@@ -429,3 +429,7 @@ A: ETM learns static topics across the corpus; DETM models topic evolution over 
 Q: Can I add my own dataset?
 
 A: Yes. Export standardized JSONL with at least id and text fields, and implement a dataset adapter.
+
+---
+## **Contact me**
+Please contact me duanzhenke@stu.zuel.edu.cn, panjiqun@stu.zuel.edu.cn or lixiun@stu.zuel.edu.cn if you have any questions.
