@@ -1,4 +1,4 @@
-````
+
 <div align="center">
 
 <img src="assets/THETA.png" width="180" alt="THETA Logo"/>
@@ -129,7 +129,6 @@ python -m theta.topic \
   --embeddings artifacts/embeddings/cfpb_lora.npy \
   --texts data/processed/cfpb.jsonl \
   --output artifacts/topics/cfpb_etm_lora
-```
 
 ---
 
