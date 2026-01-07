@@ -1,14 +1,13 @@
-
 <div align="center">
 
 <img src="assets/THETA.png" width="40%" alt="THETA Logo"/>
 
+<h1>THETA (θ)</h1>
 
-<h1>Textual Hybrid Embedding–based Topic Analysis  
-LLM-adaptive embeddings (Zero-shot / LoRA) + Generative Topic Modeling (ETM/DETM) + Agent-based workflow for social science text mining<h1>
+Textual Hybrid Embedding–based Topic Analysis  
+LLM-adaptive embeddings (Zero-shot / LoRA) + Generative Topic Modeling (ETM/DETM) + Agent-based workflow for social science text mining
 
 </div>
-
 ---
 
 ## Overview
