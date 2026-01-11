@@ -20,13 +20,11 @@
   PNPM_VERSION = "8"
   
   # 使用冻结的 lockfile，确保依赖版本一致性
+  # 注意：不设置 NODE_ENV=production，以便安装构建时需要的 devDependencies
   PNPM_FLAGS = "--prefer-frozen-lockfile"
   
   # 启用 Next.js 的构建缓存
   NEXT_TELEMETRY_DISABLED = "1"
-  
-  # 设置生产环境
-  NODE_ENV = "production"
 
 # Netlify 插件配置
 # @netlify/plugin-nextjs 会自动处理：
