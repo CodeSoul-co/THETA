@@ -1,11 +1,91 @@
+# Netlify 配置文件
+# 用于部署 Next.js 16 应用
+
 [build]
+  # 构建命令：使用 pnpm 构建 Next.js 应用
   command = "pnpm build"
+  # 发布目录：Next.js 构建输出目录
+  # 注意：使用 @netlify/plugin-nextjs 时，插件会自动处理路由和发布目录
   publish = ".next"
 
+# 构建环境变量
+[build.environment]
+  # Node.js 版本
+  NODE_VERSION = "20"
+  # pnpm 版本
+  PNPM_VERSION = "8"
+  # 使用冻结的 lockfile，确保依赖版本一致性
+  PNPM_FLAGS = "--prefer-frozen-lockfile"
+
+# Netlify 插件配置
+# @netlify/plugin-nextjs 会自动处理：
+# - Next.js 路由和重定向
+# - 服务器端渲染 (SSR)
+# - 增量静态再生 (ISR)
+# - API 路由
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-[build.environment]
-  NODE_VERSION = "20"
-  PNPM_VERSION = "8"
+# 静态资源缓存配置
+# Next.js 构建的静态文件（长期缓存）
+[[headers]]
+  for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
 
+# 图片资源缓存（24小时）
+[[headers]]
+  for = "/*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/*.jpeg"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/*.svg"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/*.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+# 字体文件缓存（长期缓存）
+[[headers]]
+  for = "/*.woff"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.woff2"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# 安全头配置
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+# 上下文特定配置（可选）
+# [context.production.environment]
+#   NODE_ENV = "production"
+
+# [context.deploy-preview.environment]
+#   NODE_ENV = "development"
+
+# [context.branch-deploy.environment]
+#   NODE_ENV = "development"
