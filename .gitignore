@@ -15,6 +15,7 @@ downloads/
 eggs/
 .eggs/
 lib/
+!smart-mining-platform/lib/
 lib64/
 parts/
 sdist/
