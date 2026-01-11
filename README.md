@@ -8,6 +8,8 @@ Textual Hybrid Embedding–based Topic Analysis
 
 </div>
 
+**[English](README.md) | [中文](README_CN.md)**
+
 ## Overview
 
 THETA (θ) is an open-source, research-oriented platform for LLM-enhanced topic analysis in social science. It combines:
