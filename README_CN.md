@@ -272,6 +272,38 @@ python -m theta.run --config configs/default.yaml
 
 ---
 
+## 📊 项目进度
+
+### ✅ 已完成任务
+
+#### 数据预处理
+- ✅ **数据清洗模块** `Completed by: pjq`
+  - dataclean 文件夹已上传
+  - 准备进行模型训练
+
+#### 文档与设计
+- ✅ **README 完善** `Completed by: 李国正`
+  - 添加待办事项统计
+  - 添加中文版本 (README_CN.md)
+  - 添加详细路线图和任务分配
+
+- ✅ **前端 Demo 设计** `Completed by: 李国正`
+  - 前端 Demo 1: [http://theta-frontend1.neovurge.com/](http://theta-frontend1.neovurge.com/)
+  - 前端 Demo 2: [http://theta-frontend2.neovurge.com/](http://theta-frontend2.neovurge.com/)
+  - 重新设计前端界面，优化用户体验
+
+- ✅ **项目知识库** `Completed by: 李国正`
+  - NotebookLM 项目知识库已建立
+  - 链接: [https://notebooklm.google.com/notebook/7af619ee-678c-4e9d-af89-482342b83e95](https://notebooklm.google.com/notebook/7af619ee-678c-4e9d-af89-482342b83e95)
+
+### 🔄 进行中
+
+- 🔄 **模型训练准备** `In Progress: pjq`
+  - 数据清洗模块已完成
+  - 计划明天开始模型训练
+
+---
+
 ## 路线图
 
 ### 📅 近期冲刺 (Sprint DDL: 1.14)
