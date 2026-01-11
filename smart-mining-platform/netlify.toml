@@ -1,21 +1,32 @@
+# ============================================
 # Netlify 配置文件
-# 用于部署 Next.js 16 应用
+# 用于部署 Next.js 16 应用 (smart-mining-platform)
+# ============================================
 
 [build]
   # 构建命令：使用 pnpm 构建 Next.js 应用
   command = "pnpm build"
+  
   # 发布目录：Next.js 构建输出目录
   # 注意：使用 @netlify/plugin-nextjs 时，插件会自动处理路由和发布目录
   publish = ".next"
 
 # 构建环境变量
 [build.environment]
-  # Node.js 版本
+  # Node.js 版本（LTS）
   NODE_VERSION = "20"
+  
   # pnpm 版本
   PNPM_VERSION = "8"
+  
   # 使用冻结的 lockfile，确保依赖版本一致性
   PNPM_FLAGS = "--prefer-frozen-lockfile"
+  
+  # 启用 Next.js 的构建缓存
+  NEXT_TELEMETRY_DISABLED = "1"
+  
+  # 设置生产环境
+  NODE_ENV = "production"
 
 # Netlify 插件配置
 # @netlify/plugin-nextjs 会自动处理：
@@ -23,13 +34,41 @@
 # - 服务器端渲染 (SSR)
 # - 增量静态再生 (ISR)
 # - API 路由
+# - 中间件 (Middleware)
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# 静态资源缓存配置
-# Next.js 构建的静态文件（长期缓存）
+# ============================================
+# 重定向规则
+# ============================================
+# Next.js 插件会自动处理大部分路由
+# 以下规则用于处理特殊情况
+
+# SPA 回退（如果需要）
+# [[redirects]]
+#   from = "/*"
+#   to = "/index.html"
+#   status = 200
+
+# ============================================
+# 缓存策略配置
+# ============================================
+
+# Next.js 构建的静态文件（长期缓存 - 1年）
 [[headers]]
   for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Next.js 构建的图片资源（长期缓存）
+[[headers]]
+  for = "/_next/image*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# 公共静态资源（长期缓存）
+[[headers]]
+  for = "/static/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
@@ -40,12 +79,22 @@
     Cache-Control = "public, max-age=86400"
 
 [[headers]]
+  for = "/*.jpeg"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
   for = "/*.png"
   [headers.values]
     Cache-Control = "public, max-age=86400"
 
 [[headers]]
-  for = "/*.jpeg"
+  for = "/*.gif"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/*.webp"
   [headers.values]
     Cache-Control = "public, max-age=86400"
 
@@ -55,11 +104,11 @@
     Cache-Control = "public, max-age=86400"
 
 [[headers]]
-  for = "/*.webp"
+  for = "/*.ico"
   [headers.values]
     Cache-Control = "public, max-age=86400"
 
-# 字体文件缓存（长期缓存）
+# 字体文件缓存（长期缓存 - 1年）
 [[headers]]
   for = "/*.woff"
   [headers.values]
@@ -70,22 +119,88 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+[[headers]]
+  for = "/*.ttf"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.otf"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# CSS 和 JS 文件缓存（1周）
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# ============================================
 # 安全头配置
+# ============================================
+
+# 全局安全头
 [[headers]]
   for = "/*"
   [headers.values]
+    # 防止点击劫持
     X-Frame-Options = "DENY"
+    
+    # XSS 保护
     X-XSS-Protection = "1; mode=block"
+    
+    # 防止 MIME 类型嗅探
     X-Content-Type-Options = "nosniff"
+    
+    # 引用策略
     Referrer-Policy = "strict-origin-when-cross-origin"
+    
+    # 权限策略
     Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+    
+    # 内容安全策略（可根据需要调整）
+    # Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"
 
-# 上下文特定配置（可选）
-# [context.production.environment]
-#   NODE_ENV = "production"
+# ============================================
+# 上下文特定配置
+# ============================================
 
-# [context.deploy-preview.environment]
-#   NODE_ENV = "development"
+# 生产环境配置
+[context.production.environment]
+  NODE_ENV = "production"
+  NEXT_PUBLIC_ENV = "production"
 
-# [context.branch-deploy.environment]
-#   NODE_ENV = "development"
+# 预览环境配置（Pull Request 预览）
+[context.deploy-preview.environment]
+  NODE_ENV = "development"
+  NEXT_PUBLIC_ENV = "preview"
+
+# 分支部署配置
+[context.branch-deploy.environment]
+  NODE_ENV = "development"
+  NEXT_PUBLIC_ENV = "development"
+
+# ============================================
+# 函数配置（如果需要）
+# ============================================
+
+# [functions]
+#   directory = "netlify/functions"
+#   node_bundler = "esbuild"
+
+# ============================================
+# 处理配置
+# ============================================
+
+# 处理 Next.js 的 API 路由
+# [[redirects]]
+#   from = "/api/*"
+#   to = "/.netlify/functions/:splat"
+#   status = 200
+#   force = true
+
