@@ -119,8 +119,42 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    /* Firefox 滚动条样式 */
+    scrollbar-width: thin;
+    scrollbar-color: oklch(0.3 0.015 250) oklch(0.16 0.012 250);
   }
+  
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* 美化滚动条样式 - Webkit (Chrome, Safari, Edge) */
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  
+  *::-webkit-scrollbar-track {
+    background: oklch(0.16 0.012 250);
+    border-radius: 10px;
+  }
+  
+  *::-webkit-scrollbar-thumb {
+    background: oklch(0.3 0.015 250);
+    border-radius: 10px;
+    border: 2px solid oklch(0.16 0.012 250);
+    transition: background 0.2s ease;
+  }
+  
+  *::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.42 0.18 280);
+  }
+  
+  *::-webkit-scrollbar-thumb:active {
+    background: oklch(0.55 0.22 260);
+  }
+  
+  *::-webkit-scrollbar-corner {
+    background: oklch(0.16 0.012 250);
   }
 }
