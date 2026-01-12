@@ -22,8 +22,8 @@ import { TrendingUp, Network, GitBranch, Loader2, AlertCircle } from "lucide-rea
 import { AISidebar } from "@/components/ai-sidebar"
 import { analyticsService } from "@/lib/api/services"
 import type { TimelineData, UMAPPoint, KeywordData } from "@/lib/api/services"
-import { HierarchyTree, generateMockHierarchyData, type TreeNode } from "@/components/hierarchy-tree"
-import { HierarchyTree } from "@/components/hierarchy-tree"
+import { HierarchyTree, generateMockHierarchyData } from "@/components/hierarchy-tree"
+import type { TreeNode } from "@/components/hierarchy-tree"
 
 const clusterColors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"]
 
@@ -84,7 +84,17 @@ function AnalyticsPageContent() {
         }
 
         if (hierarchyRes.success && hierarchyRes.data) {
-          setHierarchyData(hierarchyRes.data as TreeNode)
+          // 转换 API 数据为 TreeNode 格式
+          const convertToTreeNode = (data: any): TreeNode => {
+            return {
+              id: data.id || `node_${Math.random().toString(36).substr(2, 9)}`,
+              name: data.name || "未命名节点",
+              value: data.value,
+              color: data.color,
+              children: data.children ? data.children.map(convertToTreeNode) : undefined,
+            }
+          }
+          setHierarchyData(convertToTreeNode(hierarchyRes.data))
         } else {
           // 使用模拟数据
           setHierarchyData(generateMockHierarchyData())
@@ -219,132 +229,134 @@ function AnalyticsPageContent() {
 
           {/* Visualization Tabs */}
           {!loading && (
-            <Tabs defaultValue="timeline" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="timeline" className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
-                主题演化
-              </TabsTrigger>
-              <TabsTrigger value="space" className="flex items-center gap-2">
-                <Network className="w-4 h-4" />
-                语义空间
-              </TabsTrigger>
-              <TabsTrigger value="hierarchy" className="flex items-center gap-2">
-                <GitBranch className="w-4 h-4" />
-                主题树
-              </TabsTrigger>
-            </TabsList>
+            <>
+              <Tabs defaultValue="timeline" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="timeline" className="flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4" />
+                    主题演化
+                  </TabsTrigger>
+                  <TabsTrigger value="space" className="flex items-center gap-2">
+                    <Network className="w-4 h-4" />
+                    语义空间
+                  </TabsTrigger>
+                  <TabsTrigger value="hierarchy" className="flex items-center gap-2">
+                    <GitBranch className="w-4 h-4" />
+                    主题树
+                  </TabsTrigger>
+                </TabsList>
 
-            <TabsContent value="timeline" className="space-y-4">
+                <TabsContent value="timeline" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>时序演化分析</CardTitle>
+                      <CardDescription>主题在时间维度上的分布变化（2019年政策激增点标注）</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={400}>
+                        <LineChart data={timeSeriesData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                          <YAxis stroke="hsl(var(--muted-foreground))" />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "hsl(var(--popover))",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: "8px",
+                            }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="count"
+                            stroke="hsl(var(--primary))"
+                            strokeWidth={2}
+                            dot={{ r: 4 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="space" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>UMAP 语义降维空间</CardTitle>
+                      <CardDescription>高维语义向量降维至二维平面，颜色代表聚类簇</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={400}>
+                        <ScatterChart>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis type="number" dataKey="x" stroke="hsl(var(--muted-foreground))" />
+                          <YAxis type="number" dataKey="y" stroke="hsl(var(--muted-foreground))" />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "hsl(var(--popover))",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: "8px",
+                            }}
+                            cursor={{ strokeDasharray: "3 3" }}
+                          />
+                          <Scatter data={umapData} onClick={(data) => setSelectedPoint(data)}>
+                            {umapData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={clusterColors[entry.cluster]} />
+                            ))}
+                          </Scatter>
+                        </ScatterChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="hierarchy" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>层次聚类树</CardTitle>
+                      <CardDescription>展示主题之间的层次关系与相似度（点击节点展开/折叠）</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[400px]">
+                      {loading || !hierarchyData ? (
+                        <div className="h-full flex items-center justify-center">
+                          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                        </div>
+                      ) : (
+                        <HierarchyTree data={hierarchyData} width={800} height={400} />
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+
+              {/* Keywords Cloud */}
               <Card>
                 <CardHeader>
-                  <CardTitle>时序演化分析</CardTitle>
-                  <CardDescription>主题在时间维度上的分布变化（2019年政策激增点标注）</CardDescription>
+                  <CardTitle>c-TF-IDF 关键词提取</CardTitle>
+                  <CardDescription>Top-10 高权重术语标签</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={400}>
-                    <LineChart data={timeSeriesData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                      <YAxis stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--popover))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "8px",
-                        }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="count"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth={2}
-                        dot={{ r: 4 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="space" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>UMAP 语义降维空间</CardTitle>
-                  <CardDescription>高维语义向量降维至二维平面，颜色代表聚类簇</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={400}>
-                    <ScatterChart>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis type="number" dataKey="x" stroke="hsl(var(--muted-foreground))" />
-                      <YAxis type="number" dataKey="y" stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--popover))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "8px",
-                        }}
-                        cursor={{ strokeDasharray: "3 3" }}
-                      />
-                      <Scatter data={umapData} onClick={(data) => setSelectedPoint(data)}>
-                        {umapData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={clusterColors[entry.cluster]} />
-                        ))}
-                      </Scatter>
-                    </ScatterChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="hierarchy" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>层次聚类树</CardTitle>
-                  <CardDescription>展示主题之间的层次关系与相似度（点击节点展开/折叠）</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[400px]">
-                  {loading || !hierarchyData ? (
-                    <div className="h-full flex items-center justify-center">
-                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  {topKeywords.length > 0 ? (
+                    <div className="flex flex-wrap gap-3">
+                      {topKeywords.map((kw) => (
+                        <Badge
+                          key={kw.word}
+                          variant="secondary"
+                          className="px-4 py-2 text-base"
+                          style={{
+                            fontSize: `${0.8 + (kw.weight / 100) * 0.6}rem`,
+                            opacity: 0.6 + (kw.weight / 100) * 0.4,
+                          }}
+                        >
+                          {kw.word}
+                        </Badge>
+                      ))}
                     </div>
                   ) : (
-                    <HierarchyTree data={hierarchyData} width={800} height={400} />
+                    <p className="text-sm text-muted-foreground">暂无关键词数据</p>
                   )}
                 </CardContent>
               </Card>
-            </TabsContent>
-          </Tabs>
-
-          {/* Keywords Cloud */}
-          <Card>
-            <CardHeader>
-              <CardTitle>c-TF-IDF 关键词提取</CardTitle>
-              <CardDescription>Top-10 高权重术语标签</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {topKeywords.length > 0 ? (
-                <div className="flex flex-wrap gap-3">
-                  {topKeywords.map((kw) => (
-                    <Badge
-                      key={kw.word}
-                      variant="secondary"
-                      className="px-4 py-2 text-base"
-                      style={{
-                        fontSize: `${0.8 + (kw.weight / 100) * 0.6}rem`,
-                        opacity: 0.6 + (kw.weight / 100) * 0.4,
-                      }}
-                    >
-                      {kw.word}
-                    </Badge>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">暂无关键词数据</p>
-              )}
-            </CardContent>
-          </Card>
+            </>
           )}
         </div>
       </div>
