@@ -302,6 +302,13 @@ python -m theta.run --config configs/default.yaml
   - 数据清洗模块已完成
   - 计划明天开始模型训练
 
+- 🔄 **前端页面功能完善** `In Progress: 李国正` `Date: 今日`
+  - 重点优化 analytics、rag、setup 页面
+  - 集成 API 数据加载与错误处理
+  - 更新 layout 配置
+  - 新增依赖包
+  - 编写后端实现清单（包含接口规范、待办内容等）
+
 ---
 
 ## 路线图
