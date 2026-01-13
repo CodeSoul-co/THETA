@@ -358,6 +358,8 @@ Recommended baselines for comparison:
   - Model training planned to start tomorrow
 
 - 🔄 **Frontend Page Enhancement** `In Progress: 李国正` `Date: Today`
+  - Determined and implemented frontend basic framework
+  - Tested file upload tool and wrote backend calling methods
   - Focused optimization on analytics, rag, and setup pages
   - Integrated API data loading and error handling
   - Updated layout configuration

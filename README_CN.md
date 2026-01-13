@@ -303,6 +303,8 @@ python -m theta.run --config configs/default.yaml
   - 计划明天开始模型训练
 
 - 🔄 **前端页面功能完善** `In Progress: 李国正` `Date: 今日`
+  - 确定前端基本框架并实现
+  - 测试文件上传工具并编写后端调用方法
   - 重点优化 analytics、rag、setup 页面
   - 集成 API 数据加载与错误处理
   - 更新 layout 配置
