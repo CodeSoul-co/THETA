@@ -41,6 +41,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { DataProcessingView } from "@/components/data-processing"
 
 type ViewType = "projects" | "data" | "processing" | "analysis" | "visualization" | "report" | "tasks"
 
@@ -385,7 +386,7 @@ export default function Home() {
               >
                 <AnimatePresence mode="wait">
                   {currentView === "data" && <DataView key="data" datasets={datasets} />}
-                  {currentView === "processing" && <ProcessingView key="processing" onNewTask={handleFileUpload} />}
+                  {currentView === "processing" && <DataProcessingView key="processing" />}
                   {currentView === "projects" && <PlaceholderView key="projects" title="我的项目" />}
                   {currentView === "report" && <PlaceholderView key="report" title="智能报告" />}
                   {currentView === "tasks" && <PlaceholderView key="tasks" title="任务中心" />}
