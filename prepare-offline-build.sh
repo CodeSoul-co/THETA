@@ -18,14 +18,16 @@ if ! command -v docker &> /dev/null; then
 fi
 
 # 检查 Docker daemon 是否运行
-if ! docker info &> /dev/null; then
+echo "🔍 检查 Docker daemon..."
+if ! docker info > /dev/null 2>&1; then
     echo "❌ 错误: Docker daemon 未运行"
     echo ""
     echo "请启动 Docker Desktop:"
     echo "  macOS: 打开 Docker Desktop 应用"
+    echo "    或运行: open -a Docker"
     echo "  Linux: sudo systemctl start docker"
     echo ""
-    echo "等待 Docker 启动后，再次运行此脚本"
+    echo "等待 Docker 启动后（菜单栏图标变为稳定状态），再次运行此脚本"
     exit 1
 fi
 
