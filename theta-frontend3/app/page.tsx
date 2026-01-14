@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Upload,
@@ -25,11 +25,14 @@ import {
   Settings,
   PanelLeftClose,
   PanelLeft,
+  ArrowLeft,
+  Trash2,
+  X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -61,11 +64,94 @@ type ProcessingJob = {
   date: string
 }
 
-// Mock data for datasets
-const mockDatasets = [
-  { id: "job-001", name: "客户数据集", files: 4523, size: "2.3 GB", date: "2024-01-15" },
-  { id: "job-002", name: "销售分析", files: 1200, size: "856 MB", date: "2024-01-14" },
-  { id: "job-003", name: "市场研究", files: 3400, size: "1.8 GB", date: "2024-01-13" },
+// 数据集中的文件类型
+type DatasetFile = {
+  id: string
+  name: string
+  size: string
+  type: string
+  uploadDate: string
+}
+
+// 数据集类型（包含文件列表）
+type Dataset = {
+  id: string
+  name: string
+  files: DatasetFile[]
+  totalSize: string
+  date: string
+}
+
+// 生成默认数据集名称
+const generateDefaultDatasetName = (existingDatasets: Dataset[]): string => {
+  const baseName = "未命名数据集"
+  let counter = 1
+  let newName = baseName
+  
+  while (existingDatasets.some(d => d.name === newName)) {
+    counter++
+    newName = `${baseName} ${counter}`
+  }
+  
+  return newName
+}
+
+// 计算文件总大小
+const calculateTotalSize = (files: DatasetFile[]): string => {
+  let totalBytes = 0
+  files.forEach(file => {
+    const match = file.size.match(/^([\d.]+)\s*(KB|MB|GB)$/i)
+    if (match) {
+      const value = parseFloat(match[1])
+      const unit = match[2].toUpperCase()
+      if (unit === 'KB') totalBytes += value * 1024
+      else if (unit === 'MB') totalBytes += value * 1024 * 1024
+      else if (unit === 'GB') totalBytes += value * 1024 * 1024 * 1024
+    }
+  })
+  
+  if (totalBytes >= 1024 * 1024 * 1024) {
+    return `${(totalBytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
+  } else if (totalBytes >= 1024 * 1024) {
+    return `${(totalBytes / (1024 * 1024)).toFixed(2)} MB`
+  } else if (totalBytes >= 1024) {
+    return `${(totalBytes / 1024).toFixed(2)} KB`
+  }
+  return `${totalBytes} B`
+}
+
+// Mock data for datasets with files
+const mockDatasets: Dataset[] = [
+  { 
+    id: "job-001", 
+    name: "客户数据集", 
+    files: [
+      { id: "f1", name: "customers_2024.csv", size: "1.2 GB", type: "CSV", uploadDate: "2024-01-15" },
+      { id: "f2", name: "orders_jan.xlsx", size: "856 MB", type: "Excel", uploadDate: "2024-01-15" },
+      { id: "f3", name: "feedback.json", size: "244 MB", type: "JSON", uploadDate: "2024-01-14" },
+    ],
+    totalSize: "2.3 GB", 
+    date: "2024-01-15" 
+  },
+  { 
+    id: "job-002", 
+    name: "销售分析", 
+    files: [
+      { id: "f4", name: "sales_q1.csv", size: "456 MB", type: "CSV", uploadDate: "2024-01-14" },
+      { id: "f5", name: "products.xlsx", size: "400 MB", type: "Excel", uploadDate: "2024-01-14" },
+    ],
+    totalSize: "856 MB", 
+    date: "2024-01-14" 
+  },
+  { 
+    id: "job-003", 
+    name: "市场研究", 
+    files: [
+      { id: "f6", name: "survey_results.csv", size: "1.8 GB", type: "CSV", uploadDate: "2024-01-13" },
+    ],
+    totalSize: "1.8 GB", 
+    date: "2024-01-13" 
+  },
 ]
 
 const mockChartData = [
@@ -85,12 +171,16 @@ export default function Home() {
   const [showSourceModal, setShowSourceModal] = useState(false)
   const [datasetName, setDatasetName] = useState("")
   const [selectedSource, setSelectedSource] = useState("")
-  const [datasets, setDatasets] = useState(mockDatasets)
+  const [datasets, setDatasets] = useState<Dataset[]>(mockDatasets)
   const [processingJobs, setProcessingJobs] = useState<ProcessingJob[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const [inputValue, setInputValue] = useState("")
   const [chatHistory, setChatHistory] = useState<Message[]>([])
   const [sheetOpen, setSheetOpen] = useState(false)
+  
+  // 新增状态：待上传的文件、当前查看的数据集
+  const [pendingFiles, setPendingFiles] = useState<File[]>([])
+  const [selectedDatasetId, setSelectedDatasetId] = useState<string | null>(null)
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -102,32 +192,121 @@ export default function Home() {
     setIsDragging(false)
   }
 
+  // 初始页面拖入文件：先收集文件，确认后再命名
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
-    setShowNameModal(true)
-  }
-
-  const handleFileUpload = () => {
-    setShowNameModal(true)
-  }
-
-  const handleNameConfirm = () => {
-    if (datasetName.trim()) {
-      const newDataset = {
-        id: `job-${String(datasets.length + 1).padStart(3, "0")}`,
-        name: datasetName,
-        files: 0,
-        size: "0 MB",
-        date: new Date().toISOString().split("T")[0],
-      }
-      setDatasets([...datasets, newDataset])
-      setShowNameModal(false)
-      setAppState("workspace")
-      setCurrentView("data")
-      setDatasetName("")
+    const droppedFiles = Array.from(e.dataTransfer.files)
+    if (droppedFiles.length > 0) {
+      setPendingFiles(droppedFiles)
+      // 生成默认名称
+      setDatasetName(generateDefaultDatasetName(datasets))
+      setShowNameModal(true)
     }
   }
+
+  // 点击上传按钮：打开文件选择器
+  const handleFileUpload = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.multiple = true
+    input.onchange = (e) => {
+      const files = Array.from((e.target as HTMLInputElement).files || [])
+      if (files.length > 0) {
+        setPendingFiles(files)
+        setDatasetName(generateDefaultDatasetName(datasets))
+        setShowNameModal(true)
+      }
+    }
+    input.click()
+  }
+
+  // 确认数据集名称并创建
+  const handleNameConfirm = () => {
+    // 使用用户输入的名称，如果为空则使用默认名称
+    const finalName = datasetName.trim() || generateDefaultDatasetName(datasets)
+    
+    // 检查是否重名
+    if (datasets.some(d => d.name === finalName)) {
+      // 如果重名，自动添加后缀
+      let counter = 1
+      let uniqueName = `${finalName} (${counter})`
+      while (datasets.some(d => d.name === uniqueName)) {
+        counter++
+        uniqueName = `${finalName} (${counter})`
+      }
+      setDatasetName(uniqueName)
+      return
+    }
+    
+    // 将待上传文件转换为 DatasetFile 格式
+    const newFiles: DatasetFile[] = pendingFiles.map((file, index) => ({
+      id: `f-${Date.now()}-${index}`,
+      name: file.name,
+      size: file.size >= 1024 * 1024 
+        ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+        : `${(file.size / 1024).toFixed(2)} KB`,
+      type: file.name.split('.').pop()?.toUpperCase() || 'Unknown',
+      uploadDate: new Date().toISOString().split("T")[0],
+    }))
+    
+    const newDataset: Dataset = {
+      id: `job-${Date.now()}`,
+      name: finalName,
+      files: newFiles,
+      totalSize: calculateTotalSize(newFiles),
+      date: new Date().toISOString().split("T")[0],
+    }
+    
+    setDatasets([...datasets, newDataset])
+    setShowNameModal(false)
+    setPendingFiles([])
+    setDatasetName("")
+    setAppState("workspace")
+    setCurrentView("data")
+    // 直接进入新创建的数据集
+    setSelectedDatasetId(newDataset.id)
+  }
+  
+  // 向已有数据集添加文件
+  const handleAddFilesToDataset = useCallback((datasetId: string, files: File[]) => {
+    const newFiles: DatasetFile[] = files.map((file, index) => ({
+      id: `f-${Date.now()}-${index}`,
+      name: file.name,
+      size: file.size >= 1024 * 1024 
+        ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+        : `${(file.size / 1024).toFixed(2)} KB`,
+      type: file.name.split('.').pop()?.toUpperCase() || 'Unknown',
+      uploadDate: new Date().toISOString().split("T")[0],
+    }))
+    
+    setDatasets(prev => prev.map(dataset => {
+      if (dataset.id === datasetId) {
+        const updatedFiles = [...dataset.files, ...newFiles]
+        return {
+          ...dataset,
+          files: updatedFiles,
+          totalSize: calculateTotalSize(updatedFiles),
+        }
+      }
+      return dataset
+    }))
+  }, [])
+  
+  // 从数据集中删除文件
+  const handleRemoveFileFromDataset = useCallback((datasetId: string, fileId: string) => {
+    setDatasets(prev => prev.map(dataset => {
+      if (dataset.id === datasetId) {
+        const updatedFiles = dataset.files.filter(f => f.id !== fileId)
+        return {
+          ...dataset,
+          files: updatedFiles,
+          totalSize: calculateTotalSize(updatedFiles),
+        }
+      }
+      return dataset
+    }))
+  }, [])
 
   const handleSourceConfirm = () => {
     if (selectedSource) {
@@ -416,7 +595,17 @@ export default function Home() {
                 className="flex-1 bg-slate-50 overflow-auto"
               >
                 <AnimatePresence mode="wait">
-                  {currentView === "data" && <DataView key="data" datasets={datasets} onUpload={handleFileUpload} />}
+                  {currentView === "data" && (
+                    <DataView 
+                      key="data" 
+                      datasets={datasets} 
+                      onUpload={handleFileUpload}
+                      selectedDatasetId={selectedDatasetId}
+                      onSelectDataset={setSelectedDatasetId}
+                      onAddFiles={handleAddFilesToDataset}
+                      onRemoveFile={handleRemoveFileFromDataset}
+                    />
+                  )}
                   {currentView === "processing" && (
                     <ProcessingView key="processing" jobs={processingJobs} onNewTask={handleNewProcessingTask} />
                   )}
@@ -465,19 +654,47 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      <Dialog open={showNameModal} onOpenChange={setShowNameModal}>
-        <DialogContent className="sm:max-w-md bg-white">
+      <Dialog open={showNameModal} onOpenChange={(open) => {
+        if (!open) {
+          setPendingFiles([])
+          setDatasetName("")
+        }
+        setShowNameModal(open)
+      }}>
+        <DialogContent className="sm:max-w-lg bg-white">
           <DialogHeader>
-            <DialogTitle className="text-slate-900">命名您的数据集</DialogTitle>
+            <DialogTitle className="text-slate-900">创建数据集</DialogTitle>
+            <DialogDescription className="text-slate-500">
+              已选择 {pendingFiles.length} 个文件，请为数据集命名
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {/* 显示待上传的文件列表 */}
+            {pendingFiles.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-slate-700">已选文件</Label>
+                <div className="max-h-32 overflow-y-auto border border-slate-200 rounded-lg p-2 space-y-1">
+                  {pendingFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between text-sm py-1 px-2 bg-slate-50 rounded">
+                      <span className="text-slate-700 truncate flex-1">{file.name}</span>
+                      <span className="text-slate-400 ml-2 flex-shrink-0">
+                        {file.size >= 1024 * 1024 
+                          ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+                          : `${(file.size / 1024).toFixed(1)} KB`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="dataset-name" className="text-slate-700">
                 数据集名称
               </Label>
               <Input
                 id="dataset-name"
-                placeholder="例如：客户数据集"
+                placeholder="留空将使用默认名称"
                 value={datasetName}
                 onChange={(e) => setDatasetName(e.target.value)}
                 className="border-slate-300"
@@ -487,14 +704,21 @@ export default function Home() {
                   }
                 }}
               />
+              <p className="text-xs text-slate-400">
+                留空将自动命名为 "{generateDefaultDatasetName(datasets)}"
+              </p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowNameModal(false)} className="border-slate-300">
+            <Button variant="outline" onClick={() => {
+              setShowNameModal(false)
+              setPendingFiles([])
+              setDatasetName("")
+            }} className="border-slate-300">
               取消
             </Button>
             <Button onClick={handleNameConfirm} className="bg-blue-600 hover:bg-blue-700 text-white">
-              确认
+              创建数据集
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -720,71 +944,248 @@ function NavItem({
   )
 }
 
-function DataView({ datasets, onUpload }: { datasets: typeof mockDatasets; onUpload: () => void }) {
-  const [showUploadView, setShowUploadView] = useState(false)
+function DataView({ 
+  datasets, 
+  onUpload,
+  selectedDatasetId,
+  onSelectDataset,
+  onAddFiles,
+  onRemoveFile,
+}: { 
+  datasets: Dataset[]
+  onUpload: () => void
+  selectedDatasetId: string | null
+  onSelectDataset: (id: string | null) => void
+  onAddFiles: (datasetId: string, files: File[]) => void
+  onRemoveFile: (datasetId: string, fileId: string) => void
+}) {
+  const [isDraggingInDetail, setIsDraggingInDetail] = useState(false)
+  
+  const selectedDataset = selectedDatasetId 
+    ? datasets.find(d => d.id === selectedDatasetId) 
+    : null
 
-  if (showUploadView) {
+  // 在数据集详情页添加文件
+  const handleAddFilesClick = () => {
+    if (!selectedDatasetId) return
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.multiple = true
+    input.onchange = (e) => {
+      const files = Array.from((e.target as HTMLInputElement).files || [])
+      if (files.length > 0) {
+        onAddFiles(selectedDatasetId, files)
+      }
+    }
+    input.click()
+  }
+
+  // 拖拽添加文件到数据集
+  const handleDetailDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDraggingInDetail(true)
+  }
+
+  const handleDetailDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDraggingInDetail(false)
+  }
+
+  const handleDetailDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDraggingInDetail(false)
+    if (!selectedDatasetId) return
+    const droppedFiles = Array.from(e.dataTransfer.files)
+    if (droppedFiles.length > 0) {
+      onAddFiles(selectedDatasetId, droppedFiles)
+    }
+  }
+
+  // 数据集详情视图
+  if (selectedDataset) {
     return (
-      <div className="p-8">
+      <motion.div 
+        className="p-8"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        onDragOver={handleDetailDragOver}
+        onDragLeave={handleDetailDragLeave}
+        onDrop={handleDetailDrop}
+      >
         <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-semibold text-slate-900 mb-2">上传数据</h2>
-            <p className="text-slate-600">上传文件进行文本清洗和格式转换</p>
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={() => onSelectDataset(null)}
+              variant="ghost"
+              size="icon"
+              className="hover:bg-slate-100"
+            >
+              <ArrowLeft className="w-5 h-5 text-slate-600" />
+            </Button>
+            <div>
+              <h2 className="text-2xl font-semibold text-slate-900 mb-1">{selectedDataset.name}</h2>
+              <p className="text-slate-500 text-sm">
+                {selectedDataset.files.length} 个文件 · {selectedDataset.totalSize} · 创建于 {selectedDataset.date}
+              </p>
+            </div>
           </div>
-          <Button
-            onClick={() => setShowUploadView(false)}
-            variant="outline"
-            className="gap-2"
-          >
-            返回数据列表
+          <Button onClick={handleAddFilesClick} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+            <Plus className="w-4 h-4" />
+            添加文件
           </Button>
         </div>
-        <DataProcessingView />
-      </div>
+
+        {/* 拖拽提示 */}
+        {isDraggingInDetail && (
+          <div className="fixed inset-0 bg-blue-500/10 z-40 flex items-center justify-center pointer-events-none">
+            <div className="bg-white border-2 border-dashed border-blue-500 rounded-2xl p-8 shadow-xl">
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center">
+                  <Upload className="w-8 h-8 text-white" />
+                </div>
+                <p className="text-blue-600 font-medium">释放以添加文件到此数据集</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {selectedDataset.files.length === 0 ? (
+          <Card className="border-2 border-dashed border-slate-200 bg-white p-16 rounded-xl text-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center">
+                <Upload className="w-8 h-8 text-slate-400" />
+              </div>
+              <div>
+                <p className="text-slate-500 mb-2">此数据集暂无文件</p>
+                <p className="text-sm text-slate-400">点击上方按钮或拖拽文件到此处添加</p>
+              </div>
+            </div>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {selectedDataset.files.map((file, index) => (
+              <motion.div
+                key={file.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <Card className="border border-slate-200 bg-white hover:shadow-md transition-all p-4 rounded-xl">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-slate-900 truncate">{file.name}</h4>
+                      <p className="text-sm text-slate-500">
+                        {file.type} · {file.size} · 上传于 {file.uploadDate}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onRemoveFile(selectedDataset.id, file.id)}
+                      className="text-slate-400 hover:text-red-500 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {/* 数据处理入口 */}
+        {selectedDataset.files.length > 0 && (
+          <div className="mt-8">
+            <Card className="border border-slate-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
+                    <FileCog className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-slate-900">处理此数据集</h4>
+                    <p className="text-sm text-slate-500">对文件进行文本清洗和格式转换</p>
+                  </div>
+                </div>
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                  开始处理
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+      </motion.div>
     )
   }
 
+  // 数据集列表视图
   return (
-    <div className="p-8">
+    <motion.div 
+      className="p-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-slate-900 mb-2">我的数据</h2>
           <p className="text-slate-600">管理和查看您的数据集</p>
         </div>
-        <Button onClick={() => setShowUploadView(true)} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+        <Button onClick={onUpload} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
           <Upload className="w-4 h-4" />
           上传数据集
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {datasets.map((dataset, index) => (
-          <motion.div
-            key={dataset.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <Card className="border border-slate-200 bg-white hover:shadow-lg transition-all cursor-pointer p-6 rounded-xl">
-              <div className="flex flex-col gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center">
-                  <Folder className="w-8 h-8 text-white" />
+      {datasets.length === 0 ? (
+        <Card className="border-2 border-dashed border-slate-200 bg-white p-16 rounded-xl text-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center">
+              <Database className="w-8 h-8 text-slate-400" />
+            </div>
+            <div>
+              <p className="text-slate-500 mb-2">暂无数据集</p>
+              <p className="text-sm text-slate-400">点击上方按钮或在首页拖拽文件创建数据集</p>
+            </div>
+          </div>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {datasets.map((dataset, index) => (
+            <motion.div
+              key={dataset.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <Card 
+                className="border border-slate-200 bg-white hover:shadow-lg hover:border-blue-200 transition-all cursor-pointer p-6 rounded-xl"
+                onClick={() => onSelectDataset(dataset.id)}
+              >
+                <div className="flex flex-col gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center">
+                    <Folder className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 text-lg mb-1">{dataset.name}</h3>
+                    <p className="text-sm text-slate-500">ID: {dataset.id}</p>
+                  </div>
+                  <div className="pt-3 border-t border-slate-100 space-y-1">
+                    <p className="text-xs text-slate-600">文件数量: {dataset.files.length}</p>
+                    <p className="text-xs text-slate-600">大小: {dataset.totalSize}</p>
+                    <p className="text-xs text-slate-600">创建日期: {dataset.date}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-slate-900 text-lg mb-1">{dataset.name}</h3>
-                  <p className="text-sm text-slate-500">ID: {dataset.id}</p>
-                </div>
-                <div className="pt-3 border-t border-slate-100 space-y-1">
-                  <p className="text-xs text-slate-600">文件数量: {dataset.files}</p>
-                  <p className="text-xs text-slate-600">大小: {dataset.size}</p>
-                  <p className="text-xs text-slate-600">创建日期: {dataset.date}</p>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
-    </div>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </motion.div>
   )
 }
 
