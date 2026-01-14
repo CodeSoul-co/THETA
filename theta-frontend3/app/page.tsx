@@ -270,7 +270,11 @@ export default function Home() {
     
     setDatasets([...datasets, newDataset])
     // 存储实际文件用于后续 API 调用
-    storeFilesForDataset(newDatasetId, pendingFiles)
+    setUploadedFilesMap(prev => {
+      const newMap = new Map(prev)
+      newMap.set(newDatasetId, pendingFiles)
+      return newMap
+    })
     setShowNameModal(false)
     setPendingFiles([])
     setDatasetName("")
@@ -305,8 +309,13 @@ export default function Home() {
     }))
     
     // 存储实际文件用于后续 API 调用
-    storeFilesForDataset(datasetId, files)
-  }, [storeFilesForDataset])
+    setUploadedFilesMap(prev => {
+      const newMap = new Map(prev)
+      const existing = newMap.get(datasetId) || []
+      newMap.set(datasetId, [...existing, ...files])
+      return newMap
+    })
+  }, [])
   
   // 从数据集中删除文件
   const handleRemoveFileFromDataset = useCallback((datasetId: string, fileId: string) => {
@@ -325,16 +334,6 @@ export default function Home() {
 
   // 存储实际上传的文件（用于 API 调用）
   const [uploadedFilesMap, setUploadedFilesMap] = useState<Map<string, File[]>>(new Map())
-  
-  // 存储文件到数据集映射
-  const storeFilesForDataset = useCallback((datasetId: string, files: File[]) => {
-    setUploadedFilesMap(prev => {
-      const newMap = new Map(prev)
-      const existing = newMap.get(datasetId) || []
-      newMap.set(datasetId, [...existing, ...files])
-      return newMap
-    })
-  }, [])
 
   const handleSourceConfirm = async () => {
     if (selectedSource) {
