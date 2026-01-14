@@ -43,6 +43,16 @@ if [ ! -f ".env" ]; then
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             ${EDITOR:-nano} .env
         fi
+    elif [ -f "docker.env.template" ]; then
+        cp docker.env.template .env
+        echo "✅ 已从 docker.env.template 创建 .env 文件"
+        echo "⚠️  请编辑 .env 文件，设置正确的配置值"
+        echo ""
+        read -p "是否现在编辑 .env 文件? (y/n) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            ${EDITOR:-nano} .env
+        fi
     else
         echo "⚠️  未找到 .env.example，请手动创建 .env 文件"
     fi
