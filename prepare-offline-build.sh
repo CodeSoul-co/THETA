@@ -7,6 +7,31 @@ set -e
 echo "📦 准备离线 Docker 构建文件"
 echo "================================"
 
+# 检查 Docker 是否安装
+if ! command -v docker &> /dev/null; then
+    echo "❌ 错误: 未找到 Docker"
+    echo ""
+    echo "请先安装 Docker Desktop:"
+    echo "  macOS: https://www.docker.com/products/docker-desktop/"
+    echo "  Linux: sudo apt-get install docker.io"
+    exit 1
+fi
+
+# 检查 Docker daemon 是否运行
+if ! docker info &> /dev/null; then
+    echo "❌ 错误: Docker daemon 未运行"
+    echo ""
+    echo "请启动 Docker Desktop:"
+    echo "  macOS: 打开 Docker Desktop 应用"
+    echo "  Linux: sudo systemctl start docker"
+    echo ""
+    echo "等待 Docker 启动后，再次运行此脚本"
+    exit 1
+fi
+
+echo "✅ Docker 环境检查通过"
+echo ""
+
 # 创建输出目录
 OUTPUT_DIR="docker-offline-build"
 mkdir -p "$OUTPUT_DIR"
