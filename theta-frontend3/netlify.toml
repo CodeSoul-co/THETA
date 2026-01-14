@@ -1,3 +1,9 @@
+# Netlify 部署配置
+# 注意：如果从仓库根目录部署，需要在 Netlify 设置中指定：
+# Base directory: theta-frontend3
+# Build command: pnpm install && pnpm build
+# Publish directory: theta-frontend3/.next
+
 [build]
   command = "pnpm install && pnpm build"
   publish = ".next"
@@ -5,13 +11,8 @@
 [build.environment]
   NODE_VERSION = "20"
   PNPM_VERSION = "8"
+  NPM_FLAGS = "--legacy-peer-deps"
 
 # Next.js 特定配置
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-
-# 重定向规则（Next.js 会自动处理，但保留作为备用）
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
