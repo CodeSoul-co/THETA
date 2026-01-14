@@ -205,3 +205,28 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker 离线构建文件（本地生成，不需要提交）
+docker-offline-build/
+
+# Next.js 开发日志
+.next/dev/logs/
+*.log
+
+# 临时文件
+/tmp/theta-venv/
+
+# 测试文件（特定环境的测试脚本）
+ETM/test_*.py
+
+# 占位符文件
+**/placeholder-*

@@ -272,7 +272,122 @@ python -m theta.run --config configs/default.yaml
 
 ---
 
+## 📊 项目进度
+
+### ✅ 已完成任务
+
+#### 数据预处理
+- ✅ **数据清洗模块** `Completed by: pjq`
+  - dataclean 文件夹已上传
+  - 准备进行模型训练
+
+#### 文档与设计
+- ✅ **README 完善** `Completed by: 李国正`
+  - 添加待办事项统计
+  - 添加中文版本 (README_CN.md)
+  - 添加详细路线图和任务分配
+
+- ✅ **前端 Demo 设计** `Completed by: 李国正`
+  - 前端 Demo 1: [http://theta-frontend1.neovurge.com/](http://theta-frontend1.neovurge.com/)
+  - 前端 Demo 2: [http://theta-frontend2.neovurge.com/](http://theta-frontend2.neovurge.com/)
+  - 重新设计前端界面，优化用户体验
+
+- ✅ **项目知识库** `Completed by: 李国正`
+  - NotebookLM 项目知识库已建立
+  - 链接: [https://notebooklm.google.com/notebook/7af619ee-678c-4e9d-af89-482342b83e95](https://notebooklm.google.com/notebook/7af619ee-678c-4e9d-af89-482342b83e95)
+
+### 🔄 进行中
+
+- 🔄 **模型训练准备** `In Progress: pjq`
+  - 数据清洗模块已完成
+  - 计划明天开始模型训练
+
+- 🔄 **前端页面功能完善** `In Progress: 李国正` `Date: 今日`
+  - 重点优化 analytics、rag、setup 页面
+  - 集成 API 数据加载与错误处理
+  - 更新 layout 配置
+  - 新增依赖包
+  - 编写后端实现清单（包含接口规范、待办内容等）
+
+---
+
 ## 路线图
+
+### 📅 近期冲刺 (Sprint DDL: 1.14)
+
+#### 🚀 核心数据链路 (Data Pipeline & NLP)
+
+* [ ] **标准化预处理 Pipeline** `Assignee: pjq` `DDL: 1.14`
+  * [ ] 实现数据清洗、预处理、分词等全流程。
+  * [ ] 封装为标准化模块，确保后续产品上线可用。
+
+* [ ] **模型训练与数据保存** `Assignee: pjq` `DDL: 1.14`
+  * [ ] 将 Embedding 输入 Topic Model 进行训练（涵盖多个数据集）。
+  * [ ] 保存模型对应的矩阵数据及绘图所需中间数据。
+
+* [ ] **输出物预调研** `Assignee: pjq` `DDL: 1.14`
+  * [ ] 确定输出的具体内容（图表类型、表格格式、计算指标）。
+
+* [ ] **基础绘图与导出** `Assignee: pjq` `DDL: 1.14`
+  * [ ] 实现基础绘图功能。
+  * [ ] 实现 CSV 表格数据导出。
+
+---
+
+#### 🧩 功能开发与集成 (Features & Integration)
+
+##### 📊 可视化与开源库融合 (Visualization)
+
+* [ ] **开源绘图库集成** `Assignee: lixin`
+  * [ ] 融合 `tmtoolkit` 与 `pyLDAvis` 的绘图功能。
+  * [ ] **Ref:** [tmtoolkit docs](https://tmtoolkit.readthedocs.io/en/latest/topic_modeling.html), [pyLDAvis repo](https://github.com/bmabey/pyLDAvis).
+  * [ ] 与核心数据链路（pjq 负责部分）进行对接。
+
+* [ ] **新数据适配** `Assignee: pjq`
+  * [ ] 确保 Pipeline 能够处理新输入的数据。
+
+##### 🤖 AI Agent & 分析模块 (Analysis Agent)
+
+* [ ] **图表/数据分析 Agent 开发** `Assignee: pjq, lixin`
+  * [ ] 技术栈：`LangGraph` / `LangChain`。
+  * [ ] 功能：对生成的图/表进行单次分析（无需多轮对话）。
+  * [ ] **重点**：Prompt Engineering（提示词工程）。
+  * [ ] 接口：可能涉及多模态 API 调用。
+
+* [ ] **Agent 基础架构** `Assignee: 李芳痕`
+  * [ ] 搭建 Agent 基础框架。
+
+* [ ] **对话记录存储** `Assignee: pjq`
+  * [ ] 实现对话记录上云存储。
+
+* [ ] **解读功能补充** `Assignee: 李国正` `Priority: Low`
+  * [ ] (如有时间) 辅助开发 Agent 解读功能。
+
+##### 🔌 后端与接口 (Backend & API)
+
+* [ ] **Format-free 数据接口** `Assignee: 李芳痕`
+  * [ ] 开发支持多种格式输入的灵活接口。
+
+* [ ] **脚本化执行接口** `Assignee: pjq`
+  * [ ] 实现类 Bash 方式的调用接口（从前端接收参数 -> 触发绘图/分析代码）。
+
+---
+
+#### 💻 产品与前端对接 (Product & Frontend)
+
+* [ ] **产品设计** `Assignee: 李国正`
+  * [ ] 确定产品整体功能与交互流程。
+
+* [ ] **需求文档编写** `Assignee: lixin`
+  * [ ] 整理详细的功能需求文档。
+
+* [ ] **前后端对接与集成** `Assignee: 李国正, pjq`
+  * [ ] 页面设计完成后的前端联调。
+  * [ ] 产品级的前后端逻辑打通。
+
+---
+
+### 📋 长期路线图
 
 - **v0.1**：统一数据集接口 + 零样本嵌入 + ETM 基线
 - **v0.2**：LoRA 适配器训练管道 + 连贯性/困惑度报告

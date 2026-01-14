@@ -327,17 +327,128 @@ Recommended baselines for comparison:
 
 ---
 
+## 📊 **Project Progress**
+
+### ✅ Completed Tasks
+
+#### Data Preprocessing
+- ✅ **Data Cleaning Module** `Completed by: pjq`
+  - dataclean folder has been uploaded
+  - Ready for model training
+
+#### Documentation & Design
+- ✅ **README Enhancement** `Completed by: 李国正`
+  - Added to-do list statistics
+  - Added Chinese version (README_CN.md)
+  - Added detailed roadmap and task assignments
+
+- ✅ **Frontend Demo Design** `Completed by: 李国正`
+  - Frontend Demo 1: [http://theta-frontend1.neovurge.com/](http://theta-frontend1.neovurge.com/)
+  - Frontend Demo 2: [http://theta-frontend2.neovurge.com/](http://theta-frontend2.neovurge.com/)
+  - Redesigned frontend interface with improved user experience
+
+- ✅ **Project Knowledge Base** `Completed by: 李国正`
+  - NotebookLM project knowledge base established
+  - Link: [https://notebooklm.google.com/notebook/7af619ee-678c-4e9d-af89-482342b83e95](https://notebooklm.google.com/notebook/7af619ee-678c-4e9d-af89-482342b83e95)
+
+### 🔄 In Progress
+
+- 🔄 **Model Training Preparation** `In Progress: pjq`
+  - Data cleaning module completed
+  - Model training planned to start tomorrow
+
+- 🔄 **Frontend Page Enhancement** `In Progress: 李国正` `Date: Today`
+  - Focused optimization on analytics, rag, and setup pages
+  - Integrated API data loading and error handling
+  - Updated layout configuration
+  - Added new dependencies
+  - Compiled backend implementation checklist (including API specifications and to-do items)
+
+---
+
 ## **Roadmap**
 
-- v0.1: unified dataset interface + zero-shot embeddings + ETM baseline
-    
-- v0.2: LoRA adapter training pipeline + coherence/perplexity reports
-    
-- v0.3: DETM topic evolution + interactive visualizations
-    
-- v0.4: agent-based one-click analysis + exportable reports
-    
-- v1.0: reproducible benchmark suite (datasets, baselines, downstream tasks)
+### 📅 Current Sprint (Sprint DDL: 1.14)
+
+#### 🚀 Core Data Pipeline & NLP
+
+* [ ] **Standardized Preprocessing Pipeline** `Assignee: pjq` `DDL: 1.14`
+  * [ ] Implement data cleaning, preprocessing, tokenization, and full workflow.
+  * [ ] Package as standardized modules for production readiness.
+
+* [ ] **Model Training & Data Persistence** `Assignee: pjq` `DDL: 1.14`
+  * [ ] Train Topic Models with Embedding inputs (covering multiple datasets).
+  * [ ] Save model matrices and intermediate data required for visualization.
+
+* [ ] **Output Artifacts Research** `Assignee: pjq` `DDL: 1.14`
+  * [ ] Define specific output contents (chart types, table formats, metrics).
+
+* [ ] **Basic Visualization & Export** `Assignee: pjq` `DDL: 1.14`
+  * [ ] Implement basic plotting functionality.
+  * [ ] Implement CSV table data export.
+
+---
+
+#### 🧩 Feature Development & Integration
+
+##### 📊 Visualization & Open-Source Library Integration
+
+* [ ] **Open-Source Visualization Library Integration** `Assignee: lixin`
+  * [ ] Integrate visualization capabilities from `tmtoolkit` and `pyLDAvis`.
+  * [ ] **Ref:** [tmtoolkit docs](https://tmtoolkit.readthedocs.io/en/latest/topic_modeling.html), [pyLDAvis repo](https://github.com/bmabey/pyLDAvis).
+  * [ ] Integrate with core data pipeline (pjq's part).
+
+* [ ] **New Data Adapter** `Assignee: pjq`
+  * [ ] Ensure Pipeline can handle new input data formats.
+
+##### 🤖 AI Agent & Analysis Module
+
+* [ ] **Chart/Data Analysis Agent Development** `Assignee: pjq, lixin`
+  * [ ] Tech stack: `LangGraph` / `LangChain`.
+  * [ ] Functionality: Single-pass analysis of generated charts/tables (no multi-turn dialogue required).
+  * [ ] **Focus**: Prompt Engineering.
+  * [ ] Interface: May involve multimodal API calls.
+
+* [ ] **Agent Infrastructure** `Assignee: 李芳痕`
+  * [ ] Build Agent foundational framework.
+
+* [ ] **Conversation History Storage** `Assignee: pjq`
+  * [ ] Implement cloud storage for conversation records.
+
+* [ ] **Interpretation Feature Enhancement** `Assignee: 李国正` `Priority: Low`
+  * [ ] (Time permitting) Assist with Agent interpretation features.
+
+##### 🔌 Backend & API
+
+* [ ] **Format-free Data Interface** `Assignee: 李芳痕`
+  * [ ] Develop flexible interface supporting multiple input formats.
+
+* [ ] **Scriptable Execution Interface** `Assignee: pjq`
+  * [ ] Implement Bash-like invocation interface (receive parameters from frontend -> trigger visualization/analysis code).
+
+---
+
+#### 💻 Product & Frontend Integration
+
+* [ ] **Product Design** `Assignee: 李国正`
+  * [ ] Define overall product functionality and interaction flows.
+
+* [ ] **Requirements Documentation** `Assignee: lixin`
+  * [ ] Compile detailed functional requirements documentation.
+
+* [ ] **Frontend-Backend Integration** `Assignee: 李国正, pjq`
+  * [ ] Frontend integration after page design completion.
+  * [ ] Product-level frontend-backend logic integration.
+
+---
+
+### 📋 Long-term Roadmap
+
+- **v0.1**: unified dataset interface + zero-shot embeddings + ETM baseline
+- **v0.2**: LoRA adapter training pipeline + coherence/perplexity reports
+- **v0.3**: DETM topic evolution + interactive visualizations
+- **v0.4**: agent-based one-click analysis + exportable reports
+- **v1.0**: reproducible benchmark suite (datasets, baselines, downstream tasks)
     
 
 ---
