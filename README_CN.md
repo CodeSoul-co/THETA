@@ -296,18 +296,31 @@ python -m theta.run --config configs/default.yaml
   - NotebookLM 项目知识库已建立
   - 链接: [https://notebooklm.google.com/notebook/7af619ee-678c-4e9d-af89-482342b83e95](https://notebooklm.google.com/notebook/7af619ee-678c-4e9d-af89-482342b83e95)
 
+#### 前端开发
+- ✅ **前端页面功能完善** `Completed by: 李国正` `Date: 今日`
+  - 确定前端基本框架并实现（Next.js 框架搭建）
+  - 优化前端布局和细节动画
+  - 重点优化 analytics、rag、setup 页面
+  - 集成 API 数据加载与错误处理
+  - 更新 layout 配置，新增依赖包
+
+#### 后端集成
+- ✅ **文件上传功能集成** `Completed by: 李国正` `Date: 今日`
+  - 成功接入后端文件上传部分 dataclean 组件
+  - 测试文件上传工具并编写后端调用方法
+  - 测试成功，功能正常运行
+
+#### 部署配置
+- ✅ **Docker 部署配置** `Completed by: 李国正` `Date: 今日`
+  - 创建 Docker 配置文件
+  - 支持在实际生产环境一键部署
+  - 测试版等待权限部署到 Railway
+
 ### 🔄 进行中
 
 - 🔄 **模型训练准备** `In Progress: pjq`
   - 数据清洗模块已完成
   - 计划明天开始模型训练
-
-- 🔄 **前端页面功能完善** `In Progress: 李国正` `Date: 今日`
-  - 重点优化 analytics、rag、setup 页面
-  - 集成 API 数据加载与错误处理
-  - 更新 layout 配置
-  - 新增依赖包
-  - 编写后端实现清单（包含接口规范、待办内容等）
 
 ---
 
