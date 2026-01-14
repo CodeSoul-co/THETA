@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # DataClean API 后端
+  dataclean-api:
+    build:
+      context: ./ETM/dataclean
+      dockerfile: Dockerfile
+    container_name: dataclean-api
+    ports:
+      - "8001:8001"
+    environment:
+      - PORT=8001
+      - ALLOWED_ORIGINS=http://localhost:3000,https://yourdomain.com
+    volumes:
+      - ./ETM/dataclean/temp_uploads:/app/temp_uploads
+      - ./ETM/dataclean/temp_processed:/app/temp_processed
+    restart: unless-stopped
+    networks:
+      - theta-network
+
+  # THETA 前端
+  theta-frontend:
+    build:
+      context: ./theta-frontend3
+      dockerfile: Dockerfile
+    container_name: theta-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_DATACLEAN_API_URL=http://dataclean-api:8001
+    depends_on:
+      - dataclean-api
+    restart: unless-stopped
+    networks:
+      - theta-network
+
+networks:
+  theta-network:
+    driver: bridge
