@@ -53,6 +53,14 @@ type Message = {
   content: string
 }
 
+type ProcessingJob = {
+  id: string
+  name: string
+  sourceDataset: string
+  status: "processing" | "completed"
+  date: string
+}
+
 // Mock data for datasets
 const mockDatasets = [
   { id: "job-001", name: "客户数据集", files: 4523, size: "2.3 GB", date: "2024-01-15" },
@@ -78,6 +86,7 @@ export default function Home() {
   const [datasetName, setDatasetName] = useState("")
   const [selectedSource, setSelectedSource] = useState("")
   const [datasets, setDatasets] = useState(mockDatasets)
+  const [processingJobs, setProcessingJobs] = useState<ProcessingJob[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const [inputValue, setInputValue] = useState("")
   const [chatHistory, setChatHistory] = useState<Message[]>([])
@@ -122,6 +131,23 @@ export default function Home() {
 
   const handleSourceConfirm = () => {
     if (selectedSource) {
+      const sourceDataset = datasets.find((d) => d.id === selectedSource)
+      if (sourceDataset) {
+        const newJob: ProcessingJob = {
+          id: `processed-${Date.now()}`,
+          name: `${sourceDataset.name}_cleaned`,
+          sourceDataset: sourceDataset.name,
+          status: "processing",
+          date: new Date().toISOString().split("T")[0],
+        }
+        setProcessingJobs([...processingJobs, newJob])
+
+        // Simulate processing completion after 2 seconds
+        setTimeout(() => {
+          setProcessingJobs((prev) => prev.map((job) => (job.id === newJob.id ? { ...job, status: "completed" } : job)))
+        }, 2000)
+      }
+
       setShowSourceModal(false)
       setCurrentView("processing")
       setSelectedSource("")
@@ -160,6 +186,10 @@ export default function Home() {
     setSheetOpen(false)
   }
 
+  const handleNewProcessingTask = () => {
+    setShowSourceModal(true)
+  }
+
   const isCenterChatView = currentView === "analysis" || currentView === "visualization"
 
   return (
@@ -167,17 +197,22 @@ export default function Home() {
       <AnimatePresence mode="wait">
         {appState !== "workspace" ? (
           <motion.div
-            key="landing"
+            key="conversational"
             initial={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="h-screen"
+            className="h-screen flex flex-col"
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
           >
-            <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
-              <div className="flex items-center justify-between px-6 py-4">
+            <motion.header
+              initial={{ opacity: 0 }}
+              animate={{ opacity: appState === "chatting" ? 1 : 0 }}
+              className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200"
+              style={{ pointerEvents: appState === "chatting" ? "auto" : "none" }}
+            >
+              <div className="flex items-center justify-between px-6 h-16">
                 <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                   <SheetTrigger asChild>
                     <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
@@ -200,37 +235,33 @@ export default function Home() {
                   </SheetContent>
                 </Sheet>
 
-                <UserDropdown />
-              </div>
-            </div>
-
-            <div className="flex flex-col items-center justify-center h-screen px-8">
-              <div className="max-w-2xl w-full flex flex-col items-center gap-16">
-                <motion.div
-                  layout
-                  initial={{ y: 0 }}
-                  animate={{
-                    y: appState === "chatting" ? -150 : 0,
-                    scale: appState === "chatting" ? 0.7 : 1,
-                  }}
-                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                  className="text-center"
-                >
-                  <h1
-                    className={`font-bold text-blue-600 tracking-tight transition-all ${
-                      appState === "chatting" ? "text-4xl" : "text-7xl mb-2"
-                    }`}
+                {appState === "chatting" && (
+                  <motion.h1
+                    layoutId="app-logo"
+                    className="text-xl font-bold text-blue-600 tracking-tight absolute left-1/2 -translate-x-1/2"
                   >
                     THETA
-                  </h1>
-                  {appState === "idle" && <p className="text-slate-500 text-lg">智能分析平台</p>}
-                </motion.div>
+                  </motion.h1>
+                )}
+
+                <UserDropdown />
+              </div>
+            </motion.header>
+
+            <div className="flex-1 flex flex-col items-center justify-center px-8">
+              <div className="max-w-2xl w-full flex flex-col items-center gap-16">
+                {appState === "idle" && (
+                  <motion.div layoutId="app-logo" className="text-center">
+                    <h1 className="text-7xl font-bold text-blue-600 tracking-tight mb-2">THETA</h1>
+                    <p className="text-slate-500 text-lg">智能分析平台</p>
+                  </motion.div>
+                )}
 
                 {appState === "chatting" && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="w-full max-h-[40vh] overflow-y-auto space-y-4 px-4"
+                    className="w-full max-h-[50vh] overflow-y-auto space-y-4 px-4 mt-20"
                   >
                     {chatHistory.map((message) => (
                       <motion.div
@@ -253,7 +284,7 @@ export default function Home() {
                   </motion.div>
                 )}
 
-                <motion.div layout layoutId="chat-input-container" className="relative w-full">
+                <div className="w-full">
                   <ChatInput
                     value={inputValue}
                     onChange={setInputValue}
@@ -262,7 +293,7 @@ export default function Home() {
                     isDragging={isDragging}
                     isLanding
                   />
-                </motion.div>
+                </div>
 
                 {appState === "idle" && (
                   <motion.div
@@ -290,9 +321,9 @@ export default function Home() {
         ) : (
           <motion.div
             key="workspace"
-            initial={{ opacity: 0, scale: 1.02 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
             className="flex h-screen overflow-hidden"
           >
             <motion.aside
@@ -307,10 +338,10 @@ export default function Home() {
             >
               <div className="p-6 border-b border-slate-200 flex items-center justify-between">
                 {!sidebarCollapsed && (
-                  <div>
+                  <motion.div layoutId="app-logo">
                     <h1 className="text-3xl font-bold text-blue-600">THETA</h1>
                     <p className="text-xs text-slate-500 mt-1">智能分析平台</p>
-                  </div>
+                  </motion.div>
                 )}
                 <button
                   onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -385,7 +416,7 @@ export default function Home() {
                 className="flex-1 bg-slate-50 overflow-auto"
               >
                 <AnimatePresence mode="wait">
-                  {currentView === "data" && <DataView key="data" datasets={datasets} />}
+                  {currentView === "data" && <DataView key="data" datasets={datasets} onUpload={handleFileUpload} />}
                   {currentView === "processing" && <DataProcessingView key="processing" />}
                   {currentView === "projects" && <PlaceholderView key="projects" title="我的项目" />}
                   {currentView === "report" && <PlaceholderView key="report" title="智能报告" />}
@@ -396,7 +427,6 @@ export default function Home() {
               </motion.div>
 
               <motion.aside
-                layoutId="chat-input-container"
                 initial={{ x: 100, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.2, type: "spring", damping: 25, stiffness: 200 }}
@@ -416,19 +446,19 @@ export default function Home() {
                   onFileUpload={handleFileUpload}
                 />
               </motion.aside>
-            </div>
 
-            <motion.aside
-              initial={{ x: 100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.2, type: "spring", damping: 25, stiffness: 200 }}
-              className="w-16 bg-white border-l border-slate-200 flex flex-col items-center py-4 justify-between flex-shrink-0"
-            >
-              <UserDropdown />
-              <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-                <Settings className="w-5 h-5 text-slate-600" />
-              </button>
-            </motion.aside>
+              <motion.aside
+                initial={{ x: 100, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.2, type: "spring", damping: 25, stiffness: 200 }}
+                className="w-16 bg-white border-l border-slate-200 flex flex-col items-center py-4 justify-between flex-shrink-0"
+              >
+                <UserDropdown />
+                <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+                  <Settings className="w-5 h-5 text-slate-600" />
+                </button>
+              </motion.aside>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -688,12 +718,18 @@ function NavItem({
   )
 }
 
-function DataView({ datasets }: { datasets: typeof mockDatasets }) {
+function DataView({ datasets, onUpload }: { datasets: typeof mockDatasets; onUpload: () => void }) {
   return (
     <div className="p-8">
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-slate-900 mb-2">我的数据</h2>
-        <p className="text-slate-600">管理和查看您的数据集</p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold text-slate-900 mb-2">我的数据</h2>
+          <p className="text-slate-600">管理和查看您的数据集</p>
+        </div>
+        <Button onClick={onUpload} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+          <Upload className="w-4 h-4" />
+          上传数据集
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -727,7 +763,7 @@ function DataView({ datasets }: { datasets: typeof mockDatasets }) {
   )
 }
 
-function ProcessingView({ onNewTask }: { onNewTask: () => void }) {
+function ProcessingView({ jobs, onNewTask }: { jobs: ProcessingJob[]; onNewTask: () => void }) {
   return (
     <div className="p-8">
       <div className="mb-6 flex items-center justify-between">
@@ -741,19 +777,55 @@ function ProcessingView({ onNewTask }: { onNewTask: () => void }) {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
+      {jobs.length === 0 ? (
         <Card className="border border-slate-200 bg-white p-8 rounded-xl text-center">
           <div className="flex flex-col items-center gap-4 py-8">
             <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center">
               <FileCog className="w-8 h-8 text-slate-400" />
             </div>
             <div>
-              <p className="text-slate-500 mb-2">暂无处理任务</p>
+              <p className="text-slate-500 mb-2">暂无处理记录</p>
               <p className="text-sm text-slate-400">点击上方按钮创建新的数据处理任务</p>
             </div>
           </div>
         </Card>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {jobs.map((job, index) => (
+            <motion.div
+              key={job.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <Card className="border border-slate-200 bg-white hover:shadow-lg transition-all cursor-pointer p-6 rounded-xl">
+                <div className="flex flex-col gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-green-600 flex items-center justify-center">
+                    <FileCog className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 text-lg mb-1">{job.name}</h3>
+                    <p className="text-sm text-slate-500">源数据: {job.sourceDataset}</p>
+                  </div>
+                  <div className="pt-3 border-t border-slate-100 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-slate-600">状态:</p>
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${
+                          job.status === "completed" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
+                        }`}
+                      >
+                        {job.status === "completed" ? "已完成" : "处理中..."}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600">创建日期: {job.date}</p>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
