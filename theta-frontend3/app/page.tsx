@@ -417,7 +417,9 @@ export default function Home() {
               >
                 <AnimatePresence mode="wait">
                   {currentView === "data" && <DataView key="data" datasets={datasets} onUpload={handleFileUpload} />}
-                  {currentView === "processing" && <DataProcessingView key="processing" />}
+                  {currentView === "processing" && (
+                    <ProcessingView key="processing" jobs={processingJobs} onNewTask={handleNewProcessingTask} />
+                  )}
                   {currentView === "projects" && <PlaceholderView key="projects" title="我的项目" />}
                   {currentView === "report" && <PlaceholderView key="report" title="智能报告" />}
                   {currentView === "tasks" && <PlaceholderView key="tasks" title="任务中心" />}
@@ -719,6 +721,29 @@ function NavItem({
 }
 
 function DataView({ datasets, onUpload }: { datasets: typeof mockDatasets; onUpload: () => void }) {
+  const [showUploadView, setShowUploadView] = useState(false)
+
+  if (showUploadView) {
+    return (
+      <div className="p-8">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold text-slate-900 mb-2">上传数据</h2>
+            <p className="text-slate-600">上传文件进行文本清洗和格式转换</p>
+          </div>
+          <Button
+            onClick={() => setShowUploadView(false)}
+            variant="outline"
+            className="gap-2"
+          >
+            返回数据列表
+          </Button>
+        </div>
+        <DataProcessingView />
+      </div>
+    )
+  }
+
   return (
     <div className="p-8">
       <div className="mb-6 flex items-center justify-between">
@@ -726,7 +751,7 @@ function DataView({ datasets, onUpload }: { datasets: typeof mockDatasets; onUpl
           <h2 className="text-2xl font-semibold text-slate-900 mb-2">我的数据</h2>
           <p className="text-slate-600">管理和查看您的数据集</p>
         </div>
-        <Button onClick={onUpload} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+        <Button onClick={() => setShowUploadView(true)} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
           <Upload className="w-4 h-4" />
           上传数据集
         </Button>
