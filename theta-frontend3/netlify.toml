@@ -1,0 +1,17 @@
+[build]
+  command = "pnpm install && pnpm build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  PNPM_VERSION = "8"
+
+# Next.js 特定配置
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# 重定向规则（Next.js 会自动处理，但保留作为备用）
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
