@@ -15,6 +15,10 @@ RUN pnpm install --frozen-lockfile
 # 复制源代码
 COPY . .
 
+# 构建参数（API URL）
+ARG NEXT_PUBLIC_DATACLEAN_API_URL=http://dataclean-api:8001
+ENV NEXT_PUBLIC_DATACLEAN_API_URL=$NEXT_PUBLIC_DATACLEAN_API_URL
+
 # 构建应用
 RUN pnpm build
 
@@ -35,8 +39,16 @@ COPY --from=base /app/.next ./.next
 COPY --from=base /app/public ./public
 COPY --from=base /app/node_modules ./node_modules
 
+# 创建非 root 用户
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+USER nextjs
+
 # 暴露端口
 EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 # 启动命令
 CMD ["pnpm", "start"]
