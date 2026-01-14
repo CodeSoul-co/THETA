@@ -334,6 +334,40 @@ export default function Home() {
 
   // 存储实际上传的文件（用于 API 调用）
   const [uploadedFilesMap, setUploadedFilesMap] = useState<Map<string, File[]>>(new Map())
+  
+  // 删除数据集相关状态
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [datasetToDelete, setDatasetToDelete] = useState<string | null>(null)
+  
+  // 删除数据集
+  const handleDeleteDataset = useCallback((datasetId: string) => {
+    setDatasetToDelete(datasetId)
+    setShowDeleteConfirm(true)
+  }, [])
+  
+  // 确认删除数据集
+  const confirmDeleteDataset = useCallback(() => {
+    if (datasetToDelete) {
+      // 删除数据集
+      setDatasets(prev => prev.filter(d => d.id !== datasetToDelete))
+      
+      // 删除关联的文件映射
+      setUploadedFilesMap(prev => {
+        const newMap = new Map(prev)
+        newMap.delete(datasetToDelete)
+        return newMap
+      })
+      
+      // 如果当前查看的是被删除的数据集，返回列表视图
+      if (selectedDatasetId === datasetToDelete) {
+        setSelectedDatasetId(null)
+      }
+      
+      // 清理状态
+      setDatasetToDelete(null)
+      setShowDeleteConfirm(false)
+    }
+  }, [datasetToDelete, selectedDatasetId])
 
   const handleSourceConfirm = async () => {
     if (selectedSource) {
@@ -844,6 +878,7 @@ export default function Home() {
                           }
                         }, 0)
                       }}
+                      onDeleteDataset={handleDeleteDataset}
                     />
                   )}
                   {currentView === "processing" && (
@@ -1072,6 +1107,48 @@ export default function Home() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* 删除数据集确认对话框 */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="sm:max-w-md bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-slate-900">确认删除数据集</DialogTitle>
+            <DialogDescription className="text-slate-500">
+              此操作将永久删除该数据集及其所有文件，且无法恢复。您确定要继续吗？
+            </DialogDescription>
+          </DialogHeader>
+          {datasetToDelete && (
+            <div className="py-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red-800 font-medium">
+                  数据集: {datasets.find(d => d.id === datasetToDelete)?.name || '未知'}
+                </p>
+                <p className="text-xs text-red-600 mt-1">
+                  包含 {datasets.find(d => d.id === datasetToDelete)?.files.length || 0} 个文件
+                </p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowDeleteConfirm(false)
+                setDatasetToDelete(null)
+              }} 
+              className="border-slate-300"
+            >
+              取消
+            </Button>
+            <Button 
+              onClick={confirmDeleteDataset} 
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              确认删除
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -1253,6 +1330,7 @@ function DataView({
   onAddFiles,
   onRemoveFile,
   onStartProcessing,
+  onDeleteDataset,
 }: { 
   datasets: Dataset[]
   onUpload: () => void
@@ -1261,6 +1339,7 @@ function DataView({
   onAddFiles: (datasetId: string, files: File[]) => void
   onRemoveFile: (datasetId: string, fileId: string) => void
   onStartProcessing: (datasetId: string) => void
+  onDeleteDataset: (datasetId: string) => void
 }) {
   const [isDraggingInDetail, setIsDraggingInDetail] = useState(false)
   
@@ -1333,10 +1412,20 @@ function DataView({
               </p>
             </div>
           </div>
-          <Button onClick={handleAddFilesClick} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
-            <Plus className="w-4 h-4" />
-            添加文件
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleAddFilesClick} className="bg-blue-600 hover:bg-blue-700 text-white gap-2">
+              <Plus className="w-4 h-4" />
+              添加文件
+            </Button>
+            <Button
+              onClick={() => onDeleteDataset(selectedDataset.id)}
+              variant="outline"
+              className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              删除数据集
+            </Button>
+          </div>
         </div>
 
         {/* 拖拽提示 */}
@@ -1469,9 +1558,22 @@ function DataView({
               transition={{ delay: index * 0.1 }}
             >
               <Card 
-                className="border border-slate-200 bg-white hover:shadow-lg hover:border-blue-200 transition-all cursor-pointer p-6 rounded-xl"
+                className="border border-slate-200 bg-white hover:shadow-lg hover:border-blue-200 transition-all cursor-pointer p-6 rounded-xl relative group"
                 onClick={() => onSelectDataset(dataset.id)}
               >
+                {/* 删除按钮 */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDeleteDataset(dataset.id)
+                  }}
+                  className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-red-500 hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+                
                 <div className="flex flex-col gap-4">
                   <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center">
                     <Folder className="w-8 h-8 text-white" />
