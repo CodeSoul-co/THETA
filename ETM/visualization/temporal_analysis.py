@@ -1,7 +1,12 @@
-"""
-Temporal Topic Analysis
+"""Temporal Topic Analysis
 
 Visualize how topics evolve over time when timestamps are available.
+
+Supports:
+- Document volume trends (Tab 2 Chart A)
+- Topic evolution line charts (Tab 2 Chart B)
+- Topic Sankey diagrams (Tab 3)
+- Temporal heatmaps and stacked area charts
 """
 
 import numpy as np
@@ -12,6 +17,15 @@ from typing import List, Dict, Tuple, Optional, Union
 from datetime import datetime
 import logging
 import os
+import json
+
+# Try to import plotly for Sankey diagrams
+try:
+    import plotly.graph_objects as go
+    PLOTLY_AVAILABLE = True
+except ImportError:
+    PLOTLY_AVAILABLE = False
+    logging.warning("Plotly not available. Install with 'pip install plotly' for Sankey diagrams")
 
 logger = logging.getLogger(__name__)
 
@@ -86,50 +100,63 @@ class TemporalTopicAnalyzer:
     def compute_temporal_topic_distribution(
         self,
         time_bins: int = 10,
-        aggregation: str = 'mean'
+        aggregation: str = 'mean',
+        freq: Optional[str] = None
     ) -> Tuple[pd.DataFrame, List[str]]:
         """
         Compute topic distribution over time bins.
         
         Args:
-            time_bins: Number of time bins
+            time_bins: Number of time bins (used if freq is None)
             aggregation: Aggregation method ('mean', 'sum', 'count')
+            freq: Time frequency for grouping ('Y'=year, 'M'=month, 'Q'=quarter, 'W'=week)
+                  If provided, overrides time_bins
             
         Returns:
             (DataFrame with temporal distribution, list of time labels)
         """
-        # Create time bins
+        # Create DataFrame
         df = pd.DataFrame({
             'timestamp': self.timestamps,
             **{f'topic_{k}': self.theta[:, k] for k in range(self.num_topics)}
         })
         
-        # Bin by time
-        df['time_bin'] = pd.cut(df['timestamp'], bins=time_bins, labels=False)
-        
-        # Aggregate
         topic_cols = [f'topic_{k}' for k in range(self.num_topics)]
         
+        # Use frequency-based grouping if freq is provided
+        if freq is not None:
+            # Convert to period for grouping
+            df['period'] = df['timestamp'].dt.to_period(freq)
+            group_col = 'period'
+        else:
+            # Bin by equal time intervals
+            df['time_bin'] = pd.cut(df['timestamp'], bins=time_bins, labels=False)
+            group_col = 'time_bin'
+        
+        # Aggregate
         if aggregation == 'mean':
-            temporal_dist = df.groupby('time_bin')[topic_cols].mean()
+            temporal_dist = df.groupby(group_col)[topic_cols].mean()
         elif aggregation == 'sum':
-            temporal_dist = df.groupby('time_bin')[topic_cols].sum()
+            temporal_dist = df.groupby(group_col)[topic_cols].sum()
         elif aggregation == 'count':
             # Count documents where topic is dominant
             for k in range(self.num_topics):
                 df[f'dominant_{k}'] = (df[topic_cols].idxmax(axis=1) == f'topic_{k}').astype(int)
             dominant_cols = [f'dominant_{k}' for k in range(self.num_topics)]
-            temporal_dist = df.groupby('time_bin')[dominant_cols].sum()
+            temporal_dist = df.groupby(group_col)[dominant_cols].sum()
             temporal_dist.columns = topic_cols
         else:
             raise ValueError(f"Unknown aggregation: {aggregation}")
         
         # Get time labels
-        time_ranges = df.groupby('time_bin')['timestamp'].agg(['min', 'max'])
-        time_labels = [
-            f"{row['min'].strftime('%Y-%m-%d')} to {row['max'].strftime('%Y-%m-%d')}"
-            for _, row in time_ranges.iterrows()
-        ]
+        if freq is not None:
+            time_labels = [str(p) for p in temporal_dist.index]
+        else:
+            time_ranges = df.groupby(group_col)['timestamp'].agg(['min', 'max'])
+            time_labels = [
+                f"{row['min'].strftime('%Y-%m-%d')} to {row['max'].strftime('%Y-%m-%d')}"
+                for _, row in time_ranges.iterrows()
+            ]
         
         return temporal_dist, time_labels
     
@@ -440,6 +467,230 @@ class TemporalTopicAnalyzer:
             logger.info(f"Temporal report saved to {output_path}")
         
         return report
+    
+    def plot_document_volume(
+        self,
+        freq: str = 'M',
+        filename: Optional[str] = None
+    ) -> plt.Figure:
+        """
+        Plot document volume over time (Tab 2 Chart A).
+        
+        Args:
+            freq: Time frequency ('Y'=year, 'M'=month, 'Q'=quarter, 'W'=week)
+            filename: Output filename
+            
+        Returns:
+            Figure
+        """
+        df = pd.DataFrame({'timestamp': self.timestamps})
+        df['period'] = df['timestamp'].dt.to_period(freq)
+        volume = df.groupby('period').size()
+        
+        fig, ax = plt.subplots(figsize=self.figsize)
+        
+        x_labels = [str(p) for p in volume.index]
+        x_pos = range(len(volume))
+        
+        # Line plot with markers
+        ax.plot(x_pos, volume.values, marker='o', linewidth=2, markersize=8, color='#2E86AB')
+        ax.fill_between(x_pos, volume.values, alpha=0.3, color='#2E86AB')
+        
+        # Add value labels on points
+        for i, (x, y) in enumerate(zip(x_pos, volume.values)):
+            ax.annotate(f'{y}', (x, y), textcoords="offset points", 
+                       xytext=(0, 10), ha='center', fontsize=9)
+        
+        ax.set_title('Document Volume Over Time', fontsize=16, fontweight='bold')
+        ax.set_xlabel('Time Period', fontsize=12)
+        ax.set_ylabel('Number of Documents', fontsize=12)
+        ax.set_xticks(x_pos)
+        ax.set_xticklabels(x_labels, rotation=45, ha='right')
+        ax.grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        return self._save_or_show(fig, filename)
+    
+    def plot_topic_sankey(
+        self,
+        num_periods: int = 3,
+        top_k_topics: int = 8,
+        min_flow: float = 0.01,
+        filename: Optional[str] = None
+    ) -> Optional[str]:
+        """
+        Plot topic evolution Sankey diagram (Tab 3).
+        
+        Shows how topics flow/transition between time periods.
+        
+        Args:
+            num_periods: Number of time periods to divide data into
+            top_k_topics: Number of top topics to show
+            min_flow: Minimum flow value to display (filters noise)
+            filename: Output filename (should be .html)
+            
+        Returns:
+            Path to saved HTML file, or None if plotly not available
+        """
+        if not PLOTLY_AVAILABLE:
+            logger.warning("Plotly not available. Cannot generate Sankey diagram.")
+            return None
+        
+        # Divide timestamps into periods
+        df = pd.DataFrame({
+            'timestamp': self.timestamps,
+            **{f'topic_{k}': self.theta[:, k] for k in range(self.num_topics)}
+        })
+        df['period'] = pd.cut(df['timestamp'], bins=num_periods, labels=[f'Period {i+1}' for i in range(num_periods)])
+        
+        topic_cols = [f'topic_{k}' for k in range(self.num_topics)]
+        
+        # Get top topics by overall average
+        avg_props = self.theta.mean(axis=0)
+        top_topic_indices = np.argsort(-avg_props)[:top_k_topics]
+        
+        # Calculate topic proportions per period
+        period_topic_props = df.groupby('period')[topic_cols].mean()
+        
+        # Build Sankey nodes and links
+        nodes = []
+        node_colors = []
+        color_palette = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', 
+                        '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+        
+        # Create nodes for each period-topic combination
+        node_map = {}
+        for period_idx, period in enumerate(period_topic_props.index):
+            for topic_idx in top_topic_indices:
+                node_name = f"{period}\n{self._get_topic_label(topic_idx, max_words=2)}"
+                node_map[(period_idx, topic_idx)] = len(nodes)
+                nodes.append(node_name)
+                node_colors.append(color_palette[topic_idx % len(color_palette)])
+        
+        # Create links between consecutive periods
+        sources = []
+        targets = []
+        values = []
+        link_colors = []
+        
+        periods = list(period_topic_props.index)
+        for period_idx in range(len(periods) - 1):
+            for topic_idx in top_topic_indices:
+                # Flow from this period to next period (same topic)
+                source_node = node_map[(period_idx, topic_idx)]
+                target_node = node_map[(period_idx + 1, topic_idx)]
+                
+                # Value is the average of proportions in both periods
+                val1 = period_topic_props.iloc[period_idx][f'topic_{topic_idx}']
+                val2 = period_topic_props.iloc[period_idx + 1][f'topic_{topic_idx}']
+                flow_value = (val1 + val2) / 2
+                
+                if flow_value >= min_flow:
+                    sources.append(source_node)
+                    targets.append(target_node)
+                    values.append(flow_value)
+                    link_colors.append(color_palette[topic_idx % len(color_palette)])
+        
+        # Create Sankey diagram
+        fig = go.Figure(data=[go.Sankey(
+            node=dict(
+                pad=15,
+                thickness=20,
+                line=dict(color="black", width=0.5),
+                label=nodes,
+                color=node_colors
+            ),
+            link=dict(
+                source=sources,
+                target=targets,
+                value=values,
+                color=[c.replace(')', ', 0.4)').replace('rgb', 'rgba') if 'rgb' in c 
+                       else c + '66' for c in link_colors]
+            )
+        )])
+        
+        fig.update_layout(
+            title_text="Topic Evolution Sankey Diagram",
+            font_size=12,
+            height=600,
+            width=1000
+        )
+        
+        # Save to HTML
+        if filename and self.output_dir:
+            filepath = os.path.join(self.output_dir, filename)
+            fig.write_html(filepath)
+            logger.info(f"Sankey diagram saved to {filepath}")
+            return filepath
+        else:
+            fig.show()
+            return None
+    
+    def get_visualization_data_for_frontend(
+        self,
+        freq: str = 'M',
+        top_k_topics: int = 10
+    ) -> Dict:
+        """
+        Get all temporal visualization data in a format suitable for frontend.
+        
+        Returns:
+            Dictionary with all temporal analysis data for API response
+        """
+        # Document volume data
+        df = pd.DataFrame({'timestamp': self.timestamps})
+        df['period'] = df['timestamp'].dt.to_period(freq)
+        volume = df.groupby('period').size()
+        
+        volume_data = {
+            'labels': [str(p) for p in volume.index],
+            'values': volume.values.tolist(),
+            'chart_type': 'line'
+        }
+        
+        # Topic evolution data
+        temporal_dist, time_labels = self.compute_temporal_topic_distribution(freq=freq)
+        
+        # Get top topics
+        avg_props = temporal_dist.mean()
+        top_topics = avg_props.nlargest(top_k_topics).index.tolist()
+        
+        evolution_data = {
+            'labels': time_labels,
+            'series': []
+        }
+        
+        for col in top_topics:
+            topic_idx = int(col.split('_')[1])
+            evolution_data['series'].append({
+                'topic_id': topic_idx,
+                'topic_name': self._get_topic_label(topic_idx),
+                'values': temporal_dist[col].values.tolist()
+            })
+        
+        # Topic trends
+        trends = {}
+        x = np.arange(len(temporal_dist))
+        for col in temporal_dist.columns:
+            topic_idx = int(col.split('_')[1])
+            y = temporal_dist[col].values
+            if len(y) > 1:
+                slope = np.polyfit(x, y, 1)[0]
+                trends[topic_idx] = {
+                    'direction': 'rising' if slope > 0 else 'falling',
+                    'slope': float(slope),
+                    'avg_proportion': float(np.mean(y))
+                }
+        
+        return {
+            'document_volume': volume_data,
+            'topic_evolution': evolution_data,
+            'topic_trends': trends,
+            'time_range': {
+                'start': str(self.timestamps.min()),
+                'end': str(self.timestamps.max())
+            }
+        }
 
 
 def analyze_temporal_topics(
@@ -470,16 +721,21 @@ def analyze_temporal_topics(
     )
     
     # Generate visualizations
+    analyzer.plot_document_volume(freq='M', filename="document_volume.png")
     analyzer.plot_topic_evolution(time_bins, filename="topic_evolution.png")
     analyzer.plot_topic_heatmap(time_bins, filename="topic_heatmap.png")
     analyzer.plot_topic_stacked_area(time_bins, filename="topic_stacked_area.png")
     analyzer.plot_topic_trends(time_bins, filename="topic_trends.png")
+    analyzer.plot_topic_sankey(num_periods=3, filename="topic_sankey.html")
     
     # Generate report
     report = analyzer.generate_temporal_report(
         time_bins,
         output_path=os.path.join(output_dir, "temporal_report.json") if output_dir else None
     )
+    
+    # Add frontend data to report
+    report['frontend_data'] = analyzer.get_visualization_data_for_frontend()
     
     return report
 
