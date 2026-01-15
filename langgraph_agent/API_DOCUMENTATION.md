@@ -150,6 +150,28 @@ Get detailed dataset info.
 
 **Response:** Same as above, single object.
 
+#### GET /api/datasets/{dataset_name}/columns ⭐ NEW
+Get column information with auto-detected column types. Used for column mapping UI.
+
+**Response:**
+```json
+{
+  "all_columns": ["id", "content", "publish_date", "province", "category"],
+  "text_columns": [{"name": "content", "dtype": "object", "sample_values": ["..."], "unique_count": 1000}],
+  "time_columns": [{"name": "publish_date", "dtype": "object", "sample_values": ["2023-01-15"]}],
+  "dimension_columns": [{"name": "province", "dtype": "object", "sample_values": ["北京", "上海"]}],
+  "label_columns": [],
+  "other_columns": [...],
+  "auto_detected": {
+    "text_column": "content",
+    "time_column": "publish_date",
+    "dimension_column": "province"
+  }
+}
+```
+
+**Frontend Usage:** Display auto-detected results, let user confirm or modify column mappings.
+
 ---
 
 ### Results
@@ -239,6 +261,115 @@ List visualization files.
 
 #### GET /api/results/{dataset}/{mode}/visualizations/{filename}
 Download/view a visualization file.
+
+#### GET /api/results/{dataset}/{mode}/topic-overview ⭐ NEW
+Get structured topic overview data for frontend rendering (Tab 1).
+
+**Query Parameters:**
+- `top_k` (int, default=20): Number of topics to return
+
+**Response:**
+```json
+{
+  "topics": [
+    {
+      "id": 0,
+      "name": "Topic 0",
+      "keywords": [
+        {"word": "政策", "weight": 0.08},
+        {"word": "发展", "weight": 0.06}
+      ],
+      "proportion": 0.12,
+      "document_count": 1500,
+      "wordcloud_path": "topic_words_xxx_topic0.png"
+    }
+  ],
+  "total_documents": 10000,
+  "num_topics": 20
+}
+```
+
+#### GET /api/results/{dataset}/{mode}/temporal-analysis ⭐ NEW
+Get temporal/time-series analysis data (Tab 2/3).
+
+**Query Parameters:**
+- `freq` (string, default="Y"): Aggregation frequency - "Y" (year), "M" (month), "Q" (quarter)
+- `top_k` (int, default=10): Number of top topics to include
+
+**Success Response:**
+```json
+{
+  "available": true,
+  "document_volume": {
+    "labels": ["2019", "2020", "2021", "2022", "2023"],
+    "values": [1200, 1500, 1800, 2000, 2200]
+  },
+  "topic_evolution": {
+    "labels": ["2019", "2020", "2021", "2022", "2023"],
+    "series": [
+      {"topic_id": 0, "name": "科技创新", "values": [0.12, 0.15, 0.18, 0.20, 0.22]},
+      {"topic_id": 1, "name": "金融服务", "values": [0.10, 0.11, 0.12, 0.11, 0.10]}
+    ]
+  },
+  "topic_trends": {
+    "rising": [{"topic_id": 0, "name": "科技创新", "change": 0.10}],
+    "falling": [{"topic_id": 5, "name": "传统产业", "change": -0.05}]
+  }
+}
+```
+
+**Unavailable Response (when data lacks timestamp column):**
+```json
+{
+  "available": false,
+  "message": "📊 时序分析功能",
+  "reason": "当前数据集未包含时间列。",
+  "suggestions": [
+    "在原始数据中添加时间列（如 publish_date）",
+    "重新上传数据并在"列映射"中选择时间列"
+  ],
+  "available_columns": ["id", "content", "label"],
+  "actions": [
+    {"label": "跳过", "action": "skip"},
+    {"label": "去添加", "action": "add_column"}
+  ]
+}
+```
+
+**Frontend Handling:** Check `available` field. If `false`, display friendly message with suggestions.
+
+#### GET /api/results/{dataset}/{mode}/dimension-analysis ⭐ NEW
+Get dimension/spatial analysis data (Tab 4).
+
+**Query Parameters:**
+- `top_k_topics` (int, default=10): Number of topics
+- `top_k_dimensions` (int, default=20): Number of dimension values
+
+**Success Response:**
+```json
+{
+  "available": true,
+  "heatmap_data": {
+    "x_labels": ["Topic 0", "Topic 1", "Topic 2"],
+    "y_labels": ["北京", "上海", "广东", "浙江"],
+    "values": [
+      [0.15, 0.10, 0.08],
+      [0.12, 0.18, 0.05],
+      [0.10, 0.12, 0.15],
+      [0.08, 0.09, 0.20]
+    ]
+  },
+  "dimension_stats": {
+    "total_dimensions": 31,
+    "top_dimensions": [
+      {"name": "北京", "count": 1500, "dominant_topic": 0},
+      {"name": "上海", "count": 1200, "dominant_topic": 1}
+    ]
+  }
+}
+```
+
+**Unavailable Response:** Same structure as temporal-analysis with `available: false`.
 
 ---
 
