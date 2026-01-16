@@ -14,8 +14,10 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# Python lib 目录 (排除前端的 lib)
+/lib/
 lib64/
+!theta-frontend3/lib/
 parts/
 sdist/
 var/
