@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import { motion } from "framer-motion"
 import { useRouter, usePathname } from "next/navigation"
 import {
@@ -18,6 +18,7 @@ import {
   BrainCircuit,
   Paperclip,
   Send,
+  ListTodo,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -32,7 +33,8 @@ import {
 const workflowSteps = [
   { id: "data", label: "数据管理", icon: Database, description: "上传和管理数据集" },
   { id: "processing", label: "数据清洗", icon: FileCog, description: "清洗和预处理数据" },
-  { id: "training", label: "模型训练", icon: GraduationCap, description: "训练主题模型" },
+  { id: "embedding", label: "向量化", icon: GraduationCap, description: "生成 BOW 和 Embeddings" },
+  { id: "tasks", label: "任务中心", icon: ListTodo, description: "创建和管理训练任务" },
   { id: "results", label: "分析结果", icon: FileCheck, description: "查看分析结果" },
   { id: "visualizations", label: "可视化", icon: PieChart, description: "数据可视化展示" },
 ]
@@ -117,6 +119,9 @@ function ChatInterface({
   onInputChange: (value: string) => void
   onSend: () => void
 }) {
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
@@ -124,9 +129,16 @@ function ChatInterface({
     }
   }
 
+  // 自动滚动到底部
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [messages])
+
   return (
     <>
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center space-y-3">
@@ -137,21 +149,24 @@ function ChatInterface({
             </div>
           </div>
         ) : (
-          messages.map((message) => (
-            <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                  message.role === "user"
-                    ? "bg-blue-600 text-white"
-                    : message.role === "system"
-                    ? "bg-amber-50 text-amber-900 border border-amber-200"
-                    : "bg-slate-100 text-slate-900 border border-slate-200"
-                }`}
-              >
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+          <>
+            {messages.map((message) => (
+              <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                    message.role === "user"
+                      ? "bg-blue-600 text-white"
+                      : message.role === "system"
+                      ? "bg-amber-50 text-amber-900 border border-amber-200"
+                      : "bg-slate-100 text-slate-900 border border-slate-200"
+                  }`}
+                >
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                </div>
               </div>
-            </div>
-          ))
+            ))}
+            <div ref={messagesEndRef} />
+          </>
         )}
       </div>
 
@@ -188,17 +203,11 @@ export function WorkspaceLayout({ children, title, description, currentStep }: W
   const [chatHistory, setChatHistory] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState("")
 
-  // 根据路径确定当前步骤
-  const activeStep = currentStep || (() => {
-    if (pathname === "/training") return "training"
-    if (pathname === "/results") return "results"
-    if (pathname === "/visualizations") return "visualizations"
-    return "data"
-  })()
+  // 根据路径确定当前步骤（所有视图都在主页面通过查询参数切换）
+  const activeStep = currentStep || "data"
 
   const handleNavigation = useCallback((step: typeof workflowSteps[0]) => {
-    // 导航到主页面并切换视图
-    // 使用 router.push 因为可能从独立页面跳转
+    // 所有视图都通过查询参数在主页面切换
     router.push(`/?view=${step.id}`)
   }, [router])
 

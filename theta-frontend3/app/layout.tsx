@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Analytics } from "@vercel/analytics/next"
+import { AuthProvider } from "@/contexts/auth-context"
 import "./globals.css"
 
 // 使用 CSS 变量定义字体，避免构建时访问 Google Fonts
@@ -37,7 +38,9 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className={`${fontClassName} antialiased`}>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         <Analytics />
       </body>
     </html>

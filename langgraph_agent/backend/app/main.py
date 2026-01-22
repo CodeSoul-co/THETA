@@ -14,10 +14,15 @@ from fastapi.staticfiles import StaticFiles
 
 # 动态添加 ETM 路径
 from .core.config import settings
-sys.path.insert(0, str(settings.ETM_DIR))
+from .core.etm_paths import setup_etm_paths
+
+# 设置 ETM 路径（会自动添加 ETM 目录和父目录）
+setup_etm_paths()
 
 from .api.routes import router
 from .api.websocket import websocket_router
+from .api.auth import router as auth_router
+from .api.scripts import router as scripts_router
 from .core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -50,14 +55,17 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS + ["*"],
+    # 开发环境允许所有来源，生产环境只允许配置的域名
+    allow_origins=settings.CORS_ORIGINS if not settings.DEBUG else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(router, prefix="/api")
 app.include_router(websocket_router, prefix="/api")
+app.include_router(scripts_router, prefix="/api")
 
 # 挂载静态文件目录（如果存在）
 if settings.RESULT_DIR.exists():

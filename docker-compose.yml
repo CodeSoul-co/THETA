@@ -1,6 +1,33 @@
 version: '3.8'
 
 services:
+  # ETM Agent API 后端（主后端）
+  etm-agent-api:
+    build:
+      context: ./langgraph_agent/backend
+      dockerfile: Dockerfile
+    container_name: etm-agent-api
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      - QWEN_API_KEY=${QWEN_API_KEY:-}
+      - SECRET_KEY=${SECRET_KEY:-change-this-secret-key}
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///./users.db}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000}
+    volumes:
+      - etm-data:/app/data
+      - etm-result:/app/result
+      - etm-checkpoints:/app/checkpoints
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - theta-network
+
   # DataClean API 后端
   dataclean-api:
     build:
@@ -31,14 +58,18 @@ services:
       context: ./theta-frontend3
       dockerfile: Dockerfile
       args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
         - NEXT_PUBLIC_DATACLEAN_API_URL=${NEXT_PUBLIC_DATACLEAN_API_URL:-http://localhost:8001}
     container_name: theta-frontend
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     environment:
       - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://etm-agent-api:8000
       - NEXT_PUBLIC_DATACLEAN_API_URL=http://dataclean-api:8001
     depends_on:
+      etm-agent-api:
+        condition: service_healthy
       dataclean-api:
         condition: service_healthy
     restart: unless-stopped
@@ -48,6 +79,9 @@ services:
 volumes:
   dataclean-uploads:
   dataclean-processed:
+  etm-data:
+  etm-result:
+  etm-checkpoints:
 
 networks:
   theta-network:

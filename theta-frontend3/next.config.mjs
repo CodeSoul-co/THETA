@@ -19,13 +19,16 @@ const nextConfig = {
   },
   // 优化字体加载
   optimizeFonts: true,
-  // 环境变量配置 (Railway 部署)
+  // 环境变量配置
+  // Vercel 会自动读取环境变量，无需在此处设置默认值
+  // 本地开发时使用 .env.local 文件
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
     NEXT_PUBLIC_DATACLEAN_API_URL: process.env.NEXT_PUBLIC_DATACLEAN_API_URL || 'http://localhost:8001',
   },
-  // 输出配置 - standalone 模式优化 Docker/Railway 部署
-  output: 'standalone',
+  // 输出配置
+  // Vercel 会自动处理输出，不需要 standalone 模式
+  // output: 'standalone', // 注释掉，Vercel 会自动优化
 }
 
 export default nextConfig

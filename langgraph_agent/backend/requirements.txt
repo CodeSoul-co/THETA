@@ -14,6 +14,8 @@ langchain-core>=0.1.0
 # Pydantic
 pydantic>=2.5.0
 pydantic-settings>=2.1.0
+pydantic[email]>=2.5.0
+email-validator>=2.0.0
 
 # Data Processing
 numpy>=1.24.0
@@ -32,6 +34,18 @@ pyLDAvis>=3.4.0
 # Utilities
 python-dotenv>=1.0.0
 aiofiles>=23.0.0
+
+# Qwen API
+dashscope>=1.17.0
+
+# Authentication
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+bcrypt>=4.0.0,<5.0.0  # bcrypt 5.x is incompatible with passlib 1.7.x
+python-multipart>=0.0.6
+
+# Database (SQLite for simple user storage)
+aiosqlite>=0.19.0
 
 # Testing
 pytest>=7.4.0

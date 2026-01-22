@@ -1,0 +1,114 @@
+#!/bin/bash
+# THETA 前端更新部署脚本（包含 Git 更新）
+
+set -e
+
+echo "🔄 THETA 前端更新部署脚本"
+echo "================================"
+
+# 检查是否在 Git 仓库中
+if [ ! -d ".git" ]; then
+    echo "❌ 错误: 当前目录不是 Git 仓库"
+    echo "请先初始化 Git 仓库或克隆项目"
+    exit 1
+fi
+
+# 检查 Docker 是否安装
+if ! command -v docker &> /dev/null; then
+    echo "❌ 错误: 未找到 Docker"
+    exit 1
+fi
+
+# 检查 Docker Compose 是否安装
+if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+    echo "❌ 错误: 未找到 Docker Compose"
+    exit 1
+fi
+
+# 检查 Docker 服务是否运行
+if ! docker info &> /dev/null; then
+    echo "❌ 错误: Docker 服务未运行"
+    exit 1
+fi
+
+echo "✅ 环境检查通过"
+echo ""
+
+# 步骤 1: 拉取最新代码
+echo "📥 [1/4] 拉取最新代码..."
+git fetch origin
+git pull origin main || git pull origin master || git pull
+echo "✅ 代码更新完成"
+echo ""
+
+# 步骤 2: 检查 .env.frontend 文件
+if [ ! -f ".env.frontend" ]; then
+    echo "📝 [2/4] 创建 .env.frontend 文件..."
+    if [ -f ".env.frontend.example" ]; then
+        cp .env.frontend.example .env.frontend
+        echo "✅ 已从 .env.frontend.example 创建 .env.frontend 文件"
+        echo "⚠️  请编辑 .env.frontend 文件，设置正确的配置值"
+        echo ""
+        read -p "是否现在编辑 .env.frontend 文件? (y/n) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            ${EDITOR:-nano} .env.frontend
+        fi
+    else
+        echo "⚠️  未找到 .env.frontend.example，请手动创建 .env.frontend 文件"
+        exit 1
+    fi
+else
+    echo "✅ [2/4] .env.frontend 文件已存在"
+fi
+echo ""
+
+# 步骤 3: 停止现有容器
+echo "🛑 [3/4] 停止现有容器..."
+docker-compose -f docker-compose.frontend.yml --env-file .env.frontend down 2>/dev/null || true
+echo "✅ 容器已停止"
+echo ""
+
+# 步骤 4: 重新构建并启动
+echo "🔨 [4/4] 重新构建并启动服务..."
+docker-compose -f docker-compose.frontend.yml --env-file .env.frontend build --no-cache
+docker-compose -f docker-compose.frontend.yml --env-file .env.frontend up -d
+
+# 等待服务启动
+echo "⏳ 等待服务启动..."
+sleep 10
+
+# 检查服务状态
+echo ""
+echo "📊 服务状态:"
+docker-compose -f docker-compose.frontend.yml --env-file .env.frontend ps
+
+# 检查健康状态
+echo ""
+echo "🏥 健康检查:"
+FRONTEND_PORT=$(grep FRONTEND_PORT .env.frontend 2>/dev/null | cut -d '=' -f2 || echo "80")
+if [ -z "$FRONTEND_PORT" ] || [ "$FRONTEND_PORT" = "" ]; then
+    FRONTEND_PORT=80
+fi
+
+echo -n "前端 (端口 $FRONTEND_PORT): "
+if curl -s http://localhost:$FRONTEND_PORT > /dev/null 2>&1; then
+    echo "✅ 运行正常"
+else
+    echo "❌ 无法访问，请检查日志: docker-compose -f docker-compose.frontend.yml --env-file .env.frontend logs theta-frontend"
+fi
+
+echo ""
+echo "✅ 前端更新部署完成！"
+echo ""
+echo "📋 常用命令:"
+echo "  查看日志:     docker-compose -f docker-compose.frontend.yml --env-file .env.frontend logs -f"
+echo "  停止服务:     docker-compose -f docker-compose.frontend.yml --env-file .env.frontend down"
+echo "  重启服务:     docker-compose -f docker-compose.frontend.yml --env-file .env.frontend restart"
+echo ""
+echo "🌐 访问地址:"
+if [ "$FRONTEND_PORT" = "80" ]; then
+    echo "  前端: http://localhost (标准 HTTP 端口 80)"
+else
+    echo "  前端: http://localhost:$FRONTEND_PORT"
+fi

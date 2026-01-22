@@ -87,14 +87,21 @@ docker-compose ps
 # 检查健康状态
 echo ""
 echo "🏥 健康检查:"
-echo -n "后端 API: "
+echo -n "ETM Agent API (8000): "
+if curl -s http://localhost:8000/health > /dev/null; then
+    echo "✅ 运行正常"
+else
+    echo "❌ 无法访问，请检查日志: docker-compose logs etm-agent-api"
+fi
+
+echo -n "DataClean API (8001): "
 if curl -s http://localhost:8001/health > /dev/null; then
     echo "✅ 运行正常"
 else
     echo "❌ 无法访问，请检查日志: docker-compose logs dataclean-api"
 fi
 
-echo -n "前端: "
+echo -n "前端 (3000): "
 if curl -s http://localhost:3000 > /dev/null; then
     echo "✅ 运行正常"
 else
@@ -113,5 +120,9 @@ echo "  更新代码:     git pull && docker-compose up -d --build"
 echo ""
 echo "🌐 访问地址:"
 echo "  前端: http://localhost:3000"
-echo "  后端 API: http://localhost:8001"
-echo "  API 健康检查: http://localhost:8001/health"
+echo "  ETM Agent API: http://localhost:8000"
+echo "  DataClean API: http://localhost:8001"
+echo ""
+echo "📊 API 健康检查:"
+echo "  ETM Agent: http://localhost:8000/health"
+echo "  DataClean: http://localhost:8001/health"

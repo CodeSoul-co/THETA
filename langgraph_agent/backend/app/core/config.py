@@ -12,7 +12,17 @@ from pydantic import Field, field_validator
 
 def get_project_root() -> Path:
     """Get the project root directory"""
-    # 从 config.py 向上找到项目根目录
+    # 优先使用环境变量
+    env_root = os.environ.get('THETA_PROJECT_ROOT')
+    if env_root:
+        return Path(env_root)
+    
+    # 检查是否在服务器环境（AutoDL）
+    if os.path.exists('/root/autodl-tmp'):
+        # 在服务器上，项目根目录是 /root/autodl-tmp
+        return Path('/root/autodl-tmp')
+    
+    # 从 config.py 向上找到项目根目录（本地开发环境）
     # config.py -> core -> app -> backend -> langgraph_agent -> THETA
     return Path(__file__).parent.parent.parent.parent.parent
 
@@ -26,7 +36,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     
     # 模拟模式 - 在没有完整 ETM 环境时使用
-    SIMULATION_MODE: bool = True  # 设为 False 启用真实训练
+    SIMULATION_MODE: bool = False  # 设为 True 启用模拟模式（演示用）
     
     # Server
     HOST: str = "0.0.0.0"
@@ -84,6 +94,24 @@ class Settings(BaseSettings):
     DEFAULT_VOCAB_SIZE: int = 5000
     DEFAULT_EPOCHS: int = 50
     DEFAULT_BATCH_SIZE: int = 64
+    
+    # Security / Authentication
+    SECRET_KEY: str = Field(
+        default="theta-secure-key-change-in-production-2025",
+        description="Secret key for JWT token encoding"
+    )
+    ACCESS_TOKEN_EXPIRE_DAYS: int = Field(
+        default=30,
+        description="Access token expiration in days"
+    )
+    
+    # Qwen API Configuration
+    QWEN_API_KEY: Optional[str] = Field(
+        default="sk-ca1e46556f584e50aa74a2f6ff5659f0",
+        description="Qwen API Key for chat service"
+    )
+    QWEN_API_BASE: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    QWEN_MODEL: str = "qwen-turbo"  # qwen-turbo, qwen-plus, qwen-max
     
     # Checkpointer
     @property

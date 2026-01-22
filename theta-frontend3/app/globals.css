@@ -121,5 +121,252 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+  
+  /* 响应式基础字体大小 */
+  html {
+    font-size: 14px;
+  }
+  @media (min-width: 640px) {
+    html {
+      font-size: 15px;
+    }
+  }
+  @media (min-width: 1024px) {
+    html {
+      font-size: 16px;
+    }
+  }
+}
+
+/* 响应式容器 */
+.container-responsive {
+  @apply w-full px-4 sm:px-6 lg:px-8 mx-auto;
+  max-width: 100%;
+}
+@media (min-width: 1280px) {
+  .container-responsive {
+    max-width: 1280px;
+  }
+}
+
+/* 响应式卡片 */
+.card-responsive {
+  @apply p-3 sm:p-4 lg:p-5 rounded-lg border border-slate-200 bg-white;
+}
+
+/* 响应式标题 */
+.heading-responsive {
+  @apply text-lg sm:text-xl lg:text-2xl font-semibold text-slate-900;
+}
+
+.subheading-responsive {
+  @apply text-sm sm:text-base text-slate-600;
+}
+
+/* 响应式按钮组 */
+.button-group-responsive {
+  @apply flex flex-wrap gap-2 sm:gap-3;
+}
+
+/* 响应式网格 */
+.grid-responsive-2 {
+  @apply grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4;
+}
+
+.grid-responsive-3 {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6;
+}
+
+.grid-responsive-4 {
+  @apply grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4;
+}
+
+/* 文字截断 */
+.text-truncate {
+  @apply truncate;
+}
+
+.text-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.text-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 滚动条美化 */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+/* 图表容器 */
+.chart-container {
+  @apply w-full min-h-[120px] sm:min-h-[160px] lg:min-h-[200px];
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* 响应式间距工具类 */
+.space-y-responsive > * + * {
+  margin-top: 0.75rem;
+}
+@media (min-width: 640px) {
+  .space-y-responsive > * + * {
+    margin-top: 1rem;
+  }
+}
+@media (min-width: 1024px) {
+  .space-y-responsive > * + * {
+    margin-top: 1.5rem;
+  }
+}
+
+/* Markdown 代码高亮样式 (GitHub Dark theme) */
+.hljs {
+  color: #c9d1d9;
+  background: #0d1117;
+}
+
+.hljs-doctag,
+.hljs-keyword,
+.hljs-meta .hljs-keyword,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-variable.language_ {
+  color: #ff7b72;
+}
+
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.class_.inherited__,
+.hljs-title.function_ {
+  color: #d2a8ff;
+}
+
+.hljs-attr,
+.hljs-attribute,
+.hljs-literal,
+.hljs-meta,
+.hljs-number,
+.hljs-operator,
+.hljs-variable,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id {
+  color: #79c0ff;
+}
+
+.hljs-regexp,
+.hljs-string,
+.hljs-meta .hljs-string {
+  color: #a5d6ff;
+}
+
+.hljs-built_in,
+.hljs-symbol {
+  color: #ffa657;
+}
+
+.hljs-comment,
+.hljs-code,
+.hljs-formula {
+  color: #8b949e;
+}
+
+.hljs-name,
+.hljs-quote,
+.hljs-selector-tag,
+.hljs-selector-pseudo {
+  color: #7ee787;
+}
+
+.hljs-subst {
+  color: #c9d1d9;
+}
+
+.hljs-section {
+  color: #1f6feb;
+  font-weight: bold;
+}
+
+.hljs-bullet {
+  color: #f2cc60;
+}
+
+.hljs-emphasis {
+  color: #c9d1d9;
+  font-style: italic;
+}
+
+.hljs-strong {
+  color: #c9d1d9;
+  font-weight: bold;
+}
+
+.hljs-addition {
+  color: #aff5b4;
+  background-color: #033a16;
+}
+
+.hljs-deletion {
+  color: #ffdcd7;
+  background-color: #67060c;
+}
+
+/* Prose 样式调整 */
+.prose {
+  --tw-prose-body: #334155;
+  --tw-prose-headings: #0f172a;
+  --tw-prose-links: #2563eb;
+  --tw-prose-bold: #0f172a;
+  --tw-prose-code: #0f172a;
+  --tw-prose-pre-code: #c9d1d9;
+  --tw-prose-pre-bg: #0d1117;
+}
+
+.prose :where(code):not(:where([class~="not-prose"] *)) {
+  font-weight: 500;
+}
+
+.prose :where(pre):not(:where([class~="not-prose"] *)) {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
 }

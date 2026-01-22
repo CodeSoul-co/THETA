@@ -267,3 +267,7 @@ temp_*/
 
 # 日志文件
 /tmp/theta_*.log
+
+# 数据库文件
+*.db
+users.db
