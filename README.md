@@ -48,7 +48,7 @@ THETA aims to move topic modeling from "clustering with pretty plots" to a repro
 │   ├── model/                    # Model implementations
 │   ├── evaluation/               # Evaluation metrics
 │   ├── visualization/            # Visualization tools
-│   └── utils/                    # Utilities (ResultManager, etc.)
+│   └── utils/                    # Utilities 
 ├── agent/                        # Agent system
 │   ├── api.py                    # FastAPI endpoints
 │   ├── core/                     # Agent implementations
@@ -57,13 +57,6 @@ THETA aims to move topic modeling from "clustering with pretty plots" to a repro
 │   ├── utils/                    # LLM and vision utilities
 │   └── docs/                     # API documentation
 ├── scripts/                      # Shell scripts for automation
-├── data/                         # Raw datasets
-├── result/                       # Training results
-│   ├── 0.6B/                     # THETA 0.6B results
-│   ├── 4B/                       # THETA 4B results
-│   ├── 8B/                       # THETA 8B results
-│   └── baseline/                 # Baseline model results
-└── embedding_models/             # Qwen embedding models
 ```
 
 ---
@@ -890,6 +883,6 @@ See `agent/docs/API_REFERENCE.md` for complete API documentation.
 ## Contact
 
 Please contact us if you have any questions:
-- duanzhenke@stu.zuel.edu.cn
-- panjiqun@stu.zuel.edu.cn
-- lixin@stu.zuel.edu.cn
+- duanzhenke@code-soul.com
+- panjiqun@code-soul.com
+- lixin@code-soul.com
