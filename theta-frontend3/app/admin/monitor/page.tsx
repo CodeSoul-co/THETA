@@ -32,7 +32,11 @@ export default function MonitorPage() {
 
   const checkServices = async () => {
     setLoading(true);
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    // 如果设置为空字符串，使用当前窗口的 origin（相对路径）
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const API_BASE_URL = apiUrl !== undefined && apiUrl !== '' 
+      ? apiUrl 
+      : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000');
     
     const serviceChecks: ServiceStatus[] = [];
 
@@ -219,7 +223,11 @@ export default function MonitorPage() {
     }
 
     setRestarting(true);
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    // 如果设置为空字符串，使用当前窗口的 origin（相对路径）
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const API_BASE_URL = apiUrl !== undefined && apiUrl !== '' 
+      ? apiUrl 
+      : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000');
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/restart`, {

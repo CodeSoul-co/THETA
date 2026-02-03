@@ -25,8 +25,8 @@ const nextConfig = {
     NEXT_PUBLIC_DATACLEAN_API_URL: process.env.NEXT_PUBLIC_DATACLEAN_API_URL || 'http://localhost:8001',
   },
   // 输出配置
-  // Vercel 会自动处理输出，不需要 standalone 模式
-  // output: 'standalone', // 注释掉，Vercel 会自动优化
+  // Docker 部署需要 standalone 模式
+  output: 'standalone',
 }
 
 export default nextConfig

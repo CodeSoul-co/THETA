@@ -23,7 +23,13 @@ interface UseETMWebSocketReturn {
 const getApiBaseUrl = (): string => {
   if (typeof window === 'undefined') return 'http://localhost:8000';
   // 统一使用 NEXT_PUBLIC_API_URL，与其他 API 客户端保持一致
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  // 如果设置为空字符串，使用当前窗口的 origin（相对路径）
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (apiUrl === undefined || apiUrl === '') {
+    // 使用当前窗口的协议和主机（浏览器环境）
+    return typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000';
+  }
+  return apiUrl;
 };
 
 export function useETMWebSocket(url: string = '/api/ws'): UseETMWebSocketReturn {

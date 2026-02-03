@@ -3,7 +3,11 @@
  * 用于与后端 LangGraph Agent 通信
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// 如果设置为空字符串，使用相对路径（通过 nginx 路由）
+// 否则使用环境变量或默认值
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL !== undefined 
+  ? process.env.NEXT_PUBLIC_API_URL 
+  : 'http://localhost:8000';
 
 // ==================== 类型定义 ====================
 
@@ -95,23 +99,42 @@ export interface MetricsResponse {
   [key: string]: any;
 }
 
+/** 后端预处理任务状态（含细粒度阶段） */
+export type PreprocessingJobStatus =
+  | 'pending'
+  | 'bow_generating'
+  | 'bow_completed'
+  | 'embedding_generating'
+  | 'embedding_completed'
+  | 'running'
+  | 'completed'
+  | 'failed';
+
 export interface PreprocessingJob {
   job_id: string;
   dataset: string;
-  model: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
+  model?: string;
+  status: PreprocessingJobStatus;
   progress: number;
-  message: string;
+  message: string | null;
+  current_stage?: string | null;
+  error_message?: string | null;
   created_at?: string;
-  bow_file?: string;
-  embedding_file?: string;
+  updated_at?: string;
+  bow_path?: string | null;
+  embedding_path?: string | null;
+  vocab_path?: string | null;
 }
 
+/** 检查数据集是否已预处理（BOW + 嵌入）时的返回 */
 export interface PreprocessingStatus {
+  dataset?: string;
   has_bow: boolean;
   has_embeddings: boolean;
-  bow_file?: string;
-  embedding_file?: string;
+  ready_for_training: boolean;
+  bow_path?: string | null;
+  embedding_path?: string | null;
+  vocab_path?: string | null;
 }
 
 // ==================== 脚本执行类型 ====================

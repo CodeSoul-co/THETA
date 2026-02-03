@@ -3,7 +3,10 @@
  * 用于与后端 DataClean API 服务通信
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_DATACLEAN_API_URL || 'http://localhost:8001';
+// 如果设置为空字符串，使用相对路径（通过 nginx 路由）
+const API_BASE_URL = process.env.NEXT_PUBLIC_DATACLEAN_API_URL !== undefined 
+  ? process.env.NEXT_PUBLIC_DATACLEAN_API_URL 
+  : 'http://localhost:8001';
 
 export interface CleanTextRequest {
   text: string;

@@ -22,7 +22,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       const actuallyAuthenticated = isAuthenticated || hasToken;
       
       if (!actuallyAuthenticated) {
-        router.replace('/login');
+        // Redirect to landing page (which has the login modal)
+        router.replace('/');
       } else {
         setIsChecking(false);
       }

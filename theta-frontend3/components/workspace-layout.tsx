@@ -33,7 +33,7 @@ import {
 const workflowSteps = [
   { id: "data", label: "数据管理", icon: Database, description: "上传和管理数据集" },
   { id: "processing", label: "数据清洗", icon: FileCog, description: "清洗和预处理数据" },
-  { id: "embedding", label: "向量化", icon: GraduationCap, description: "生成 BOW 和 Embeddings" },
+  { id: "embedding", label: "参数选择", icon: GraduationCap, description: "选择模型与参数" },
   { id: "tasks", label: "任务中心", icon: ListTodo, description: "创建和管理训练任务" },
   { id: "results", label: "分析结果", icon: FileCheck, description: "查看分析结果" },
   { id: "visualizations", label: "可视化", icon: PieChart, description: "数据可视化展示" },
