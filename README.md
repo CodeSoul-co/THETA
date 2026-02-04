@@ -57,6 +57,11 @@ THETA aims to move topic modeling from "clustering with pretty plots" to a repro
 │   ├── utils/                    # LLM and vision utilities
 │   └── docs/                     # API documentation
 ├── scripts/                      # Shell scripts for automation
+├── embedding/                     # Qwen嵌入生成代码
+│   ├── main.py                    # Embedding generation main codebase
+│   ├── embedder.py                # Embedding
+│   ├── trainer.py                 # Training (supervised/unsupervised)
+│   ├── data_loader.py             # Dataloader
 ```
 
 ---
