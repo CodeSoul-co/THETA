@@ -15,7 +15,7 @@ THETA (θ) is an open-source, research-oriented platform for LLM-enhanced topic 
 - Domain-adaptive document embeddings from Qwen-3 models (0.6B/4B/8B)
   - Zero-shot embedding (no training), or
   - Supervised/Unsupervised fine-tuning modes
-- Generative topic models with 12 baseline models for comparison:
+- Generative topic models with 12 models for comparison:
   - **THETA**: Main model using Qwen embeddings (0.6B/4B/8B)
   - **Traditional**: LDA, HDP (auto topics), STM (covariates), BTM (short texts)
   - **Neural**: ETM, CTM, DTM (time-aware), NVDM, GSM, ProdLDA, BERTopic
@@ -30,7 +30,7 @@ THETA aims to move topic modeling from "clustering with pretty plots" to a repro
 
 - **Hybrid embedding topic analysis**: Zero-shot / Supervised / Unsupervised modes
 - **Multiple Qwen model sizes**: 0.6B (1024-dim), 4B (2560-dim), 8B (4096-dim)
-- **12 Baseline models**: LDA, HDP, STM, BTM, ETM, CTM, DTM, NVDM, GSM, ProdLDA, BERTopic for comparison
+- **12 Baseline models**: LDA, HDP, STM, BTM, ETM, CTM, DTM, NVDM, GSM, ProdLDA, BERTopic, THETA for comparison
 - **Data governance**: Domain-aware cleaning for multiple languages (English, Chinese, German, Spanish)
 - **Unified evaluation**: 7 metrics with JSON/CSV export
 - **Rich visualization**: 20+ chart types with bilingual labels
