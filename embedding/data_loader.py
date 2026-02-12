@@ -70,6 +70,13 @@ class DatasetLoader:
             "label_column": "label",
             "language": "multi",
             "has_label": True
+        },
+        "edu_data": {
+            "file_path": "data/edu_data/edu_data_cleaned.csv",
+            "text_column": "cleaned_content",
+            "label_column": None,
+            "language": "zh",
+            "has_label": False
         }
     }
     
