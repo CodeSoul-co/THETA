@@ -1,16 +1,16 @@
 """
-Embedding Model Registry - Embedding模型注册表
+Embedding Model Registry
 
-方便前后端人员选择不同的Embedding模型。
-未来可以在这里添加更多模型（如BGE、M3E等）。
+Conveniently select different embedding models for both frontend and backend usage.
+More models can be added here in the future (e.g., BGE, M3E).
 
 Usage:
     from registry import get_embedding_model_options, get_embedding_model_path
     
-    # 获取所有可用模型（用于前端下拉框）
+    # Get all available models (for frontend dropdown)
     options = get_embedding_model_options()
     
-    # 获取模型路径
+    # Get model path
     path = get_embedding_model_path("qwen3_0.6B")
 """
 
@@ -20,27 +20,27 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-# 基础路径
+# Base paths
 BASE_DIR = Path("/root/autodl-tmp")
 EMBEDDING_MODELS_DIR = Path("/root/autodl-tmp/embedding_models")
 
 
 @dataclass
 class EmbeddingModelInfo:
-    """Embedding模型信息"""
-    name: str                           # 显示名称
-    path: str                           # 模型路径
-    embedding_dim: int                  # 嵌入维度
-    max_length: int                     # 最大序列长度
-    description: str                    # 模型描述
-    languages: list                     # 支持的语言
-    model_size: str                     # 模型大小 (参数量)
-    requires_gpu: bool                  # 是否需要GPU
-    default_batch_size: int             # 推荐批次大小
+    """Embedding model metadata"""
+    name: str                           # Display name
+    path: str                           # Model path
+    embedding_dim: int                  # Embedding dimension
+    max_length: int                     # Max sequence length
+    description: str                    # Model description
+    languages: list                     # Supported languages
+    model_size: str                     # Model size (parameter count)
+    requires_gpu: bool                  # Whether GPU is required
+    default_batch_size: int             # Recommended batch size
 
 
 # ============================================================================
-# 模型注册表 - 在这里添加新模型
+# Model registry - add new models here
 # ============================================================================
 
 EMBEDDING_MODEL_REGISTRY: Dict[str, EmbeddingModelInfo] = {
@@ -49,8 +49,8 @@ EMBEDDING_MODEL_REGISTRY: Dict[str, EmbeddingModelInfo] = {
         path=str(EMBEDDING_MODELS_DIR / "qwen3_embedding_0.6B"),
         embedding_dim=1024,
         max_length=512,
-        description="阿里云Qwen3系列轻量级embedding模型，支持中英文，"
-                   "适合资源有限的环境，推理速度快。",
+        description="Alibaba Cloud Qwen3 lightweight embedding model, supports Chinese and English, "
+                   "suitable for resource-limited environments, with fast inference.",
         languages=["chinese", "english", "multi"],
         model_size="0.6B",
         requires_gpu=True,
@@ -62,7 +62,7 @@ EMBEDDING_MODEL_REGISTRY: Dict[str, EmbeddingModelInfo] = {
         path=str(EMBEDDING_MODELS_DIR / "qwen3_embedding_4B"),
         embedding_dim=2560,
         max_length=512,
-        description="阿里云Qwen3系列中等规模embedding模型，效果更好但需要更多显存。",
+        description="Alibaba Cloud Qwen3 mid-size embedding model, better quality but requires more VRAM.",
         languages=["chinese", "english", "multi"],
         model_size="4B",
         requires_gpu=True,
@@ -74,20 +74,20 @@ EMBEDDING_MODEL_REGISTRY: Dict[str, EmbeddingModelInfo] = {
         path=str(EMBEDDING_MODELS_DIR / "qwen3_embedding_8B"),
         embedding_dim=4096,
         max_length=512,
-        description="阿里云Qwen3系列大规模embedding模型，效果最好，需要较大显存。",
+        description="Alibaba Cloud Qwen3 large embedding model, best quality, requires large VRAM.",
         languages=["chinese", "english", "multi"],
         model_size="8B",
         requires_gpu=True,
         default_batch_size=4
     ),
     
-    # =========== 未来可添加更多模型 ===========
+    # =========== More models can be added in the future ===========
     # "bge_large_zh": EmbeddingModelInfo(
     #     name="BGE-Large-Chinese",
     #     path=str(EMBEDDING_MODELS_DIR / "bge-large-zh-v1.5"),
     #     embedding_dim=1024,
     #     max_length=512,
-    #     description="智源BGE中文embedding模型，中文效果优秀",
+    #     description="BAAI BGE Chinese embedding model, excellent Chinese performance",
     #     languages=["chinese"],
     #     model_size="0.3B",
     #     requires_gpu=True,
@@ -97,12 +97,12 @@ EMBEDDING_MODEL_REGISTRY: Dict[str, EmbeddingModelInfo] = {
 
 
 # ============================================================================
-# API函数
+# API functions
 # ============================================================================
 
 def get_embedding_model_options() -> Dict[str, Dict[str, Any]]:
     """
-    获取所有可用的Embedding模型选项 - 供前端下拉框使用
+    Get options for all available embedding models (for frontend dropdown)
     
     Returns:
         {
@@ -118,7 +118,7 @@ def get_embedding_model_options() -> Dict[str, Dict[str, Any]]:
     """
     result = {}
     for model_id, info in EMBEDDING_MODEL_REGISTRY.items():
-        # 检查模型是否存在
+        # Check if the model exists
         model_exists = os.path.exists(info.path)
         
         result[model_id] = {
@@ -131,36 +131,36 @@ def get_embedding_model_options() -> Dict[str, Dict[str, Any]]:
             "model_size": info.model_size,
             "requires_gpu": info.requires_gpu,
             "default_batch_size": info.default_batch_size,
-            "available": model_exists,  # 标记模型是否已下载
+            "available": model_exists,  # Whether the model is already downloaded
         }
     return result
 
 
 def get_embedding_model_info(model_id: str) -> Optional[EmbeddingModelInfo]:
     """
-    获取指定模型的详细信息
+    Get detailed info for a specified model
     
     Args:
-        model_id: 模型ID (如 "qwen3_0.6B")
+        model_id: Model ID (e.g., "qwen3_0.6B")
         
     Returns:
-        EmbeddingModelInfo 或 None
+        EmbeddingModelInfo or None
     """
     return EMBEDDING_MODEL_REGISTRY.get(model_id)
 
 
 def get_embedding_model_path(model_id: str) -> str:
     """
-    获取模型路径
+    Get model path
     
     Args:
-        model_id: 模型ID
+        model_id: Model ID
         
     Returns:
-        模型路径字符串
+        Model path string
         
     Raises:
-        ValueError: 如果模型不存在
+        ValueError: If the model does not exist
     """
     if model_id not in EMBEDDING_MODEL_REGISTRY:
         available = list(EMBEDDING_MODEL_REGISTRY.keys())
@@ -171,36 +171,36 @@ def get_embedding_model_path(model_id: str) -> str:
 
 def get_embedding_dim(model_id: str) -> int:
     """
-    获取模型的嵌入维度
+    Get embedding dimension for a model
     
     Args:
-        model_id: 模型ID
+        model_id: Model ID
         
     Returns:
-        嵌入维度
+        Embedding dimension
     """
     info = EMBEDDING_MODEL_REGISTRY.get(model_id)
     if info is None:
-        return 1024  # 默认值
+        return 1024  # Default
     return info.embedding_dim
 
 
 def list_available_models() -> list:
     """
-    列出所有可用的模型ID
+    List all available model IDs
     
     Returns:
-        模型ID列表
+        Model ID list
     """
     return list(EMBEDDING_MODEL_REGISTRY.keys())
 
 
 def list_downloaded_models() -> list:
     """
-    列出已下载的模型
+    List downloaded models
     
     Returns:
-        已下载的模型ID列表
+        Downloaded model ID list
     """
     return [
         model_id for model_id, info in EMBEDDING_MODEL_REGISTRY.items()
@@ -221,19 +221,19 @@ def register_model(
     default_batch_size: int = 32
 ) -> None:
     """
-    注册新模型 - 用于动态添加模型
+    Register a new model (for dynamically adding models)
     
     Args:
-        model_id: 模型唯一标识
-        name: 显示名称
-        path: 模型路径
-        embedding_dim: 嵌入维度
-        max_length: 最大序列长度
-        description: 模型描述
-        languages: 支持的语言列表
-        model_size: 模型大小
-        requires_gpu: 是否需要GPU
-        default_batch_size: 推荐批次大小
+        model_id: Unique model identifier
+        name: Display name
+        path: Model path
+        embedding_dim: Embedding dimension
+        max_length: Max sequence length
+        description: Model description
+        languages: Supported language list
+        model_size: Model size
+        requires_gpu: Whether GPU is required
+        default_batch_size: Recommended batch size
     """
     EMBEDDING_MODEL_REGISTRY[model_id] = EmbeddingModelInfo(
         name=name,
@@ -250,15 +250,15 @@ def register_model(
 
 def get_recommended_model(language: str = "english") -> str:
     """
-    根据语言获取推荐的模型
+    Get recommended model by language
     
     Args:
-        language: 语言 (english/chinese/german/multi)
+        language: Language (english/chinese/german/multi)
         
     Returns:
-        推荐的模型ID
+        Recommended model ID
     """
-    # 优先选择已下载的模型
+    # Prefer downloaded models
     downloaded = list_downloaded_models()
     
     for model_id in downloaded:
@@ -266,12 +266,12 @@ def get_recommended_model(language: str = "english") -> str:
         if language in info.languages or "multi" in info.languages:
             return model_id
     
-    # 如果没有已下载的，返回默认
+    # If none are downloaded, return default
     return "qwen3_0.6B"
 
 
 # ============================================================================
-# CLI测试
+# CLI test
 # ============================================================================
 
 if __name__ == "__main__":
