@@ -1,12 +1,12 @@
 """
 Balanced Dataset Sampler for Joint Training
 
-Solves data imbalance problem:
-- mental_health: 1,000,000 samples
-- germanCoal: 5,000 samples
-- Ratio 200:1
+解决数据不平衡问题：
+- mental_health: 1,000,000 条
+- germanCoal: 5,000 条
+- 比例 200:1
 
-Strategy: Ensure balanced sampling of each dataset within each epoch
+策略：确保每个epoch中各数据集被采样的次数平衡
 """
 
 import numpy as np
@@ -18,15 +18,14 @@ from collections import Counter
 
 class BalancedDatasetSampler(Sampler):
     """
-    Balanced dataset sampler
+    平衡数据集采样器
     
-    Ensures balanced sample proportions from each dataset in every batch,
-    preventing large datasets from "overwhelming" small datasets.
+    确保每个batch中各数据集的样本比例均衡，避免大数据集"吞噬"小数据集。
     
-    Strategy:
-    1. Calculate sampling weight for each dataset (log scaling)
-    2. Oversample small datasets, downsample large datasets
-    3. Ensure all datasets are adequately sampled in each epoch
+    策略：
+    1. 计算每个数据集的采样权重（对数缩放）
+    2. 过采样小数据集，下采样大数据集
+    3. 每个epoch确保所有数据集被充分采样
     """
     
     def __init__(
@@ -38,47 +37,47 @@ class BalancedDatasetSampler(Sampler):
     ):
         """
         Args:
-            dataset_labels: Dataset ID for each sample (0, 1, 2, ...)
-            strategy: Balancing strategy
-                - "oversample": Oversample small datasets to the size of the largest dataset
-                - "downsample": Downsample large datasets to the size of the smallest dataset
-                - "weighted": Weighted sampling (recommended)
-            temperature: Temperature parameter controlling balance degree (0=fully balanced, 1=original distribution)
-            seed: Random seed
+            dataset_labels: 每个样本所属的数据集ID (0, 1, 2, ...)
+            strategy: 平衡策略
+                - "oversample": 过采样小数据集到最大数据集的规模
+                - "downsample": 下采样大数据集到最小数据集的规模
+                - "weighted": 加权采样（推荐）
+            temperature: 温度参数，控制平衡程度 (0=完全平衡, 1=原始分布)
+            seed: 随机种子
         """
         self.dataset_labels = np.array(dataset_labels)
         self.strategy = strategy
         self.temperature = temperature
         self.seed = seed
         
-        # Count samples in each dataset
+        # 统计每个数据集的样本数
         self.dataset_counts = Counter(dataset_labels)
         self.num_datasets = len(self.dataset_counts)
         self.dataset_ids = sorted(self.dataset_counts.keys())
         
-        # Create indices for each dataset
+        # 为每个数据集创建索引
         self.dataset_indices = {}
         for dataset_id in self.dataset_ids:
             self.dataset_indices[dataset_id] = np.where(
                 self.dataset_labels == dataset_id
             )[0]
         
-        # Compute sampling strategy
+        # 计算采样策略
         self._compute_sampling_strategy()
         
-        print(f"\n[BalancedDatasetSampler] Initialization complete")
-        print(f"  Strategy: {strategy}")
-        print(f"  Number of datasets: {self.num_datasets}")
-        print(f"  Original distribution:")
+        print(f"\n[BalancedDatasetSampler] 初始化完成")
+        print(f"  策略: {strategy}")
+        print(f"  数据集数量: {self.num_datasets}")
+        print(f"  原始分布:")
         for dataset_id in self.dataset_ids:
             count = self.dataset_counts[dataset_id]
-            print(f"    Dataset {dataset_id}: {count:,} samples")
-        print(f"  Samples per epoch after balancing: {len(self):,}")
+            print(f"    Dataset {dataset_id}: {count:,} 样本")
+        print(f"  平衡后每个epoch采样数: {len(self):,}")
     
     def _compute_sampling_strategy(self):
-        """Compute sampling strategy"""
+        """计算采样策略"""
         if self.strategy == "oversample":
-            # Oversample: Sample all datasets to the size of the largest dataset
+            # 过采样：所有数据集都采样到最大数据集的规模
             max_count = max(self.dataset_counts.values())
             self.samples_per_dataset = {
                 dataset_id: max_count 
@@ -87,7 +86,7 @@ class BalancedDatasetSampler(Sampler):
             self.epoch_length = max_count * self.num_datasets
             
         elif self.strategy == "downsample":
-            # Downsample: Sample all datasets to the size of the smallest dataset
+            # 下采样：所有数据集都采样到最小数据集的规模
             min_count = min(self.dataset_counts.values())
             self.samples_per_dataset = {
                 dataset_id: min_count 
@@ -96,26 +95,26 @@ class BalancedDatasetSampler(Sampler):
             self.epoch_length = min_count * self.num_datasets
             
         elif self.strategy == "weighted":
-            # Weighted sampling: Use log scaling for balance
-            # Calculate sampling weight for each dataset
+            # 加权采样：使用对数缩放平衡
+            # 计算每个数据集的采样权重
             counts = np.array([self.dataset_counts[i] for i in self.dataset_ids])
             
-            # Log scaling: log(count + 1)
+            # 对数缩放：log(count + 1)
             log_counts = np.log(counts + 1)
             
-            # Apply temperature parameter
-            # temperature=0: Fully balanced (all datasets have same weight)
-            # temperature=1: Keep original distribution
+            # 应用温度参数
+            # temperature=0: 完全平衡 (所有数据集相同权重)
+            # temperature=1: 保持原始分布
             if self.temperature == 0:
                 weights = np.ones_like(log_counts)
             else:
                 weights = log_counts ** (1 / self.temperature)
             
-            # Normalize
+            # 归一化
             weights = weights / weights.sum()
             
-            # Calculate number of samples for each dataset
-            # Target: Total samples approximately equal to average of all datasets
+            # 计算每个数据集的采样数
+            # 目标：总采样数约为所有数据集的平均值
             target_total = int(np.mean(counts) * self.num_datasets)
             self.samples_per_dataset = {
                 dataset_id: int(weights[i] * target_total)
@@ -126,19 +125,19 @@ class BalancedDatasetSampler(Sampler):
         else:
             raise ValueError(f"Unknown strategy: {self.strategy}")
         
-        print(f"  Balanced distribution:")
+        print(f"  平衡后分布:")
         for dataset_id in self.dataset_ids:
             samples = self.samples_per_dataset[dataset_id]
             original = self.dataset_counts[dataset_id]
             ratio = samples / original
-            print(f"    Dataset {dataset_id}: {samples:,} samples "
-                  f"(original: {original:,}, sampling rate: {ratio:.2f}x)")
+            print(f"    Dataset {dataset_id}: {samples:,} 样本 "
+                  f"(原始: {original:,}, 采样率: {ratio:.2f}x)")
     
     def __iter__(self):
-        """Generate sampling indices"""
+        """生成采样索引"""
         np.random.seed(self.seed)
         
-        # Generate sampling indices for each dataset
+        # 为每个数据集生成采样索引
         all_indices = []
         
         for dataset_id in self.dataset_ids:
@@ -146,14 +145,14 @@ class BalancedDatasetSampler(Sampler):
             num_samples = self.samples_per_dataset[dataset_id]
             
             if num_samples <= len(dataset_idx):
-                # Downsample: Random selection
+                # 下采样：随机选择
                 sampled = np.random.choice(
                     dataset_idx, 
                     size=num_samples, 
                     replace=False
                 )
             else:
-                # Oversample: Repeated sampling
+                # 过采样：重复采样
                 sampled = np.random.choice(
                     dataset_idx, 
                     size=num_samples, 
@@ -162,24 +161,24 @@ class BalancedDatasetSampler(Sampler):
             
             all_indices.extend(sampled.tolist())
         
-        # Shuffle all indices
+        # 打乱所有索引
         np.random.shuffle(all_indices)
         
-        # Update random seed (different for each epoch)
+        # 更新随机种子（每个epoch不同）
         self.seed += 1
         
         return iter(all_indices)
     
     def __len__(self):
-        """Return number of samples per epoch"""
+        """返回每个epoch的样本数"""
         return self.epoch_length
 
 
 class SimpleOversamplingDataset:
     """
-    Simple oversampling dataset wrapper
+    简单过采样数据集包装器
     
-    Directly duplicates samples from small datasets during data loading phase
+    在数据加载阶段直接复制小数据集的样本
     """
     
     def __init__(
@@ -193,13 +192,13 @@ class SimpleOversamplingDataset:
         Args:
             texts_by_dataset: {dataset_name: [text1, text2, ...]}
             labels_by_dataset: {dataset_name: [label1, label2, ...]}
-            target_size: Target size, None for automatic calculation
-            strategy: "max" (largest dataset), "mean" (average), "median" (median)
+            target_size: 目标大小，None则自动计算
+            strategy: "max" (最大数据集), "mean" (平均), "median" (中位数)
         """
         self.texts_by_dataset = texts_by_dataset
         self.labels_by_dataset = labels_by_dataset or {}
         
-        # Calculate target size
+        # 计算目标大小
         sizes = [len(texts) for texts in texts_by_dataset.values()]
         if target_size is None:
             if strategy == "max":
@@ -213,11 +212,11 @@ class SimpleOversamplingDataset:
         
         self.target_size = target_size
         
-        print(f"\n[SimpleOversamplingDataset] Oversampling initialization")
-        print(f"  Target size: {target_size:,}")
-        print(f"  Original distribution:")
+        print(f"\n[SimpleOversamplingDataset] 过采样初始化")
+        print(f"  目标大小: {target_size:,}")
+        print(f"  原始分布:")
         
-        # Oversample
+        # 过采样
         self.all_texts = []
         self.all_labels = []
         self.all_dataset_ids = []
@@ -226,10 +225,10 @@ class SimpleOversamplingDataset:
             original_size = len(texts)
             labels = self.labels_by_dataset.get(dataset_name, [None] * original_size)
             
-            # Calculate number of times to duplicate
+            # 计算需要复制的次数
             repeat_times = int(np.ceil(target_size / original_size))
             
-            # Oversample
+            # 过采样
             oversampled_texts = (texts * repeat_times)[:target_size]
             oversampled_labels = (labels * repeat_times)[:target_size]
             
@@ -237,13 +236,13 @@ class SimpleOversamplingDataset:
             self.all_labels.extend(oversampled_labels)
             self.all_dataset_ids.extend([dataset_id] * target_size)
             
-            print(f"    {dataset_name}: {original_size:,} -> {target_size:,} "
-                  f"(duplicated {repeat_times}x)")
+            print(f"    {dataset_name}: {original_size:,} → {target_size:,} "
+                  f"(复制 {repeat_times}x)")
         
-        print(f"  Total samples: {len(self.all_texts):,}")
+        print(f"  总样本数: {len(self.all_texts):,}")
     
     def get_data(self):
-        """Return balanced data"""
+        """返回平衡后的数据"""
         return {
             'texts': self.all_texts,
             'labels': self.all_labels if any(l is not None for l in self.all_labels) else None,
@@ -261,23 +260,23 @@ def create_balanced_dataloader(
     seed: int = 42
 ):
     """
-    Create balanced data loader
+    创建平衡的数据加载器
     
     Args:
         texts_by_dataset: {dataset_name: [text1, text2, ...]}
         labels_by_dataset: {dataset_name: [label1, label2, ...]}
-        batch_size: Batch size
-        strategy: Balancing strategy ("oversample", "downsample", "weighted")
-        temperature: Temperature parameter (only for weighted strategy)
-        num_workers: Number of data loading threads
-        seed: Random seed
+        batch_size: batch大小
+        strategy: 平衡策略 ("oversample", "downsample", "weighted")
+        temperature: 温度参数 (仅用于weighted策略)
+        num_workers: 数据加载线程数
+        seed: 随机种子
     
     Returns:
         DataLoader with balanced sampling
     """
     from torch.utils.data import DataLoader, TensorDataset
     
-    # Merge all datasets
+    # 合并所有数据集
     all_texts = []
     all_labels = []
     dataset_ids = []
@@ -291,7 +290,7 @@ def create_balanced_dataloader(
         else:
             all_labels.extend([None] * len(texts))
     
-    # Create balanced sampler
+    # 创建平衡采样器
     sampler = BalancedDatasetSampler(
         dataset_labels=dataset_ids,
         strategy=strategy,
@@ -299,8 +298,8 @@ def create_balanced_dataloader(
         seed=seed
     )
     
-    # Note: This returns indices and dataset_ids
-    # Actual text encoding needs to be done in the training loop
+    # 注意：这里返回的是索引和dataset_ids
+    # 实际的文本编码需要在训练循环中进行
     return {
         'texts': all_texts,
         'labels': all_labels if any(l is not None for l in all_labels) else None,
@@ -310,10 +309,10 @@ def create_balanced_dataloader(
 
 
 if __name__ == '__main__':
-    # Test code
-    print("Testing balanced sampler\n")
+    # 测试代码
+    print("测试平衡采样器\n")
     
-    # Simulate data distribution
+    # 模拟数据分布
     dataset_labels = (
         [0] * 5000 +      # germanCoal: 5k
         [1] * 10000 +     # FCPB: 10k
@@ -323,12 +322,12 @@ if __name__ == '__main__':
     )
     
     print("=" * 70)
-    print("Strategy 1: Oversample")
+    print("策略1: Oversample (过采样)")
     print("=" * 70)
     sampler1 = BalancedDatasetSampler(dataset_labels, strategy="oversample")
     
     print("\n" + "=" * 70)
-    print("Strategy 2: Weighted (temperature=0.3)")
+    print("策略2: Weighted (加权采样, temperature=0.3)")
     print("=" * 70)
     sampler2 = BalancedDatasetSampler(
         dataset_labels, 
@@ -337,7 +336,7 @@ if __name__ == '__main__':
     )
     
     print("\n" + "=" * 70)
-    print("Strategy 3: Weighted (temperature=0.5)")
+    print("策略3: Weighted (加权采样, temperature=0.5)")
     print("=" * 70)
     sampler3 = BalancedDatasetSampler(
         dataset_labels, 
