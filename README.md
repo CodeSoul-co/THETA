@@ -17,7 +17,7 @@ THETA (θ) is an open-source, research-oriented platform for LLM-enhanced topic 
   - Supervised/Unsupervised fine-tuning modes
 - Generative topic models with 12 baseline models for comparison:
   - **THETA**: Main model using Qwen embeddings (0.6B/4B/8B)
-  - **Traditional**: LDA, HDP (auto topics), STM (covariates), BTM (short texts)
+  - **Traditional**: LDA, HDP (auto topics), STM (requires covariates), BTM (short texts)
   - **Neural**: ETM, CTM, DTM (time-aware), NVDM, GSM, ProdLDA, BERTopic
 - Scientific validation via 7 intrinsic metrics (PPL, TD, iRBO, NPMI, C_V, UMass, Exclusivity)
 - Comprehensive visualization with bilingual support (English/Chinese)
@@ -30,7 +30,7 @@ THETA aims to move topic modeling from "clustering with pretty plots" to a repro
 
 - **Hybrid embedding topic analysis**: Zero-shot / Supervised / Unsupervised modes
 - **Multiple Qwen model sizes**: 0.6B (1024-dim), 4B (2560-dim), 8B (4096-dim)
-- **12 Baseline models**: LDA, HDP, STM, BTM, ETM, CTM, DTM, NVDM, GSM, ProdLDA, BERTopic for comparison
+- **12 Baseline models**: LDA, HDP, STM (requires covariates), BTM, ETM, CTM, DTM, NVDM, GSM, ProdLDA, BERTopic for comparison
 - **Data governance**: Domain-aware cleaning for multiple languages (English, Chinese, German, Spanish)
 - **Unified evaluation**: 7 metrics with JSON/CSV export
 - **Rich visualization**: 20+ chart types with bilingual labels
@@ -46,7 +46,7 @@ THETA aims to move topic modeling from "clustering with pretty plots" to a repro
 | `theta` | Neural | THETA with Qwen embeddings (0.6B/4B/8B) | No | General purpose, high quality |
 | `lda` | Traditional | Latent Dirichlet Allocation (sklearn) | No | Fast baseline, interpretable |
 | `hdp` | Traditional | Hierarchical Dirichlet Process | **Yes** | Unknown topic count |
-| `stm` | Traditional | Structural Topic Model | No | With metadata/covariates |
+| `stm` | Traditional | Structural Topic Model | No | **Requires covariates** (metadata) |
 | `btm` | Traditional | Biterm Topic Model | No | Short texts (tweets, titles) |
 | `etm` | Neural | Embedded Topic Model (Word2Vec + VAE) | No | Word embedding integration |
 | `ctm` | Neural | Contextualized Topic Model (SBERT + VAE) | No | Semantic understanding |
@@ -70,6 +70,10 @@ Choose your model based on:
 │   ├─ SHORT (tweets, titles) → Use BTM                          │
 │   └─ NORMAL/LONG → Continue below                               │
 ├─────────────────────────────────────────────────────────────────┤
+│ Do you have document-level metadata (covariates)?               │
+│   ├─ YES → Use STM (models how metadata affects topics)         │
+│   └─ NO  → Continue below                                       │
+├─────────────────────────────────────────────────────────────────┤
 │ Do you have time-series data?                                   │
 │   ├─ YES → Use DTM                                              │
 │   └─ NO  → Continue below                                       │
@@ -81,79 +85,7 @@ Choose your model based on:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Python API Usage
 
-#### THETA Model Training
-
-```python
-import sys
-sys.path.insert(0, '/root/autodl-tmp/ETM')
-
-from main import run_training
-from config import config_from_args
-import argparse
-
-# Create configuration
-args = argparse.Namespace(
-    dataset='hatespeech',
-    mode='zero_shot',           # zero_shot / supervised / unsupervised
-    model_size='0.6B',          # 0.6B / 4B / 8B
-    num_topics=20,
-    epochs=100,
-    batch_size=64,
-    hidden_dim=512,
-    learning_rate=0.002,
-    kl_start=0.0,
-    kl_end=1.0,
-    kl_warmup=50,
-    patience=10,
-    gpu_id=0,
-    dev_mode=False
-)
-
-config = config_from_args(args)
-run_training(config)
-```
-
-#### Baseline Model Training
-
-```python
-import sys
-sys.path.insert(0, '/root/autodl-tmp/ETM')
-
-from model.baseline_trainer import BaselineTrainer
-
-# Initialize trainer
-trainer = BaselineTrainer(
-    dataset='hatespeech',
-    num_topics=20,
-    vocab_size=5000,
-    data_dir='/root/autodl-tmp/data',
-    result_dir='/root/autodl-tmp/result/baseline'
-)
-
-# Prepare data (generates BOW and SBERT embeddings)
-trainer.prepare_data(generate_sbert=True)
-
-# Train individual models
-lda_result = trainer.train_lda(max_iter=100)
-hdp_result = trainer.train_hdp(max_topics=150)      # Auto topic number
-btm_result = trainer.train_btm(n_iter=100)
-nvdm_result = trainer.train_nvdm(epochs=100, batch_size=64)
-gsm_result = trainer.train_gsm(epochs=100, batch_size=64)
-prodlda_result = trainer.train_prodlda(epochs=100, batch_size=64)
-
-# Or train multiple models at once
-results = trainer.train_all(
-    models=['lda', 'hdp', 'btm', 'nvdm', 'prodlda'],
-    batch_size=64
-)
-
-# Access results
-print(f"LDA theta shape: {lda_result['theta'].shape}")      # (N, K)
-print(f"LDA beta shape: {lda_result['beta'].shape}")        # (K, V)
-print(f"HDP actual topics: {hdp_result['actual_num_topics']}")
-```
 
 ### Training Parameters Reference
 
@@ -398,7 +330,8 @@ One-stop data preparation for all 12 models. Generates BOW matrix and model-spec
 
 | Model | Type | Data Needed |
 |-------|------|-------------|
-| lda, hdp, stm, btm | Traditional | BOW only |
+| lda, hdp, btm | Traditional | BOW only |
+| stm | Traditional | BOW + covariates (document metadata) |
 | nvdm, gsm, prodlda | Neural | BOW only |
 | etm | Neural | BOW + Word2Vec |
 | ctm | Neural | BOW + SBERT |
@@ -411,7 +344,7 @@ One-stop data preparation for all 12 models. Generates BOW matrix and model-spec
 ```bash
 # ---- Baseline models ----
 
-# BOW-only models (lda, hdp, stm, btm, nvdm, gsm, prodlda share this)
+# BOW-only models (lda, hdp, btm, nvdm, gsm, prodlda share this)
 bash scripts/03_prepare_data.sh \
     --dataset edu_data --model lda --vocab_size 3500 --language chinese
 
@@ -465,7 +398,7 @@ bash scripts/03_prepare_data.sh --dataset mydata \
 | Parameter | Required | Description | Default |
 |-----------|----------|-------------|---------|
 | `--dataset` | ✓ | Dataset name | - |
-| `--model` | ✓ | Target model: lda, hdp, stm, btm, nvdm, gsm, prodlda, ctm, etm, dtm, bertopic, theta | - |
+| `--model` | ✓ | Target model: lda, hdp, stm (requires covariates), btm, nvdm, gsm, prodlda, ctm, etm, dtm, bertopic, theta | - |
 | `--model_size` | | Qwen model size (theta only): 0.6B, 4B, 8B | 0.6B |
 | `--mode` | | Embedding mode (theta only): zero_shot, unsupervised, supervised | zero_shot |
 | `--vocab_size` | | Vocabulary size | 5000 |
@@ -572,216 +505,419 @@ bash scripts/04_train_theta.sh \
 
 Train 11 baseline topic models for comparison with THETA.
 
+#### Supported Models
+
+| Model | Type | Description | Model-Specific Parameters |
+|-------|------|-------------|---------------------------|
+| **lda** | Traditional | Latent Dirichlet Allocation | `--max_iter` |
+| **hdp** | Traditional | Hierarchical Dirichlet Process (auto topic count) | `--max_topics`, `--alpha` |
+| **stm** | Traditional | Structural Topic Model (**requires covariates**) | `--max_iter` |
+| **btm** | Traditional | Biterm Topic Model (best for short texts) | `--n_iter`, `--alpha`, `--beta` |
+| **nvdm** | Neural | Neural Variational Document Model | `--epochs`, `--dropout` |
+| **gsm** | Neural | Gaussian Softmax Model | `--epochs`, `--dropout` |
+| **prodlda** | Neural | Product of Experts LDA | `--epochs`, `--dropout` |
+| **ctm** | Neural | Contextualized Topic Model (requires SBERT) | `--epochs`, `--inference_type` |
+| **etm** | Neural | Embedded Topic Model (requires Word2Vec) | `--epochs` |
+| **dtm** | Neural | Dynamic Topic Model (requires timestamps) | `--epochs` |
+| **bertopic** | Neural | BERT-based Topic Model (auto topic count) | - |
+
+#### Complete Per-Model Examples
+
 ```bash
 # ============================================================
 # 1. LDA — Latent Dirichlet Allocation
 #    Type: Traditional | Data: BOW only
-#    Specific params: --max_iter
+#    Specific params: --max_iter (max EM iterations)
 # ============================================================
-bash scripts/05_train_baseline.sh --dataset edu_data --models lda --num_topics 20
-# Full:
-bash scripts/05_train_baseline.sh --dataset edu_data --models lda \
-    --num_topics 20 --max_iter 200 --gpu 0 --language zh --with-viz
+
+# Minimal
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models lda --num_topics 20
+
+# Full parameters
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models lda \
+    --num_topics 20 --max_iter 200 \
+    --gpu 0 --language zh --with-viz \
+    --data_exp exp_20260208_153424_vocab3500_lda \
+    --exp_name lda_full
 
 # ============================================================
 # 2. HDP — Hierarchical Dirichlet Process
 #    Type: Traditional | Data: BOW only
-#    Note: Auto topic count, --num_topics is IGNORED
+#    Note: Auto-determines topic count, --num_topics is IGNORED
 #    Specific params: --max_topics, --alpha
 # ============================================================
-bash scripts/05_train_baseline.sh --dataset edu_data --models hdp
-# Full:
-bash scripts/05_train_baseline.sh --dataset edu_data --models hdp \
-    --max_topics 150 --alpha 1.0 --gpu 0 --language zh --with-viz
+
+# Minimal (auto topic count)
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models hdp
+
+# Full parameters
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models hdp \
+    --max_topics 150 --alpha 1.0 \
+    --gpu 0 --language zh --with-viz \
+    --data_exp exp_20260208_153424_vocab3500_lda \
+    --exp_name hdp_full
 
 # ============================================================
 # 3. STM — Structural Topic Model
-#    Type: Traditional | Data: BOW only
+#    Type: Traditional | Data: BOW + covariates (document metadata)
+#    REQUIRES covariates — auto-skipped if dataset has no metadata
 #    Specific params: --max_iter
 # ============================================================
-bash scripts/05_train_baseline.sh --dataset edu_data --models stm --num_topics 20
-# Full:
-bash scripts/05_train_baseline.sh --dataset edu_data --models stm \
-    --num_topics 20 --max_iter 200 --gpu 0 --language zh --with-viz
+#
+# To use STM:
+#   1. Ensure your cleaned CSV has metadata columns (e.g., year, source, category)
+#   2. Register covariates in ETM/config.py → DATASET_CONFIGS:
+#        DATASET_CONFIGS["my_dataset"] = {
+#            ...
+#            "covariate_columns": ["year", "source", "category"],
+#        }
+#   3. Prepare data (same as other BOW models)
+#   4. Train STM
+#
+# If no covariates are configured, you'll see:
+#   [SKIP] STM: STM requires document-level covariates (metadata)...
+# In that case, use CTM (same logistic-normal prior) or LDA instead.
+
+# Minimal (requires covariates in DATASET_CONFIGS)
+bash scripts/05_train_baseline.sh \
+    --dataset my_dataset_with_covariates --models stm --num_topics 20
+
+# Full parameters
+bash scripts/05_train_baseline.sh \
+    --dataset my_dataset_with_covariates --models stm \
+    --num_topics 20 --max_iter 200 \
+    --gpu 0 --language en --with-viz \
+    --data_exp exp_20260208_153424_vocab3500_lda \
+    --exp_name stm_full
 
 # ============================================================
-# 4. BTM — Biterm Topic Model (best for short texts)
+# 4. BTM — Biterm Topic Model
 #    Type: Traditional | Data: BOW only
+#    Note: Uses Gibbs sampling, very slow on long documents (samples max 50 words/doc)
+#    Best suited for short texts (tweets, comments)
 #    Specific params: --n_iter, --alpha, --beta
 # ============================================================
-bash scripts/05_train_baseline.sh --dataset edu_data --models btm --num_topics 20
-# Full:
-bash scripts/05_train_baseline.sh --dataset edu_data --models btm \
-    --num_topics 20 --n_iter 100 --alpha 1.0 --beta 0.01 --gpu 0 --language zh --with-viz
+
+# Minimal
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models btm --num_topics 20
+
+# Full parameters
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models btm \
+    --num_topics 20 --n_iter 100 --alpha 1.0 --beta 0.01 \
+    --gpu 0 --language zh --with-viz \
+    --data_exp exp_20260208_153424_vocab3500_lda \
+    --exp_name btm_full
 
 # ============================================================
 # 5. NVDM — Neural Variational Document Model
 #    Type: Neural | Data: BOW only
 #    Specific params: --epochs, --batch_size, --hidden_dim, --learning_rate, --dropout
 # ============================================================
-bash scripts/05_train_baseline.sh --dataset edu_data --models nvdm --num_topics 20
-# Full:
-bash scripts/05_train_baseline.sh --dataset edu_data --models nvdm \
-    --num_topics 20 --epochs 200 --batch_size 128 --hidden_dim 512 \
-    --learning_rate 0.002 --dropout 0.2 --gpu 0 --language zh --with-viz
+
+# Minimal
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models nvdm --num_topics 20
+
+# Full parameters
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models nvdm \
+    --num_topics 20 --epochs 200 --batch_size 128 \
+    --hidden_dim 512 --learning_rate 0.002 --dropout 0.2 \
+    --gpu 0 --language zh --with-viz \
+    --data_exp exp_20260208_153424_vocab3500_lda \
+    --exp_name nvdm_full
 
 # ============================================================
 # 6. GSM — Gaussian Softmax Model
 #    Type: Neural | Data: BOW only
 #    Specific params: --epochs, --batch_size, --hidden_dim, --learning_rate, --dropout
 # ============================================================
-bash scripts/05_train_baseline.sh --dataset edu_data --models gsm --num_topics 20
-# Full:
-bash scripts/05_train_baseline.sh --dataset edu_data --models gsm \
-    --num_topics 20 --epochs 200 --batch_size 128 --hidden_dim 512 \
-    --learning_rate 0.002 --dropout 0.2 --gpu 0 --language zh --with-viz
+
+# Minimal
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models gsm --num_topics 20
+
+# Full parameters
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models gsm \
+    --num_topics 20 --epochs 200 --batch_size 128 \
+    --hidden_dim 512 --learning_rate 0.002 --dropout 0.2 \
+    --gpu 0 --language zh --with-viz \
+    --data_exp exp_20260208_153424_vocab3500_lda \
+    --exp_name gsm_full
 
 # ============================================================
 # 7. ProdLDA — Product of Experts LDA
 #    Type: Neural | Data: BOW only
 #    Specific params: --epochs, --batch_size, --hidden_dim, --learning_rate, --dropout
 # ============================================================
-bash scripts/05_train_baseline.sh --dataset edu_data --models prodlda --num_topics 20
-# Full:
-bash scripts/05_train_baseline.sh --dataset edu_data --models prodlda \
-    --num_topics 20 --epochs 200 --batch_size 128 --hidden_dim 512 \
-    --learning_rate 0.002 --dropout 0.2 --gpu 0 --language zh --with-viz
+
+# Minimal
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models prodlda --num_topics 20
+
+# Full parameters
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models prodlda \
+    --num_topics 20 --epochs 200 --batch_size 128 \
+    --hidden_dim 512 --learning_rate 0.002 --dropout 0.2 \
+    --gpu 0 --language zh --with-viz \
+    --data_exp exp_20260208_153424_vocab3500_lda \
+    --exp_name prodlda_full
 
 # ============================================================
-# 8. CTM — Contextualized Topic Model (requires SBERT data_exp)
+# 8. CTM — Contextualized Topic Model
 #    Type: Neural | Data: BOW + SBERT embeddings
+#    Note: Requires SBERT data_exp (prepared with --model ctm)
 #    Specific params: --epochs, --inference_type (zeroshot | combined)
 # ============================================================
-bash scripts/05_train_baseline.sh --dataset edu_data --models ctm --num_topics 20
-# Zeroshot inference:
-bash scripts/05_train_baseline.sh --dataset edu_data --models ctm \
+
+# Minimal (zeroshot inference, default)
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models ctm --num_topics 20
+
+# Zeroshot inference (uses only SBERT embeddings for inference)
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models ctm \
     --num_topics 20 --epochs 100 --inference_type zeroshot \
-    --batch_size 64 --hidden_dim 512 --learning_rate 0.002 --gpu 0 --language zh --with-viz
-# Combined inference:
-bash scripts/05_train_baseline.sh --dataset edu_data --models ctm \
-    --num_topics 20 --epochs 100 --inference_type combined --gpu 0 --with-viz
+    --batch_size 64 --hidden_dim 512 --learning_rate 0.002 \
+    --gpu 0 --language zh --with-viz \
+    --data_exp exp_20260208_154645_vocab3500_ctm \
+    --exp_name ctm_zeroshot
+
+# Combined inference (uses both BOW and SBERT)
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models ctm \
+    --num_topics 20 --epochs 100 --inference_type combined \
+    --gpu 0 --language zh --with-viz
 
 # ============================================================
-# 9. ETM — Embedded Topic Model (uses Word2Vec from BOW data_exp)
+# 9. ETM — Embedded Topic Model
 #    Type: Neural | Data: BOW + Word2Vec embeddings
+#    Note: Word2Vec embeddings are generated during BOW-only data prep
 #    Specific params: --epochs, --batch_size, --hidden_dim, --learning_rate
 # ============================================================
-bash scripts/05_train_baseline.sh --dataset edu_data --models etm --num_topics 20
-# Full:
-bash scripts/05_train_baseline.sh --dataset edu_data --models etm \
-    --num_topics 20 --epochs 200 --batch_size 64 --hidden_dim 512 \
-    --learning_rate 0.002 --gpu 0 --language zh --with-viz
+
+# Minimal
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models etm --num_topics 20
+
+# Full parameters
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models etm \
+    --num_topics 20 --epochs 200 --batch_size 64 \
+    --hidden_dim 512 --learning_rate 0.002 \
+    --gpu 0 --language zh --with-viz \
+    --data_exp exp_20260208_153424_vocab3500_lda \
+    --exp_name etm_full
 
 # ============================================================
-# 10. DTM — Dynamic Topic Model (requires time_slices data_exp)
+# 10. DTM — Dynamic Topic Model
 #     Type: Neural | Data: BOW + SBERT + time slices
+#     Note: Requires data_exp prepared with --model dtm (includes time_slices.json)
 #     Specific params: --epochs, --batch_size, --hidden_dim, --learning_rate
 # ============================================================
-bash scripts/05_train_baseline.sh --dataset edu_data --models dtm --num_topics 20
-# Full:
-bash scripts/05_train_baseline.sh --dataset edu_data --models dtm \
-    --num_topics 20 --epochs 200 --batch_size 64 --hidden_dim 512 \
-    --learning_rate 0.002 --gpu 0 --language zh --with-viz
+
+# Minimal
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models dtm --num_topics 20
+
+# Full parameters
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models dtm \
+    --num_topics 20 --epochs 200 --batch_size 64 \
+    --hidden_dim 512 --learning_rate 0.002 \
+    --gpu 0 --language zh --with-viz \
+    --data_exp exp_20260208_171413_vocab3500_dtm \
+    --exp_name dtm_full
 
 # ============================================================
-# 11. BERTopic — BERT-based Topic Model (requires SBERT data_exp)
+# 11. BERTopic — BERT-based Topic Model
 #     Type: Neural | Data: SBERT + raw text
-#     Note: Auto topic count, --num_topics is IGNORED
-#     Can reuse CTM's SBERT data_exp
+#     Note: Auto-determines topic count, --num_topics is IGNORED
+#     Note: Requires SBERT data_exp (can reuse CTM's data_exp)
 # ============================================================
-bash scripts/05_train_baseline.sh --dataset edu_data --models bertopic
-# With explicit data_exp:
-bash scripts/05_train_baseline.sh --dataset edu_data --models bertopic \
+
+# Minimal (auto topic count)
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models bertopic
+
+# With visualization and explicit data_exp
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models bertopic \
     --gpu 0 --language zh --with-viz \
-    --data_exp exp_20260208_154645_vocab3500_ctm
+    --data_exp exp_20260208_154645_vocab3500_ctm \
+    --exp_name bertopic_full
 
 # ============================================================
 # Batch training (multiple models at once)
 # ============================================================
 
-# All BOW-only models (share the same data_exp)
-bash scripts/05_train_baseline.sh --dataset edu_data \
-    --models lda,hdp,stm,btm,nvdm,gsm,prodlda \
-    --num_topics 20 --epochs 100
+# Train all BOW-only models (share the same data_exp)
+# Note: STM excluded — requires covariates metadata
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data \
+    --models lda,hdp,btm,nvdm,gsm,prodlda \
+    --num_topics 20 --epochs 100 \
+    --data_exp exp_20260208_153424_vocab3500_lda
 
-# Models needing special data (train separately)
-bash scripts/05_train_baseline.sh --dataset edu_data --models etm --num_topics 20 --epochs 100
-bash scripts/05_train_baseline.sh --dataset edu_data --models ctm,bertopic --num_topics 20 --epochs 100
-bash scripts/05_train_baseline.sh --dataset edu_data --models dtm --num_topics 20 --epochs 100
+# Train ETM separately (uses Word2Vec from BOW data_exp)
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models etm \
+    --num_topics 20 --epochs 100 \
+    --data_exp exp_20260208_153424_vocab3500_lda
+
+# Train CTM + BERTopic (share SBERT data_exp)
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models ctm,bertopic \
+    --num_topics 20 --epochs 100 \
+    --data_exp exp_20260208_154645_vocab3500_ctm
+
+# Train DTM separately (requires time_slices data_exp)
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models dtm \
+    --num_topics 20 --epochs 100 \
+    --data_exp exp_20260208_171413_vocab3500_dtm
 
 # ============================================================
-# Skip / visualization options
+# Skip training / visualization
 # ============================================================
 
-# Skip training, only evaluate existing model
-bash scripts/05_train_baseline.sh --dataset edu_data --models lda --num_topics 20 --skip-train
+# Skip training, only evaluate and visualize existing model
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models lda --num_topics 20 --skip-train
 
-# Enable visualization (disabled by default for speed)
-bash scripts/05_train_baseline.sh --dataset edu_data --models lda --num_topics 20 --with-viz --language zh
+# Enable visualization (disabled by default, use --with-viz to enable)
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models lda --num_topics 20 \
+    --with-viz --language zh
 ```
+
+> **Important notes**:
+> - BTM uses Gibbs sampling and is very slow on long documents (samples max 50 words/doc). Best for short texts.
+> - HDP and BERTopic auto-determine topic count; `--num_topics` is ignored for these models.
+> - STM requires document-level covariates. If your dataset has no `covariate_columns` in `DATASET_CONFIGS`, STM will be automatically skipped.
+> - DTM requires a data experiment containing `time_slices.json` (prepared with `--model dtm`).
+> - CTM and BERTopic require a data experiment containing SBERT embeddings.
+
+#### Parameter Reference
+
+**Common parameters**:
 
 | Parameter | Required | Description | Default |
 |-----------|----------|-------------|---------|
 | `--dataset` | ✓ | Dataset name | - |
 | `--models` | ✓ | Model list (comma-separated) | - |
-| `--num_topics` | Number of topics (ignored for hdp/bertopic) | 20 |
-| `--vocab_size` | Vocabulary size | 5000 |
-| `--epochs` | Training epochs (neural models) | 100 |
-| `--batch_size` | Batch size | 64 |
-| `--hidden_dim` | Hidden dimension | 512 |
-| `--learning_rate` | Learning rate | 0.002 |
-| `--gpu` | GPU device ID | 0 |
-| `--language` | Visualization language: en, zh | en |
-| `--skip-train` | Skip training | false |
-| `--skip-viz` | Skip visualization (default) | true |
-| `--with-viz` | Enable visualization | false |
-| `--data_exp` | Data experiment ID | auto latest |
-| `--exp_name` | Experiment name tag | auto-generated |
+| `--num_topics` | | Number of topics (ignored for hdp/bertopic) | 20 |
+| `--vocab_size` | | Vocabulary size | 5000 |
+| `--epochs` | | Training epochs (neural models) | 100 |
+| `--batch_size` | | Batch size | 64 |
+| `--hidden_dim` | | Hidden layer dimension | 512 |
+| `--learning_rate` | | Learning rate | 0.002 |
+| `--gpu` | | GPU device ID | 0 |
+| `--language` | | Visualization language: en, zh | en |
+| `--skip-train` | | Skip training | false |
+| `--skip-viz` | | Skip visualization (default: skipped) | true |
+| `--with-viz` | | Enable visualization | false |
+| `--data_exp` | | Data experiment ID | auto latest |
+| `--exp_name` | | Experiment name tag | auto-generated |
 
 **Model-specific parameters**:
 
-| Parameter | Models | Description | Default |
-|-----------|--------|-------------|---------|
-| `--max_iter` | lda, stm | Max iterations | 100 |
+| Parameter | Applicable Models | Description | Default |
+|-----------|-------------------|-------------|---------|
+| `--max_iter` | lda, stm | Max iterations (EM algorithm) | 100 |
 | `--max_topics` | hdp | Max topic count | 150 |
 | `--n_iter` | btm | Gibbs sampling iterations | 100 |
 | `--alpha` | hdp, btm | Alpha prior | 1.0 |
 | `--beta` | btm | Beta prior | 0.01 |
 | `--inference_type` | ctm | Inference type: zeroshot, combined | zeroshot |
-| `--dropout` | neural models | Dropout rate | 0.2 |
+| `--dropout` | Neural models (nvdm, gsm, prodlda, ctm, etm, dtm) | Dropout rate | 0.2 |
 
 ### E) Visualization — `06_visualize.sh`
 
 Generate visualizations for trained models without re-training.
 
 ```bash
-# ---- THETA model ----
+# ==================================================
+# THETA model visualization
+# ==================================================
 
+# Basic usage (auto-selects latest experiment)
 bash scripts/06_visualize.sh \
     --dataset edu_data --model_size 0.6B --mode zero_shot --language zh
 
+# Unsupervised mode
 bash scripts/06_visualize.sh \
-    --dataset edu_data --model_size 0.6B --mode unsupervised --language en --dpi 600
+    --dataset edu_data --model_size 0.6B --mode unsupervised --language zh
 
-# ---- Baseline models (all 11) ----
+# English charts + high DPI (for papers)
+bash scripts/06_visualize.sh \
+    --dataset edu_data --model_size 0.6B --mode zero_shot --language en --dpi 600
 
-bash scripts/06_visualize.sh --baseline --dataset edu_data --model lda --num_topics 20 --language zh
-bash scripts/06_visualize.sh --baseline --dataset edu_data --model hdp --num_topics 150 --language zh
-bash scripts/06_visualize.sh --baseline --dataset edu_data --model stm --num_topics 20 --language zh
-bash scripts/06_visualize.sh --baseline --dataset edu_data --model btm --num_topics 20 --language zh
-bash scripts/06_visualize.sh --baseline --dataset edu_data --model nvdm --num_topics 20 --language zh
-bash scripts/06_visualize.sh --baseline --dataset edu_data --model gsm --num_topics 20 --language zh
-bash scripts/06_visualize.sh --baseline --dataset edu_data --model prodlda --num_topics 20 --language zh
-bash scripts/06_visualize.sh --baseline --dataset edu_data --model ctm --num_topics 20 --language zh
-bash scripts/06_visualize.sh --baseline --dataset edu_data --model etm --num_topics 20 --language zh
-bash scripts/06_visualize.sh --baseline --dataset edu_data --model dtm --num_topics 20 --language zh
-bash scripts/06_visualize.sh --baseline --dataset edu_data --model bertopic --num_topics 20 --language zh
+# ==================================================
+# Baseline model visualization (all 11 models)
+# ==================================================
 
-# Specify model experiment explicitly
+# LDA
+bash scripts/06_visualize.sh \
+    --baseline --dataset edu_data --model lda --num_topics 20 --language zh
+
+# HDP (auto topic count, use actual K from training)
+bash scripts/06_visualize.sh \
+    --baseline --dataset edu_data --model hdp --num_topics 150 --language zh
+
+# STM (only if trained with covariates)
+bash scripts/06_visualize.sh \
+    --baseline --dataset edu_data --model stm --num_topics 20 --language zh
+
+# BTM
+bash scripts/06_visualize.sh \
+    --baseline --dataset edu_data --model btm --num_topics 20 --language zh
+
+# NVDM
+bash scripts/06_visualize.sh \
+    --baseline --dataset edu_data --model nvdm --num_topics 20 --language zh
+
+# GSM
+bash scripts/06_visualize.sh \
+    --baseline --dataset edu_data --model gsm --num_topics 20 --language zh
+
+# ProdLDA
+bash scripts/06_visualize.sh \
+    --baseline --dataset edu_data --model prodlda --num_topics 20 --language zh
+
+# CTM
+bash scripts/06_visualize.sh \
+    --baseline --dataset edu_data --model ctm --num_topics 20 --language zh
+
+# ETM
+bash scripts/06_visualize.sh \
+    --baseline --dataset edu_data --model etm --num_topics 20 --language en
+
+# DTM (includes topic evolution charts)
+bash scripts/06_visualize.sh \
+    --baseline --dataset edu_data --model dtm --num_topics 20 --language zh
+
+# BERTopic
+bash scripts/06_visualize.sh \
+    --baseline --dataset edu_data --model bertopic --num_topics 20 --language zh
+
+# ==================================================
+# Advanced options
+# ==================================================
+
+# Specify a model experiment explicitly
 bash scripts/06_visualize.sh \
     --baseline --dataset edu_data --model ctm --model_exp exp_20260208_xxx --language zh
 
-# High DPI for publications
+# High DPI output (for publication)
 bash scripts/06_visualize.sh \
     --baseline --dataset edu_data --model lda --num_topics 20 --language en --dpi 600
 ```
@@ -791,47 +927,110 @@ bash scripts/06_visualize.sh \
 | `--dataset` | Dataset name (required) | — |
 | `--baseline` | Baseline model mode | false |
 | `--model` | Baseline model name | — |
-| `--model_exp` | Model experiment ID | auto latest |
+| `--model_exp` | Model experiment ID (auto-selects latest if not specified) | auto latest |
 | `--model_size` | THETA model size | 0.6B |
 | `--mode` | THETA mode | zero_shot |
 | `--language` | Visualization language: en, zh | en |
 | `--dpi` | Image DPI | 300 |
 
-**Generated charts** (20+ types): topic word bars, word clouds, topic similarity heatmap, document clustering (UMAP), topic network graph, topic evolution (DTM), training convergence, coherence metrics, pyLDAvis interactive HTML, per-topic word importance, and more.
+**Generated charts** (20+ types):
+
+| Chart | Description | Filename |
+|-------|-------------|----------|
+| Topic Table | Top words per topic | topic_table.png |
+| Topic Network | Inter-topic similarity network | topic_network.png |
+| Document Clusters | UMAP document distribution | doc_topic_umap.png |
+| Cluster Heatmap | Topic-document heatmap | cluster_heatmap.png |
+| Topic Proportion | Document proportion per topic | topic_proportion.png |
+| Training Loss | Loss curve | training_loss.png |
+| Evaluation Metrics | 7-metric radar chart | metrics.png |
+| Topic Coherence | Per-topic NPMI | topic_coherence.png |
+| Topic Exclusivity | Per-topic exclusivity | topic_exclusivity.png |
+| Word Clouds | All topic word clouds | topic_wordclouds.png |
+| Topic Similarity | Inter-topic cosine similarity | topic_similarity.png |
+| pyLDAvis | Interactive topic explorer | pyldavis_interactive.html |
+| Per-topic Words | Per-topic word weights | topics/topic_N/word_importance.png |
 
 ### F) Evaluation — `07_evaluate.sh`
 
 Standalone evaluation with 7 unified metrics.
 
 ```bash
-# Evaluate all 11 baseline models
+# ==================================================
+# Evaluate baseline models (all 11)
+# ==================================================
+
+# LDA
 bash scripts/07_evaluate.sh --dataset edu_data --model lda --num_topics 20
+
+# HDP (topic count auto-determined; num_topics is used for file lookup)
 bash scripts/07_evaluate.sh --dataset edu_data --model hdp --num_topics 150
+
+# STM (only if trained with covariates)
 bash scripts/07_evaluate.sh --dataset edu_data --model stm --num_topics 20
+
+# BTM
 bash scripts/07_evaluate.sh --dataset edu_data --model btm --num_topics 20
+
+# NVDM
 bash scripts/07_evaluate.sh --dataset edu_data --model nvdm --num_topics 20
+
+# GSM
 bash scripts/07_evaluate.sh --dataset edu_data --model gsm --num_topics 20
+
+# ProdLDA
 bash scripts/07_evaluate.sh --dataset edu_data --model prodlda --num_topics 20
+
+# CTM
 bash scripts/07_evaluate.sh --dataset edu_data --model ctm --num_topics 20
+
+# ETM
 bash scripts/07_evaluate.sh --dataset edu_data --model etm --num_topics 20
+
+# DTM
 bash scripts/07_evaluate.sh --dataset edu_data --model dtm --num_topics 20
+
+# BERTopic
 bash scripts/07_evaluate.sh --dataset edu_data --model bertopic --num_topics 20
 
-# Evaluate THETA model
+# With custom vocab size
+bash scripts/07_evaluate.sh --dataset edu_data --model lda --num_topics 20 --vocab_size 3500
+
+# ==================================================
+# Evaluate THETA models
+# ==================================================
+
+# Zero-shot THETA
 bash scripts/07_evaluate.sh --dataset edu_data --model theta --model_size 0.6B --mode zero_shot
+
+# Unsupervised THETA
 bash scripts/07_evaluate.sh --dataset edu_data --model theta --model_size 0.6B --mode unsupervised
+
+# Supervised THETA (4B model)
 bash scripts/07_evaluate.sh --dataset edu_data --model theta --model_size 4B --mode supervised
 ```
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `--dataset` | Dataset name (required) | — |
-| `--model` | Model name (required) | — |
+| `--model` | Model name (required): lda, hdp, stm, btm, nvdm, gsm, prodlda, ctm, etm, dtm, bertopic, theta | — |
 | `--num_topics` | Number of topics | 20 |
 | `--vocab_size` | Vocabulary size | 5000 |
 | `--baseline` | Baseline model mode | false |
 | `--model_size` | THETA model size: 0.6B, 4B, 8B | 0.6B |
 | `--mode` | THETA mode: zero_shot, unsupervised, supervised | zero_shot |
+
+**Evaluation Metrics (7 metrics)**:
+
+| Metric | Full Name | Direction | Description |
+|--------|-----------|-----------|-------------|
+| **TD** | Topic Diversity | ↑ Higher is better | Proportion of unique words across topics |
+| **iRBO** | Inverse Rank-Biased Overlap | ↑ Higher is better | Rank-based topic diversity |
+| **NPMI** | Normalized PMI | ↑ Higher is better | Normalized pointwise mutual information coherence |
+| **C_V** | C_V Coherence | ↑ Higher is better | Sliding-window based coherence |
+| **UMass** | UMass Coherence | → Closer to 0 is better | Document co-occurrence based coherence |
+| **Exclusivity** | Topic Exclusivity | ↑ Higher is better | How exclusive words are to their topics |
+| **PPL** | Perplexity | ↓ Lower is better | Model fit (lower = better generalization) |
 
 ### G) Model Comparison — `08_compare_models.sh`
 
@@ -841,8 +1040,16 @@ Cross-model metric comparison table.
 # Compare all baseline models
 bash scripts/08_compare_models.sh \
     --dataset edu_data \
-    --models lda,hdp,stm,btm,nvdm,gsm,prodlda,ctm,etm,dtm,bertopic \
+    --models lda,hdp,btm,nvdm,gsm,prodlda,ctm,etm,dtm,bertopic \
     --num_topics 20
+
+# Compare traditional models only
+bash scripts/08_compare_models.sh \
+    --dataset edu_data --models lda,hdp,btm --num_topics 20
+
+# Compare neural models only
+bash scripts/08_compare_models.sh \
+    --dataset edu_data --models nvdm,gsm,prodlda,ctm,etm,dtm --num_topics 20
 
 # Compare specific models
 bash scripts/08_compare_models.sh \
@@ -850,8 +1057,27 @@ bash scripts/08_compare_models.sh \
 
 # Export to CSV
 bash scripts/08_compare_models.sh \
-    --dataset edu_data --models lda,hdp,nvdm,gsm,prodlda,ctm,etm,stm,dtm \
+    --dataset edu_data --models lda,hdp,nvdm,gsm,prodlda,ctm,etm,dtm \
     --num_topics 20 --output comparison.csv
+```
+
+**Example output**:
+```
+================================================================================
+Model Comparison: edu_data (K=20)
+================================================================================
+
+Model              TD     iRBO     NPMI      C_V    UMass  Exclusivity        PPL
+--------------------------------------------------------------------------------
+lda            0.8500   0.7200   0.0512   0.4231  -2.1234       0.6543     123.45
+prodlda        0.9200   0.8100   0.0634   0.4567  -1.8765       0.7234      98.76
+ctm            0.8800   0.7800   0.0589   0.4412  -1.9876       0.6987     105.32
+--------------------------------------------------------------------------------
+
+Best Models:
+  - Best TD (Topic Diversity): prodlda (0.9200)
+  - Best NPMI (Coherence):     prodlda (0.0634)
+  - Best PPL (Perplexity):     prodlda (98.76)
 ```
 
 | Parameter | Description | Default |
@@ -919,6 +1145,175 @@ for model in lda etm ctm prodlda; do
     bash scripts/06_visualize.sh --baseline --dataset hatespeech \
         --model $model --num_topics 20 --language en
 done
+```
+
+### K) End-to-End Example: edu_data
+
+The following demonstrates the complete pipeline from data cleaning to model comparison using `edu_data` (823 Chinese education policy documents).
+
+#### 1. Setup
+
+```bash
+bash scripts/01_setup.sh
+```
+
+#### 2. Data Cleaning (if raw data is not yet cleaned)
+
+```bash
+# Preview columns first
+bash scripts/02_clean_data.sh --input /root/autodl-tmp/data/edu_data/edu_data_raw.csv --preview
+
+# Clean with explicit column selection (directory mode for docx/txt)
+bash scripts/02_clean_data.sh --input /root/autodl-tmp/data/edu_data/ --language chinese
+
+# Clean CSV with text column specified
+bash scripts/02_clean_data.sh \
+    --input /root/autodl-tmp/data/edu_data/edu_data_raw.csv \
+    --language chinese --text_column cleaned_content
+# Output: data/edu_data/edu_data_raw_cleaned.csv
+```
+
+#### 3. Data Preparation — Baseline Models
+
+```bash
+# BOW-only models (lda, hdp, btm, nvdm, gsm, prodlda share the same data)
+# Note: STM also uses BOW but additionally requires covariates in DATASET_CONFIGS
+bash scripts/03_prepare_data.sh \
+    --dataset edu_data --model lda --vocab_size 3500 --language chinese
+# Output: result/baseline/edu_data/data/exp_xxx/
+
+# CTM (additionally requires SBERT embeddings)
+bash scripts/03_prepare_data.sh \
+    --dataset edu_data --model ctm --vocab_size 3500 --language chinese
+
+# ETM (additionally requires Word2Vec embeddings)
+bash scripts/03_prepare_data.sh \
+    --dataset edu_data --model etm --vocab_size 3500 --language chinese
+
+# DTM (additionally requires SBERT + time slices)
+bash scripts/03_prepare_data.sh \
+    --dataset edu_data --model dtm --vocab_size 3500 --language chinese --time_column year
+
+# BERTopic (SBERT + raw text)
+bash scripts/03_prepare_data.sh \
+    --dataset edu_data --model bertopic --vocab_size 3500 --language chinese
+```
+
+#### 4. Data Preparation — THETA Model
+
+```bash
+# Zero-shot (fastest, recommended for initial testing)
+bash scripts/03_prepare_data.sh \
+    --dataset edu_data --model theta --model_size 0.6B --mode zero_shot \
+    --vocab_size 3500 --language chinese
+# Output: result/0.6B/edu_data/data/exp_xxx_vocab3500_theta_0.6B_zero_shot/
+
+# Unsupervised (LoRA fine-tuning, potentially better results)
+bash scripts/03_prepare_data.sh \
+    --dataset edu_data --model theta --model_size 0.6B --mode unsupervised \
+    --vocab_size 3500 --language chinese --emb_epochs 10 --emb_batch_size 8
+# Output: result/0.6B/edu_data/data/exp_xxx_vocab3500_theta_0.6B_unsupervised/
+```
+
+#### 5. Train Baseline Models
+
+```bash
+# Train all BOW-only models at once (STM excluded — requires covariates)
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models lda,hdp,btm,nvdm,gsm,prodlda \
+    --num_topics 20 --epochs 100
+
+# Train CTM
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models ctm --num_topics 20 --epochs 50
+
+# Train ETM
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models etm --num_topics 20 --epochs 50
+
+# Train DTM
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models dtm --num_topics 20 --epochs 50
+
+# Train BERTopic
+bash scripts/05_train_baseline.sh \
+    --dataset edu_data --models bertopic
+```
+
+#### 6. Train THETA Model
+
+```bash
+# Zero-shot THETA (Chinese visualization)
+bash scripts/04_train_theta.sh \
+    --dataset edu_data --model_size 0.6B --mode zero_shot \
+    --num_topics 20 --epochs 100 --language zh
+
+# Unsupervised THETA
+bash scripts/04_train_theta.sh \
+    --dataset edu_data --model_size 0.6B --mode unsupervised \
+    --num_topics 20 --epochs 100 --language zh
+```
+
+#### 7. Standalone Visualization (optional, already generated during training)
+
+```bash
+# THETA visualization
+bash scripts/06_visualize.sh \
+    --dataset edu_data --model_size 0.6B --mode zero_shot --language zh
+
+# Baseline visualization
+bash scripts/06_visualize.sh \
+    --baseline --dataset edu_data --model lda --num_topics 20 --language zh
+```
+
+#### 8. Model Comparison
+
+```bash
+bash scripts/08_compare_models.sh \
+    --dataset edu_data \
+    --models lda,hdp,btm,nvdm,gsm,prodlda,ctm,etm \
+    --num_topics 20
+```
+
+#### Final Result Directory
+
+```
+result/
+├── 0.6B/edu_data/                          # THETA results
+│   ├── data/
+│   │   ├── exp_xxx_vocab3500_theta_0.6B_zero_shot/
+│   │   │   ├── bow/ (bow_matrix.npy, vocab.json, vocab_embeddings.npy)
+│   │   │   └── embeddings/ (embeddings.npy)
+│   │   └── exp_xxx_vocab3500_theta_0.6B_unsupervised/
+│   │       ├── bow/
+│   │       └── embeddings/
+│   └── models/
+│       ├── exp_xxx_k20_e100_zero_shot/
+│       │   ├── model/ (etm_model.pt, theta.npy, beta.npy, ...)
+│       │   ├── evaluation/ (metrics.json)
+│       │   ├── topic_words/ (topic_words.json, topic_words.txt)
+│       │   └── visualization/viz_xxx/ (30+ charts)
+│       └── exp_xxx_k20_e100_unsupervised/
+│
+└── baseline/edu_data/                      # Baseline results
+    ├── data/
+    │   ├── exp_xxx_vocab3500/              # Shared by BOW-only models
+    │   ├── exp_xxx_ctm_vocab3500/          # CTM-specific
+    │   ├── exp_xxx_etm_vocab3500/          # ETM-specific
+    │   ├── exp_xxx_dtm_vocab3500/          # DTM-specific
+    │   └── exp_xxx_bertopic_vocab3500/     # BERTopic-specific
+    └── models/
+        ├── lda/exp_xxx/ (theta_k20.npy, beta_k20.npy, metrics_k20.json)
+        ├── hdp/exp_xxx/
+        ├── stm/exp_xxx/
+        ├── btm/exp_xxx/
+        ├── nvdm/exp_xxx/
+        ├── gsm/exp_xxx/
+        ├── prodlda/exp_xxx/
+        ├── ctm/exp_xxx/
+        ├── etm/exp_xxx/
+        ├── dtm/exp_xxx/
+        └── bertopic/exp_xxx/
 ```
 
 ---
@@ -1326,9 +1721,84 @@ A: No. Qwen-3 is the reference backbone, but THETA is designed to be model-agnos
 
 A: ETM learns static topics across the corpus; DTM (Dynamic Topic Model) models topic evolution over time and requires timestamps.
 
+**Q: Why is STM skipped when I try to train it? How do I use STM?**
+
+A: STM (Structural Topic Model) requires document-level covariates (metadata such as year, source, category). Unlike LDA, STM models how metadata influences topic prevalence, so covariates are mandatory. If your dataset doesn't have covariates configured, STM will be automatically skipped.
+
+To use STM:
+
+```bash
+# 1. Make sure your cleaned CSV has metadata columns (e.g., year, source, category)
+
+# 2. Register covariates in ETM/config.py:
+#    DATASET_CONFIGS["my_dataset"] = {
+#        "vocab_size": 5000,
+#        "num_topics": 20,
+#        "language": "english",
+#        "covariate_columns": ["year", "source", "category"],  # <-- required for STM
+#    }
+
+# 3. Prepare data
+bash scripts/03_prepare_data.sh --dataset my_dataset --model stm --vocab_size 5000
+
+# 4. Train STM
+bash scripts/05_train_baseline.sh --dataset my_dataset --models stm --num_topics 20
+```
+
+If your dataset has no meaningful metadata, use CTM (same logistic-normal prior, no covariates needed) or LDA instead.
+
+**Q: CUDA out of memory — what should I do?**
+
+A: Insufficient GPU VRAM. Solutions:
+- Embedding generation (unsupervised/supervised): reduce `--batch_size` (recommend 4–8)
+- THETA training: reduce `--batch_size` (recommend 32–64)
+- Check for other processes using the GPU: `nvidia-smi`
+- Kill zombie processes: `kill -9 <PID>`
+
+**Q: EMB shows ✗ (embeddings not generated)**
+
+A: Embedding generation failed (usually OOM) but the script did not exit with an error. Regenerate with a smaller batch_size:
+
+```bash
+bash scripts/02_generate_embeddings.sh \
+    --dataset edu_data --mode unsupervised --model_size 0.6B \
+    --batch_size 4 --gpu 0 \
+    --exp_dir /root/autodl-tmp/result/0.6B/edu_data/data/exp_xxx
+```
+
+**Q: How to choose an embedding mode?**
+
+| Scenario | Recommended Mode | Reason |
+|----------|------------------|--------|
+| Quick testing | zero_shot | No training needed, completes in seconds |
+| Unlabeled data | unsupervised | LoRA fine-tuning adapts to the domain |
+| Labeled data | supervised | Leverages label information to enhance embeddings |
+| Large datasets | zero_shot | Avoids lengthy fine-tuning |
+
+**Q: How to choose the number of topics K?**
+
+- Small datasets (<1000 docs): K = 5–15
+- Medium datasets (1000–10000): K = 10–30
+- Large datasets (>10000): K = 20–50
+- Use `hdp` or `bertopic` to auto-determine topic count as a reference
+
+**Q: What does the visualization `--language` parameter do?**
+
+- `en`: Chart titles, axes, and legends in English
+- `zh`: Chart titles, axes, and legends in Chinese (e.g., "主题表", "训练损失图")
+- Only affects visualization; does not affect model training or evaluation
+
+**Q: What is the difference between BOW `--language` and visualization `--language`?**
+
+| Parameter | Script | Values | Purpose |
+|-----------|--------|--------|---------|
+| `--language` in `03_prepare_data.sh` | BOW generation | english, chinese | Controls tokenization and stopword filtering |
+| `--language` in `04_train_theta.sh` | Visualization | en, zh | Controls chart label language |
+| `--language` in `05_train_baseline.sh` | Visualization | en, zh | Controls chart label language |
+
 **Q: Can I add my own dataset?**
 
-A: Yes. Prepare a cleaned CSV with `text` column (and optionally `year` for DTM), then add configuration to `config.py`:
+A: Yes. Prepare a cleaned CSV with `text` column (and optionally `year` for DTM, or metadata columns for STM), then add configuration to `config.py`:
 
 ```python
 DATASET_CONFIGS["my_dataset"] = {
@@ -1336,6 +1806,10 @@ DATASET_CONFIGS["my_dataset"] = {
     "num_topics": 20,
     "min_doc_freq": 5,
     "language": "english",
+    # Optional: for STM (document-level metadata)
+    # "covariate_columns": ["year", "source", "category"],
+    # Optional: for DTM (time-aware)
+    # "has_timestamp": True,
 }
 ```
 
