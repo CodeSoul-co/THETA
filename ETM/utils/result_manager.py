@@ -95,10 +95,9 @@ class ResultManager:
         vocab_embeddings: np.ndarray = None
     ):
         """Save BOW data."""
-        if sp.issparse(bow_matrix):
-            sp.save_npz(self.bow_dir / 'bow_matrix.npz', bow_matrix)
-        else:
-            sp.save_npz(self.bow_dir / 'bow_matrix.npz', sp.csr_matrix(bow_matrix))
+        # Save as dense npy format
+        bow_dense = bow_matrix.toarray() if sp.issparse(bow_matrix) else bow_matrix
+        np.save(self.bow_dir / 'bow_matrix.npy', bow_dense)
         
         vocab_list = list(vocab.keys()) if isinstance(vocab, dict) else list(vocab)
         
@@ -118,9 +117,9 @@ class ResultManager:
         """Load BOW data."""
         result = {}
         
-        bow_path = self.bow_dir / 'bow_matrix.npz'
+        bow_path = self.bow_dir / 'bow_matrix.npy'
         if bow_path.exists():
-            result['bow_matrix'] = sp.load_npz(bow_path)
+            result['bow_matrix'] = np.load(bow_path)
         
         vocab_path = self.bow_dir / 'vocab.json'
         if vocab_path.exists():
