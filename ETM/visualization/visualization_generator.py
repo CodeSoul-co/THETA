@@ -674,6 +674,14 @@ class VisualizationGenerator:
         # Calculate topic proportions
         topic_props = self.theta.mean(axis=0)
         
+        # Ensure non-negative values (some models like NVDM may have negative values)
+        topic_props = np.maximum(topic_props, 0)
+        
+        # Skip if all zeros
+        if topic_props.sum() == 0:
+            print(f"  [SKIP] {self._get_filename('topic_proportion_pie')} (no positive proportions)")
+            return
+        
         # Get top 10 topics
         top_k = min(10, self.n_topics)
         top_indices = np.argsort(topic_props)[-top_k:][::-1]
@@ -1559,11 +1567,15 @@ class VisualizationGenerator:
     
     def generate_topic_significance_chart(self):
         """Generate topic significance chart from metrics."""
-        if self.metrics is None or 'topic_significance' not in self.metrics:
-            print("  [SKIP] topic_significance_chart (no significance data)")
+        if self.metrics is None:
+            print("  [SKIP] topic_significance_chart (no metrics)")
             return
         
-        significance = self.metrics['topic_significance']
+        # Try both key names
+        significance = self.metrics.get('topic_significance_per_topic') or self.metrics.get('topic_significance')
+        if significance is None:
+            print("  [SKIP] topic_significance_chart (no significance data)")
+            return
         
         fig, ax = plt.subplots(figsize=(12, 6))
         
@@ -2294,9 +2306,9 @@ def load_model_data(model_dir, bow_dir=None, result_dir=None):
         bow_dir = Path(bow_dir)
         
         # Load BOW matrix
-        bow_file = bow_dir / 'bow_matrix.npz'
+        bow_file = bow_dir / 'bow_matrix.npy'
         if bow_file.exists():
-            data['bow_matrix'] = sparse.load_npz(bow_file)
+            data['bow_matrix'] = np.load(bow_file)
             print(f"  Loaded bow_matrix: {data['bow_matrix'].shape}")
         
         # Load vocab (real vocabulary, not word_0, word_1, ...)

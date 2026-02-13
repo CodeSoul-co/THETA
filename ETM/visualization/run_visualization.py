@@ -68,7 +68,39 @@ def load_visualization_data(result_dir, dataset, mode, model_size=None):
     model_dir = base_dir / 'model'
     evaluation_dir = base_dir / 'evaluation'
     topic_words_dir = base_dir / 'topic_words'
-    bow_dir = result_dir / model_size / dataset / 'bow' if model_size else result_dir / dataset / 'bow'
+    
+    # Resolve BOW directory
+    # 1. Check if base_dir has a config.json with data_exp reference
+    bow_dir = None
+    config_file = base_dir / 'config.json'
+    if config_file.exists():
+        try:
+            with open(config_file, 'r') as f:
+                train_config = json.load(f)
+            data_exp = train_config.get('data_exp', '')
+            ms = train_config.get('model_size', model_size or '')
+            ds = train_config.get('dataset', dataset)
+            if data_exp and data_exp != 'legacy':
+                # New exp structure: find bow in data exp dir
+                candidate = result_dir.parent.parent / 'data' / data_exp / 'bow'
+                if not candidate.exists() and ms:
+                    candidate = Path('/root/autodl-tmp/result') / ms / ds / 'data' / data_exp / 'bow'
+                if candidate.exists():
+                    bow_dir = candidate
+        except Exception:
+            pass
+    
+    # 2. Fallback to legacy paths
+    if bow_dir is None:
+        if model_size:
+            bow_dir = result_dir / model_size / dataset / 'bow'
+        else:
+            # Try parent directories
+            candidate = base_dir.parent / 'bow'
+            if candidate.exists():
+                bow_dir = candidate
+            else:
+                bow_dir = result_dir / dataset / 'bow'
     
     print(f"\n{'='*60}")
     print(f"Loading visualization data")
@@ -158,9 +190,9 @@ def load_visualization_data(result_dir, dataset, mode, model_size=None):
         print(f"⚠ Generated placeholder vocab: {len(data['vocab'])} words")
     
     # Load BOW matrix (optional)
-    bow_file = bow_dir / 'bow_matrix.npz'
+    bow_file = bow_dir / 'bow_matrix.npy'
     if bow_file.exists():
-        data['bow_matrix'] = sparse.load_npz(bow_file)
+        data['bow_matrix'] = np.load(bow_file)
         print(f"✓ Loaded bow_matrix: {data['bow_matrix'].shape}")
     
     # Load timestamps (optional)
@@ -445,7 +477,9 @@ def load_baseline_data(result_dir, dataset, model, num_topics=20):
     Load baseline model data (LDA, ETM, CTM) for visualization.
     
     Args:
-        result_dir: Base result directory (e.g., /root/autodl-tmp/result/baseline)
+        result_dir: Result directory - can be:
+            - New structure: full experiment path (e.g., .../models/lda/exp_xxx)
+            - Old structure: base result directory (e.g., /root/autodl-tmp/result/baseline)
         dataset: Dataset name (e.g., socialTwitter)
         model: Model name (lda, etm, ctm_zeroshot)
         num_topics: Number of topics
@@ -456,8 +490,42 @@ def load_baseline_data(result_dir, dataset, model, num_topics=20):
     from scipy import sparse
     
     result_dir = Path(result_dir)
-    dataset_dir = result_dir / dataset
-    model_dir = dataset_dir / model
+    
+    # Check if result_dir is already the experiment directory (new structure)
+    # New structure: result_dir contains model subdirectory (e.g., lda/) directly
+    data_exp_dir = None  # For loading vocab from data experiment
+    
+    if (result_dir / model).exists():
+        model_dir = result_dir / model
+        dataset_dir = result_dir
+        # Try to load data_exp from config.json
+        config_path = result_dir / 'config.json'
+        if config_path.exists():
+            with open(config_path, 'r') as f:
+                config = json.load(f)
+            data_exp = config.get('data_exp')
+            if data_exp:
+                # Construct data experiment directory path
+                data_exp_dir = result_dir.parent.parent.parent / 'data' / data_exp
+    elif result_dir.name.startswith('exp_'):
+        # result_dir is the experiment directory itself
+        model_dir = result_dir / model
+        dataset_dir = result_dir
+        if not model_dir.exists():
+            # Try looking for files directly in result_dir
+            model_dir = result_dir
+        # Try to load data_exp from config.json
+        config_path = result_dir / 'config.json'
+        if config_path.exists():
+            with open(config_path, 'r') as f:
+                config = json.load(f)
+            data_exp = config.get('data_exp')
+            if data_exp:
+                data_exp_dir = result_dir.parent.parent.parent / 'data' / data_exp
+    else:
+        # Old structure: result_dir / dataset / model
+        dataset_dir = result_dir / dataset
+        model_dir = dataset_dir / model
     
     if not model_dir.exists():
         raise FileNotFoundError(f"Model directory not found: {model_dir}")
@@ -468,31 +536,54 @@ def load_baseline_data(result_dir, dataset, model, num_topics=20):
     
     data = {}
     
-    # Load theta from model/ subdirectory
-    theta_path = model_dir / 'model' / f'theta_k{num_topics}.npy'
-    if not theta_path.exists():
-        theta_path = model_dir / f'theta_k{num_topics}.npy'
-    if theta_path.exists():
+    # Load theta from various possible subdirectories
+    theta_path = None
+    beta_path = None
+    
+    # Check paths in priority order
+    possible_paths = [
+        model_dir / 'model' / f'theta_k{num_topics}.npy',  # HDP/neural
+        model_dir / f'theta_k{num_topics}.npy',  # direct
+        model_dir / model / f'theta_k{num_topics}.npy',  # model subdir
+        model_dir / model / 'model' / f'theta_k{num_topics}.npy',  # model/model subdir
+    ]
+    
+    # CTM saves to ctm_zeroshot/ or ctm_combined/
+    if model == 'ctm':
+        possible_paths.insert(0, model_dir / 'ctm_zeroshot' / f'theta_k{num_topics}.npy')
+        possible_paths.insert(1, model_dir / 'ctm_combined' / f'theta_k{num_topics}.npy')
+    
+    for p in possible_paths:
+        if p.exists():
+            theta_path = p
+            beta_path = p.parent / f'beta_k{num_topics}.npy'
+            break
+    
+    if theta_path and theta_path.exists():
         data['theta'] = np.load(theta_path)
         print(f"✓ Loaded theta: {data['theta'].shape}")
     else:
-        raise FileNotFoundError(f"theta not found: {theta_path}")
+        raise FileNotFoundError(f"theta not found in any of: {[str(p) for p in possible_paths]}")
     
-    # Load beta from model/ subdirectory
-    beta_path = model_dir / 'model' / f'beta_k{num_topics}.npy'
-    if not beta_path.exists():
-        beta_path = model_dir / f'beta_k{num_topics}.npy'
-    if beta_path.exists():
+    if beta_path and beta_path.exists():
         data['beta'] = np.load(beta_path)
         print(f"✓ Loaded beta: {data['beta'].shape}")
     else:
         raise FileNotFoundError(f"beta not found: {beta_path}")
     
-    # Load vocab from bow/ subdirectory
-    vocab_path = model_dir / 'bow' / 'vocab.json'
-    if not vocab_path.exists():
+    # Load vocab - try multiple locations
+    vocab_path = None
+    # 1. Try data_exp_dir first (new structure)
+    if data_exp_dir and (data_exp_dir / 'vocab.json').exists():
+        vocab_path = data_exp_dir / 'vocab.json'
+    # 2. Try model_dir / bow / vocab.json (old structure)
+    elif (model_dir / 'bow' / 'vocab.json').exists():
+        vocab_path = model_dir / 'bow' / 'vocab.json'
+    # 3. Try dataset_dir / vocab.json
+    elif (dataset_dir / 'vocab.json').exists():
         vocab_path = dataset_dir / 'vocab.json'
-    if vocab_path.exists():
+    
+    if vocab_path and vocab_path.exists():
         with open(vocab_path, 'r', encoding='utf-8') as f:
             data['vocab'] = json.load(f)
         print(f"✓ Loaded vocab: {len(data['vocab'])} words")
@@ -543,22 +634,38 @@ def load_baseline_data(result_dir, dataset, model, num_topics=20):
         data['topic_words'] = topic_words
         print(f"⚠ Generated topic_words from beta")
     
-    # Load BOW matrix from bow/ subdirectory
-    bow_path = model_dir / 'bow' / 'bow_matrix.npz'
-    if not bow_path.exists():
-        bow_path = dataset_dir / 'bow_matrix.npz'
-    if bow_path.exists():
-        data['bow_matrix'] = sparse.load_npz(bow_path)
+    # Load BOW matrix - try multiple locations
+    bow_path = None
+    # 1. Try data_exp_dir first (new structure)
+    if data_exp_dir and (data_exp_dir / 'bow_matrix.npy').exists():
+        bow_path = data_exp_dir / 'bow_matrix.npy'
+    # 2. Try model_dir / bow / bow_matrix.npy (old structure)
+    elif (model_dir / 'bow' / 'bow_matrix.npy').exists():
+        bow_path = model_dir / 'bow' / 'bow_matrix.npy'
+    # 3. Try dataset_dir / bow_matrix.npy
+    elif (dataset_dir / 'bow_matrix.npy').exists():
+        bow_path = dataset_dir / 'bow_matrix.npy'
+    
+    if bow_path and bow_path.exists():
+        data['bow_matrix'] = np.load(bow_path)
         print(f"✓ Loaded bow_matrix: {data['bow_matrix'].shape}")
     
-    # Load metrics from evaluation/ subdirectory
-    metrics_path = model_dir / 'evaluation' / f'metrics_k{num_topics}.json'
-    if not metrics_path.exists():
+    # Load metrics - try multiple locations
+    metrics_path = None
+    # 1. Try result_dir (experiment directory) first
+    if (result_dir / f'metrics_k{num_topics}.json').exists():
+        metrics_path = result_dir / f'metrics_k{num_topics}.json'
+    # 2. Try model_dir / evaluation / metrics_k{num_topics}.json
+    elif (model_dir / 'evaluation' / f'metrics_k{num_topics}.json').exists():
+        metrics_path = model_dir / 'evaluation' / f'metrics_k{num_topics}.json'
+    # 3. Try model_dir / metrics_k{num_topics}.json
+    elif (model_dir / f'metrics_k{num_topics}.json').exists():
         metrics_path = model_dir / f'metrics_k{num_topics}.json'
-    if metrics_path.exists():
+    
+    if metrics_path and metrics_path.exists():
         with open(metrics_path, 'r', encoding='utf-8') as f:
             data['metrics'] = json.load(f)
-        print(f"✓ Loaded metrics")
+        print(f"✓ Loaded metrics from {metrics_path.name}")
     
     # Load timestamps for DTM (time_slices.json and time_indices.npy)
     data['topic_embeddings'] = None
@@ -821,12 +928,19 @@ def run_baseline_visualization(
     # Load data
     data = load_baseline_data(result_dir, dataset, model, num_topics)
     
-    # Determine output directory with unique naming (k{num_topics}_{timestamp})
+    # Determine output directory with k and language in folder name
     if output_dir is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        result_path = Path(result_dir)
         lang_suffix = 'zh' if language == 'zh' else 'en'
-        viz_folder = f'visualization_k{num_topics}_{lang_suffix}_{timestamp}'
-        output_dir = Path(result_dir) / dataset / model / viz_folder
+        viz_folder = f'visualization_k{num_topics}_{lang_suffix}'
+        
+        # Check if result_dir is already an experiment directory (new structure)
+        if result_path.name.startswith('exp_') or (result_path / model).exists():
+            # New structure: output to result_dir/visualization_k{num_topics}_{language}/
+            output_dir = result_path / viz_folder
+        else:
+            # Old structure: result_dir/dataset/model/visualization_k{num_topics}_{language}
+            output_dir = result_path / dataset / model / viz_folder
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -865,40 +979,49 @@ def run_baseline_visualization(
         global_dir = output_dir / 'global'
         viz = TopicVisualizer(output_dir=str(global_dir), dpi=dpi, language=language)
         
-        viz.visualize_topic_words(data['topic_words'], num_words=10, filename='topic_words_bars.png')
-        print(f"  ✓ topic_words_bars.png")
+        # Filename mapping for zh/en
+        filenames = {
+            'topic_words_bars': '主题词条形图.png' if language == 'zh' else 'topic_words_bars.png',
+            'topic_similarity': '主题相似度.png' if language == 'zh' else 'topic_similarity.png',
+            'doc_topic_umap': '文档主题UMAP.png' if language == 'zh' else 'doc_topic_umap.png',
+            'metrics': '评估指标图.png' if language == 'zh' else 'metrics.png',
+            'topic_wordclouds': '主题词云.png' if language == 'zh' else 'topic_wordclouds.png',
+            'pyldavis_intertopic': '主题距离图.png' if language == 'zh' else 'pyldavis_intertopic.png',
+            'pyldavis_interactive': '交互式主题可视化.html' if language == 'zh' else 'pyldavis_interactive.html',
+        }
         
-        viz.visualize_topic_similarity(data['beta'], data['topic_words'], filename='topic_similarity.png')
-        print(f"  ✓ topic_similarity.png")
+        viz.visualize_topic_words(data['topic_words'], num_words=10, filename=filenames['topic_words_bars'])
+        print(f"  ✓ {filenames['topic_words_bars']}")
         
-        viz.visualize_document_topics(data['theta'], method='umap', max_docs=5000, filename='doc_topic_umap.png')
-        print(f"  ✓ doc_topic_umap.png")
+        viz.visualize_topic_similarity(data['beta'], data['topic_words'], filename=filenames['topic_similarity'])
+        print(f"  ✓ {filenames['topic_similarity']}")
         
-        if data.get('metrics'):
-            viz.visualize_metrics(data['metrics'], filename='metrics.png')
-            print(f"  ✓ metrics.png")
+        viz.visualize_document_topics(data['theta'], method='umap', max_docs=5000, filename=filenames['doc_topic_umap'])
+        print(f"  ✓ {filenames['doc_topic_umap']}")
+        
+        # Note: metrics chart is already generated by VisualizationGenerator (评估指标.png)
         
         try:
-            viz.visualize_all_wordclouds(data['topic_words'], num_words=30, filename='topic_wordclouds.png')
-            print(f"  ✓ topic_wordclouds.png")
+            viz.visualize_all_wordclouds(data['topic_words'], num_words=30, filename=filenames['topic_wordclouds'])
+            print(f"  ✓ {filenames['topic_wordclouds']}")
         except Exception as e:
-            print(f"  ⚠ topic_wordclouds skipped: {e}")
+            print(f"  ⚠ {filenames['topic_wordclouds']} skipped: {e}")
         
         try:
             viz.visualize_pyldavis_style(data['theta'], data['beta'], data['topic_words'], 
-                                        selected_topic=0, n_words=30, filename='pyldavis_intertopic.png')
-            print(f"  ✓ pyldavis_intertopic.png")
+                                        selected_topic=0, n_words=30, filename=filenames['pyldavis_intertopic'])
+            print(f"  ✓ {filenames['pyldavis_intertopic']}")
         except Exception as e:
-            print(f"  ⚠ pyldavis_intertopic skipped: {e}")
+            print(f"  ⚠ {filenames['pyldavis_intertopic']} skipped: {e}")
         
         try:
             from visualization.topic_visualizer import generate_pyldavis_visualization
             html_path = generate_pyldavis_visualization(
                 theta=data['theta'], beta=data['beta'], bow_matrix=data.get('bow_matrix'),
-                vocab=data['vocab'], output_path=str(global_dir / 'pyldavis_interactive.html')
+                vocab=data['vocab'], output_path=str(global_dir / filenames['pyldavis_interactive'])
             )
             if html_path:
-                print(f"  ✓ pyldavis_interactive.html")
+                print(f"  ✓ {filenames['pyldavis_interactive']}")
         except Exception as e:
             print(f"  ⚠ pyldavis_interactive.html skipped: {e}")
             
@@ -994,7 +1117,7 @@ Examples:
     parser.add_argument('--all', action='store_true',
                         help='Run for all datasets and models (baseline mode only)')
     parser.add_argument('--model', type=str, default=None,
-                        choices=['lda', 'etm', 'ctm_zeroshot'],
+                        choices=['lda', 'hdp', 'stm', 'btm', 'etm', 'ctm', 'ctm_zeroshot', 'dtm', 'nvdm', 'gsm', 'prodlda', 'bertopic'],
                         help='Model name (baseline mode only)')
     parser.add_argument('--num_topics', type=int, default=20,
                         help='Number of topics (baseline mode only)')
