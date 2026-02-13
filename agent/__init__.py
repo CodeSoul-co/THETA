@@ -25,6 +25,10 @@ from .core.orchestrator_agent import OrchestratorAgent
 from .core.result_interpreter_agent import ResultInterpreterAgent
 from .config.llm_config import LLMConfig, LLMConfigManager, get_llm_config, get_default_llm_config
 
+# LangChain agent (lazy imports to avoid startup cost)
+from .langchain_agent import THETAAgent, get_agent, reset_agent
+from .langchain_llm import get_chat_model
+
 # Submodule imports
 from . import core
 from . import prompts
@@ -43,6 +47,11 @@ __all__ = [
     "ReportAgent",
     "OrchestratorAgent",
     "ResultInterpreterAgent",
+    # LangChain Agent
+    "THETAAgent",
+    "get_agent",
+    "reset_agent",
+    "get_chat_model",
     # Config
     "LLMConfig",
     "LLMConfigManager",
