@@ -1,21 +1,48 @@
 #!/usr/bin/env python
 """
-ETM Topic Model Pipeline - Unified entry script
+THETA Topic Model Pipeline - Unified entry script
 
-Supports running complete workflow for multiple topic models (THETA, LDA, ETM, CTM, DTM):
+Supports running complete workflow for multiple topic models:
 Data processing -> Model training -> Evaluation -> Visualization -> Result saving
+
+Supported Models:
+    THETA:     Main model using Qwen embeddings (0.6B/4B/8B)
+    
+    Traditional Baselines:
+        LDA:       Latent Dirichlet Allocation (sklearn)
+        HDP:       Hierarchical Dirichlet Process (auto topic number)
+        STM:       Structural Topic Model (with covariates)
+        BTM:       Biterm Topic Model (for short texts)
+    
+    Neural Baselines:
+        ETM:       Embedded Topic Model (Word2Vec + VAE)
+        CTM:       Contextualized Topic Model (SBERT + VAE)
+        DTM:       Dynamic Topic Model (time-aware)
+        NVDM:      Neural Variational Document Model
+        GSM:       Gaussian Softmax Model
+        ProdLDA:   Product of Experts LDA
+        BERTopic:  BERT-based topic modeling (auto topic number)
 
 Usage:
     # THETA model (requires model size and mode)
     python run_pipeline.py --dataset socialTwitter --models theta --model_size 0.6B --mode zero_shot
     python run_pipeline.py --dataset socialTwitter --models theta --model_size 4B --mode supervised
     
-    # Baseline models (no model_size needed)
+    # Traditional baseline models
     python run_pipeline.py --dataset socialTwitter --models lda
-    python run_pipeline.py --dataset socialTwitter --models lda,etm,ctm
+    python run_pipeline.py --dataset socialTwitter --models lda,hdp,stm,btm
+    
+    # Neural baseline models
+    python run_pipeline.py --dataset socialTwitter --models etm,ctm,nvdm,gsm,prodlda
     
     # DTM model (requires timestamp data)
     python run_pipeline.py --dataset edu_data --models dtm
+    
+    # BERTopic (auto topic number)
+    python run_pipeline.py --dataset socialTwitter --models bertopic
+    
+    # HDP (auto topic number)
+    python run_pipeline.py --dataset socialTwitter --models hdp
     
     # Skip training, only evaluate and visualize
     python run_pipeline.py --dataset socialTwitter --models theta --model_size 0.6B --skip-train
@@ -39,8 +66,72 @@ sys.path.insert(0, str(Path(__file__).parent))
 from config import DATASET_CONFIGS, RESULT_DIR, DATA_DIR
 
 # Supported models and model sizes
-ALL_MODELS = ['theta', 'lda', 'etm', 'ctm', 'dtm']
+# THETA: Main model using Qwen embeddings
+# Baselines: Traditional (lda, hdp, stm, btm) and Neural (etm, ctm, dtm, nvdm, gsm, prodlda, bertopic)
+ALL_MODELS = [
+    'theta',      # THETA - Main model (Qwen embedding + VAE)
+    'lda',        # LDA - Latent Dirichlet Allocation (sklearn)
+    'hdp',        # HDP - Hierarchical Dirichlet Process (auto topic number)
+    'stm',        # STM - Structural Topic Model (with covariates)
+    'btm',        # BTM - Biterm Topic Model (for short texts)
+    'etm',        # ETM - Embedded Topic Model (Word2Vec)
+    'ctm',        # CTM - Contextualized Topic Model (SBERT)
+    'dtm',        # DTM - Dynamic Topic Model (time-aware)
+    'nvdm',       # NVDM - Neural Variational Document Model
+    'gsm',        # GSM - Gaussian Softmax Model
+    'prodlda',    # ProdLDA - Product of Experts LDA
+    'bertopic',   # BERTopic - BERT-based topic modeling
+]
 MODEL_SIZES = ['0.6B', '4B', '8B']
+
+
+def find_latest_data_exp(dataset: str, data_exp: str = None) -> str:
+    """Find data experiment directory.
+    
+    Args:
+        dataset: Dataset name
+        data_exp: Specific experiment ID (if None, auto-select latest)
+    
+    Returns:
+        Path to data experiment directory
+    """
+    data_base = Path(RESULT_DIR) / 'baseline' / dataset / 'data'
+    
+    if data_exp:
+        # Use specified experiment
+        exp_dir = data_base / data_exp
+        if exp_dir.exists():
+            return str(exp_dir)
+        else:
+            raise FileNotFoundError(f"Data experiment not found: {exp_dir}")
+    
+    # Auto-select latest experiment
+    if not data_base.exists():
+        raise FileNotFoundError(f"No data experiments found in: {data_base}")
+    
+    exp_dirs = sorted([d for d in data_base.iterdir() if d.is_dir() and d.name.startswith('exp_')])
+    if not exp_dirs:
+        raise FileNotFoundError(f"No data experiments found in: {data_base}")
+    
+    latest = exp_dirs[-1]  # Sorted by name, latest timestamp is last
+    print(f"  [Auto] Using latest data experiment: {latest.name}")
+    return str(latest)
+
+
+def generate_model_exp_id(exp_name: str = None) -> str:
+    """Generate experiment ID with timestamp.
+    
+    Args:
+        exp_name: Optional experiment name tag
+    
+    Returns:
+        Experiment ID like 'exp_20260205_171000' or 'exp_20260205_171000_k15'
+    """
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    exp_id = f"exp_{timestamp}"
+    if exp_name:
+        exp_id = f"{exp_id}_{exp_name}"
+    return exp_id
 
 
 def parse_args():
@@ -52,13 +143,21 @@ def parse_args():
                         choices=list(DATASET_CONFIGS.keys()),
                         help='Dataset name')
     parser.add_argument('--models', type=str, required=True,
-                        help='Model list: theta,lda,etm,ctm')
+                        help='Model list (comma-separated): theta,lda,hdp,stm,btm,etm,ctm,dtm,nvdm,gsm,prodlda,bertopic')
     parser.add_argument('--mode', type=str, default='zero_shot',
                         choices=['zero_shot', 'supervised', 'unsupervised'],
                         help='THETA mode (default: zero_shot)')
     parser.add_argument('--num_topics', type=int, default=20)
+    parser.add_argument('--vocab_size', type=int, default=5000, help='Vocabulary size')
     parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--hidden_dim', type=int, default=512, help='Encoder hidden dimension (128-1024)')
+    parser.add_argument('--learning_rate', type=float, default=0.002, help='Learning rate (0.00001-0.1)')
+    parser.add_argument('--kl_start', type=float, default=0.0, help='KL annealing start weight (0-1)')
+    parser.add_argument('--kl_end', type=float, default=1.0, help='KL annealing end weight (0-1)')
+    parser.add_argument('--kl_warmup', type=int, default=50, help='KL warmup epochs')
+    parser.add_argument('--patience', type=int, default=10, help='Early stopping patience')
+    parser.add_argument('--no_early_stopping', action='store_true', help='Disable early stopping')
     parser.add_argument('--skip-train', action='store_true')
     parser.add_argument('--skip-eval', action='store_true')
     parser.add_argument('--skip-viz', action='store_true')
@@ -71,6 +170,23 @@ def parse_args():
                         help='Only check if data files exist, do not run')
     parser.add_argument('--prepare', action='store_true',
                         help='Preprocess data (generate embedding and BOW)')
+    
+    # Model-specific parameters
+    parser.add_argument('--max_iter', type=int, default=100, help='Max iterations for LDA/STM')
+    parser.add_argument('--max_topics', type=int, default=150, help='Max topics for HDP')
+    parser.add_argument('--n_iter', type=int, default=100, help='Gibbs sampling iterations for BTM')
+    parser.add_argument('--alpha', type=float, default=1.0, help='Alpha prior for HDP/BTM')
+    parser.add_argument('--beta', type=float, default=0.01, help='Beta prior for BTM')
+    parser.add_argument('--inference_type', type=str, default='zeroshot', 
+                        choices=['zeroshot', 'combined'], help='CTM inference type')
+    parser.add_argument('--dropout', type=float, default=0.2, help='Dropout rate for neural models')
+    
+    # Experiment management
+    parser.add_argument('--data_exp', type=str, default=None,
+                        help='Data experiment ID to use (default: auto-select latest)')
+    parser.add_argument('--exp_name', type=str, default=None,
+                        help='Experiment name tag (appended to exp_id)')
+    
     return parser.parse_args()
 
 
@@ -82,30 +198,46 @@ def get_model_list(models_str: str) -> List[str]:
     return models
 
 
-def check_theta_data_files(dataset: str, model_size: str, mode: str) -> Dict[str, Any]:
+def check_theta_data_files(dataset: str, model_size: str, mode: str, data_exp_dir: str = '') -> Dict[str, Any]:
     """Check if data files required for THETA model exist"""
     result_base = Path(RESULT_DIR) / model_size / dataset
     
-    # 0.6B structure: {model_size}/{dataset}/{mode}/embeddings/
-    # 4B/8B structure: {model_size}/{dataset}/embedding/ (with timestamp)
+    if data_exp_dir:
+        # New exp structure: data/{exp_id}/embeddings/ and data/{exp_id}/bow/
+        exp_path = Path(data_exp_dir)
+        emb_candidates = [
+            exp_path / 'embeddings' / 'embeddings.npy',
+            exp_path / 'embeddings' / f'{dataset}_{mode}_embeddings.npy',
+        ]
+        bow_base = exp_path / 'bow'
+    else:
+        # Legacy structure: {mode}/embeddings/ and bow/
+        emb_candidates = [
+            result_base / mode / 'embeddings' / f'{dataset}_{mode}_embeddings.npy',
+            result_base / mode / 'embeddings' / 'embeddings.npy',
+        ]
+        bow_base = result_base / 'bow'
     
-    # Check embeddings - supports two directory structures
-    emb_path_v1 = result_base / mode / 'embeddings' / f'{dataset}_{mode}_embeddings.npy'
-    emb_path_v2_dir = result_base / 'embedding'
-    
-    emb_path = emb_path_v1
-    if not emb_path_v1.exists() and emb_path_v2_dir.exists():
-        # Find 4B/8B format embedding file
-        for f in emb_path_v2_dir.glob(f'{mode}_embeddings_*.npy'):
-            emb_path = f
+    emb_path = emb_candidates[0]  # default (for error message)
+    for candidate in emb_candidates:
+        if candidate.exists():
+            emb_path = candidate
             break
+    
+    # Also check 4B/8B format: {model_size}/{dataset}/embedding/
+    if not emb_path.exists() and not data_exp_dir:
+        emb_path_v2_dir = result_base / 'embedding'
+        if emb_path_v2_dir.exists():
+            for f in emb_path_v2_dir.glob(f'{mode}_embeddings_*.npy'):
+                emb_path = f
+                break
     
     # Files to check
     files_to_check = {
         'embeddings': emb_path,
-        'bow_matrix': result_base / 'bow' / 'bow_matrix.npz',
-        'vocab': result_base / 'bow' / 'vocab.txt',
-        'vocab_embeddings': result_base / 'bow' / 'vocab_embeddings.npy',
+        'bow_matrix': bow_base / 'bow_matrix.npy',
+        'vocab': bow_base / 'vocab.txt',
+        'vocab_embeddings': bow_base / 'vocab_embeddings.npy',
     }
     
     status = {'all_exist': True, 'files': {}}
@@ -178,6 +310,52 @@ def print_data_check_result(model: str, status: Dict[str, Any]):
     return all_ok
 
 
+def _is_complete_theta_exp(exp_dir: Path) -> bool:
+    """Check if a THETA data experiment has all required files."""
+    return (
+        (exp_dir / 'bow' / 'bow_matrix.npy').exists() and
+        (exp_dir / 'embeddings' / 'embeddings.npy').exists()
+    )
+
+
+def find_theta_data_exp(dataset: str, model_size: str, data_exp: str = '') -> str:
+    """Find THETA data experiment directory.
+    
+    Args:
+        dataset: Dataset name
+        model_size: Model size (0.6B, 4B, 8B)
+        data_exp: Data experiment ID, 'select' for interactive, '' for latest/legacy
+    
+    Returns:
+        Path to data experiment directory, or empty string for legacy mode
+    """
+    data_base = Path(RESULT_DIR) / model_size / dataset / 'data'
+    
+    # Check if new exp structure exists
+    if data_base.exists():
+        exp_dirs = sorted(data_base.glob('exp_*'), key=lambda p: p.stat().st_mtime, reverse=True)
+        if exp_dirs:
+            if data_exp and data_exp != 'select':
+                # Explicit data_exp specified — use it even if incomplete
+                for d in exp_dirs:
+                    if d.name == data_exp:
+                        return str(d)
+                # Fuzzy match
+                for d in exp_dirs:
+                    if data_exp in d.name:
+                        return str(d)
+                print(f"[Warning] data_exp '{data_exp}' not found, falling back")
+            else:
+                # Auto-select: only use complete experiments
+                for d in exp_dirs:
+                    if _is_complete_theta_exp(d):
+                        return str(d)
+                # No complete exp found — fall through to legacy
+    
+    # Legacy mode: no exp structure or no complete experiments
+    return ''
+
+
 def run_theta(args) -> Dict[str, Any]:
     """THETA model workflow"""
     print(f"\n{'='*70}")
@@ -186,11 +364,46 @@ def run_theta(args) -> Dict[str, Any]:
     
     result = {'model': 'theta', 'dataset': args.dataset, 'mode': args.mode, 'model_size': args.model_size}
     
-    # Check data files
-    status = check_theta_data_files(args.dataset, args.model_size, args.mode)
+    # Resolve data experiment
+    data_exp_dir = find_theta_data_exp(args.dataset, args.model_size, getattr(args, 'data_exp', ''))
+    if data_exp_dir:
+        data_exp_id = Path(data_exp_dir).name
+        print(f"  Data experiment: {data_exp_id}")
+        print(f"  Data directory:  {data_exp_dir}")
+    
+    # Check data files (use exp dir if available)
+    status = check_theta_data_files(args.dataset, args.model_size, args.mode, data_exp_dir)
     if not print_data_check_result(f'theta-{args.model_size}', status):
         result['train_status'] = 'data_missing'
         return result
+    
+    # Generate training experiment ID
+    train_exp_id = generate_model_exp_id(args.exp_name)
+    train_exp_dir = Path(RESULT_DIR) / args.model_size / args.dataset / 'models' / train_exp_id
+    train_exp_dir.mkdir(parents=True, exist_ok=True)
+    print(f"  Train experiment: {train_exp_id}")
+    print(f"  Output directory: {train_exp_dir}")
+    
+    # Save training config
+    train_config = {
+        'exp_id': train_exp_id,
+        'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'dataset': args.dataset,
+        'model_size': args.model_size,
+        'mode': args.mode,
+        'data_exp': Path(data_exp_dir).name if data_exp_dir else 'legacy',
+        'num_topics': args.num_topics,
+        'epochs': args.epochs,
+        'batch_size': args.batch_size,
+        'hidden_dim': args.hidden_dim,
+        'learning_rate': args.learning_rate,
+        'kl_start': args.kl_start,
+        'kl_end': args.kl_end,
+        'kl_warmup': args.kl_warmup,
+        'patience': args.patience,
+    }
+    with open(train_exp_dir / 'config.json', 'w', encoding='utf-8') as f:
+        json.dump(train_config, f, ensure_ascii=False, indent=2)
     
     # Call main.py pipeline command
     import subprocess
@@ -201,8 +414,26 @@ def run_theta(args) -> Dict[str, Any]:
         '--model_size', args.model_size,
         '--num_topics', str(args.num_topics),
         '--epochs', str(args.epochs),
-        '--batch_size', str(args.batch_size)
+        '--batch_size', str(args.batch_size),
+        '--hidden_dim', str(args.hidden_dim),
+        '--learning_rate', str(args.learning_rate),
+        '--kl_start', str(args.kl_start),
+        '--kl_end', str(args.kl_end),
+        '--kl_warmup', str(args.kl_warmup),
+        '--patience', str(args.patience),
+        '--language', args.language
     ]
+    # Pass experiment IDs to main.py
+    if data_exp_dir:
+        cmd.extend(['--data_exp', Path(data_exp_dir).name])
+    cmd.extend(['--train_exp', train_exp_id])
+    
+    if args.no_early_stopping:
+        cmd.append('--no_early_stopping')
+    if args.skip_viz:
+        cmd.append('--skip_viz')
+    if args.skip_eval:
+        cmd.append('--skip_eval')
     
     if args.skip_train:
         print("  [SKIP] Training skipped")
@@ -212,11 +443,13 @@ def run_theta(args) -> Dict[str, Any]:
         ret = subprocess.run(cmd, cwd=str(Path(__file__).parent))
         result['train_status'] = 'completed' if ret.returncode == 0 else 'failed'
     
+    result['train_exp'] = train_exp_id
+    result['data_exp'] = Path(data_exp_dir).name if data_exp_dir else ''
     return result
 
 
 def run_baseline(model_name: str, args) -> Dict[str, Any]:
-    """Baseline model workflow (LDA/ETM/CTM/DTM)"""
+    """Baseline model workflow (LDA/HDP/STM/BTM/ETM/CTM/DTM/NVDM/GSM/ProdLDA/BERTopic)"""
     print(f"\n{'='*70}")
     print(f"[{model_name.upper()}] Dataset: {args.dataset}")
     print(f"{'='*70}")
@@ -227,11 +460,42 @@ def run_baseline(model_name: str, args) -> Dict[str, Any]:
     from evaluation.unified_evaluator import UnifiedEvaluator
     from visualization.run_visualization import run_baseline_visualization
     
-    dataset_config = DATASET_CONFIGS.get(args.dataset, {})
-    vocab_size = dataset_config.get('vocab_size', 5000)
+    # Find data experiment directory
+    try:
+        data_exp_dir = find_latest_data_exp(args.dataset, args.data_exp)
+        print(f"  Data experiment: {Path(data_exp_dir).name}")
+    except FileNotFoundError as e:
+        print(f"  [Error] {e}")
+        print(f"  Please run data preprocessing first:")
+        print(f"    bash scripts/03_prepare_data.sh --dataset {args.dataset} --model {model_name}")
+        return {'model': model_name, 'error': str(e)}
     
-    result_dir = Path(RESULT_DIR) / 'baseline' / args.dataset
-    model_dir = result_dir / ('ctm_zeroshot' if model_name == 'ctm' else model_name)
+    # Generate model experiment ID
+    model_exp_id = generate_model_exp_id(args.exp_name)
+    
+    # New directory structure: baseline/{dataset}/models/{model}/{exp_id}/
+    base_dir = Path(RESULT_DIR) / 'baseline' / args.dataset
+    model_dir = base_dir / 'models' / model_name / model_exp_id
+    model_dir.mkdir(parents=True, exist_ok=True)
+    
+    print(f"  Model experiment: {model_exp_id}")
+    print(f"  Output directory: {model_dir}")
+    
+    # Save config.json for this model experiment
+    config = {
+        'exp_id': model_exp_id,
+        'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'model': model_name,
+        'dataset': args.dataset,
+        'data_exp': Path(data_exp_dir).name,
+        'num_topics': args.num_topics,
+        'epochs': args.epochs,
+        'batch_size': args.batch_size,
+        'hidden_dim': args.hidden_dim,
+        'learning_rate': args.learning_rate,
+    }
+    with open(model_dir / 'config.json', 'w', encoding='utf-8') as f:
+        json.dump(config, f, ensure_ascii=False, indent=2)
     
     # === Training ===
     if not args.skip_train:
@@ -239,21 +503,45 @@ def run_baseline(model_name: str, args) -> Dict[str, Any]:
         trainer = BaselineTrainer(
             dataset=args.dataset,
             num_topics=args.num_topics,
-            vocab_size=vocab_size,
+            data_exp_dir=data_exp_dir,  # Use data experiment directory
+            output_dir=str(model_dir),   # Use model experiment directory
             data_dir=str(DATA_DIR),
-            result_dir=str(Path(RESULT_DIR) / 'baseline')
         )
-        # DTM and CTM need SBERT embedding
-        trainer.prepare_data(generate_sbert=(model_name in ['ctm', 'dtm']))
+        # Load data from data_exp_dir (no need to regenerate)
+        trainer.load_preprocessed_data()
         
+        # Traditional models
         if model_name == 'lda':
-            train_result = trainer.train_lda(max_iter=100)
+            train_result = trainer.train_lda(max_iter=args.max_iter)
+        elif model_name == 'hdp':
+            train_result = trainer.train_hdp(max_topics=args.max_topics, alpha=args.alpha)
+        elif model_name == 'stm':
+            train_result = trainer.train_stm(max_iter=args.max_iter)
+        elif model_name == 'btm':
+            train_result = trainer.train_btm(n_iter=args.n_iter, alpha=args.alpha, beta=args.beta)
+        # Neural models
         elif model_name == 'etm':
-            train_result = trainer.train_etm(epochs=args.epochs, batch_size=args.batch_size)
+            train_result = trainer.train_etm(epochs=args.epochs, batch_size=args.batch_size, 
+                                             learning_rate=args.learning_rate, hidden_dim=args.hidden_dim)
         elif model_name == 'ctm':
-            train_result = trainer.train_ctm(inference_type='zeroshot', epochs=args.epochs, batch_size=args.batch_size)
+            train_result = trainer.train_ctm(inference_type=args.inference_type, epochs=args.epochs, 
+                                             batch_size=args.batch_size, learning_rate=args.learning_rate)
         elif model_name == 'dtm':
-            train_result = trainer.train_dtm(epochs=args.epochs, batch_size=args.batch_size)
+            train_result = trainer.train_dtm(epochs=args.epochs, batch_size=args.batch_size,
+                                             learning_rate=args.learning_rate, hidden_dim=args.hidden_dim)
+        elif model_name == 'nvdm':
+            train_result = trainer.train_nvdm(epochs=args.epochs, batch_size=args.batch_size,
+                                              learning_rate=args.learning_rate, hidden_dim=args.hidden_dim)
+        elif model_name == 'gsm':
+            train_result = trainer.train_gsm(epochs=args.epochs, batch_size=args.batch_size,
+                                             learning_rate=args.learning_rate, hidden_dim=args.hidden_dim)
+        elif model_name == 'prodlda':
+            train_result = trainer.train_prodlda(epochs=args.epochs, batch_size=args.batch_size,
+                                                 learning_rate=args.learning_rate, hidden_dim=args.hidden_dim)
+        elif model_name == 'bertopic':
+            train_result = trainer.train_bertopic()
+        else:
+            raise ValueError(f"Unknown model: {model_name}")
         
         result['train_status'] = 'completed'
         result['train_time'] = train_result.get('train_time', 0)
@@ -264,13 +552,68 @@ def run_baseline(model_name: str, args) -> Dict[str, Any]:
     # === Evaluation ===
     if not args.skip_eval:
         print(f"\n[Evaluating {model_name.upper()}]")
-        bow_path = result_dir / 'bow_matrix.npz'
-        vocab_path = result_dir / 'vocab.json'
-        theta_path = model_dir / f'theta_k{args.num_topics}.npy'
-        beta_path = model_dir / f'beta_k{args.num_topics}.npy'
+        # Load BOW and vocab from data experiment directory
+        bow_path = Path(data_exp_dir) / 'bow_matrix.npy'
+        vocab_path = Path(data_exp_dir) / 'vocab.json'
+        
+        # Determine actual num_topics (HDP/BERTopic may have different actual topics)
+        actual_num_topics = args.num_topics
+        if model_name in ('hdp', 'bertopic'):
+            if train_result and 'actual_num_topics' in train_result:
+                actual_num_topics = train_result['actual_num_topics']
+                print(f"  Using {model_name.upper()} actual topics: {actual_num_topics}")
+            else:
+                # If skip-train, try to find existing theta file to get actual K
+                import glob
+                search_dirs = [
+                    str(model_dir / model_name / 'theta_k*.npy'),
+                    str(model_dir / model_name / 'model' / 'theta_k*.npy'),
+                ]
+                theta_files = []
+                for pattern in search_dirs:
+                    theta_files = glob.glob(pattern)
+                    if theta_files:
+                        break
+                if theta_files:
+                    # Extract K from filename like theta_k50.npy
+                    import re
+                    match = re.search(r'theta_k(\d+)\.npy', theta_files[0])
+                    if match:
+                        actual_num_topics = int(match.group(1))
+                        print(f"  Detected {model_name.upper()} topics from file: {actual_num_topics}")
+        
+        # Check multiple possible paths for theta/beta (different models save to different locations)
+        # Path priority:
+        # 1. model_dir/{model_name}/theta_k{K}.npy (standard)
+        # 2. model_dir/{model_name}_zeroshot/theta_k{K}.npy (CTM zeroshot)
+        # 3. model_dir/{model_name}_combined/theta_k{K}.npy (CTM combined)
+        # 4. model_dir/theta_k{K}.npy (direct)
+        # 5. model_dir/{model_name}/model/theta_k{K}.npy (HDP/neural)
+        
+        theta_path = model_dir / model_name / f'theta_k{actual_num_topics}.npy'
+        beta_path = model_dir / model_name / f'beta_k{actual_num_topics}.npy'
+        
+        # CTM saves to ctm_zeroshot/ or ctm_combined/
+        if not theta_path.exists() and model_name == 'ctm':
+            for suffix in ['zeroshot', 'combined']:
+                ctm_path = model_dir / f'ctm_{suffix}' / f'theta_k{actual_num_topics}.npy'
+                if ctm_path.exists():
+                    theta_path = ctm_path
+                    beta_path = model_dir / f'ctm_{suffix}' / f'beta_k{actual_num_topics}.npy'
+                    break
+        
+        # If not found, check directly in model_dir
+        if not theta_path.exists():
+            theta_path = model_dir / f'theta_k{actual_num_topics}.npy'
+            beta_path = model_dir / f'beta_k{actual_num_topics}.npy'
+        
+        # If still not found, check model/ subdirectory (HDP/neural models)
+        if not theta_path.exists():
+            theta_path = model_dir / model_name / 'model' / f'theta_k{actual_num_topics}.npy'
+            beta_path = model_dir / model_name / 'model' / f'beta_k{actual_num_topics}.npy'
         
         if all(p.exists() for p in [bow_path, vocab_path, theta_path, beta_path]):
-            bow_matrix = sp.load_npz(bow_path)
+            bow_matrix = np.load(bow_path)
             with open(vocab_path, 'r', encoding='utf-8') as f:
                 vocab = json.load(f)
             theta = np.load(theta_path)
@@ -284,13 +627,15 @@ def run_baseline(model_name: str, args) -> Dict[str, Any]:
             
             evaluator = UnifiedEvaluator(
                 beta=beta, theta=theta, bow_matrix=bow_matrix, vocab=vocab,
-                training_history=training_history, model_name=model_name,
-                dataset=args.dataset, output_dir=str(model_dir), num_topics=args.num_topics
+                training_history=training_history,
+                dataset=args.dataset, output_dir=str(model_dir), num_topics=actual_num_topics
             )
             metrics = evaluator.compute_all_metrics()
             evaluator.save_metrics()
-            evaluator.generate_training_plots()
-            evaluator.generate_metrics_plots()
+            # Only generate plots if visualization is enabled
+            if not args.skip_viz:
+                evaluator.generate_training_plots()
+                evaluator.generate_metrics_plots()
             
             result['eval_status'] = 'completed'
             result['metrics'] = {
@@ -310,14 +655,47 @@ def run_baseline(model_name: str, args) -> Dict[str, Any]:
     if not args.skip_viz:
         print(f"\n[Visualizing {model_name.upper()}]")
         try:
-            run_baseline_visualization(
-                result_dir=str(Path(RESULT_DIR) / 'baseline'),
-                dataset=args.dataset,
-                model='ctm_zeroshot' if model_name == 'ctm' else model_name,
-                num_topics=args.num_topics,
-                language=args.language
-            )
-            result['viz_status'] = 'completed'
+            from visualization.visualization_generator import VisualizationGenerator
+            
+            # Load data directly (new structure)
+            theta_path = model_dir / model_name / f'theta_k{args.num_topics}.npy'
+            beta_path = model_dir / model_name / f'beta_k{args.num_topics}.npy'
+            topic_words_path = model_dir / model_name / f'topic_words_k{args.num_topics}.json'
+            
+            if theta_path.exists() and beta_path.exists():
+                theta = np.load(theta_path)
+                beta = np.load(beta_path)
+                
+                # Load vocab from data experiment
+                with open(Path(data_exp_dir) / 'vocab.json', 'r', encoding='utf-8') as f:
+                    vocab = json.load(f)
+                
+                # Load topic words if exists
+                topic_words = None
+                if topic_words_path.exists():
+                    with open(topic_words_path, 'r', encoding='utf-8') as f:
+                        topic_words = json.load(f)
+                
+                # Create visualization output directory
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                lang_suffix = 'zh' if args.language == 'zh' else 'en'
+                viz_dir = model_dir / 'visualization'
+                viz_dir.mkdir(parents=True, exist_ok=True)
+                
+                generator = VisualizationGenerator(
+                    theta=theta,
+                    beta=beta,
+                    vocab=vocab,
+                    topic_words=topic_words,
+                    output_dir=str(viz_dir),
+                    language=args.language,
+                    dpi=300
+                )
+                generator.generate_all()
+                result['viz_status'] = 'completed'
+            else:
+                print(f"  [Skip] theta/beta files not found")
+                result['viz_status'] = 'files_not_found'
         except Exception as e:
             print(f"  [Error] {e}")
             result['viz_status'] = f'error: {str(e)}'

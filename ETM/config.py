@@ -107,6 +107,7 @@ class DataConfig:
         # Try different file naming patterns
         patterns = [
             f"{self.dataset}_text_only.csv",
+            f"{self.dataset}_cleaned.csv",
             "complaints_text_only.csv",      # FCPB
             "german_coal_text_only.csv",     # germanCoal
         ]
@@ -196,6 +197,12 @@ class ModelConfig:
     train_ratio: float = 0.8
     val_ratio: float = 0.1
     test_ratio: float = 0.1
+    
+    # DataLoader优化参数
+    num_workers: int = 4              # 多进程加载数据
+    pin_memory: bool = True           # 加速CPU到GPU的数据传输
+    persistent_workers: bool = True   # 保持worker进程存活
+    prefetch_factor: int = 2          # 每个worker预取的batch数量
 
 
 @dataclass
@@ -220,6 +227,7 @@ class VisualizationConfig:
     output_dir: str = ""
     figsize: tuple = (12, 8)
     dpi: int = 150
+    language: str = "en"  # en, zh
     
     # Word cloud
     use_wordcloud: bool = True
@@ -253,28 +261,53 @@ class PipelineConfig:
     # Model size for directory structure (e.g., '0.6B', '1.5B')
     model_size: str = "0.6B"
     
-    # Output - all results go to /root/autodl-tmp/result/{model_size}/{dataset}/{mode}/
+    # Experiment management
+    # data_exp: data experiment ID (e.g. "exp_20260207_140000_vocab3500_theta_0.6B_zero_shot")
+    # train_exp: training experiment ID (auto-generated if empty)
+    data_exp: str = ""
+    train_exp: str = ""
+    
+    # Output - all results go to /root/autodl-tmp/result/{model_size}/{dataset}/
     output_base_dir: str = str(RESULT_DIR)
     
     @property
-    def result_dir(self) -> str:
-        """Base result directory for this dataset/mode"""
+    def dataset_base_dir(self) -> str:
+        """Base directory for this dataset: result/{model_size}/{dataset}/"""
         if self.model_size:
-            return os.path.join(self.output_base_dir, self.model_size, self.data.dataset, self.embedding.mode)
-        return os.path.join(self.output_base_dir, self.data.dataset, self.embedding.mode)
+            return os.path.join(self.output_base_dir, self.model_size, self.data.dataset)
+        return os.path.join(self.output_base_dir, self.data.dataset)
+    
+    @property
+    def data_exp_dir(self) -> str:
+        """Data experiment directory: result/{model_size}/{dataset}/data/{data_exp}/"""
+        if self.data_exp:
+            return os.path.join(self.dataset_base_dir, "data", self.data_exp)
+        # Fallback to legacy flat structure for backward compatibility
+        return self.dataset_base_dir
+    
+    @property
+    def result_dir(self) -> str:
+        """Training result directory"""
+        if self.train_exp:
+            # New structure: result/{model_size}/{dataset}/models/{train_exp}/
+            return os.path.join(self.dataset_base_dir, "models", self.train_exp)
+        # Fallback to legacy structure
+        return os.path.join(self.dataset_base_dir, self.embedding.mode)
     
     @property
     def embeddings_dir(self) -> str:
         """Directory for document embeddings"""
-        return os.path.join(self.result_dir, "embeddings")
+        if self.data_exp:
+            return os.path.join(self.data_exp_dir, "embeddings")
+        return os.path.join(self.dataset_base_dir, self.embedding.mode, "embeddings")
     
     @property
     def bow_dir(self) -> str:
-        """Directory for BOW matrices and vocabulary (shared across modes)"""
-        # BOW is shared across all modes for fair comparison
-        if self.model_size:
-            return os.path.join(self.output_base_dir, self.model_size, self.data.dataset, "bow")
-        return os.path.join(self.output_base_dir, self.data.dataset, "bow")
+        """Directory for BOW matrices and vocabulary"""
+        if self.data_exp:
+            return os.path.join(self.data_exp_dir, "bow")
+        # Legacy: BOW shared across all modes
+        return os.path.join(self.dataset_base_dir, "bow")
     
     @property
     def model_dir(self) -> str:
@@ -444,6 +477,36 @@ def _add_training_args(parser: argparse.ArgumentParser):
                         help="Enable temporal analysis (requires timestamp column)")
     parser.add_argument("--timestamp_column", type=str, default=None,
                         help="Column name for timestamps in data")
+    
+    # Model size
+    parser.add_argument("--model_size", type=str, default="0.6B",
+                        choices=["0.6B", "4B", "8B"],
+                        help="Qwen model size (default: 0.6B)")
+    
+    # Pipeline control
+    parser.add_argument("--skip_viz", action="store_true",
+                        help="Skip visualization step")
+    parser.add_argument("--skip_eval", action="store_true",
+                        help="Skip evaluation step")
+    
+    # Experiment management
+    parser.add_argument("--data_exp", type=str, default="",
+                        help="Data experiment ID (for THETA exp management)")
+    parser.add_argument("--train_exp", type=str, default="",
+                        help="Training experiment ID (for THETA exp management)")
+    
+    # Visualization language
+    parser.add_argument("--language", type=str, default="en",
+                        choices=["en", "zh"],
+                        help="Visualization language (chart titles, labels)")
+    
+    # DataLoader优化参数
+    parser.add_argument("--num_workers", type=int, default=4,
+                        help="Number of data loading workers")
+    parser.add_argument("--no_pin_memory", action="store_true",
+                        help="Disable pin_memory for DataLoader")
+    parser.add_argument("--no_persistent_workers", action="store_true",
+                        help="Disable persistent workers")
 
 
 def config_from_args(args: argparse.Namespace) -> PipelineConfig:
@@ -471,10 +534,10 @@ def config_from_args(args: argparse.Namespace) -> PipelineConfig:
     if hasattr(args, "dev"):
         config.dev_mode = args.dev
     
-    # Training args - command line overrides dataset defaults
-    if hasattr(args, "num_topics") and args.num_topics != 20:  # Only if explicitly set
+    # Training args - command line ALWAYS overrides dataset defaults
+    if hasattr(args, "num_topics"):
         config.model.num_topics = args.num_topics
-    if hasattr(args, "vocab_size") and args.vocab_size != 5000:  # Only if explicitly set
+    if hasattr(args, "vocab_size"):
         config.bow.vocab_size = args.vocab_size
     if hasattr(args, "hidden_dim"):
         config.model.hidden_dim = args.hidden_dim
@@ -495,6 +558,10 @@ def config_from_args(args: argparse.Namespace) -> PipelineConfig:
     if hasattr(args, "patience"):
         config.model.patience = args.patience
     
+    # Model size
+    if hasattr(args, "model_size") and args.model_size:
+        config.model_size = args.model_size
+    
     # Word embeddings - default is True (train from scratch)
     if hasattr(args, "no_train_word_embeddings") and args.no_train_word_embeddings:
         config.model.train_word_embeddings = False
@@ -506,6 +573,24 @@ def config_from_args(args: argparse.Namespace) -> PipelineConfig:
         config.visualization.enable_temporal = args.enable_temporal
     if hasattr(args, "timestamp_column") and args.timestamp_column:
         config.data.timestamp_column = args.timestamp_column
+    
+    # DataLoader优化参数
+    if hasattr(args, "num_workers"):
+        config.model.num_workers = args.num_workers
+    if hasattr(args, "no_pin_memory") and args.no_pin_memory:
+        config.model.pin_memory = False
+    if hasattr(args, "no_persistent_workers") and args.no_persistent_workers:
+        config.model.persistent_workers = False
+    
+    # Visualization language
+    if hasattr(args, "language") and args.language:
+        config.visualization.language = args.language
+    
+    # Experiment management
+    if hasattr(args, "data_exp") and args.data_exp:
+        config.data_exp = args.data_exp
+    if hasattr(args, "train_exp") and args.train_exp:
+        config.train_exp = args.train_exp
     
     return config
 

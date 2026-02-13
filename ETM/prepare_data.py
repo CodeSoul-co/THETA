@@ -55,7 +55,10 @@ def parse_args():
                         help='THETA mode')
     parser.add_argument('--vocab_size', type=int, default=5000, help='Vocabulary size')
     parser.add_argument('--batch_size', type=int, default=32, help='Batch size')
+    parser.add_argument('--max_length', type=int, default=512, help='Embedding model max input length')
     parser.add_argument('--bow-only', action='store_true', help='Only generate BOW')
+    parser.add_argument('--skip-sbert', action='store_true', help='Skip SBERT embedding generation')
+    parser.add_argument('--with-time', action='store_true', help='Generate time slice information')
     parser.add_argument('--check-only', action='store_true', help='Only check files')
     parser.add_argument('--gpu', type=int, default=0, help='GPU ID')
     parser.add_argument('--clean', action='store_true', 
@@ -63,13 +66,15 @@ def parse_args():
     parser.add_argument('--raw-input', type=str, default=None,
                         help='Raw data input path (use with --clean)')
     parser.add_argument('--language', type=str, default='english',
-                        choices=['english', 'chinese'],
-                        help='Language for data cleaning (use with --clean)')
+                        choices=['english', 'chinese', 'german', 'spanish', 'multi'],
+                        help='Language for tokenization and cleaning')
     # DTM specific parameters
     parser.add_argument('--time_column', type=str, default='year',
                         help='Time column name (DTM specific)')
     parser.add_argument('--time_slices', type=int, default=None,
                         help='Number of time slices, auto-detect by default (DTM specific)')
+    parser.add_argument('--exp_name', type=str, default=None,
+                        help='Experiment name tag (appended to exp_id)')
     return parser.parse_args()
 
 
@@ -298,10 +303,18 @@ def load_texts(data_path: Path) -> Tuple[List[str], Optional[np.ndarray]]:
     
     # Find text column
     text_col = None
-    for col in ['cleaned_content', 'clean_text', 'cleaned_text', 'text', 'content', 'Text']:
+    for col in ['cleaned_content', 'clean_text', 'cleaned_text', 'text', 'content', 'Text',
+                 'Consumer complaint narrative', 'narrative']:
         if col in df.columns:
             text_col = col
             break
+    
+    # Fallback: use the longest-string column
+    if text_col is None:
+        str_cols = [c for c in df.columns if df[c].dtype == 'object']
+        if str_cols:
+            text_col = max(str_cols, key=lambda c: df[c].astype(str).str.len().mean())
+            print(f"  Auto-detected text column: '{text_col}'")
     
     if text_col is None:
         raise ValueError(f"No text column found. Columns: {df.columns.tolist()}")
@@ -310,7 +323,7 @@ def load_texts(data_path: Path) -> Tuple[List[str], Optional[np.ndarray]]:
     
     # Find label column
     labels = None
-    for col in ['label', 'Label', 'labels', 'category']:
+    for col in ['label', 'Label', 'labels', 'category', 'subreddit_id']:
         if col in df.columns:
             labels = df[col].values
             break
@@ -342,7 +355,9 @@ def generate_bow(texts: List[str], vocab_size: int, output_dir: Path) -> Tuple[s
     
     # Save
     output_dir.mkdir(parents=True, exist_ok=True)
-    sp.save_npz(output_dir / 'bow_matrix.npz', bow_output.bow_matrix)
+    # Save as dense npy format
+    bow_dense = bow_output.bow_matrix.toarray() if sp.issparse(bow_output.bow_matrix) else bow_output.bow_matrix
+    np.save(output_dir / 'bow_matrix.npy', bow_dense)
     
     with open(output_dir / 'vocab.txt', 'w', encoding='utf-8') as f:
         f.write('\n'.join(vocab))
@@ -362,7 +377,8 @@ def generate_qwen_embeddings(
     model_size: str,
     mode: str,
     output_dir: Path,
-    batch_size: int = 32
+    batch_size: int = 32,
+    max_length: int = 512
 ) -> np.ndarray:
     """Generate Qwen document embeddings"""
     import torch
@@ -395,7 +411,7 @@ def generate_qwen_embeddings(
                 batch_texts,
                 padding=True,
                 truncation=True,
-                max_length=512,
+                max_length=max_length,
                 return_tensors='pt'
             ).to(device)
             
@@ -484,9 +500,17 @@ def generate_sbert_embeddings(texts: List[str], output_dir: Path, batch_size: in
     
     print(f"\n[Generating SBERT Embedding]")
     
-    # Use local SBERT model
-    local_sbert_path = '/root/autodl-tmp/ETM/model/sbert/sentence-transformers/all-MiniLM-L6-v2'
-    if Path(local_sbert_path).exists():
+    # Use local SBERT model (check multiple possible paths)
+    local_sbert_paths = [
+        '/root/autodl-tmp/ETM/model/baselines/sbert/sentence-transformers/all-MiniLM-L6-v2',
+        '/root/autodl-tmp/ETM/model/sbert/sentence-transformers/all-MiniLM-L6-v2',
+    ]
+    local_sbert_path = None
+    for path in local_sbert_paths:
+        if Path(path).exists():
+            local_sbert_path = path
+            break
+    if local_sbert_path and Path(local_sbert_path).exists():
         print(f"  Using local model: {local_sbert_path}")
         model = SentenceTransformer(local_sbert_path)
     else:
@@ -500,6 +524,61 @@ def generate_sbert_embeddings(texts: List[str], output_dir: Path, batch_size: in
     np.save(output_dir / 'sbert_embeddings.npy', embeddings)
     
     print(f"  ✓ SBERT embeddings shape: {embeddings.shape}")
+    print(f"  ✓ Saved to {output_dir}")
+    
+    return embeddings
+
+
+def generate_word2vec_embeddings(texts: List[str], vocab: List[str], output_dir: Path, 
+                                  embedding_dim: int = 300, language: str = 'english') -> np.ndarray:
+    """Generate Word2Vec embeddings for ETM model"""
+    from gensim.models import Word2Vec
+    
+    print(f"\n[Generating Word2Vec Embedding]")
+    print(f"  Vocab size: {len(vocab)}")
+    print(f"  Embedding dim: {embedding_dim}")
+    print(f"  Language: {language}")
+    
+    # Tokenize texts - use jieba for Chinese, simple split for others
+    if language in ('chinese', 'zh'):
+        import jieba
+        print("  Tokenizing texts with jieba...")
+        tokenized_texts = [list(jieba.cut(text)) for text in texts]
+    else:
+        print("  Tokenizing texts with whitespace split...")
+        tokenized_texts = [text.lower().split() for text in texts]
+    
+    # Train Word2Vec
+    print("  Training Word2Vec model...")
+    w2v_model = Word2Vec(
+        sentences=tokenized_texts,
+        vector_size=embedding_dim,
+        window=5,
+        min_count=1,
+        workers=4,
+        epochs=10,
+        seed=42
+    )
+    
+    # Create embedding matrix for vocab
+    embeddings = np.zeros((len(vocab), embedding_dim), dtype=np.float32)
+    found_count = 0
+    
+    for i, word in enumerate(vocab):
+        if word in w2v_model.wv:
+            embeddings[i] = w2v_model.wv[word]
+            found_count += 1
+        else:
+            # Random initialization for OOV words
+            embeddings[i] = np.random.randn(embedding_dim) * 0.1
+    
+    print(f"  Found {found_count}/{len(vocab)} words in Word2Vec vocabulary")
+    
+    # Save
+    output_dir.mkdir(parents=True, exist_ok=True)
+    np.save(output_dir / 'word2vec_embeddings.npy', embeddings)
+    
+    print(f"  ✓ Word2Vec embeddings shape: {embeddings.shape}")
     print(f"  ✓ Saved to {output_dir}")
     
     return embeddings
@@ -524,35 +603,55 @@ def prepare_theta_data(args):
     # Load texts
     texts, labels = load_texts(data_path)
     
-    # Output directory
-    result_base = Path(RESULT_DIR) / model_size / dataset
-    bow_dir = result_base / 'bow'
+    # Generate experiment ID with timestamp
+    from datetime import datetime
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    exp_id = f"exp_{timestamp}"
+    if args.exp_name:
+        exp_id = f"{exp_id}_{args.exp_name}"
     
-    if model_size == '0.6B':
-        emb_dir = result_base / mode / 'embeddings'
-    else:
-        emb_dir = result_base / 'embedding'
+    # Output directory - new structure: {model_size}/{dataset}/data/{exp_id}/
+    result_base = Path(RESULT_DIR) / model_size / dataset
+    exp_dir = result_base / 'data' / exp_id
+    exp_dir.mkdir(parents=True, exist_ok=True)
+    
+    bow_dir = exp_dir / 'bow'
+    emb_dir = exp_dir / 'embeddings'
+    
+    # Save config.json with all parameters
+    config = {
+        'exp_id': exp_id,
+        'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'dataset': dataset,
+        'model_size': model_size,
+        'mode': mode,
+        'vocab_size': args.vocab_size,
+        'batch_size': args.batch_size,
+        'max_length': args.max_length,
+        'bow_only': args.bow_only,
+    }
+    with open(exp_dir / 'config.json', 'w', encoding='utf-8') as f:
+        json.dump(config, f, ensure_ascii=False, indent=2)
+    print(f"  Experiment: {exp_id}")
+    print(f"  Config saved to: {exp_dir / 'config.json'}")
     
     # 1. Generate BOW
-    if not (bow_dir / 'bow_matrix.npz').exists() or not args.bow_only:
-        bow_matrix, vocab = generate_bow(texts, args.vocab_size, bow_dir)
-    else:
-        print(f"\n[Skip] BOW already exists: {bow_dir}")
-        with open(bow_dir / 'vocab.txt', 'r') as f:
-            vocab = f.read().strip().split('\n')
+    bow_matrix, vocab = generate_bow(texts, args.vocab_size, bow_dir)
     
     if args.bow_only:
-        print("\n[Done] Only generated BOW")
+        print("\n[Done] Only generated BOW (embedding fine-tuning will be done separately)")
+        print(f"  Experiment: {exp_id}")
         return True
     
     # 2. Generate document embeddings
-    generate_qwen_embeddings(texts, labels, model_size, mode, emb_dir, args.batch_size)
+    generate_qwen_embeddings(texts, labels, model_size, mode, emb_dir, args.batch_size, args.max_length)
     
     # 3. Generate vocabulary embeddings
     generate_vocab_embeddings(vocab, model_size, bow_dir, args.batch_size)
     
     print(f"\n{'='*70}")
     print(f"[Done] THETA data preparation completed")
+    print(f"  Experiment: {exp_id}")
     print(f"  - BOW: {bow_dir}")
     print(f"  - Embeddings: {emb_dir}")
     print(f"{'='*70}")
@@ -577,8 +676,31 @@ def prepare_baseline_data(args):
     # Load texts
     texts, labels = load_texts(data_path)
     
-    # Output directory
-    result_dir = Path(RESULT_DIR) / 'baseline' / dataset
+    # Generate experiment ID with timestamp
+    from datetime import datetime
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    exp_id = f"exp_{timestamp}"
+    if args.exp_name:
+        exp_id = f"{exp_id}_{args.exp_name}"
+    
+    # Output directory - new structure: baseline/{dataset}/data/{exp_id}/
+    result_dir = Path(RESULT_DIR) / 'baseline' / dataset / 'data' / exp_id
+    result_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Save config.json with all parameters
+    config = {
+        'exp_id': exp_id,
+        'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'dataset': dataset,
+        'vocab_size': args.vocab_size,
+        'batch_size': args.batch_size,
+        'max_length': args.max_length,
+        'skip_sbert': args.skip_sbert,
+        'bow_only': args.bow_only,
+    }
+    with open(result_dir / 'config.json', 'w', encoding='utf-8') as f:
+        json.dump(config, f, ensure_ascii=False, indent=2)
+    print(f"  Config saved to: {result_dir / 'config.json'}")
     
     # 1. Generate BOW
     bow_matrix, vocab = generate_bow(texts, args.vocab_size, result_dir)
@@ -587,12 +709,22 @@ def prepare_baseline_data(args):
         print("\n[Done] Only generated BOW")
         return True
     
-    # 2. Generate SBERT embedding (CTM specific)
+    # 2. Generate SBERT embedding (CTM specific) - skip if --skip-sbert
+    if not args.skip_sbert:
+        try:
+            generate_sbert_embeddings(texts, result_dir, args.batch_size)
+        except Exception as e:
+            print(f"  [Warning] SBERT generation failed: {e}")
+            print(f"  CTM model may not work, but LDA and ETM can run normally")
+    else:
+        print("\n[Skip] SBERT embedding generation (--skip-sbert)")
+    
+    # 3. Generate Word2Vec embedding (ETM specific)
     try:
-        generate_sbert_embeddings(texts, result_dir, args.batch_size)
+        generate_word2vec_embeddings(texts, vocab, result_dir, embedding_dim=300, language=args.language)
     except Exception as e:
-        print(f"  [Warning] SBERT generation failed: {e}")
-        print(f"  CTM model may not work, but LDA and ETM can run normally")
+        print(f"  [Warning] Word2Vec generation failed: {e}")
+        print(f"  ETM will use random initialization for word embeddings")
     
     print(f"\n{'='*70}")
     print(f"[Done] Baseline data preparation completed")
@@ -623,10 +755,18 @@ def prepare_dtm_data(args):
     
     # Find text column
     text_col = None
-    for col in ['cleaned_content', 'clean_text', 'cleaned_text', 'text', 'content', 'Text']:
+    for col in ['cleaned_content', 'clean_text', 'cleaned_text', 'text', 'content', 'Text',
+                 'Consumer complaint narrative', 'narrative']:
         if col in df.columns:
             text_col = col
             break
+    
+    # Fallback: use the longest-string column
+    if text_col is None:
+        str_cols = [c for c in df.columns if df[c].dtype == 'object']
+        if str_cols:
+            text_col = max(str_cols, key=lambda c: df[c].astype(str).str.len().mean())
+            print(f"  Auto-detected text column: '{text_col}'")
     
     if text_col is None:
         raise ValueError(f"No text column found. Columns: {df.columns.tolist()}")
@@ -684,9 +824,29 @@ def prepare_dtm_data(args):
     if len(unique_times) > 10:
         print(f"    ... (total {len(unique_times)} time points)")
     
-    # Output directory
-    result_dir = Path(RESULT_DIR) / 'baseline' / dataset
+    # Output directory - new structure: baseline/{dataset}/data/{exp_id}/
+    from datetime import datetime
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    exp_id = f"exp_{timestamp}_dtm_vocab{args.vocab_size}"
+    if args.exp_name:
+        exp_id = f"exp_{timestamp}_{args.exp_name}"
+    
+    result_dir = Path(RESULT_DIR) / 'baseline' / dataset / 'data' / exp_id
     result_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Save config.json
+    config = {
+        'exp_id': exp_id,
+        'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'dataset': dataset,
+        'vocab_size': args.vocab_size,
+        'model_type': 'dtm',
+        'time_column': time_column,
+        'num_time_slices': num_time_slices,
+    }
+    with open(result_dir / 'config.json', 'w', encoding='utf-8') as f:
+        json.dump(config, f, ensure_ascii=False, indent=2)
+    print(f"  Config saved to: {result_dir / 'config.json'}")
     
     # 1. Generate BOW
     bow_matrix, vocab = generate_bow(texts, args.vocab_size, result_dir)
@@ -753,7 +913,7 @@ def check_files(args):
         print(f"\n[THETA {model_size} - {mode}]")
         
         files = {
-            'bow_matrix': result_base / 'bow' / 'bow_matrix.npz',
+            'bow_matrix': result_base / 'bow' / 'bow_matrix.npy',
             'vocab': result_base / 'bow' / 'vocab.txt',
             'vocab_embeddings': result_base / 'bow' / 'vocab_embeddings.npy',
         }
@@ -787,7 +947,7 @@ def check_files(args):
         print(f"\n[{model_label}]")
         
         files = {
-            'bow_matrix': result_dir / 'bow_matrix.npz',
+            'bow_matrix': result_dir / 'bow_matrix.npy',
             'vocab': result_dir / 'vocab.json',
             'sbert_embeddings': result_dir / 'sbert_embeddings.npy',
         }
