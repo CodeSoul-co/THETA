@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="基于通义千问嵌入的先进主题建模">
+        <meta name="description" content="Advanced Topic Modeling with Qwen Embeddings">
       
       
         <meta name="author" content="CodeSoul">
@@ -15,28 +15,32 @@
         <link rel="canonical" href="https://codesoul-co.github.io/THETA/zh/user-guide/training/">
       
       
+        <link rel="prev" href="../preprocessing/">
+      
+      
+        <link rel="next" href="../evaluation/">
       
       
         
-          <link rel="alternate" href="/THETA/" hreflang="en">
+          <link rel="alternate" href="../../../user-guide/training/" hreflang="en">
         
-          <link rel="alternate" href="/THETA/zh/" hreflang="zh">
+          <link rel="alternate" href="./" hreflang="zh">
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
     
     
       
-        <title>Training Models - THETA 主题模型</title>
+        <title>训练模型 - THETA Topic Model</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -55,7 +59,7 @@
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#training-models" class="md-skip">
+        <a href="#_1" class="md-skip">
           跳转至
         </a>
       
@@ -96,7 +100,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="页眉">
-    <a href="../.." title="THETA 主题模型" class="md-header__button md-logo" aria-label="THETA 主题模型" data-md-component="logo">
+    <a href="../../" title="THETA Topic Model" class="md-header__button md-logo" aria-label="THETA Topic Model" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -110,13 +114,13 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            THETA 主题模型
+            THETA Topic Model
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Training Models
+              训练模型
             
           </span>
         </div>
@@ -163,13 +167,13 @@
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="/THETA/" hreflang="en" class="md-select__link">
+            <a href="../../../user-guide/training/" hreflang="en" class="md-select__link">
               English
             </a>
           </li>
         
           <li class="md-select__item">
-            <a href="/THETA/zh/" hreflang="zh" class="md-select__link">
+            <a href="./" hreflang="zh" class="md-select__link">
               中文
             </a>
           </li>
@@ -249,7 +253,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../index_zh/" class="md-tabs__link">
+      <a href="../../" class="md-tabs__link">
         
   
   
@@ -270,7 +274,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../getting-started/overview_zh/" class="md-tabs__link">
+        <a href="../../getting-started/overview/" class="md-tabs__link">
           
   
   
@@ -286,11 +290,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../data-preparation_zh/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../data-preparation/" class="md-tabs__link">
           
   
   
@@ -310,7 +316,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../models/theta_zh/" class="md-tabs__link">
+        <a href="../../models/theta/" class="md-tabs__link">
           
   
   
@@ -330,7 +336,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../advanced/custom-datasets_zh/" class="md-tabs__link">
+        <a href="../../advanced/custom-datasets/" class="md-tabs__link">
           
   
   
@@ -350,7 +356,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../api/prepare-data_zh/" class="md-tabs__link">
+        <a href="../../api/prepare-data/" class="md-tabs__link">
           
   
   
@@ -370,7 +376,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../examples/english-dataset_zh/" class="md-tabs__link">
+        <a href="../../examples/english-dataset/" class="md-tabs__link">
           
   
   
@@ -388,7 +394,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../troubleshooting_zh/" class="md-tabs__link">
+      <a href="../../troubleshooting/" class="md-tabs__link">
         
   
   
@@ -407,7 +413,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../appendix/faq_zh/" class="md-tabs__link">
+      <a href="../../appendix/faq/" class="md-tabs__link">
         
   
   
@@ -448,13 +454,13 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="THETA 主题模型" class="md-nav__button md-logo" aria-label="THETA 主题模型" data-md-component="logo">
+    <a href="../../" title="THETA Topic Model" class="md-nav__button md-logo" aria-label="THETA Topic Model" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    THETA 主题模型
+    THETA Topic Model
   </label>
   
     <div class="md-nav__source">
@@ -478,7 +484,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../index_zh/" class="md-nav__link">
+      <a href="../../" class="md-nav__link">
         
   
   
@@ -557,7 +563,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/overview_zh/" class="md-nav__link">
+      <a href="../../getting-started/overview/" class="md-nav__link">
         
   
   
@@ -585,7 +591,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/installation_zh/" class="md-nav__link">
+      <a href="../../getting-started/installation/" class="md-nav__link">
         
   
   
@@ -613,7 +619,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/quickstart_zh/" class="md-nav__link">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
         
   
   
@@ -645,26 +651,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -682,7 +693,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -700,7 +711,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../data-preparation_zh/" class="md-nav__link">
+      <a href="../data-preparation/" class="md-nav__link">
         
   
   
@@ -728,7 +739,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../preprocessing_zh/" class="md-nav__link">
+      <a href="../preprocessing/" class="md-nav__link">
         
   
   
@@ -753,10 +764,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../training_zh/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    训练模型
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -772,6 +810,203 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#theta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        THETA模型训练
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="THETA模型训练">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        基本训练
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        主题数量选择
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        学习率调优
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KL退火配置
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        隐藏层维度配置
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        早停
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        中文数据训练
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        有监督训练
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        基线模型训练
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="基线模型训练">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lda" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LDA训练
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#etm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ETM训练
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ctm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CTM训练
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dtm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DTM训练
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        训练多个模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -784,7 +1019,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../evaluation_zh/" class="md-nav__link">
+      <a href="../evaluation/" class="md-nav__link">
         
   
   
@@ -812,7 +1047,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../visualization_zh/" class="md-nav__link">
+      <a href="../visualization/" class="md-nav__link">
         
   
   
@@ -899,7 +1134,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/theta_zh/" class="md-nav__link">
+      <a href="../../models/theta/" class="md-nav__link">
         
   
   
@@ -927,7 +1162,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/baselines_zh/" class="md-nav__link">
+      <a href="../../models/baselines/" class="md-nav__link">
         
   
   
@@ -955,7 +1190,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/comparison_zh/" class="md-nav__link">
+      <a href="../../models/comparison/" class="md-nav__link">
         
   
   
@@ -1042,7 +1277,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/custom-datasets_zh/" class="md-nav__link">
+      <a href="../../advanced/custom-datasets/" class="md-nav__link">
         
   
   
@@ -1070,7 +1305,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/hyperparameters_zh/" class="md-nav__link">
+      <a href="../../advanced/hyperparameters/" class="md-nav__link">
         
   
   
@@ -1098,7 +1333,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/chinese-data_zh/" class="md-nav__link">
+      <a href="../../advanced/chinese-data/" class="md-nav__link">
         
   
   
@@ -1126,7 +1361,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/distributed-training_zh/" class="md-nav__link">
+      <a href="../../advanced/distributed-training/" class="md-nav__link">
         
   
   
@@ -1213,7 +1448,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/prepare-data_zh/" class="md-nav__link">
+      <a href="../../api/prepare-data/" class="md-nav__link">
         
   
   
@@ -1241,7 +1476,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/run-pipeline_zh/" class="md-nav__link">
+      <a href="../../api/run-pipeline/" class="md-nav__link">
         
   
   
@@ -1269,7 +1504,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/visualization_zh/" class="md-nav__link">
+      <a href="../../api/visualization/" class="md-nav__link">
         
   
   
@@ -1356,7 +1591,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/english-dataset_zh/" class="md-nav__link">
+      <a href="../../examples/english-dataset/" class="md-nav__link">
         
   
   
@@ -1384,7 +1619,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/chinese-dataset_zh/" class="md-nav__link">
+      <a href="../../examples/chinese-dataset/" class="md-nav__link">
         
   
   
@@ -1412,7 +1647,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/supervised-learning_zh/" class="md-nav__link">
+      <a href="../../examples/supervised-learning/" class="md-nav__link">
         
   
   
@@ -1447,7 +1682,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../troubleshooting_zh/" class="md-nav__link">
+      <a href="../../troubleshooting/" class="md-nav__link">
         
   
   
@@ -1474,7 +1709,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../appendix/faq_zh/" class="md-nav__link">
+      <a href="../../appendix/faq/" class="md-nav__link">
         
   
   
@@ -1521,22 +1756,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#theta-model-training" class="md-nav__link">
+  <a href="#theta" class="md-nav__link">
     <span class="md-ellipsis">
       
-        THETA Model Training
+        THETA模型训练
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="THETA Model Training">
+    <nav class="md-nav" aria-label="THETA模型训练">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#basic-training" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Basic Training
+        基本训练
       
     </span>
   </a>
@@ -1544,10 +1779,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#topic-number-selection" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Topic Number Selection
+        主题数量选择
       
     </span>
   </a>
@@ -1555,10 +1790,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#learning-rate-tuning" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Learning Rate Tuning
+        学习率调优
       
     </span>
   </a>
@@ -1566,10 +1801,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#kl-annealing-configuration" class="md-nav__link">
+  <a href="#kl" class="md-nav__link">
     <span class="md-ellipsis">
       
-        KL Annealing Configuration
+        KL退火配置
       
     </span>
   </a>
@@ -1577,10 +1812,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#hidden-dimension-configuration" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Hidden Dimension Configuration
+        隐藏层维度配置
       
     </span>
   </a>
@@ -1588,10 +1823,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#early-stopping" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Early Stopping
+        早停
       
     </span>
   </a>
@@ -1599,10 +1834,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#chinese-data-training" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Chinese Data Training
+        中文数据训练
       
     </span>
   </a>
@@ -1610,10 +1845,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#supervised-training" class="md-nav__link">
+  <a href="#_8" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Supervised Training
+        有监督训练
       
     </span>
   </a>
@@ -1626,22 +1861,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#baseline-model-training" class="md-nav__link">
+  <a href="#_9" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Baseline Model Training
+        基线模型训练
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Baseline Model Training">
+    <nav class="md-nav" aria-label="基线模型训练">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#lda-training" class="md-nav__link">
+  <a href="#lda" class="md-nav__link">
     <span class="md-ellipsis">
       
-        LDA Training
+        LDA训练
       
     </span>
   </a>
@@ -1649,10 +1884,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#etm-training" class="md-nav__link">
+  <a href="#etm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ETM Training
+        ETM训练
       
     </span>
   </a>
@@ -1660,10 +1895,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ctm-training" class="md-nav__link">
+  <a href="#ctm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        CTM Training
+        CTM训练
       
     </span>
   </a>
@@ -1671,10 +1906,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#dtm-training" class="md-nav__link">
+  <a href="#dtm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        DTM Training
+        DTM训练
       
     </span>
   </a>
@@ -1682,10 +1917,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#training-multiple-models" class="md-nav__link">
+  <a href="#_10" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Training Multiple Models
+        训练多个模型
       
     </span>
   </a>
@@ -1714,7 +1949,7 @@
 
 
   
-    <a href="https://github.com/CodeSoul-co/THETA/edit/main/doc/user-guide/training.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/CodeSoul-co/THETA/edit/main/doc/user-guide/training.zh.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1722,12 +1957,14 @@
   
 
 
-<h1 id="training-models">Training Models<a class="headerlink" href="#training-models" title="Permanent link">&para;</a></h1>
-<p>This guide covers training THETA and baseline models with various configurations.</p>
+<h1 id="_1">训练模型<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<p><strong><a href="./">English</a></strong> | <strong><a href="./">中文</a></strong></p>
 <hr />
-<h2 id="theta-model-training">THETA Model Training<a class="headerlink" href="#theta-model-training" title="Permanent link">&para;</a></h2>
-<h3 id="basic-training">Basic Training<a class="headerlink" href="#basic-training" title="Permanent link">&para;</a></h3>
-<p>Train a THETA model with default hyperparameters:</p>
+<p>本指南涵盖使用各种配置训练THETA和基线模型。</p>
+<hr />
+<h2 id="theta">THETA模型训练<a class="headerlink" href="#theta" title="Permanent link">&para;</a></h2>
+<h3 id="_2">基本训练<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<p>使用默认超参数训练THETA模型：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">cd</span><span class="w"> </span>/root/autodl-tmp/ETM
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
@@ -1747,92 +1984,92 @@
 </span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">    </span>--language<span class="w"> </span>en
 </span></code></pre></div>
-<p>Training typically completes in 20-40 minutes depending on dataset size and hardware.</p>
-<h3 id="topic-number-selection">Topic Number Selection<a class="headerlink" href="#topic-number-selection" title="Permanent link">&para;</a></h3>
-<p>The number of topics is a key hyperparameter that affects granularity:</p>
+<p>训练通常在20-40分钟内完成，具体取决于数据集规模和硬件。</p>
+<h3 id="_3">主题数量选择<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<p>主题数量是影响粒度的关键超参数：</p>
 <table>
 <thead>
 <tr>
-<th>Topics</th>
-<th>Appropriate For</th>
+<th>主题数</th>
+<th>适用场景</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>10-15</td>
-<td>Small corpora, broad categories, high-level overview</td>
+<td>小型语料库，宽泛类别，高层级概览</td>
 </tr>
 <tr>
 <td>20-30</td>
-<td>Medium corpora, balanced granularity, default choice</td>
+<td>中型语料库，平衡粒度，默认选择</td>
 </tr>
 <tr>
 <td>40-100</td>
-<td>Large diverse corpora, fine-grained analysis</td>
+<td>大型多样化语料库，细粒度分析</td>
 </tr>
 </tbody>
 </table>
-<h3 id="learning-rate-tuning">Learning Rate Tuning<a class="headerlink" href="#learning-rate-tuning" title="Permanent link">&para;</a></h3>
+<h3 id="_4">学习率调优<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Learning Rate</th>
-<th>Use When</th>
+<th>学习率</th>
+<th>使用场景</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>0.001</td>
-<td>Training is unstable, loss oscillates</td>
+<td>训练不稳定，损失值震荡</td>
 </tr>
 <tr>
 <td>0.002</td>
-<td>Default choice for most datasets</td>
+<td>大多数数据集的默认选择</td>
 </tr>
 <tr>
 <td>0.005</td>
-<td>Training is too slow, need faster convergence</td>
+<td>训练过慢，需要更快收敛</td>
 </tr>
 </tbody>
 </table>
-<h3 id="kl-annealing-configuration">KL Annealing Configuration<a class="headerlink" href="#kl-annealing-configuration" title="Permanent link">&para;</a></h3>
-<p>KL annealing gradually increases the KL divergence weight during training to prevent posterior collapse.</p>
-<p><strong>Standard KL annealing:</strong>
-Weight increases linearly from 0.0 to 1.0 over 50 epochs.</p>
-<p><strong>Slow KL annealing:</strong>
-<code>--kl_warmup 80</code> — Longer warmup period helps prevent early posterior collapse.</p>
-<p><strong>Partial KL annealing:</strong>
-<code>--kl_start 0.1 --kl_end 0.9 --kl_warmup 30</code> — Starts with non-zero weight and stops before full weight.</p>
-<h3 id="hidden-dimension-configuration">Hidden Dimension Configuration<a class="headerlink" href="#hidden-dimension-configuration" title="Permanent link">&para;</a></h3>
+<h3 id="kl">KL退火配置<a class="headerlink" href="#kl" title="Permanent link">&para;</a></h3>
+<p>KL退火在训练过程中逐渐增加KL散度权重，以防止后验坍塌。</p>
+<p><strong>标准KL退火：</strong>
+权重在50轮内从0.0线性增加到1.0。</p>
+<p><strong>慢速KL退火：</strong>
+<code>--kl_warmup 80</code> — 更长的预热期有助于防止早期后验坍塌。</p>
+<p><strong>部分KL退火：</strong>
+<code>--kl_start 0.1 --kl_end 0.9 --kl_warmup 30</code> — 从非零权重开始，在达到完全权重前停止。</p>
+<h3 id="_5">隐藏层维度配置<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Hidden Dim</th>
-<th>Use When</th>
+<th>隐藏层维度</th>
+<th>使用场景</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>256</td>
-<td>Small datasets, faster training, limited VRAM</td>
+<td>小型数据集，训练更快，显存有限</td>
 </tr>
 <tr>
 <td>512</td>
-<td>Default choice for most datasets</td>
+<td>大多数数据集的默认选择</td>
 </tr>
 <tr>
 <td>768-1024</td>
-<td>Large complex datasets, sufficient VRAM available</td>
+<td>大型复杂数据集，显存充足</td>
 </tr>
 </tbody>
 </table>
-<h3 id="early-stopping">Early Stopping<a class="headerlink" href="#early-stopping" title="Permanent link">&para;</a></h3>
-<p>Early stopping prevents overfitting by monitoring validation performance:</p>
+<h3 id="_6">早停<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
+<p>早停通过监控验证性能来防止过拟合：</p>
 <ul>
-<li><strong>Default</strong>: <code>--patience 10</code> — Stops if no improvement after 10 epochs</li>
-<li><strong>Disabled</strong>: <code>--no_early_stopping</code> — Trains for all specified epochs</li>
+<li><strong>默认</strong>：<code>--patience 10</code> — 10轮无改善后停止</li>
+<li><strong>禁用</strong>：<code>--no_early_stopping</code> — 训练所有指定轮数</li>
 </ul>
-<h3 id="chinese-data-training">Chinese Data Training<a class="headerlink" href="#chinese-data-training" title="Permanent link">&para;</a></h3>
+<h3 id="_7">中文数据训练<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span>--dataset<span class="w"> </span>chinese_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span>--models<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -1844,9 +2081,9 @@ Weight increases linearly from 0.0 to 1.0 over 50 epochs.</p>
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span>--language<span class="w"> </span>zh
 </span></code></pre></div>
-<p>The language parameter affects visualization rendering (fonts, layout) but does not change the training algorithm.</p>
-<h3 id="supervised-training">Supervised Training<a class="headerlink" href="#supervised-training" title="Permanent link">&para;</a></h3>
-<p>For datasets with labels:</p>
+<p>语言参数影响可视化渲染（字体、布局），但不改变训练算法。</p>
+<h3 id="_8">有监督训练<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h3>
+<p>对于带标签的数据集：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span>--dataset<span class="w"> </span>labeled_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>--models<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -1858,10 +2095,10 @@ Weight increases linearly from 0.0 to 1.0 over 50 epochs.</p>
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span>--language<span class="w"> </span>en
 </span></code></pre></div>
-<p>The model incorporates label information to guide topic discovery.</p>
+<p>模型融入标签信息以引导主题发现。</p>
 <hr />
-<h2 id="baseline-model-training">Baseline Model Training<a class="headerlink" href="#baseline-model-training" title="Permanent link">&para;</a></h2>
-<h3 id="lda-training">LDA Training<a class="headerlink" href="#lda-training" title="Permanent link">&para;</a></h3>
+<h2 id="_9">基线模型训练<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h2>
+<h3 id="lda">LDA训练<a class="headerlink" href="#lda" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--models<span class="w"> </span>lda<span class="w"> </span><span class="se">\</span>
@@ -1871,8 +2108,8 @@ Weight increases linearly from 0.0 to 1.0 over 50 epochs.</p>
 </span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span>--language<span class="w"> </span>en
 </span></code></pre></div>
-<p>LDA uses Gibbs sampling and does not utilize GPU acceleration.</p>
-<h3 id="etm-training">ETM Training<a class="headerlink" href="#etm-training" title="Permanent link">&para;</a></h3>
+<p>LDA使用吉布斯采样，不利用GPU加速。</p>
+<h3 id="etm">ETM训练<a class="headerlink" href="#etm" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--models<span class="w"> </span>etm<span class="w"> </span><span class="se">\</span>
@@ -1884,8 +2121,8 @@ Weight increases linearly from 0.0 to 1.0 over 50 epochs.</p>
 </span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span>--language<span class="w"> </span>en
 </span></code></pre></div>
-<p>ETM uses Word2Vec embeddings (300 dimensions).</p>
-<h3 id="ctm-training">CTM Training<a class="headerlink" href="#ctm-training" title="Permanent link">&para;</a></h3>
+<p>ETM使用Word2Vec嵌入（300维）。</p>
+<h3 id="ctm">CTM训练<a class="headerlink" href="#ctm" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span>--models<span class="w"> </span>ctm<span class="w"> </span><span class="se">\</span>
@@ -1897,8 +2134,8 @@ Weight increases linearly from 0.0 to 1.0 over 50 epochs.</p>
 </span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="w">    </span>--language<span class="w"> </span>en
 </span></code></pre></div>
-<p>CTM uses SBERT embeddings (768 dimensions).</p>
-<h3 id="dtm-training">DTM Training<a class="headerlink" href="#dtm-training" title="Permanent link">&para;</a></h3>
+<p>CTM使用SBERT嵌入（768维）。</p>
+<h3 id="dtm">DTM训练<a class="headerlink" href="#dtm" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span>--dataset<span class="w"> </span>temporal_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span>--models<span class="w"> </span>dtm<span class="w"> </span><span class="se">\</span>
@@ -1910,9 +2147,9 @@ Weight increases linearly from 0.0 to 1.0 over 50 epochs.</p>
 </span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">    </span>--language<span class="w"> </span>en
 </span></code></pre></div>
-<p>DTM models topic evolution across time slices defined by the time column in preprocessing.</p>
-<h3 id="training-multiple-models">Training Multiple Models<a class="headerlink" href="#training-multiple-models" title="Permanent link">&para;</a></h3>
-<p>Compare multiple models simultaneously:</p>
+<p>DTM对由预处理中时间列定义的时间切片上的主题演化进行建模。</p>
+<h3 id="_10">训练多个模型<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h3>
+<p>同时比较多个模型：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span>--models<span class="w"> </span>lda,etm,ctm<span class="w"> </span><span class="se">\</span>
@@ -1922,7 +2159,7 @@ Weight increases linearly from 0.0 to 1.0 over 50 epochs.</p>
 </span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span>--language<span class="w"> </span>en
 </span></code></pre></div>
-<p>Models train sequentially. Results are saved in separate directories for comparison.</p>
+<p>模型顺序训练。结果保存在单独的目录中以供比较。</p>
 
 
 
@@ -1995,10 +2232,10 @@ Weight increases linearly from 0.0 to 1.0 over 50 epochs.</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.action.edit"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

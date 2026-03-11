@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="基于通义千问嵌入的先进主题建模">
+        <meta name="description" content="Advanced Topic Modeling with Qwen Embeddings">
       
       
         <meta name="author" content="CodeSoul">
@@ -15,28 +15,32 @@
         <link rel="canonical" href="https://codesoul-co.github.io/THETA/zh/examples/english-dataset/">
       
       
+        <link rel="prev" href="../../api/visualization/">
+      
+      
+        <link rel="next" href="../chinese-dataset/">
       
       
         
-          <link rel="alternate" href="/THETA/" hreflang="en">
+          <link rel="alternate" href="../../../examples/english-dataset/" hreflang="en">
         
-          <link rel="alternate" href="/THETA/zh/" hreflang="zh">
+          <link rel="alternate" href="./" hreflang="zh">
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
     
     
       
-        <title>English Dataset Examples - THETA 主题模型</title>
+        <title>英文数据集 - THETA Topic Model</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -55,7 +59,7 @@
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#english-dataset-examples" class="md-skip">
+        <a href="#_1" class="md-skip">
           跳转至
         </a>
       
@@ -96,7 +100,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="页眉">
-    <a href="../.." title="THETA 主题模型" class="md-header__button md-logo" aria-label="THETA 主题模型" data-md-component="logo">
+    <a href="../../" title="THETA Topic Model" class="md-header__button md-logo" aria-label="THETA Topic Model" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -110,13 +114,13 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            THETA 主题模型
+            THETA Topic Model
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              English Dataset Examples
+              英文数据集
             
           </span>
         </div>
@@ -163,13 +167,13 @@
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="/THETA/" hreflang="en" class="md-select__link">
+            <a href="../../../examples/english-dataset/" hreflang="en" class="md-select__link">
               English
             </a>
           </li>
         
           <li class="md-select__item">
-            <a href="/THETA/zh/" hreflang="zh" class="md-select__link">
+            <a href="./" hreflang="zh" class="md-select__link">
               中文
             </a>
           </li>
@@ -249,7 +253,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../index_zh/" class="md-tabs__link">
+      <a href="../../" class="md-tabs__link">
         
   
   
@@ -270,7 +274,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../getting-started/overview_zh/" class="md-tabs__link">
+        <a href="../../getting-started/overview/" class="md-tabs__link">
           
   
   
@@ -290,7 +294,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../user-guide/data-preparation_zh/" class="md-tabs__link">
+        <a href="../../user-guide/data-preparation/" class="md-tabs__link">
           
   
   
@@ -310,7 +314,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../models/theta_zh/" class="md-tabs__link">
+        <a href="../../models/theta/" class="md-tabs__link">
           
   
   
@@ -330,7 +334,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../advanced/custom-datasets_zh/" class="md-tabs__link">
+        <a href="../../advanced/custom-datasets/" class="md-tabs__link">
           
   
   
@@ -350,7 +354,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../api/prepare-data_zh/" class="md-tabs__link">
+        <a href="../../api/prepare-data/" class="md-tabs__link">
           
   
   
@@ -366,11 +370,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../english-dataset_zh/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
           
   
   
@@ -388,7 +394,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../troubleshooting_zh/" class="md-tabs__link">
+      <a href="../../troubleshooting/" class="md-tabs__link">
         
   
   
@@ -407,7 +413,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../appendix/faq_zh/" class="md-tabs__link">
+      <a href="../../appendix/faq/" class="md-tabs__link">
         
   
   
@@ -448,13 +454,13 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="THETA 主题模型" class="md-nav__button md-logo" aria-label="THETA 主题模型" data-md-component="logo">
+    <a href="../../" title="THETA Topic Model" class="md-nav__button md-logo" aria-label="THETA Topic Model" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    THETA 主题模型
+    THETA Topic Model
   </label>
   
     <div class="md-nav__source">
@@ -478,7 +484,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../index_zh/" class="md-nav__link">
+      <a href="../../" class="md-nav__link">
         
   
   
@@ -557,7 +563,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/overview_zh/" class="md-nav__link">
+      <a href="../../getting-started/overview/" class="md-nav__link">
         
   
   
@@ -585,7 +591,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/installation_zh/" class="md-nav__link">
+      <a href="../../getting-started/installation/" class="md-nav__link">
         
   
   
@@ -613,7 +619,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/quickstart_zh/" class="md-nav__link">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
         
   
   
@@ -700,7 +706,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/data-preparation_zh/" class="md-nav__link">
+      <a href="../../user-guide/data-preparation/" class="md-nav__link">
         
   
   
@@ -728,7 +734,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/preprocessing_zh/" class="md-nav__link">
+      <a href="../../user-guide/preprocessing/" class="md-nav__link">
         
   
   
@@ -756,7 +762,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/training_zh/" class="md-nav__link">
+      <a href="../../user-guide/training/" class="md-nav__link">
         
   
   
@@ -784,7 +790,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/evaluation_zh/" class="md-nav__link">
+      <a href="../../user-guide/evaluation/" class="md-nav__link">
         
   
   
@@ -812,7 +818,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/visualization_zh/" class="md-nav__link">
+      <a href="../../user-guide/visualization/" class="md-nav__link">
         
   
   
@@ -899,7 +905,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/theta_zh/" class="md-nav__link">
+      <a href="../../models/theta/" class="md-nav__link">
         
   
   
@@ -927,7 +933,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/baselines_zh/" class="md-nav__link">
+      <a href="../../models/baselines/" class="md-nav__link">
         
   
   
@@ -955,7 +961,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/comparison_zh/" class="md-nav__link">
+      <a href="../../models/comparison/" class="md-nav__link">
         
   
   
@@ -1042,7 +1048,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/custom-datasets_zh/" class="md-nav__link">
+      <a href="../../advanced/custom-datasets/" class="md-nav__link">
         
   
   
@@ -1070,7 +1076,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/hyperparameters_zh/" class="md-nav__link">
+      <a href="../../advanced/hyperparameters/" class="md-nav__link">
         
   
   
@@ -1098,7 +1104,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/chinese-data_zh/" class="md-nav__link">
+      <a href="../../advanced/chinese-data/" class="md-nav__link">
         
   
   
@@ -1126,7 +1132,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/distributed-training_zh/" class="md-nav__link">
+      <a href="../../advanced/distributed-training/" class="md-nav__link">
         
   
   
@@ -1213,7 +1219,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/prepare-data_zh/" class="md-nav__link">
+      <a href="../../api/prepare-data/" class="md-nav__link">
         
   
   
@@ -1241,7 +1247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/run-pipeline_zh/" class="md-nav__link">
+      <a href="../../api/run-pipeline/" class="md-nav__link">
         
   
   
@@ -1269,7 +1275,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/visualization_zh/" class="md-nav__link">
+      <a href="../../api/visualization/" class="md-nav__link">
         
   
   
@@ -1301,26 +1307,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
             
   
   
@@ -1338,7 +1349,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1353,10 +1364,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../english-dataset_zh/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    英文数据集
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1372,6 +1410,342 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        示例1：英文新闻数据集
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="示例1：英文新闻数据集">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        数据集描述
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤1：准备数据
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤2：预处理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤3：训练模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤4：分析结果
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤5：与基线模型比较
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        示例2：使用4B模型的大规模数据集
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="示例2：使用4B模型的大规模数据集">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        数据集描述
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤1：使用4B模型预处理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤2：使用增强容量训练
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤3：比较模型规模
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        示例3：多模型比较
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="示例3：多模型比较">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        数据集描述
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤1：为所有模型预处理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤2：训练所有模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤3：比较表格
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        示例4：超参数网格搜索
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="示例4：超参数网格搜索">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        设置
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        网格搜索脚本
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        最佳配置
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        最佳实践总结
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="最佳实践总结">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        数据准备
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        模型选择
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        超参数调优
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        评估
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1384,7 +1758,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../chinese-dataset_zh/" class="md-nav__link">
+      <a href="../chinese-dataset/" class="md-nav__link">
         
   
   
@@ -1412,7 +1786,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../supervised-learning_zh/" class="md-nav__link">
+      <a href="../supervised-learning/" class="md-nav__link">
         
   
   
@@ -1447,7 +1821,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../troubleshooting_zh/" class="md-nav__link">
+      <a href="../../troubleshooting/" class="md-nav__link">
         
   
   
@@ -1474,7 +1848,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../appendix/faq_zh/" class="md-nav__link">
+      <a href="../../appendix/faq/" class="md-nav__link">
         
   
   
@@ -1521,22 +1895,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#example-1-english-news-dataset" class="md-nav__link">
+  <a href="#1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example 1: English News Dataset
+        示例1：英文新闻数据集
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Example 1: English News Dataset">
+    <nav class="md-nav" aria-label="示例1：英文新闻数据集">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#dataset-description" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Dataset Description
+        数据集描述
       
     </span>
   </a>
@@ -1544,10 +1918,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-1-prepare-data" class="md-nav__link">
+  <a href="#1_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 1: Prepare Data
+        步骤1：准备数据
       
     </span>
   </a>
@@ -1555,10 +1929,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-2-preprocess" class="md-nav__link">
+  <a href="#2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 2: Preprocess
+        步骤2：预处理
       
     </span>
   </a>
@@ -1566,10 +1940,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-3-train-model" class="md-nav__link">
+  <a href="#3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 3: Train Model
+        步骤3：训练模型
       
     </span>
   </a>
@@ -1577,10 +1951,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-4-analyze-results" class="md-nav__link">
+  <a href="#4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 4: Analyze Results
+        步骤4：分析结果
       
     </span>
   </a>
@@ -1588,10 +1962,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-5-compare-with-baselines" class="md-nav__link">
+  <a href="#5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 5: Compare with Baselines
+        步骤5：与基线模型比较
       
     </span>
   </a>
@@ -1604,22 +1978,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-2-large-scale-dataset-with-4b-model" class="md-nav__link">
+  <a href="#24b" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example 2: Large-Scale Dataset with 4B Model
+        示例2：使用4B模型的大规模数据集
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Example 2: Large-Scale Dataset with 4B Model">
+    <nav class="md-nav" aria-label="示例2：使用4B模型的大规模数据集">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#dataset-description_1" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Dataset Description
+        数据集描述
       
     </span>
   </a>
@@ -1627,10 +2001,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-1-preprocess-with-4b-model" class="md-nav__link">
+  <a href="#14b" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 1: Preprocess with 4B Model
+        步骤1：使用4B模型预处理
       
     </span>
   </a>
@@ -1638,10 +2012,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-2-train-with-increased-capacity" class="md-nav__link">
+  <a href="#2_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 2: Train with Increased Capacity
+        步骤2：使用增强容量训练
       
     </span>
   </a>
@@ -1649,10 +2023,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-3-compare-model-sizes" class="md-nav__link">
+  <a href="#3_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 3: Compare Model Sizes
+        步骤3：比较模型规模
       
     </span>
   </a>
@@ -1665,22 +2039,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-3-multi-model-comparison" class="md-nav__link">
+  <a href="#3_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example 3: Multi-Model Comparison
+        示例3：多模型比较
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Example 3: Multi-Model Comparison">
+    <nav class="md-nav" aria-label="示例3：多模型比较">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#dataset-description_2" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Dataset Description
+        数据集描述
       
     </span>
   </a>
@@ -1688,10 +2062,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-1-preprocess-for-all-models" class="md-nav__link">
+  <a href="#1_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 1: Preprocess for All Models
+        步骤1：为所有模型预处理
       
     </span>
   </a>
@@ -1699,10 +2073,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-2-train-all-models" class="md-nav__link">
+  <a href="#2_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 2: Train All Models
+        步骤2：训练所有模型
       
     </span>
   </a>
@@ -1710,10 +2084,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-3-comparison-table" class="md-nav__link">
+  <a href="#3_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 3: Comparison Table
+        步骤3：比较表格
       
     </span>
   </a>
@@ -1726,22 +2100,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-4-hyperparameter-grid-search" class="md-nav__link">
+  <a href="#4_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example 4: Hyperparameter Grid Search
+        示例4：超参数网格搜索
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Example 4: Hyperparameter Grid Search">
+    <nav class="md-nav" aria-label="示例4：超参数网格搜索">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#setup" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Setup
+        设置
       
     </span>
   </a>
@@ -1749,10 +2123,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#grid-search-script" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Grid Search Script
+        网格搜索脚本
       
     </span>
   </a>
@@ -1760,10 +2134,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#best-configuration" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Best Configuration
+        最佳配置
       
     </span>
   </a>
@@ -1776,22 +2150,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#best-practices-summary" class="md-nav__link">
+  <a href="#_8" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Best Practices Summary
+        最佳实践总结
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Best Practices Summary">
+    <nav class="md-nav" aria-label="最佳实践总结">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#data-preparation" class="md-nav__link">
+  <a href="#_9" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Data Preparation
+        数据准备
       
     </span>
   </a>
@@ -1799,10 +2173,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#model-selection" class="md-nav__link">
+  <a href="#_10" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Model Selection
+        模型选择
       
     </span>
   </a>
@@ -1810,10 +2184,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#hyperparameter-tuning" class="md-nav__link">
+  <a href="#_11" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Hyperparameter Tuning
+        超参数调优
       
     </span>
   </a>
@@ -1821,10 +2195,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#evaluation" class="md-nav__link">
+  <a href="#_12" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Evaluation
+        评估
       
     </span>
   </a>
@@ -1853,7 +2227,7 @@
 
 
   
-    <a href="https://github.com/CodeSoul-co/THETA/edit/main/doc/examples/english-dataset.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/CodeSoul-co/THETA/edit/main/doc/examples/english-dataset.zh.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1861,31 +2235,33 @@
   
 
 
-<h1 id="english-dataset-examples">English Dataset Examples<a class="headerlink" href="#english-dataset-examples" title="Permanent link">&para;</a></h1>
-<p>Complete tutorials demonstrating THETA usage with English data.</p>
+<h1 id="_1">英文数据集示例<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<p><strong><a href="./">English</a></strong> | <strong><a href="./">中文</a></strong></p>
 <hr />
-<h2 id="example-1-english-news-dataset">Example 1: English News Dataset<a class="headerlink" href="#example-1-english-news-dataset" title="Permanent link">&para;</a></h2>
-<p>This example demonstrates the complete workflow for analyzing news articles.</p>
-<h3 id="dataset-description">Dataset Description<a class="headerlink" href="#dataset-description" title="Permanent link">&para;</a></h3>
+<p>展示使用THETA处理英文数据的完整教程。</p>
+<hr />
+<h2 id="1">示例1：英文新闻数据集<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>本示例演示分析新闻文章的完整工作流程。</p>
+<h3 id="_2">数据集描述<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Domain: News articles</li>
-<li>Size: 5000 documents</li>
-<li>Language: English</li>
-<li>Source: Online news aggregator</li>
-<li>Time period: 2020-2023</li>
+<li>领域：新闻文章</li>
+<li>规模：5000篇文档</li>
+<li>语言：英文</li>
+<li>来源：在线新闻聚合器</li>
+<li>时间范围：2020-2023年</li>
 </ul>
-<h3 id="step-1-prepare-data">Step 1: Prepare Data<a class="headerlink" href="#step-1-prepare-data" title="Permanent link">&para;</a></h3>
-<p>Create dataset directory and place CSV file:</p>
+<h3 id="1_1">步骤1：准备数据<a class="headerlink" href="#1_1" title="Permanent link">&para;</a></h3>
+<p>创建数据集目录并放置CSV文件：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>/root/autodl-tmp/data/news_corpus
 </span></code></pre></div>
-<p>CSV format:
+<p>CSV格式：
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>text
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>&quot;Federal Reserve raises interest rates to combat inflation...&quot;
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&quot;Climate summit reaches historic agreement on emissions...&quot;
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>&quot;Technology companies announce layoffs amid economic uncertainty...&quot;
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>&quot;美联储加息以应对通货膨胀...&quot;
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>&quot;气候峰会达成历史性排放协议...&quot;
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>&quot;科技公司因经济不确定性宣布裁员...&quot;
 </span></code></pre></div></p>
-<p>Save as <code>/root/autodl-tmp/data/news_corpus/news_corpus_cleaned.csv</code></p>
-<h3 id="step-2-preprocess">Step 2: Preprocess<a class="headerlink" href="#step-2-preprocess" title="Permanent link">&para;</a></h3>
+<p>保存为 <code>/root/autodl-tmp/data/news_corpus/news_corpus_cleaned.csv</code></p>
+<h3 id="2">步骤2：预处理<a class="headerlink" href="#2" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">cd</span><span class="w"> </span>/root/autodl-tmp/ETM
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
@@ -1898,9 +2274,9 @@
 </span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">    </span>--max_length<span class="w"> </span><span class="m">512</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div>
-<p>Processing time: ~5 minutes on V100 GPU</p>
-<h3 id="step-3-train-model">Step 3: Train Model<a class="headerlink" href="#step-3-train-model" title="Permanent link">&para;</a></h3>
-<p>Train with 25 topics to capture diverse news categories:</p>
+<p>处理时间：在V100 GPU上约5分钟</p>
+<h3 id="3">步骤3：训练模型<a class="headerlink" href="#3" title="Permanent link">&para;</a></h3>
+<p>使用25个主题训练以捕捉多样的新闻类别：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--dataset<span class="w"> </span>news_corpus<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--models<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -1918,11 +2294,11 @@
 </span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">    </span>--language<span class="w"> </span>en
 </span></code></pre></div>
-<p>Training time: ~25 minutes</p>
-<h3 id="step-4-analyze-results">Step 4: Analyze Results<a class="headerlink" href="#step-4-analyze-results" title="Permanent link">&para;</a></h3>
+<p>训练时间：约25分钟</p>
+<h3 id="4">步骤4：分析结果<a class="headerlink" href="#4" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cat<span class="w"> </span>/root/autodl-tmp/result/0.6B/news_corpus/zero_shot/metrics/evaluation_results.json
 </span></code></pre></div>
-<p>Example output:
+<p>示例输出：
 <div class="language-json highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">&quot;TD&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.87</span><span class="p">,</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">&quot;iRBO&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.73</span><span class="p">,</span>
@@ -1933,7 +2309,7 @@
 </span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">  </span><span class="nt">&quot;PPL&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">152.34</span>
 </span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="p">}</span>
 </span></code></pre></div></p>
-<h3 id="step-5-compare-with-baselines">Step 5: Compare with Baselines<a class="headerlink" href="#step-5-compare-with-baselines" title="Permanent link">&para;</a></h3>
+<h3 id="5">步骤5：与基线模型比较<a class="headerlink" href="#5" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span>--dataset<span class="w"> </span>news_corpus<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span>--model<span class="w"> </span>baseline<span class="w"> </span><span class="se">\</span>
@@ -1948,11 +2324,11 @@
 </span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">    </span>--language<span class="w"> </span>en
 </span></code></pre></div>
-<p>Comparison results:</p>
+<p>比较结果：</p>
 <table>
 <thead>
 <tr>
-<th>Model</th>
+<th>模型</th>
 <th>TD</th>
 <th>NPMI</th>
 <th>C_V</th>
@@ -1991,16 +2367,16 @@
 </tbody>
 </table>
 <hr />
-<h2 id="example-2-large-scale-dataset-with-4b-model">Example 2: Large-Scale Dataset with 4B Model<a class="headerlink" href="#example-2-large-scale-dataset-with-4b-model" title="Permanent link">&para;</a></h2>
-<p>This example demonstrates scaling to larger models and datasets.</p>
-<h3 id="dataset-description_1">Dataset Description<a class="headerlink" href="#dataset-description_1" title="Permanent link">&para;</a></h3>
+<h2 id="24b">示例2：使用4B模型的大规模数据集<a class="headerlink" href="#24b" title="Permanent link">&para;</a></h2>
+<p>本示例演示扩展到更大模型和数据集的用法。</p>
+<h3 id="_3">数据集描述<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Domain: Wikipedia articles</li>
-<li>Size: 50000 documents</li>
-<li>Language: English</li>
-<li>Complexity: Diverse topics and vocabulary</li>
+<li>领域：维基百科文章</li>
+<li>规模：50000篇文档</li>
+<li>语言：英文</li>
+<li>复杂度：多样的主题和词汇</li>
 </ul>
-<h3 id="step-1-preprocess-with-4b-model">Step 1: Preprocess with 4B Model<a class="headerlink" href="#step-1-preprocess-with-4b-model" title="Permanent link">&para;</a></h3>
+<h3 id="14b">步骤1：使用4B模型预处理<a class="headerlink" href="#14b" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span>--dataset<span class="w"> </span>wikipedia<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span>--model<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -2011,8 +2387,8 @@
 </span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span>--max_length<span class="w"> </span><span class="m">512</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div>
-<p>Processing time: ~4 hours on A100 GPU</p>
-<h3 id="step-2-train-with-increased-capacity">Step 2: Train with Increased Capacity<a class="headerlink" href="#step-2-train-with-increased-capacity" title="Permanent link">&para;</a></h3>
+<p>处理时间：在A100 GPU上约4小时</p>
+<h3 id="2_1">步骤2：使用增强容量训练<a class="headerlink" href="#2_1" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span>--dataset<span class="w"> </span>wikipedia<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span>--models<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -2030,16 +2406,16 @@
 </span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="w">    </span>--language<span class="w"> </span>en
 </span></code></pre></div>
-<h3 id="step-3-compare-model-sizes">Step 3: Compare Model Sizes<a class="headerlink" href="#step-3-compare-model-sizes" title="Permanent link">&para;</a></h3>
+<h3 id="3_1">步骤3：比较模型规模<a class="headerlink" href="#3_1" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Model</th>
+<th>模型</th>
 <th>TD</th>
 <th>NPMI</th>
 <th>C_V</th>
 <th>PPL</th>
-<th>Time</th>
+<th>时间</th>
 </tr>
 </thead>
 <tbody>
@@ -2049,7 +2425,7 @@
 <td>0.43</td>
 <td>0.66</td>
 <td>138.5</td>
-<td>90 min</td>
+<td>90分钟</td>
 </tr>
 <tr>
 <td>4B</td>
@@ -2057,20 +2433,20 @@
 <td>0.49</td>
 <td>0.71</td>
 <td>128.2</td>
-<td>180 min</td>
+<td>180分钟</td>
 </tr>
 </tbody>
 </table>
-<p>4B model provides significant quality improvements at 2x cost.</p>
+<p>4B模型以2倍成本提供显著的质量提升。</p>
 <hr />
-<h2 id="example-3-multi-model-comparison">Example 3: Multi-Model Comparison<a class="headerlink" href="#example-3-multi-model-comparison" title="Permanent link">&para;</a></h2>
-<h3 id="dataset-description_2">Dataset Description<a class="headerlink" href="#dataset-description_2" title="Permanent link">&para;</a></h3>
+<h2 id="3_2">示例3：多模型比较<a class="headerlink" href="#3_2" title="Permanent link">&para;</a></h2>
+<h3 id="_4">数据集描述<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Domain: Movie reviews</li>
-<li>Size: 4000 documents</li>
-<li>Language: English</li>
+<li>领域：电影评论</li>
+<li>规模：4000篇文档</li>
+<li>语言：英文</li>
 </ul>
-<h3 id="step-1-preprocess-for-all-models">Step 1: Preprocess for All Models<a class="headerlink" href="#step-1-preprocess-for-all-models" title="Permanent link">&para;</a></h3>
+<h3 id="1_2">步骤1：为所有模型预处理<a class="headerlink" href="#1_2" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span>--dataset<span class="w"> </span>movie_reviews<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span>--model<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -2084,7 +2460,7 @@
 </span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">    </span>--model<span class="w"> </span>baseline<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">    </span>--vocab_size<span class="w"> </span><span class="m">5000</span>
 </span></code></pre></div>
-<h3 id="step-2-train-all-models">Step 2: Train All Models<a class="headerlink" href="#step-2-train-all-models" title="Permanent link">&para;</a></h3>
+<h3 id="2_2">步骤2：训练所有模型<a class="headerlink" href="#2_2" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span>--dataset<span class="w"> </span>movie_reviews<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span>--models<span class="w"> </span>lda,etm,ctm<span class="w"> </span><span class="se">\</span>
@@ -2105,18 +2481,18 @@
 </span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-10-19"><a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a><span class="w">    </span>--language<span class="w"> </span>en
 </span></code></pre></div>
-<h3 id="step-3-comparison-table">Step 3: Comparison Table<a class="headerlink" href="#step-3-comparison-table" title="Permanent link">&para;</a></h3>
+<h3 id="3_3">步骤3：比较表格<a class="headerlink" href="#3_3" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Model</th>
+<th>模型</th>
 <th>TD</th>
 <th>iRBO</th>
 <th>NPMI</th>
 <th>C_V</th>
 <th>Exclusivity</th>
 <th>PPL</th>
-<th>Time</th>
+<th>时间</th>
 </tr>
 </thead>
 <tbody>
@@ -2128,7 +2504,7 @@
 <td>0.49</td>
 <td>0.76</td>
 <td>178.3</td>
-<td>12 min</td>
+<td>12分钟</td>
 </tr>
 <tr>
 <td>ETM</td>
@@ -2138,7 +2514,7 @@
 <td>0.56</td>
 <td>0.79</td>
 <td>163.5</td>
-<td>18 min</td>
+<td>18分钟</td>
 </tr>
 <tr>
 <td>CTM</td>
@@ -2148,7 +2524,7 @@
 <td>0.60</td>
 <td>0.82</td>
 <td>154.2</td>
-<td>22 min</td>
+<td>22分钟</td>
 </tr>
 <tr>
 <td>THETA</td>
@@ -2158,16 +2534,16 @@
 <td>0.64</td>
 <td>0.85</td>
 <td>147.8</td>
-<td>26 min</td>
+<td>26分钟</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="example-4-hyperparameter-grid-search">Example 4: Hyperparameter Grid Search<a class="headerlink" href="#example-4-hyperparameter-grid-search" title="Permanent link">&para;</a></h2>
-<h3 id="setup">Setup<a class="headerlink" href="#setup" title="Permanent link">&para;</a></h3>
-<p>Dataset: 2000 news articles
-Goal: Find optimal hyperparameters for topic quality</p>
-<h3 id="grid-search-script">Grid Search Script<a class="headerlink" href="#grid-search-script" title="Permanent link">&para;</a></h3>
+<h2 id="4_1">示例4：超参数网格搜索<a class="headerlink" href="#4_1" title="Permanent link">&para;</a></h2>
+<h3 id="_5">设置<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<p>数据集：2000篇新闻文章
+目标：寻找主题质量的最佳超参数</p>
+<h3 id="_6">网格搜索脚本<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="ch">#!/bin/bash</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="nv">topics</span><span class="o">=(</span><span class="m">15</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">25</span><span class="w"> </span><span class="m">30</span><span class="o">)</span>
@@ -2177,7 +2553,7 @@ Goal: Find optimal hyperparameters for topic quality</p>
 </span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="k">for</span><span class="w"> </span>K<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">topics</span><span class="p">[@]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
 </span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">    </span><span class="k">for</span><span class="w"> </span>lr<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">learning_rates</span><span class="p">[@]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
 </span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">        </span><span class="k">for</span><span class="w"> </span>hd<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">hidden_dims</span><span class="p">[@]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
-</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">            </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Training K=</span><span class="nv">$K</span><span class="s2">, lr=</span><span class="nv">$lr</span><span class="s2">, hd=</span><span class="nv">$hd</span><span class="s2">&quot;</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">            </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;训练 K=</span><span class="nv">$K</span><span class="s2">, lr=</span><span class="nv">$lr</span><span class="s2">, hd=</span><span class="nv">$hd</span><span class="s2">&quot;</span>
 </span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>
 </span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="w">            </span>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="w">                </span>--dataset<span class="w"> </span>news<span class="w"> </span><span class="se">\</span>
@@ -2198,36 +2574,36 @@ Goal: Find optimal hyperparameters for topic quality</p>
 </span><span id="__span-11-28"><a id="__codelineno-11-28" name="__codelineno-11-28" href="#__codelineno-11-28"></a><span class="w">    </span><span class="k">done</span>
 </span><span id="__span-11-29"><a id="__codelineno-11-29" name="__codelineno-11-29" href="#__codelineno-11-29"></a><span class="k">done</span>
 </span></code></pre></div>
-<h3 id="best-configuration">Best Configuration<a class="headerlink" href="#best-configuration" title="Permanent link">&para;</a></h3>
-<p>Analysis reveals optimal settings:
-- Number of topics: 20
-- Learning rate: 0.002
-- Hidden dimension: 512</p>
+<h3 id="_7">最佳配置<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
+<p>分析显示最佳设置：
+- 主题数量：20
+- 学习率：0.002
+- 隐藏层维度：512</p>
 <hr />
-<h2 id="best-practices-summary">Best Practices Summary<a class="headerlink" href="#best-practices-summary" title="Permanent link">&para;</a></h2>
-<h3 id="data-preparation">Data Preparation<a class="headerlink" href="#data-preparation" title="Permanent link">&para;</a></h3>
+<h2 id="_8">最佳实践总结<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h2>
+<h3 id="_9">数据准备<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h3>
 <ol>
-<li>Clean data thoroughly before preprocessing</li>
-<li>Ensure CSV follows naming convention</li>
-<li>Verify data quality with exploratory analysis</li>
+<li>预处理前彻底清洗数据</li>
+<li>确保CSV符合命名规则</li>
+<li>通过探索性分析验证数据质量</li>
 </ol>
-<h3 id="model-selection">Model Selection<a class="headerlink" href="#model-selection" title="Permanent link">&para;</a></h3>
+<h3 id="_10">模型选择<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h3>
 <ol>
-<li>Start with THETA 0.6B for prototyping</li>
-<li>Compare with CTM baseline</li>
-<li>Scale to 4B for production if needed</li>
+<li>原型开发从THETA 0.6B开始</li>
+<li>与CTM基线进行比较</li>
+<li>如需生产环境，扩展到4B</li>
 </ol>
-<h3 id="hyperparameter-tuning">Hyperparameter Tuning<a class="headerlink" href="#hyperparameter-tuning" title="Permanent link">&para;</a></h3>
+<h3 id="_11">超参数调优<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h3>
 <ol>
-<li>Begin with default parameters</li>
-<li>Adjust number of topics based on corpus</li>
-<li>Tune learning rate if training is unstable</li>
+<li>从默认参数开始</li>
+<li>根据语料库调整主题数量</li>
+<li>训练不稳定时调整学习率</li>
 </ol>
-<h3 id="evaluation">Evaluation<a class="headerlink" href="#evaluation" title="Permanent link">&para;</a></h3>
+<h3 id="_12">评估<a class="headerlink" href="#_12" title="Permanent link">&para;</a></h3>
 <ol>
-<li>Review multiple metrics, not just one</li>
-<li>Examine visualizations for qualitative assessment</li>
-<li>Compare with baseline models</li>
+<li>查看多个指标，而非单一指标</li>
+<li>检查可视化进行定性评估</li>
+<li>与基线模型进行比较</li>
 </ol>
 
 
@@ -2301,10 +2677,10 @@ Goal: Find optimal hyperparameters for topic quality</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.action.edit"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

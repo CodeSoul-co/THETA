@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="基于通义千问嵌入的先进主题建模">
+        <meta name="description" content="Advanced Topic Modeling with Qwen Embeddings">
       
       
         <meta name="author" content="CodeSoul">
@@ -15,28 +15,32 @@
         <link rel="canonical" href="https://codesoul-co.github.io/THETA/zh/examples/chinese-dataset/">
       
       
+        <link rel="prev" href="../english-dataset/">
+      
+      
+        <link rel="next" href="../supervised-learning/">
       
       
         
-          <link rel="alternate" href="/THETA/" hreflang="en">
+          <link rel="alternate" href="../../../examples/chinese-dataset/" hreflang="en">
         
-          <link rel="alternate" href="/THETA/zh/" hreflang="zh">
+          <link rel="alternate" href="./" hreflang="zh">
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
     
     
       
-        <title>Chinese Dataset Example - THETA 主题模型</title>
+        <title>中文数据集 - THETA Topic Model</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -55,7 +59,7 @@
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#chinese-dataset-example" class="md-skip">
+        <a href="#_1" class="md-skip">
           跳转至
         </a>
       
@@ -96,7 +100,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="页眉">
-    <a href="../.." title="THETA 主题模型" class="md-header__button md-logo" aria-label="THETA 主题模型" data-md-component="logo">
+    <a href="../../" title="THETA Topic Model" class="md-header__button md-logo" aria-label="THETA Topic Model" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -110,13 +114,13 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            THETA 主题模型
+            THETA Topic Model
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Chinese Dataset Example
+              中文数据集
             
           </span>
         </div>
@@ -163,13 +167,13 @@
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="/THETA/" hreflang="en" class="md-select__link">
+            <a href="../../../examples/chinese-dataset/" hreflang="en" class="md-select__link">
               English
             </a>
           </li>
         
           <li class="md-select__item">
-            <a href="/THETA/zh/" hreflang="zh" class="md-select__link">
+            <a href="./" hreflang="zh" class="md-select__link">
               中文
             </a>
           </li>
@@ -249,7 +253,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../index_zh/" class="md-tabs__link">
+      <a href="../../" class="md-tabs__link">
         
   
   
@@ -270,7 +274,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../getting-started/overview_zh/" class="md-tabs__link">
+        <a href="../../getting-started/overview/" class="md-tabs__link">
           
   
   
@@ -290,7 +294,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../user-guide/data-preparation_zh/" class="md-tabs__link">
+        <a href="../../user-guide/data-preparation/" class="md-tabs__link">
           
   
   
@@ -310,7 +314,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../models/theta_zh/" class="md-tabs__link">
+        <a href="../../models/theta/" class="md-tabs__link">
           
   
   
@@ -330,7 +334,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../advanced/custom-datasets_zh/" class="md-tabs__link">
+        <a href="../../advanced/custom-datasets/" class="md-tabs__link">
           
   
   
@@ -350,7 +354,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../api/prepare-data_zh/" class="md-tabs__link">
+        <a href="../../api/prepare-data/" class="md-tabs__link">
           
   
   
@@ -366,11 +370,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../english-dataset_zh/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../english-dataset/" class="md-tabs__link">
           
   
   
@@ -388,7 +394,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../troubleshooting_zh/" class="md-tabs__link">
+      <a href="../../troubleshooting/" class="md-tabs__link">
         
   
   
@@ -407,7 +413,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../appendix/faq_zh/" class="md-tabs__link">
+      <a href="../../appendix/faq/" class="md-tabs__link">
         
   
   
@@ -448,13 +454,13 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="THETA 主题模型" class="md-nav__button md-logo" aria-label="THETA 主题模型" data-md-component="logo">
+    <a href="../../" title="THETA Topic Model" class="md-nav__button md-logo" aria-label="THETA Topic Model" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    THETA 主题模型
+    THETA Topic Model
   </label>
   
     <div class="md-nav__source">
@@ -478,7 +484,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../index_zh/" class="md-nav__link">
+      <a href="../../" class="md-nav__link">
         
   
   
@@ -557,7 +563,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/overview_zh/" class="md-nav__link">
+      <a href="../../getting-started/overview/" class="md-nav__link">
         
   
   
@@ -585,7 +591,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/installation_zh/" class="md-nav__link">
+      <a href="../../getting-started/installation/" class="md-nav__link">
         
   
   
@@ -613,7 +619,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/quickstart_zh/" class="md-nav__link">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
         
   
   
@@ -700,7 +706,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/data-preparation_zh/" class="md-nav__link">
+      <a href="../../user-guide/data-preparation/" class="md-nav__link">
         
   
   
@@ -728,7 +734,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/preprocessing_zh/" class="md-nav__link">
+      <a href="../../user-guide/preprocessing/" class="md-nav__link">
         
   
   
@@ -756,7 +762,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/training_zh/" class="md-nav__link">
+      <a href="../../user-guide/training/" class="md-nav__link">
         
   
   
@@ -784,7 +790,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/evaluation_zh/" class="md-nav__link">
+      <a href="../../user-guide/evaluation/" class="md-nav__link">
         
   
   
@@ -812,7 +818,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/visualization_zh/" class="md-nav__link">
+      <a href="../../user-guide/visualization/" class="md-nav__link">
         
   
   
@@ -899,7 +905,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/theta_zh/" class="md-nav__link">
+      <a href="../../models/theta/" class="md-nav__link">
         
   
   
@@ -927,7 +933,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/baselines_zh/" class="md-nav__link">
+      <a href="../../models/baselines/" class="md-nav__link">
         
   
   
@@ -955,7 +961,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/comparison_zh/" class="md-nav__link">
+      <a href="../../models/comparison/" class="md-nav__link">
         
   
   
@@ -1042,7 +1048,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/custom-datasets_zh/" class="md-nav__link">
+      <a href="../../advanced/custom-datasets/" class="md-nav__link">
         
   
   
@@ -1070,7 +1076,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/hyperparameters_zh/" class="md-nav__link">
+      <a href="../../advanced/hyperparameters/" class="md-nav__link">
         
   
   
@@ -1098,7 +1104,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/chinese-data_zh/" class="md-nav__link">
+      <a href="../../advanced/chinese-data/" class="md-nav__link">
         
   
   
@@ -1126,7 +1132,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/distributed-training_zh/" class="md-nav__link">
+      <a href="../../advanced/distributed-training/" class="md-nav__link">
         
   
   
@@ -1213,7 +1219,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/prepare-data_zh/" class="md-nav__link">
+      <a href="../../api/prepare-data/" class="md-nav__link">
         
   
   
@@ -1241,7 +1247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/run-pipeline_zh/" class="md-nav__link">
+      <a href="../../api/run-pipeline/" class="md-nav__link">
         
   
   
@@ -1269,7 +1275,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/visualization_zh/" class="md-nav__link">
+      <a href="../../api/visualization/" class="md-nav__link">
         
   
   
@@ -1301,26 +1307,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
             
   
   
@@ -1338,7 +1349,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1356,7 +1367,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../english-dataset_zh/" class="md-nav__link">
+      <a href="../english-dataset/" class="md-nav__link">
         
   
   
@@ -1381,10 +1392,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../chinese-dataset_zh/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    中文数据集
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1400,6 +1438,92 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        数据集描述
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤1：数据清洗
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤2：预处理
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤3：训练模型
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤4：结果
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤5：时序分析
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1412,7 +1536,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../supervised-learning_zh/" class="md-nav__link">
+      <a href="../supervised-learning/" class="md-nav__link">
         
   
   
@@ -1447,7 +1571,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../troubleshooting_zh/" class="md-nav__link">
+      <a href="../../troubleshooting/" class="md-nav__link">
         
   
   
@@ -1474,7 +1598,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../appendix/faq_zh/" class="md-nav__link">
+      <a href="../../appendix/faq/" class="md-nav__link">
         
   
   
@@ -1521,10 +1645,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#dataset-description" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Dataset Description
+        数据集描述
       
     </span>
   </a>
@@ -1532,10 +1656,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-1-data-cleaning" class="md-nav__link">
+  <a href="#1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 1: Data Cleaning
+        步骤1：数据清洗
       
     </span>
   </a>
@@ -1543,10 +1667,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-2-preprocess" class="md-nav__link">
+  <a href="#2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 2: Preprocess
+        步骤2：预处理
       
     </span>
   </a>
@@ -1554,10 +1678,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-3-train-model" class="md-nav__link">
+  <a href="#3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 3: Train Model
+        步骤3：训练模型
       
     </span>
   </a>
@@ -1565,10 +1689,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-4-results" class="md-nav__link">
+  <a href="#4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 4: Results
+        步骤4：结果
       
     </span>
   </a>
@@ -1576,10 +1700,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#step-5-temporal-analysis" class="md-nav__link">
+  <a href="#5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 5: Temporal Analysis
+        步骤5：时序分析
       
     </span>
   </a>
@@ -1603,7 +1727,7 @@
 
 
   
-    <a href="https://github.com/CodeSoul-co/THETA/edit/main/doc/examples/chinese-dataset.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/CodeSoul-co/THETA/edit/main/doc/examples/chinese-dataset.zh.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1611,20 +1735,22 @@
   
 
 
-<h1 id="chinese-dataset-example">Chinese Dataset Example<a class="headerlink" href="#chinese-dataset-example" title="Permanent link">&para;</a></h1>
-<p>This example demonstrates Chinese text processing with THETA.</p>
+<h1 id="_1">中文数据集示例<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<p><strong><a href="./">English</a></strong> | <strong><a href="./">中文</a></strong></p>
 <hr />
-<h2 id="dataset-description">Dataset Description<a class="headerlink" href="#dataset-description" title="Permanent link">&para;</a></h2>
+<p>本示例演示如何使用THETA处理中文文本。</p>
+<hr />
+<h2 id="_2">数据集描述<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Domain: Weibo posts</li>
-<li>Size: 8000 documents</li>
-<li>Language: Chinese</li>
-<li>Source: Weibo public API</li>
-<li>Topics: Various social discussions</li>
+<li>领域：微博帖子</li>
+<li>规模：8000篇文档</li>
+<li>语言：中文</li>
+<li>来源：微博公开API</li>
+<li>主题：各类社会讨论</li>
 </ul>
 <hr />
-<h2 id="step-1-data-cleaning">Step 1: Data Cleaning<a class="headerlink" href="#step-1-data-cleaning" title="Permanent link">&para;</a></h2>
-<p>Clean raw Chinese text:</p>
+<h2 id="1">步骤1：数据清洗<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<p>清洗原始中文文本：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">cd</span><span class="w"> </span>/root/autodl-tmp/ETM
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>python<span class="w"> </span>-m<span class="w"> </span>dataclean.main<span class="w"> </span><span class="se">\</span>
@@ -1632,13 +1758,13 @@
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span>--output<span class="w"> </span>/root/autodl-tmp/data/weibo/weibo_cleaned.csv<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span>--language<span class="w"> </span>chinese
 </span></code></pre></div>
-<p>Cleaning removes:
-- URLs and mentions
-- Special symbols
-- Excessive punctuation
-- Non-Chinese characters</p>
+<p>清洗移除：
+- URL和提及
+- 特殊符号
+- 过多标点
+- 非中文字符</p>
 <hr />
-<h2 id="step-2-preprocess">Step 2: Preprocess<a class="headerlink" href="#step-2-preprocess" title="Permanent link">&para;</a></h2>
+<h2 id="2">步骤2：预处理<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span>--dataset<span class="w"> </span>weibo<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span>--model<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -1649,9 +1775,9 @@
 </span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span>--max_length<span class="w"> </span><span class="m">512</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div>
-<p>Qwen models handle Chinese tokenization natively.</p>
+<p>通义千问模型原生支持中文分词。</p>
 <hr />
-<h2 id="step-3-train-model">Step 3: Train Model<a class="headerlink" href="#step-3-train-model" title="Permanent link">&para;</a></h2>
+<h2 id="3">步骤3：训练模型<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span>--dataset<span class="w"> </span>weibo<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>--models<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -1665,18 +1791,18 @@
 </span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span>--language<span class="w"> </span>zh
 </span></code></pre></div>
-<p>Note: <code>--language zh</code> ensures proper Chinese font rendering.</p>
+<p>注意：<code>--language zh</code> 确保正确渲染中文字体。</p>
 <hr />
-<h2 id="step-4-results">Step 4: Results<a class="headerlink" href="#step-4-results" title="Permanent link">&para;</a></h2>
-<p>Discovered topics include:
-- 生活, 分享, 日常, 今天, 开心 (daily life)
-- 工作, 公司, 同事, 加班, 项目 (work)
-- 美食, 餐厅, 好吃, 推荐, 味道 (food)
-- 旅游, 景点, 风景, 拍照, 美丽 (travel)</p>
-<p>Visualizations render Chinese characters correctly with appropriate fonts.</p>
+<h2 id="4">步骤4：结果<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<p>发现的主题包括：
+- 生活，分享，日常，今天，开心（日常生活）
+- 工作，公司，同事，加班，项目（工作）
+- 美食，餐厅，好吃，推荐，味道（美食）
+- 旅游，景点，风景，拍照，美丽（旅游）</p>
+<p>可视化使用适当字体正确显示中文字符。</p>
 <hr />
-<h2 id="step-5-temporal-analysis">Step 5: Temporal Analysis<a class="headerlink" href="#step-5-temporal-analysis" title="Permanent link">&para;</a></h2>
-<p>If Weibo data includes timestamps, use DTM:</p>
+<h2 id="5">步骤5：时序分析<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<p>如果微博数据包含时间戳，使用DTM：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--dataset<span class="w"> </span>weibo<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--model<span class="w"> </span>dtm<span class="w"> </span><span class="se">\</span>
@@ -1692,10 +1818,10 @@
 </span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">    </span>--language<span class="w"> </span>zh
 </span></code></pre></div>
-<p>DTM reveals topic evolution over time:
-- Rise of remote work discussions (2020-2021)
-- Increasing environmental awareness (2021-2023)
-- Technology adoption trends (2020-2023)</p>
+<p>DTM揭示主题随时间演化：
+- 远程工作讨论的兴起（2020-2021）
+- 环保意识增强（2021-2023）
+- 技术采纳趋势（2020-2023）</p>
 
 
 
@@ -1768,10 +1894,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.action.edit"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

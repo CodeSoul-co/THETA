@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="基于通义千问嵌入的先进主题建模">
+        <meta name="description" content="Advanced Topic Modeling with Qwen Embeddings">
       
       
         <meta name="author" content="CodeSoul">
@@ -15,28 +15,32 @@
         <link rel="canonical" href="https://codesoul-co.github.io/THETA/zh/troubleshooting/">
       
       
+        <link rel="prev" href="../examples/supervised-learning/">
+      
+      
+        <link rel="next" href="../appendix/faq/">
       
       
         
-          <link rel="alternate" href="/THETA/" hreflang="en">
+          <link rel="alternate" href="../../troubleshooting/" hreflang="en">
         
-          <link rel="alternate" href="/THETA/zh/" hreflang="zh">
+          <link rel="alternate" href="./" hreflang="zh">
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
     
     
       
-        <title>Troubleshooting - THETA 主题模型</title>
+        <title>故障排除 - THETA Topic Model</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -55,7 +59,7 @@
       
     
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#troubleshooting" class="md-skip">
+        <a href="#_1" class="md-skip">
           跳转至
         </a>
       
@@ -96,7 +100,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="页眉">
-    <a href=".." title="THETA 主题模型" class="md-header__button md-logo" aria-label="THETA 主题模型" data-md-component="logo">
+    <a href="../" title="THETA Topic Model" class="md-header__button md-logo" aria-label="THETA Topic Model" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -110,13 +114,13 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            THETA 主题模型
+            THETA Topic Model
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Troubleshooting
+              故障排除
             
           </span>
         </div>
@@ -163,13 +167,13 @@
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="/THETA/" hreflang="en" class="md-select__link">
+            <a href="../../troubleshooting/" hreflang="en" class="md-select__link">
               English
             </a>
           </li>
         
           <li class="md-select__item">
-            <a href="/THETA/zh/" hreflang="zh" class="md-select__link">
+            <a href="./" hreflang="zh" class="md-select__link">
               中文
             </a>
           </li>
@@ -249,7 +253,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../index_zh/" class="md-tabs__link">
+      <a href="../" class="md-tabs__link">
         
   
   
@@ -270,7 +274,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../getting-started/overview_zh/" class="md-tabs__link">
+        <a href="../getting-started/overview/" class="md-tabs__link">
           
   
   
@@ -290,7 +294,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../user-guide/data-preparation_zh/" class="md-tabs__link">
+        <a href="../user-guide/data-preparation/" class="md-tabs__link">
           
   
   
@@ -310,7 +314,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../models/theta_zh/" class="md-tabs__link">
+        <a href="../models/theta/" class="md-tabs__link">
           
   
   
@@ -330,7 +334,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../advanced/custom-datasets_zh/" class="md-tabs__link">
+        <a href="../advanced/custom-datasets/" class="md-tabs__link">
           
   
   
@@ -350,7 +354,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../api/prepare-data_zh/" class="md-tabs__link">
+        <a href="../api/prepare-data/" class="md-tabs__link">
           
   
   
@@ -370,7 +374,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../examples/english-dataset_zh/" class="md-tabs__link">
+        <a href="../examples/english-dataset/" class="md-tabs__link">
           
   
   
@@ -386,9 +390,11 @@
   
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="../troubleshooting_zh/" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
         
   
   
@@ -407,7 +413,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../appendix/faq_zh/" class="md-tabs__link">
+      <a href="../appendix/faq/" class="md-tabs__link">
         
   
   
@@ -448,13 +454,13 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="THETA 主题模型" class="md-nav__button md-logo" aria-label="THETA 主题模型" data-md-component="logo">
+    <a href="../" title="THETA Topic Model" class="md-nav__button md-logo" aria-label="THETA Topic Model" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    THETA 主题模型
+    THETA Topic Model
   </label>
   
     <div class="md-nav__source">
@@ -478,7 +484,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../index_zh/" class="md-nav__link">
+      <a href="../" class="md-nav__link">
         
   
   
@@ -557,7 +563,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../getting-started/overview_zh/" class="md-nav__link">
+      <a href="../getting-started/overview/" class="md-nav__link">
         
   
   
@@ -585,7 +591,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../getting-started/installation_zh/" class="md-nav__link">
+      <a href="../getting-started/installation/" class="md-nav__link">
         
   
   
@@ -613,7 +619,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../getting-started/quickstart_zh/" class="md-nav__link">
+      <a href="../getting-started/quickstart/" class="md-nav__link">
         
   
   
@@ -700,7 +706,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/data-preparation_zh/" class="md-nav__link">
+      <a href="../user-guide/data-preparation/" class="md-nav__link">
         
   
   
@@ -728,7 +734,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/preprocessing_zh/" class="md-nav__link">
+      <a href="../user-guide/preprocessing/" class="md-nav__link">
         
   
   
@@ -756,7 +762,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/training_zh/" class="md-nav__link">
+      <a href="../user-guide/training/" class="md-nav__link">
         
   
   
@@ -784,7 +790,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/evaluation_zh/" class="md-nav__link">
+      <a href="../user-guide/evaluation/" class="md-nav__link">
         
   
   
@@ -812,7 +818,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../user-guide/visualization_zh/" class="md-nav__link">
+      <a href="../user-guide/visualization/" class="md-nav__link">
         
   
   
@@ -899,7 +905,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../models/theta_zh/" class="md-nav__link">
+      <a href="../models/theta/" class="md-nav__link">
         
   
   
@@ -927,7 +933,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../models/baselines_zh/" class="md-nav__link">
+      <a href="../models/baselines/" class="md-nav__link">
         
   
   
@@ -955,7 +961,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../models/comparison_zh/" class="md-nav__link">
+      <a href="../models/comparison/" class="md-nav__link">
         
   
   
@@ -1042,7 +1048,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../advanced/custom-datasets_zh/" class="md-nav__link">
+      <a href="../advanced/custom-datasets/" class="md-nav__link">
         
   
   
@@ -1070,7 +1076,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../advanced/hyperparameters_zh/" class="md-nav__link">
+      <a href="../advanced/hyperparameters/" class="md-nav__link">
         
   
   
@@ -1098,7 +1104,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../advanced/chinese-data_zh/" class="md-nav__link">
+      <a href="../advanced/chinese-data/" class="md-nav__link">
         
   
   
@@ -1126,7 +1132,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../advanced/distributed-training_zh/" class="md-nav__link">
+      <a href="../advanced/distributed-training/" class="md-nav__link">
         
   
   
@@ -1213,7 +1219,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/prepare-data_zh/" class="md-nav__link">
+      <a href="../api/prepare-data/" class="md-nav__link">
         
   
   
@@ -1241,7 +1247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/run-pipeline_zh/" class="md-nav__link">
+      <a href="../api/run-pipeline/" class="md-nav__link">
         
   
   
@@ -1269,7 +1275,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/visualization_zh/" class="md-nav__link">
+      <a href="../api/visualization/" class="md-nav__link">
         
   
   
@@ -1356,7 +1362,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/english-dataset_zh/" class="md-nav__link">
+      <a href="../examples/english-dataset/" class="md-nav__link">
         
   
   
@@ -1384,7 +1390,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/chinese-dataset_zh/" class="md-nav__link">
+      <a href="../examples/chinese-dataset/" class="md-nav__link">
         
   
   
@@ -1412,7 +1418,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/supervised-learning_zh/" class="md-nav__link">
+      <a href="../examples/supervised-learning/" class="md-nav__link">
         
   
   
@@ -1444,10 +1450,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../troubleshooting_zh/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    故障排除
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1463,6 +1496,387 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        安装问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="安装问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cuda" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CUDA不可用
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        导入错误
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        版本冲突
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        模型下载失败
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        数据问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="数据问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        文件未找到
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        缺少必需列
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        编码错误
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        空数据或无效数据
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        训练问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="训练问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cuda_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CUDA内存不足
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        训练不收敛
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        早停过早
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#naninf" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NaN或Inf值
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        评估问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="评估问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_15" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        指标得分低
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        指标计算错误
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_17" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        可视化问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="可视化问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_18" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        可视化生成失败
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_19" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        中文字符不显示
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_20" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        图像分辨率低
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_21" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        性能问题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="性能问题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        预处理慢
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_23" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        内存泄漏
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_24" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        特定错误信息
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_25" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        获取帮助
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="获取帮助">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_26" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        报告问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_27" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        社区资源
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1474,7 +1888,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../appendix/faq_zh/" class="md-nav__link">
+      <a href="../appendix/faq/" class="md-nav__link">
         
   
   
@@ -1521,22 +1935,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#installation-issues" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Installation Issues
+        安装问题
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Installation Issues">
+    <nav class="md-nav" aria-label="安装问题">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#cuda-not-available" class="md-nav__link">
+  <a href="#cuda" class="md-nav__link">
     <span class="md-ellipsis">
       
-        CUDA Not Available
+        CUDA不可用
       
     </span>
   </a>
@@ -1544,10 +1958,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#import-errors" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Import Errors
+        导入错误
       
     </span>
   </a>
@@ -1555,10 +1969,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#version-conflicts" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Version Conflicts
+        版本冲突
       
     </span>
   </a>
@@ -1566,10 +1980,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#model-download-failures" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Model Download Failures
+        模型下载失败
       
     </span>
   </a>
@@ -1582,22 +1996,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#data-issues" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Data Issues
+        数据问题
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Data Issues">
+    <nav class="md-nav" aria-label="数据问题">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#file-not-found" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
-        File Not Found
+        文件未找到
       
     </span>
   </a>
@@ -1605,10 +2019,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#missing-required-columns" class="md-nav__link">
+  <a href="#_8" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Missing Required Columns
+        缺少必需列
       
     </span>
   </a>
@@ -1616,10 +2030,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#encoding-errors" class="md-nav__link">
+  <a href="#_9" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Encoding Errors
+        编码错误
       
     </span>
   </a>
@@ -1627,10 +2041,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#empty-or-invalid-data" class="md-nav__link">
+  <a href="#_10" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Empty or Invalid Data
+        空数据或无效数据
       
     </span>
   </a>
@@ -1643,22 +2057,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#training-issues" class="md-nav__link">
+  <a href="#_11" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Training Issues
+        训练问题
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Training Issues">
+    <nav class="md-nav" aria-label="训练问题">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#cuda-out-of-memory" class="md-nav__link">
+  <a href="#cuda_1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        CUDA Out of Memory
+        CUDA内存不足
       
     </span>
   </a>
@@ -1666,10 +2080,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#training-not-converging" class="md-nav__link">
+  <a href="#_12" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Training Not Converging
+        训练不收敛
       
     </span>
   </a>
@@ -1677,10 +2091,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#early-stopping-too-soon" class="md-nav__link">
+  <a href="#_13" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Early Stopping Too Soon
+        早停过早
       
     </span>
   </a>
@@ -1688,10 +2102,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#nan-or-inf-values" class="md-nav__link">
+  <a href="#naninf" class="md-nav__link">
     <span class="md-ellipsis">
       
-        NaN or Inf Values
+        NaN或Inf值
       
     </span>
   </a>
@@ -1704,22 +2118,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#evaluation-issues" class="md-nav__link">
+  <a href="#_14" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Evaluation Issues
+        评估问题
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Evaluation Issues">
+    <nav class="md-nav" aria-label="评估问题">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#poor-metric-scores" class="md-nav__link">
+  <a href="#_15" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Poor Metric Scores
+        指标得分低
       
     </span>
   </a>
@@ -1727,10 +2141,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#metric-computation-errors" class="md-nav__link">
+  <a href="#_16" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Metric Computation Errors
+        指标计算错误
       
     </span>
   </a>
@@ -1743,22 +2157,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#visualization-issues" class="md-nav__link">
+  <a href="#_17" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Visualization Issues
+        可视化问题
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Visualization Issues">
+    <nav class="md-nav" aria-label="可视化问题">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#visualization-generation-fails" class="md-nav__link">
+  <a href="#_18" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Visualization Generation Fails
+        可视化生成失败
       
     </span>
   </a>
@@ -1766,10 +2180,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#chinese-characters-not-displaying" class="md-nav__link">
+  <a href="#_19" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Chinese Characters Not Displaying
+        中文字符不显示
       
     </span>
   </a>
@@ -1777,10 +2191,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#low-resolution-images" class="md-nav__link">
+  <a href="#_20" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Low Resolution Images
+        图像分辨率低
       
     </span>
   </a>
@@ -1793,22 +2207,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#performance-issues" class="md-nav__link">
+  <a href="#_21" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Performance Issues
+        性能问题
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Performance Issues">
+    <nav class="md-nav" aria-label="性能问题">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#slow-preprocessing" class="md-nav__link">
+  <a href="#_22" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Slow Preprocessing
+        预处理慢
       
     </span>
   </a>
@@ -1816,10 +2230,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#memory-leaks" class="md-nav__link">
+  <a href="#_23" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Memory Leaks
+        内存泄漏
       
     </span>
   </a>
@@ -1832,10 +2246,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#specific-error-messages" class="md-nav__link">
+  <a href="#_24" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Specific Error Messages
+        特定错误信息
       
     </span>
   </a>
@@ -1843,22 +2257,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#getting-help" class="md-nav__link">
+  <a href="#_25" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Getting Help
+        获取帮助
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Getting Help">
+    <nav class="md-nav" aria-label="获取帮助">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#report-issues" class="md-nav__link">
+  <a href="#_26" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Report Issues
+        报告问题
       
     </span>
   </a>
@@ -1866,10 +2280,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#community-resources" class="md-nav__link">
+  <a href="#_27" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Community Resources
+        社区资源
       
     </span>
   </a>
@@ -1898,7 +2312,7 @@
 
 
   
-    <a href="https://github.com/CodeSoul-co/THETA/edit/main/doc/troubleshooting.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/CodeSoul-co/THETA/edit/main/doc/troubleshooting.zh.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1906,98 +2320,98 @@
   
 
 
-<h1 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h1>
-<p>Common issues and solutions for THETA topic modeling.</p>
+<h1 id="_1">故障排除<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<p>THETA主题建模的常见问题及解决方案。</p>
 <hr />
-<h2 id="installation-issues">Installation Issues<a class="headerlink" href="#installation-issues" title="Permanent link">&para;</a></h2>
-<h3 id="cuda-not-available">CUDA Not Available<a class="headerlink" href="#cuda-not-available" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong>
+<h2 id="_2">安装问题<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h3 id="cuda">CUDA不可用<a class="headerlink" href="#cuda" title="Permanent link">&para;</a></h3>
+<p><strong>问题：</strong>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>RuntimeError: CUDA is not available
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>torch.cuda.is_available() returns False
 </span></code></pre></div></p>
-<p><strong>Solutions:</strong></p>
-<p>Check CUDA installation:
+<p><strong>解决方案：</strong></p>
+<p>检查CUDA安装：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>nvidia-smi
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>nvcc<span class="w"> </span>--version
 </span></code></pre></div></p>
-<p>Reinstall PyTorch with CUDA support:
+<p>重新安装支持CUDA的PyTorch：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>pip<span class="w"> </span>uninstall<span class="w"> </span>torch
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>pip<span class="w"> </span>install<span class="w"> </span>torch<span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cu118
 </span></code></pre></div></p>
-<h3 id="import-errors">Import Errors<a class="headerlink" href="#import-errors" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong>
+<h3 id="_3">导入错误<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<p><strong>问题：</strong>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>ModuleNotFoundError: No module named &#39;transformers&#39;
 </span></code></pre></div></p>
-<p><strong>Solution:</strong>
+<p><strong>解决方案：</strong>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
 </span></code></pre></div></p>
-<h3 id="version-conflicts">Version Conflicts<a class="headerlink" href="#version-conflicts" title="Permanent link">&para;</a></h3>
-<p>Create fresh virtual environment:
+<h3 id="_4">版本冲突<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<p>创建新的虚拟环境：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>theta_clean<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.9
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>conda<span class="w"> </span>activate<span class="w"> </span>theta_clean
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
 </span></code></pre></div></p>
-<h3 id="model-download-failures">Model Download Failures<a class="headerlink" href="#model-download-failures" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong>
+<h3 id="_5">模型下载失败<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<p><strong>问题：</strong>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>OSError: Can&#39;t load model from &#39;Qwen/Qwen-Embedding-0.6B&#39;
 </span></code></pre></div></p>
-<p><strong>Solution:</strong> Download manually:
+<p><strong>解决方案：</strong> 手动下载：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>git<span class="w"> </span>lfs<span class="w"> </span>install
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>git<span class="w"> </span>clone<span class="w"> </span>https://huggingface.co/Qwen/Qwen-Embedding-0.6B
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>mv<span class="w"> </span>Qwen-Embedding-0.6B<span class="w"> </span>/root/embedding_models/qwen3_embedding_0.6B/
 </span></code></pre></div></p>
 <hr />
-<h2 id="data-issues">Data Issues<a class="headerlink" href="#data-issues" title="Permanent link">&para;</a></h2>
-<h3 id="file-not-found">File Not Found<a class="headerlink" href="#file-not-found" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong>
+<h2 id="_6">数据问题<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<h3 id="_7">文件未找到<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
+<p><strong>问题：</strong>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>FileNotFoundError: /root/autodl-tmp/data/my_dataset/my_dataset_cleaned.csv
 </span></code></pre></div></p>
-<p><strong>Solution:</strong> Verify naming convention <code>{dataset_name}_cleaned.csv</code>:
+<p><strong>解决方案：</strong> 验证命名规则 <code>{数据集名称}_cleaned.csv</code>：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>/root/autodl-tmp/data/my_dataset
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>cp<span class="w"> </span>your_file.csv<span class="w"> </span>/root/autodl-tmp/data/my_dataset/my_dataset_cleaned.csv
 </span></code></pre></div></p>
-<h3 id="missing-required-columns">Missing Required Columns<a class="headerlink" href="#missing-required-columns" title="Permanent link">&para;</a></h3>
-<p><strong>Problem:</strong>
+<h3 id="_8">缺少必需列<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h3>
+<p><strong>问题：</strong>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>KeyError: &#39;text&#39;
 </span></code></pre></div></p>
-<p><strong>Solution:</strong> Rename column to standard name:
+<p><strong>解决方案：</strong> 将列重命名为标准名称：
 <div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;data.csv&#39;</span><span class="p">)</span>
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">df</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="s1">&#39;text&#39;</span><span class="p">},</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s1">&#39;data_fixed.csv&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </span></code></pre></div></p>
-<p>Accepted text column names: <code>text</code>, <code>content</code>, <code>cleaned_content</code>, <code>clean_text</code></p>
-<h3 id="encoding-errors">Encoding Errors<a class="headerlink" href="#encoding-errors" title="Permanent link">&para;</a></h3>
+<p>可接受的文本列名：<code>text</code>、<code>content</code>、<code>cleaned_content</code>、<code>clean_text</code></p>
+<h3 id="_9">编码错误<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>iconv<span class="w"> </span>-f<span class="w"> </span>ISO-8859-1<span class="w"> </span>-t<span class="w"> </span>UTF-8<span class="w"> </span>input.csv<span class="w"> </span>&gt;<span class="w"> </span>output.csv
 </span></code></pre></div>
-<h3 id="empty-or-invalid-data">Empty or Invalid Data<a class="headerlink" href="#empty-or-invalid-data" title="Permanent link">&para;</a></h3>
-<p>Check data statistics:
+<h3 id="_10">空数据或无效数据<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h3>
+<p>检查数据统计：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
 </span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="s2">import pandas as pd</span>
 </span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="s2">df = pd.read_csv(&#39;data.csv&#39;)</span>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="s2">print(f&#39;Rows: {len(df)}&#39;)</span>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="s2">print(f&#39;Empty text: {df[\&quot;text\&quot;].isna().sum()}&#39;)</span>
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="s2">print(f&#39;Avg length: {df[\&quot;text\&quot;].str.len().mean():.1f}&#39;)</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="s2">print(f&#39;行数：{len(df)}&#39;)</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="s2">print(f&#39;空文本：{df[\&quot;text\&quot;].isna().sum()}&#39;)</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="s2">print(f&#39;平均长度：{df[\&quot;text\&quot;].str.len().mean():.1f}&#39;)</span>
 </span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="s2">&quot;</span>
 </span></code></pre></div></p>
 <hr />
-<h2 id="training-issues">Training Issues<a class="headerlink" href="#training-issues" title="Permanent link">&para;</a></h2>
-<h3 id="cuda-out-of-memory">CUDA Out of Memory<a class="headerlink" href="#cuda-out-of-memory" title="Permanent link">&para;</a></h3>
-<p><strong>Solutions:</strong></p>
-<p>Reduce batch size:
+<h2 id="_11">训练问题<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h2>
+<h3 id="cuda_1">CUDA内存不足<a class="headerlink" href="#cuda_1" title="Permanent link">&para;</a></h3>
+<p><strong>解决方案：</strong></p>
+<p>减小批大小：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span>--models<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">    </span>--batch_size<span class="w"> </span><span class="m">16</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div></p>
-<p>Memory requirements by configuration:</p>
+<p>各配置的内存需求：</p>
 <table>
 <thead>
 <tr>
-<th>Model Size</th>
-<th>Batch Size</th>
-<th>VRAM Required</th>
+<th>模型规模</th>
+<th>批大小</th>
+<th>所需显存</th>
 </tr>
 </thead>
 <tbody>
@@ -2027,6 +2441,11 @@
 <td>~14GB</td>
 </tr>
 <tr>
+<td>4B</td>
+<td>32</td>
+<td>~22GB</td>
+</tr>
+<tr>
 <td>8B</td>
 <td>8</td>
 <td>~18GB</td>
@@ -2038,16 +2457,16 @@
 </tr>
 </tbody>
 </table>
-<h3 id="training-not-converging">Training Not Converging<a class="headerlink" href="#training-not-converging" title="Permanent link">&para;</a></h3>
-<p><strong>Solutions:</strong></p>
-<p>Reduce learning rate:
+<h3 id="_12">训练不收敛<a class="headerlink" href="#_12" title="Permanent link">&para;</a></h3>
+<p><strong>解决方案：</strong></p>
+<p>降低学习率：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">    </span>--models<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="w">    </span>--learning_rate<span class="w"> </span><span class="m">0</span>.001<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div></p>
-<p>Adjust KL annealing:
+<p>调整KL退火：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">    </span>--models<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -2056,15 +2475,15 @@
 </span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">    </span>--kl_warmup<span class="w"> </span><span class="m">80</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div></p>
-<h3 id="early-stopping-too-soon">Early Stopping Too Soon<a class="headerlink" href="#early-stopping-too-soon" title="Permanent link">&para;</a></h3>
-<p>Increase patience:
+<h3 id="_13">早停过早<a class="headerlink" href="#_13" title="Permanent link">&para;</a></h3>
+<p>增加耐心值：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">    </span>--models<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">    </span>--patience<span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div></p>
-<p>Or disable early stopping:
+<p>或禁用早停：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">    </span>--models<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -2072,64 +2491,64 @@
 </span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">    </span>--no_early_stopping<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div></p>
-<h3 id="nan-or-inf-values">NaN or Inf Values<a class="headerlink" href="#nan-or-inf-values" title="Permanent link">&para;</a></h3>
-<p>Reduce learning rate significantly:
+<h3 id="naninf">NaN或Inf值<a class="headerlink" href="#naninf" title="Permanent link">&para;</a></h3>
+<p>大幅降低学习率：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">    </span>--models<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">    </span>--learning_rate<span class="w"> </span><span class="m">0</span>.0005<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div></p>
-<p>Check for data issues:
+<p>检查数据问题：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
 </span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="s2">import numpy as np</span>
 </span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="s2">embeddings = np.load(&#39;result/0.6B/my_dataset/bow/qwen_embeddings_zeroshot.npy&#39;)</span>
-</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="s2">print(f&#39;Contains NaN: {np.isnan(embeddings).any()}&#39;)</span>
-</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="s2">print(f&#39;Contains Inf: {np.isinf(embeddings).any()}&#39;)</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="s2">print(f&#39;包含NaN：{np.isnan(embeddings).any()}&#39;)</span>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="s2">print(f&#39;包含Inf：{np.isinf(embeddings).any()}&#39;)</span>
 </span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="s2">&quot;</span>
 </span></code></pre></div></p>
 <hr />
-<h2 id="evaluation-issues">Evaluation Issues<a class="headerlink" href="#evaluation-issues" title="Permanent link">&para;</a></h2>
-<h3 id="poor-metric-scores">Poor Metric Scores<a class="headerlink" href="#poor-metric-scores" title="Permanent link">&para;</a></h3>
-<p><strong>Solutions:</strong></p>
+<h2 id="_14">评估问题<a class="headerlink" href="#_14" title="Permanent link">&para;</a></h2>
+<h3 id="_15">指标得分低<a class="headerlink" href="#_15" title="Permanent link">&para;</a></h3>
+<p><strong>解决方案：</strong></p>
 <ul>
-<li>Train longer with <code>--epochs 200 --no_early_stopping</code></li>
-<li>Adjust topic count: try 10, 15, 20, 25, 30</li>
-<li>Improve data quality: clean text more thoroughly, remove short documents</li>
-<li>Tune hyperparameters: <code>--hidden_dim 768 --learning_rate 0.001 --kl_warmup 80</code></li>
+<li>使用 <code>--epochs 200 --no_early_stopping</code> 延长训练</li>
+<li>调整主题数量：尝试 10、15、20、25、30</li>
+<li>提高数据质量：更彻底地清洗文本，移除短文档</li>
+<li>调整超参数：<code>--hidden_dim 768 --learning_rate 0.001 --kl_warmup 80</code></li>
 </ul>
-<h3 id="metric-computation-errors">Metric Computation Errors<a class="headerlink" href="#metric-computation-errors" title="Permanent link">&para;</a></h3>
-<p>Minimum requirements:
-- Documents: 500+
-- Average length: 20+ words
-- Vocabulary: 1000+ words</p>
+<h3 id="_16">指标计算错误<a class="headerlink" href="#_16" title="Permanent link">&para;</a></h3>
+<p>最低要求：
+- 文档数量：500+
+- 平均长度：20+词
+- 词汇表：1000+词</p>
 <hr />
-<h2 id="visualization-issues">Visualization Issues<a class="headerlink" href="#visualization-issues" title="Permanent link">&para;</a></h2>
-<h3 id="visualization-generation-fails">Visualization Generation Fails<a class="headerlink" href="#visualization-generation-fails" title="Permanent link">&para;</a></h3>
-<p>Install required fonts:
+<h2 id="_17">可视化问题<a class="headerlink" href="#_17" title="Permanent link">&para;</a></h2>
+<h3 id="_18">可视化生成失败<a class="headerlink" href="#_18" title="Permanent link">&para;</a></h3>
+<p>安装所需字体：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># Ubuntu/Debian</span>
 </span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>apt-get<span class="w"> </span>install<span class="w"> </span>fonts-liberation<span class="w"> </span>fonts-noto-cjk
 </span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>
 </span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="c1"># macOS</span>
 </span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>brew<span class="w"> </span>install<span class="w"> </span>font-liberation<span class="w"> </span>font-noto-cjk
 </span></code></pre></div></p>
-<p>Set matplotlib backend:
+<p>设置matplotlib后端：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">MPLBACKEND</span><span class="o">=</span>Agg
 </span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span>--models<span class="w"> </span>theta
 </span></code></pre></div></p>
-<h3 id="chinese-characters-not-displaying">Chinese Characters Not Displaying<a class="headerlink" href="#chinese-characters-not-displaying" title="Permanent link">&para;</a></h3>
-<p>Install Chinese fonts:
+<h3 id="_19">中文字符不显示<a class="headerlink" href="#_19" title="Permanent link">&para;</a></h3>
+<p>安装中文字体：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>apt-get<span class="w"> </span>install<span class="w"> </span>fonts-noto-cjk<span class="w"> </span>fonts-wqy-zenhei
 </span></code></pre></div></p>
-<p>Specify language parameter:
+<p>指定语言参数：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="w">    </span>--dataset<span class="w"> </span>chinese_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="w">    </span>--models<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="w">    </span>--language<span class="w"> </span>zh<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div></p>
-<h3 id="low-resolution-images">Low Resolution Images<a class="headerlink" href="#low-resolution-images" title="Permanent link">&para;</a></h3>
-<p>Increase DPI:
+<h3 id="_20">图像分辨率低<a class="headerlink" href="#_20" title="Permanent link">&para;</a></h3>
+<p>增加DPI：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>python<span class="w"> </span>-m<span class="w"> </span>visualization.run_visualization<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="w">    </span>--result_dir<span class="w"> </span>result/0.6B<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
@@ -2138,11 +2557,11 @@
 </span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a><span class="w">    </span>--dpi<span class="w"> </span><span class="m">600</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a><span class="w">    </span>--language<span class="w"> </span>en
 </span></code></pre></div></p>
-<p>DPI recommendations: Screen=150, Document=300, Publication=600, Poster=1200</p>
+<p>DPI建议：屏幕=150，文档=300，发表=600，海报=1200</p>
 <hr />
-<h2 id="performance-issues">Performance Issues<a class="headerlink" href="#performance-issues" title="Permanent link">&para;</a></h2>
-<h3 id="slow-preprocessing">Slow Preprocessing<a class="headerlink" href="#slow-preprocessing" title="Permanent link">&para;</a></h3>
-<p>Increase batch size:
+<h2 id="_21">性能问题<a class="headerlink" href="#_21" title="Permanent link">&para;</a></h2>
+<h3 id="_22">预处理慢<a class="headerlink" href="#_22" title="Permanent link">&para;</a></h3>
+<p>增加批大小：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">    </span>--model<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -2150,21 +2569,21 @@
 </span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="w">    </span>--batch_size<span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div></p>
-<p>Monitor GPU utilization: <code>nvidia-smi dmon</code></p>
-<h3 id="memory-leaks">Memory Leaks<a class="headerlink" href="#memory-leaks" title="Permanent link">&para;</a></h3>
-<p>Clear cache periodically:
+<p>监控GPU利用率：<code>nvidia-smi dmon</code></p>
+<h3 id="_23">内存泄漏<a class="headerlink" href="#_23" title="Permanent link">&para;</a></h3>
+<p>定期清除缓存：
 <div class="language-python highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
 </span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 </span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
 </span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">empty_cache</span><span class="p">()</span>
 </span></code></pre></div></p>
 <hr />
-<h2 id="specific-error-messages">Specific Error Messages<a class="headerlink" href="#specific-error-messages" title="Permanent link">&para;</a></h2>
+<h2 id="_24">特定错误信息<a class="headerlink" href="#_24" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Error</th>
-<th>Solution</th>
+<th>错误</th>
+<th>解决方案</th>
 </tr>
 </thead>
 <tbody>
@@ -2174,50 +2593,50 @@
 </tr>
 <tr>
 <td>"Preprocessed files not found"</td>
-<td>Run <code>prepare_data.py</code> first</td>
+<td>先运行 <code>prepare_data.py</code></td>
 </tr>
 <tr>
 <td>"Model checkpoint not found"</td>
-<td>Run training first</td>
+<td>先运行训练</td>
 </tr>
 <tr>
 <td>"Invalid number of topics"</td>
-<td>Use range 5-100</td>
+<td>使用5-100范围</td>
 </tr>
 <tr>
 <td>"Supervised mode requires labels"</td>
-<td>Add label column or use <code>--mode zero_shot</code></td>
+<td>添加标签列或使用 <code>--mode zero_shot</code></td>
 </tr>
 <tr>
 <td>"DTM requires time column"</td>
-<td>Add <code>--time_column year</code> to preprocessing</td>
+<td>在预处理中添加 <code>--time_column year</code></td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="getting-help">Getting Help<a class="headerlink" href="#getting-help" title="Permanent link">&para;</a></h2>
-<h3 id="report-issues">Report Issues<a class="headerlink" href="#report-issues" title="Permanent link">&para;</a></h3>
-<p>When reporting issues, include:
-1. Complete error message
-2. Command that produced error
-3. System information (GPU, CUDA version)
-4. Dataset characteristics (size, language)</p>
-<p>System information:
+<h2 id="_25">获取帮助<a class="headerlink" href="#_25" title="Permanent link">&para;</a></h2>
+<h3 id="_26">报告问题<a class="headerlink" href="#_26" title="Permanent link">&para;</a></h3>
+<p>报告问题时，请包含：
+1. 完整的错误信息
+2. 产生错误的命令
+3. 系统信息（GPU、CUDA版本）
+4. 数据集特征（规模、语言）</p>
+<p>系统信息：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
 </span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="s2">import torch</span>
 </span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="s2">import sys</span>
-</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="s2">print(f&#39;Python: {sys.version}&#39;)</span>
-</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="s2">print(f&#39;PyTorch: {torch.__version__}&#39;)</span>
-</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a><span class="s2">print(f&#39;CUDA: {torch.version.cuda}&#39;)</span>
-</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="s2">print(f&#39;GPU: {torch.cuda.get_device_name(0)}&#39;)</span>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a><span class="s2">print(f&#39;Python：{sys.version}&#39;)</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a><span class="s2">print(f&#39;PyTorch：{torch.__version__}&#39;)</span>
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a><span class="s2">print(f&#39;CUDA：{torch.version.cuda}&#39;)</span>
+</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="s2">print(f&#39;GPU：{torch.cuda.get_device_name(0)}&#39;)</span>
 </span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="s2">&quot;</span>
 </span></code></pre></div></p>
-<h3 id="community-resources">Community Resources<a class="headerlink" href="#community-resources" title="Permanent link">&para;</a></h3>
+<h3 id="_27">社区资源<a class="headerlink" href="#_27" title="Permanent link">&para;</a></h3>
 <ul>
-<li>GitHub Issues: <a href="https://github.com/CodeSoul-co/THETA/issues">Report bugs</a></li>
-<li>GitHub Discussions: <a href="https://github.com/CodeSoul-co/THETA/discussions">Ask questions</a></li>
-<li>Documentation: <a href="https://theta.code-soul.com">https://theta.code-soul.com</a></li>
-<li>Email: support@theta.code-soul.com</li>
+<li>GitHub Issues：<a href="https://github.com/CodeSoul-co/THETA/issues">报告错误</a></li>
+<li>GitHub Discussions：<a href="https://github.com/CodeSoul-co/THETA/discussions">提问</a></li>
+<li>文档：<a href="https://theta.code-soul.com">https://theta.code-soul.com</a></li>
+<li>邮箱：support@theta.code-soul.com</li>
 </ul>
 
 
@@ -2291,10 +2710,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.action.edit"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

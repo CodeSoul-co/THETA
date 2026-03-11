@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="基于通义千问嵌入的先进主题建模">
+        <meta name="description" content="Advanced Topic Modeling with Qwen Embeddings">
       
       
         <meta name="author" content="CodeSoul">
@@ -15,28 +15,32 @@
         <link rel="canonical" href="https://codesoul-co.github.io/THETA/zh/user-guide/preprocessing/">
       
       
+        <link rel="prev" href="../data-preparation/">
+      
+      
+        <link rel="next" href="../training/">
       
       
         
-          <link rel="alternate" href="/THETA/" hreflang="en">
+          <link rel="alternate" href="../../../user-guide/preprocessing/" hreflang="en">
         
-          <link rel="alternate" href="/THETA/zh/" hreflang="zh">
+          <link rel="alternate" href="./" hreflang="zh">
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
     
     
       
-        <title>Data Preprocessing - THETA 主题模型</title>
+        <title>数据预处理 - THETA Topic Model</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -55,7 +59,7 @@
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#data-preprocessing" class="md-skip">
+        <a href="#_1" class="md-skip">
           跳转至
         </a>
       
@@ -96,7 +100,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="页眉">
-    <a href="../.." title="THETA 主题模型" class="md-header__button md-logo" aria-label="THETA 主题模型" data-md-component="logo">
+    <a href="../../" title="THETA Topic Model" class="md-header__button md-logo" aria-label="THETA Topic Model" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -110,13 +114,13 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            THETA 主题模型
+            THETA Topic Model
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Data Preprocessing
+              数据预处理
             
           </span>
         </div>
@@ -163,13 +167,13 @@
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="/THETA/" hreflang="en" class="md-select__link">
+            <a href="../../../user-guide/preprocessing/" hreflang="en" class="md-select__link">
               English
             </a>
           </li>
         
           <li class="md-select__item">
-            <a href="/THETA/zh/" hreflang="zh" class="md-select__link">
+            <a href="./" hreflang="zh" class="md-select__link">
               中文
             </a>
           </li>
@@ -249,7 +253,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../index_zh/" class="md-tabs__link">
+      <a href="../../" class="md-tabs__link">
         
   
   
@@ -270,7 +274,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../getting-started/overview_zh/" class="md-tabs__link">
+        <a href="../../getting-started/overview/" class="md-tabs__link">
           
   
   
@@ -286,11 +290,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../data-preparation_zh/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../data-preparation/" class="md-tabs__link">
           
   
   
@@ -310,7 +316,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../models/theta_zh/" class="md-tabs__link">
+        <a href="../../models/theta/" class="md-tabs__link">
           
   
   
@@ -330,7 +336,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../advanced/custom-datasets_zh/" class="md-tabs__link">
+        <a href="../../advanced/custom-datasets/" class="md-tabs__link">
           
   
   
@@ -350,7 +356,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../api/prepare-data_zh/" class="md-tabs__link">
+        <a href="../../api/prepare-data/" class="md-tabs__link">
           
   
   
@@ -370,7 +376,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../examples/english-dataset_zh/" class="md-tabs__link">
+        <a href="../../examples/english-dataset/" class="md-tabs__link">
           
   
   
@@ -388,7 +394,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../troubleshooting_zh/" class="md-tabs__link">
+      <a href="../../troubleshooting/" class="md-tabs__link">
         
   
   
@@ -407,7 +413,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../appendix/faq_zh/" class="md-tabs__link">
+      <a href="../../appendix/faq/" class="md-tabs__link">
         
   
   
@@ -448,13 +454,13 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="THETA 主题模型" class="md-nav__button md-logo" aria-label="THETA 主题模型" data-md-component="logo">
+    <a href="../../" title="THETA Topic Model" class="md-nav__button md-logo" aria-label="THETA Topic Model" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    THETA 主题模型
+    THETA Topic Model
   </label>
   
     <div class="md-nav__source">
@@ -478,7 +484,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../index_zh/" class="md-nav__link">
+      <a href="../../" class="md-nav__link">
         
   
   
@@ -557,7 +563,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/overview_zh/" class="md-nav__link">
+      <a href="../../getting-started/overview/" class="md-nav__link">
         
   
   
@@ -585,7 +591,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/installation_zh/" class="md-nav__link">
+      <a href="../../getting-started/installation/" class="md-nav__link">
         
   
   
@@ -613,7 +619,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/quickstart_zh/" class="md-nav__link">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
         
   
   
@@ -645,26 +651,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   
@@ -682,7 +693,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -700,7 +711,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../data-preparation_zh/" class="md-nav__link">
+      <a href="../data-preparation/" class="md-nav__link">
         
   
   
@@ -725,10 +736,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../preprocessing_zh/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    数据预处理
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -744,6 +782,142 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#theta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        THETA模型预处理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="THETA模型预处理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        基本预处理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        模型规模选择
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        训练模式选择
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        词汇表配置
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        序列长度配置
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        组合清洗和预处理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        验证预处理数据
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        基线模型预处理
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dtm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DTM模型预处理
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -756,7 +930,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../training_zh/" class="md-nav__link">
+      <a href="../training/" class="md-nav__link">
         
   
   
@@ -784,7 +958,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../evaluation_zh/" class="md-nav__link">
+      <a href="../evaluation/" class="md-nav__link">
         
   
   
@@ -812,7 +986,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../visualization_zh/" class="md-nav__link">
+      <a href="../visualization/" class="md-nav__link">
         
   
   
@@ -899,7 +1073,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/theta_zh/" class="md-nav__link">
+      <a href="../../models/theta/" class="md-nav__link">
         
   
   
@@ -927,7 +1101,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/baselines_zh/" class="md-nav__link">
+      <a href="../../models/baselines/" class="md-nav__link">
         
   
   
@@ -955,7 +1129,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/comparison_zh/" class="md-nav__link">
+      <a href="../../models/comparison/" class="md-nav__link">
         
   
   
@@ -1042,7 +1216,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/custom-datasets_zh/" class="md-nav__link">
+      <a href="../../advanced/custom-datasets/" class="md-nav__link">
         
   
   
@@ -1070,7 +1244,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/hyperparameters_zh/" class="md-nav__link">
+      <a href="../../advanced/hyperparameters/" class="md-nav__link">
         
   
   
@@ -1098,7 +1272,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/chinese-data_zh/" class="md-nav__link">
+      <a href="../../advanced/chinese-data/" class="md-nav__link">
         
   
   
@@ -1126,7 +1300,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/distributed-training_zh/" class="md-nav__link">
+      <a href="../../advanced/distributed-training/" class="md-nav__link">
         
   
   
@@ -1213,7 +1387,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/prepare-data_zh/" class="md-nav__link">
+      <a href="../../api/prepare-data/" class="md-nav__link">
         
   
   
@@ -1241,7 +1415,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/run-pipeline_zh/" class="md-nav__link">
+      <a href="../../api/run-pipeline/" class="md-nav__link">
         
   
   
@@ -1269,7 +1443,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/visualization_zh/" class="md-nav__link">
+      <a href="../../api/visualization/" class="md-nav__link">
         
   
   
@@ -1356,7 +1530,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/english-dataset_zh/" class="md-nav__link">
+      <a href="../../examples/english-dataset/" class="md-nav__link">
         
   
   
@@ -1384,7 +1558,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/chinese-dataset_zh/" class="md-nav__link">
+      <a href="../../examples/chinese-dataset/" class="md-nav__link">
         
   
   
@@ -1412,7 +1586,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/supervised-learning_zh/" class="md-nav__link">
+      <a href="../../examples/supervised-learning/" class="md-nav__link">
         
   
   
@@ -1447,7 +1621,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../troubleshooting_zh/" class="md-nav__link">
+      <a href="../../troubleshooting/" class="md-nav__link">
         
   
   
@@ -1474,7 +1648,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../appendix/faq_zh/" class="md-nav__link">
+      <a href="../../appendix/faq/" class="md-nav__link">
         
   
   
@@ -1521,22 +1695,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#theta-model-preprocessing" class="md-nav__link">
+  <a href="#theta" class="md-nav__link">
     <span class="md-ellipsis">
       
-        THETA Model Preprocessing
+        THETA模型预处理
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="THETA Model Preprocessing">
+    <nav class="md-nav" aria-label="THETA模型预处理">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#basic-preprocessing" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Basic Preprocessing
+        基本预处理
       
     </span>
   </a>
@@ -1544,10 +1718,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#model-size-selection" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Model Size Selection
+        模型规模选择
       
     </span>
   </a>
@@ -1555,10 +1729,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#training-mode-selection" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Training Mode Selection
+        训练模式选择
       
     </span>
   </a>
@@ -1566,10 +1740,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#vocabulary-configuration" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Vocabulary Configuration
+        词汇表配置
       
     </span>
   </a>
@@ -1577,10 +1751,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#sequence-length-configuration" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Sequence Length Configuration
+        序列长度配置
       
     </span>
   </a>
@@ -1588,10 +1762,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#combined-cleaning-and-preprocessing" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Combined Cleaning and Preprocessing
+        组合清洗和预处理
       
     </span>
   </a>
@@ -1599,10 +1773,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#verifying-preprocessed-data" class="md-nav__link">
+  <a href="#_8" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Verifying Preprocessed Data
+        验证预处理数据
       
     </span>
   </a>
@@ -1615,10 +1789,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#baseline-model-preprocessing" class="md-nav__link">
+  <a href="#_9" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Baseline Model Preprocessing
+        基线模型预处理
       
     </span>
   </a>
@@ -1626,10 +1800,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#dtm-model-preprocessing" class="md-nav__link">
+  <a href="#dtm" class="md-nav__link">
     <span class="md-ellipsis">
       
-        DTM Model Preprocessing
+        DTM模型预处理
       
     </span>
   </a>
@@ -1653,7 +1827,7 @@
 
 
   
-    <a href="https://github.com/CodeSoul-co/THETA/edit/main/doc/user-guide/preprocessing.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/CodeSoul-co/THETA/edit/main/doc/user-guide/preprocessing.zh.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1661,12 +1835,14 @@
   
 
 
-<h1 id="data-preprocessing">Data Preprocessing<a class="headerlink" href="#data-preprocessing" title="Permanent link">&para;</a></h1>
-<p>Preprocessing converts cleaned text into numerical representations required for training. This stage generates embeddings using Qwen models and constructs bag-of-words representations.</p>
+<h1 id="_1">数据预处理<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<p><strong><a href="./">English</a></strong> | <strong><a href="./">中文</a></strong></p>
 <hr />
-<h2 id="theta-model-preprocessing">THETA Model Preprocessing<a class="headerlink" href="#theta-model-preprocessing" title="Permanent link">&para;</a></h2>
-<h3 id="basic-preprocessing">Basic Preprocessing<a class="headerlink" href="#basic-preprocessing" title="Permanent link">&para;</a></h3>
-<p>For a dataset named <code>my_dataset</code> with a cleaned CSV file:</p>
+<p>预处理将清洗后的文本转换为训练所需的数值表示。此阶段使用Qwen模型生成嵌入并构建词袋表示。</p>
+<hr />
+<h2 id="theta">THETA模型预处理<a class="headerlink" href="#theta" title="Permanent link">&para;</a></h2>
+<h3 id="_2">基本预处理<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<p>对于名为 <code>my_dataset</code> 且带有清洗后CSV文件的数据集：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">cd</span><span class="w"> </span>/root/autodl-tmp/ETM
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
@@ -1679,13 +1855,13 @@
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span>--max_length<span class="w"> </span><span class="m">512</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div>
-<p>This command:
-1. Loads the CSV from <code>/root/autodl-tmp/data/my_dataset/my_dataset_cleaned.csv</code>
-2. Generates Qwen embeddings (dimension 1024 for 0.6B model)
-3. Constructs bag-of-words with vocabulary size 5000
-4. Saves output to <code>/root/autodl-tmp/result/0.6B/my_dataset/bow/</code></p>
-<h3 id="model-size-selection">Model Size Selection<a class="headerlink" href="#model-size-selection" title="Permanent link">&para;</a></h3>
-<p><strong>0.6B Model - Default choice for most use cases</strong></p>
+<p>此命令：
+1. 从 <code>/root/autodl-tmp/data/my_dataset/my_dataset_cleaned.csv</code> 加载CSV
+2. 生成Qwen嵌入（0.6B模型维度为1024）
+3. 构建词汇表大小为5000的词袋
+4. 将输出保存到 <code>/root/autodl-tmp/result/0.6B/my_dataset/bow/</code></p>
+<h3 id="_3">模型规模选择<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<p><strong>0.6B模型 - 大多数用例的默认选择</strong></p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span>--model<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -1695,9 +1871,9 @@
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span>--batch_size<span class="w"> </span><span class="m">32</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div>
-<p>Processing speed: ~1000 documents per minute on single GPU
-Memory requirement: 4GB VRAM</p>
-<p><strong>4B Model - Better quality at moderate cost</strong></p>
+<p>处理速度：单GPU上约1000篇文档/分钟
+内存需求：4GB显存</p>
+<p><strong>4B模型 - 适中成本下更高质量</strong></p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>--model<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -1707,10 +1883,10 @@ Memory requirement: 4GB VRAM</p>
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span>--batch_size<span class="w"> </span><span class="m">16</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div>
-<p>Processing speed: ~400 documents per minute
-Memory requirement: 12GB VRAM
-Batch size reduced to 16 due to larger embeddings (dimension 2560)</p>
-<p><strong>8B Model - Highest quality</strong></p>
+<p>处理速度：约400篇文档/分钟
+内存需求：12GB显存
+由于嵌入更大（维度2560），批大小减小到16</p>
+<p><strong>8B模型 - 最高质量</strong></p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--model<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -1720,11 +1896,11 @@ Batch size reduced to 16 due to larger embeddings (dimension 2560)</p>
 </span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span>--batch_size<span class="w"> </span><span class="m">8</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div>
-<p>Processing speed: ~200 documents per minute
-Memory requirement: 24GB VRAM
-Batch size reduced to 8 due to large embeddings (dimension 4096)</p>
-<h3 id="training-mode-selection">Training Mode Selection<a class="headerlink" href="#training-mode-selection" title="Permanent link">&para;</a></h3>
-<p><strong>zero_shot mode - Standard unsupervised learning</strong></p>
+<p>处理速度：约200篇文档/分钟
+内存需求：24GB显存
+由于嵌入很大（维度4096），批大小减小到8</p>
+<h3 id="_4">训练模式选择<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<p><strong>zero_shot模式 - 标准无监督学习</strong></p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span>--model<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -1734,8 +1910,8 @@ Batch size reduced to 8 due to large embeddings (dimension 4096)</p>
 </span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span>--batch_size<span class="w"> </span><span class="m">32</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div>
-<p>Use when: No labels available or labels should be ignored</p>
-<p><strong>supervised mode - Label-guided learning</strong></p>
+<p>适用场景：无可用标签或应忽略标签</p>
+<p><strong>supervised模式 - 标签引导学习</strong></p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span>--model<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -1745,9 +1921,9 @@ Batch size reduced to 8 due to large embeddings (dimension 4096)</p>
 </span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span>--batch_size<span class="w"> </span><span class="m">32</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div>
-<p>Use when: CSV contains <code>label</code> or <code>category</code> column
-The model will incorporate label information during training</p>
-<p><strong>unsupervised mode - Explicit unsupervised mode</strong></p>
+<p>适用场景：CSV包含 <code>label</code> 或 <code>category</code> 列
+模型将在训练过程中融入标签信息</p>
+<p><strong>unsupervised模式 - 显式无监督模式</strong></p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span>--model<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -1757,58 +1933,58 @@ The model will incorporate label information during training</p>
 </span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">    </span>--batch_size<span class="w"> </span><span class="m">32</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div>
-<p>Use when: Comparing with zero_shot mode on labeled data while ignoring labels</p>
-<h3 id="vocabulary-configuration">Vocabulary Configuration<a class="headerlink" href="#vocabulary-configuration" title="Permanent link">&para;</a></h3>
-<p>Vocabulary size affects model capacity and training speed. Larger vocabularies capture more terms but increase computation.</p>
+<p>适用场景：在带标签数据上与zero_shot模式比较，同时忽略标签</p>
+<h3 id="_5">词汇表配置<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<p>词汇表大小影响模型容量和训练速度。更大的词汇表能捕捉更多词汇，但会增加计算量。</p>
 <table>
 <thead>
 <tr>
-<th>Vocabulary Size</th>
-<th>Appropriate For</th>
+<th>词汇表大小</th>
+<th>适用场景</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>3000-5000</td>
-<td>Small corpora, domain-specific text, faster training</td>
+<td>小型语料库、领域特定文本、训练更快</td>
 </tr>
 <tr>
 <td>5000-8000</td>
-<td>General purpose, default setting</td>
+<td>通用目的，默认设置</td>
 </tr>
 <tr>
 <td>8000-15000</td>
-<td>Large diverse corpora, capturing rare terms</td>
+<td>大型多样化语料库，捕捉罕见词</td>
 </tr>
 </tbody>
 </table>
-<h3 id="sequence-length-configuration">Sequence Length Configuration<a class="headerlink" href="#sequence-length-configuration" title="Permanent link">&para;</a></h3>
-<p>The <code>max_length</code> parameter controls input truncation for embedding generation.</p>
+<h3 id="_6">序列长度配置<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
+<p><code>max_length</code> 参数控制嵌入生成的输入截断。</p>
 <table>
 <thead>
 <tr>
-<th>Max Length</th>
-<th>Appropriate For</th>
+<th>最大长度</th>
+<th>适用场景</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>256</td>
-<td>Short documents (tweets, reviews), faster processing</td>
+<td>短文档（推文、评论），处理更快</td>
 </tr>
 <tr>
 <td>512</td>
-<td>Medium documents (news articles), default setting</td>
+<td>中等长度文档（新闻文章），默认设置</td>
 </tr>
 <tr>
 <td>1024</td>
-<td>Long documents (papers, reports), requires more VRAM</td>
+<td>长文档（论文、报告），需要更多显存</td>
 </tr>
 </tbody>
 </table>
-<h3 id="combined-cleaning-and-preprocessing">Combined Cleaning and Preprocessing<a class="headerlink" href="#combined-cleaning-and-preprocessing" title="Permanent link">&para;</a></h3>
-<p>Process raw data in a single step:</p>
-<p><strong>English data:</strong>
+<h3 id="_7">组合清洗和预处理<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
+<p>单步处理原始数据：</p>
+<p><strong>英文数据：</strong>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span>--model<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -1822,7 +1998,7 @@ The model will incorporate label information during training</p>
 </span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">    </span>--language<span class="w"> </span>english<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div></p>
-<p><strong>Chinese data:</strong>
+<p><strong>中文数据：</strong>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span>--model<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -1836,9 +2012,9 @@ The model will incorporate label information during training</p>
 </span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">    </span>--language<span class="w"> </span>chinese<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div></p>
-<p>The <code>--clean</code> flag triggers automatic cleaning before preprocessing. The cleaned CSV is saved as <code>{dataset}_cleaned.csv</code> in the dataset directory.</p>
-<h3 id="verifying-preprocessed-data">Verifying Preprocessed Data<a class="headerlink" href="#verifying-preprocessed-data" title="Permanent link">&para;</a></h3>
-<p>Check that all required files were generated:</p>
+<p><code>--clean</code> 标志触发预处理前的自动清洗。清洗后的CSV保存为数据集目录下的 <code>{dataset}_cleaned.csv</code>。</p>
+<h3 id="_8">验证预处理数据<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h3>
+<p>检查是否生成了所有必需文件：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span>--model<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -1846,38 +2022,38 @@ The model will incorporate label information during training</p>
 </span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">    </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">    </span>--check-only
 </span></code></pre></div>
-<p>Expected output:
-<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Checking preprocessed files for dataset: my_dataset
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>✓ BOW data: /root/autodl-tmp/result/0.6B/my_dataset/bow/
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>✓ Embeddings: qwen_embeddings_zeroshot.npy (1024 dims)
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>✓ Vocabulary: vocab.pkl (5000 words)
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>✓ Document indices: doc_indices.npy
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>All required files present.
+<p>预期输出：
+<div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>检查数据集预处理文件：my_dataset
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>✓ BOW数据：/root/autodl-tmp/result/0.6B/my_dataset/bow/
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>✓ 嵌入：qwen_embeddings_zeroshot.npy（1024维）
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>✓ 词汇表：vocab.pkl（5000词）
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>✓ 文档索引：doc_indices.npy
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>所有必需文件都存在。
 </span></code></pre></div></p>
 <hr />
-<h2 id="baseline-model-preprocessing">Baseline Model Preprocessing<a class="headerlink" href="#baseline-model-preprocessing" title="Permanent link">&para;</a></h2>
-<p>Baseline models (LDA, ETM, CTM) use different preprocessing pipelines that do not require Qwen embeddings.</p>
+<h2 id="_9">基线模型预处理<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h2>
+<p>基线模型（LDA、ETM、CTM）使用不同的预处理流程，不需要Qwen嵌入。</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span>--model<span class="w"> </span>baseline<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span>--vocab_size<span class="w"> </span><span class="m">5000</span>
 </span></code></pre></div>
-<p>This generates:
-- Bag-of-words representations
-- TF-IDF vectors (for CTM)
-- Word2Vec embeddings (for ETM)
-- Document-term matrix (for LDA)</p>
-<p>Output location: <code>/root/autodl-tmp/result/baseline/my_dataset/bow/</code></p>
+<p>这会生成：
+- 词袋表示
+- TF-IDF向量（用于CTM）
+- Word2Vec嵌入（用于ETM）
+- 文档-词项矩阵（用于LDA）</p>
+<p>输出位置：<code>/root/autodl-tmp/result/baseline/my_dataset/bow/</code></p>
 <hr />
-<h2 id="dtm-model-preprocessing">DTM Model Preprocessing<a class="headerlink" href="#dtm-model-preprocessing" title="Permanent link">&para;</a></h2>
-<p>DTM requires temporal information in the CSV. Specify the time column name:</p>
+<h2 id="dtm">DTM模型预处理<a class="headerlink" href="#dtm" title="Permanent link">&para;</a></h2>
+<p>DTM需要CSV中的时间信息。指定时间列名：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">    </span>--model<span class="w"> </span>dtm<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">    </span>--vocab_size<span class="w"> </span><span class="m">5000</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">    </span>--time_column<span class="w"> </span>year
 </span></code></pre></div>
-<p>The time column can be named <code>year</code>, <code>timestamp</code>, or <code>date</code>. Documents are automatically grouped by time slice for temporal modeling.</p>
+<p>时间列可以命名为 <code>year</code>、<code>timestamp</code> 或 <code>date</code>。文档会自动按时间切片分组用于时序建模。</p>
 
 
 
@@ -1950,10 +2126,10 @@ The model will incorporate label information during training</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.action.edit"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

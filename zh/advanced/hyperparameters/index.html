@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="基于通义千问嵌入的先进主题建模">
+        <meta name="description" content="Advanced Topic Modeling with Qwen Embeddings">
       
       
         <meta name="author" content="CodeSoul">
@@ -15,28 +15,32 @@
         <link rel="canonical" href="https://codesoul-co.github.io/THETA/zh/advanced/hyperparameters/">
       
       
+        <link rel="prev" href="../custom-datasets/">
+      
+      
+        <link rel="next" href="../chinese-data/">
       
       
         
-          <link rel="alternate" href="/THETA/" hreflang="en">
+          <link rel="alternate" href="../../../advanced/hyperparameters/" hreflang="en">
         
-          <link rel="alternate" href="/THETA/zh/" hreflang="zh">
+          <link rel="alternate" href="./" hreflang="zh">
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
     
     
       
-        <title>Hyperparameter Tuning - THETA 主题模型</title>
+        <title>超参数调优 - THETA Topic Model</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -55,7 +59,7 @@
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#hyperparameter-tuning" class="md-skip">
+        <a href="#_1" class="md-skip">
           跳转至
         </a>
       
@@ -96,7 +100,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="页眉">
-    <a href="../.." title="THETA 主题模型" class="md-header__button md-logo" aria-label="THETA 主题模型" data-md-component="logo">
+    <a href="../../" title="THETA Topic Model" class="md-header__button md-logo" aria-label="THETA Topic Model" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -110,13 +114,13 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            THETA 主题模型
+            THETA Topic Model
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Hyperparameter Tuning
+              超参数调优
             
           </span>
         </div>
@@ -163,13 +167,13 @@
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="/THETA/" hreflang="en" class="md-select__link">
+            <a href="../../../advanced/hyperparameters/" hreflang="en" class="md-select__link">
               English
             </a>
           </li>
         
           <li class="md-select__item">
-            <a href="/THETA/zh/" hreflang="zh" class="md-select__link">
+            <a href="./" hreflang="zh" class="md-select__link">
               中文
             </a>
           </li>
@@ -249,7 +253,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../index_zh/" class="md-tabs__link">
+      <a href="../../" class="md-tabs__link">
         
   
   
@@ -270,7 +274,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../getting-started/overview_zh/" class="md-tabs__link">
+        <a href="../../getting-started/overview/" class="md-tabs__link">
           
   
   
@@ -290,7 +294,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../user-guide/data-preparation_zh/" class="md-tabs__link">
+        <a href="../../user-guide/data-preparation/" class="md-tabs__link">
           
   
   
@@ -310,7 +314,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../models/theta_zh/" class="md-tabs__link">
+        <a href="../../models/theta/" class="md-tabs__link">
           
   
   
@@ -326,11 +330,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../custom-datasets_zh/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../custom-datasets/" class="md-tabs__link">
           
   
   
@@ -350,7 +356,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../api/prepare-data_zh/" class="md-tabs__link">
+        <a href="../../api/prepare-data/" class="md-tabs__link">
           
   
   
@@ -370,7 +376,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../examples/english-dataset_zh/" class="md-tabs__link">
+        <a href="../../examples/english-dataset/" class="md-tabs__link">
           
   
   
@@ -388,7 +394,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../troubleshooting_zh/" class="md-tabs__link">
+      <a href="../../troubleshooting/" class="md-tabs__link">
         
   
   
@@ -407,7 +413,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../appendix/faq_zh/" class="md-tabs__link">
+      <a href="../../appendix/faq/" class="md-tabs__link">
         
   
   
@@ -448,13 +454,13 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="THETA 主题模型" class="md-nav__button md-logo" aria-label="THETA 主题模型" data-md-component="logo">
+    <a href="../../" title="THETA Topic Model" class="md-nav__button md-logo" aria-label="THETA Topic Model" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    THETA 主题模型
+    THETA Topic Model
   </label>
   
     <div class="md-nav__source">
@@ -478,7 +484,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../index_zh/" class="md-nav__link">
+      <a href="../../" class="md-nav__link">
         
   
   
@@ -557,7 +563,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/overview_zh/" class="md-nav__link">
+      <a href="../../getting-started/overview/" class="md-nav__link">
         
   
   
@@ -585,7 +591,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/installation_zh/" class="md-nav__link">
+      <a href="../../getting-started/installation/" class="md-nav__link">
         
   
   
@@ -613,7 +619,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/quickstart_zh/" class="md-nav__link">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
         
   
   
@@ -700,7 +706,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/data-preparation_zh/" class="md-nav__link">
+      <a href="../../user-guide/data-preparation/" class="md-nav__link">
         
   
   
@@ -728,7 +734,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/preprocessing_zh/" class="md-nav__link">
+      <a href="../../user-guide/preprocessing/" class="md-nav__link">
         
   
   
@@ -756,7 +762,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/training_zh/" class="md-nav__link">
+      <a href="../../user-guide/training/" class="md-nav__link">
         
   
   
@@ -784,7 +790,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/evaluation_zh/" class="md-nav__link">
+      <a href="../../user-guide/evaluation/" class="md-nav__link">
         
   
   
@@ -812,7 +818,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/visualization_zh/" class="md-nav__link">
+      <a href="../../user-guide/visualization/" class="md-nav__link">
         
   
   
@@ -899,7 +905,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/theta_zh/" class="md-nav__link">
+      <a href="../../models/theta/" class="md-nav__link">
         
   
   
@@ -927,7 +933,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/baselines_zh/" class="md-nav__link">
+      <a href="../../models/baselines/" class="md-nav__link">
         
   
   
@@ -955,7 +961,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/comparison_zh/" class="md-nav__link">
+      <a href="../../models/comparison/" class="md-nav__link">
         
   
   
@@ -987,26 +993,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
             
   
   
@@ -1024,7 +1035,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1042,7 +1053,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../custom-datasets_zh/" class="md-nav__link">
+      <a href="../custom-datasets/" class="md-nav__link">
         
   
   
@@ -1067,10 +1078,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../hyperparameters_zh/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    超参数调优
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1086,6 +1124,164 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        学习率调度
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        批大小优化
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KL退火策略
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        隐藏层维度调优
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        早停配置
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        词汇表大小选择
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        使用不同模型规模
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="使用不同模型规模">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        扩展策略
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        质量与成本分析
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        网格搜索
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        批量处理多个数据集
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gpu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        多GPU并行处理
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1098,7 +1294,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../chinese-data_zh/" class="md-nav__link">
+      <a href="../chinese-data/" class="md-nav__link">
         
   
   
@@ -1126,7 +1322,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../distributed-training_zh/" class="md-nav__link">
+      <a href="../distributed-training/" class="md-nav__link">
         
   
   
@@ -1213,7 +1409,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/prepare-data_zh/" class="md-nav__link">
+      <a href="../../api/prepare-data/" class="md-nav__link">
         
   
   
@@ -1241,7 +1437,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/run-pipeline_zh/" class="md-nav__link">
+      <a href="../../api/run-pipeline/" class="md-nav__link">
         
   
   
@@ -1269,7 +1465,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/visualization_zh/" class="md-nav__link">
+      <a href="../../api/visualization/" class="md-nav__link">
         
   
   
@@ -1356,7 +1552,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/english-dataset_zh/" class="md-nav__link">
+      <a href="../../examples/english-dataset/" class="md-nav__link">
         
   
   
@@ -1384,7 +1580,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/chinese-dataset_zh/" class="md-nav__link">
+      <a href="../../examples/chinese-dataset/" class="md-nav__link">
         
   
   
@@ -1412,7 +1608,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/supervised-learning_zh/" class="md-nav__link">
+      <a href="../../examples/supervised-learning/" class="md-nav__link">
         
   
   
@@ -1447,7 +1643,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../troubleshooting_zh/" class="md-nav__link">
+      <a href="../../troubleshooting/" class="md-nav__link">
         
   
   
@@ -1474,7 +1670,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../appendix/faq_zh/" class="md-nav__link">
+      <a href="../../appendix/faq/" class="md-nav__link">
         
   
   
@@ -1521,10 +1717,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#learning-rate-scheduling" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Learning Rate Scheduling
+        学习率调度
       
     </span>
   </a>
@@ -1532,10 +1728,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#batch-size-optimization" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Batch Size Optimization
+        批大小优化
       
     </span>
   </a>
@@ -1543,10 +1739,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#kl-annealing-strategies" class="md-nav__link">
+  <a href="#kl" class="md-nav__link">
     <span class="md-ellipsis">
       
-        KL Annealing Strategies
+        KL退火策略
       
     </span>
   </a>
@@ -1554,10 +1750,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#hidden-dimension-tuning" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Hidden Dimension Tuning
+        隐藏层维度调优
       
     </span>
   </a>
@@ -1565,10 +1761,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#early-stopping-configuration" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Early Stopping Configuration
+        早停配置
       
     </span>
   </a>
@@ -1576,10 +1772,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#vocabulary-size-selection" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Vocabulary Size Selection
+        词汇表大小选择
       
     </span>
   </a>
@@ -1587,22 +1783,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#using-different-model-sizes" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Using Different Model Sizes
+        使用不同模型规模
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Using Different Model Sizes">
+    <nav class="md-nav" aria-label="使用不同模型规模">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#scaling-strategy" class="md-nav__link">
+  <a href="#_8" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Scaling Strategy
+        扩展策略
       
     </span>
   </a>
@@ -1610,10 +1806,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#quality-vs-cost-analysis" class="md-nav__link">
+  <a href="#_9" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quality vs Cost Analysis
+        质量与成本分析
       
     </span>
   </a>
@@ -1626,10 +1822,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#grid-search" class="md-nav__link">
+  <a href="#_10" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Grid Search
+        网格搜索
       
     </span>
   </a>
@@ -1637,10 +1833,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#batch-processing-multiple-datasets" class="md-nav__link">
+  <a href="#_11" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Batch Processing Multiple Datasets
+        批量处理多个数据集
       
     </span>
   </a>
@@ -1648,10 +1844,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#parallel-processing-on-multiple-gpus" class="md-nav__link">
+  <a href="#gpu" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Parallel Processing on Multiple GPUs
+        多GPU并行处理
       
     </span>
   </a>
@@ -1675,7 +1871,7 @@
 
 
   
-    <a href="https://github.com/CodeSoul-co/THETA/edit/main/doc/advanced/hyperparameters.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/CodeSoul-co/THETA/edit/main/doc/advanced/hyperparameters.zh.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1683,11 +1879,13 @@
   
 
 
-<h1 id="hyperparameter-tuning">Hyperparameter Tuning<a class="headerlink" href="#hyperparameter-tuning" title="Permanent link">&para;</a></h1>
-<p>Systematic guide to optimizing THETA hyperparameters.</p>
+<h1 id="_1">超参数调优<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<p><strong><a href="./">English</a></strong> | <strong><a href="./">中文</a></strong></p>
 <hr />
-<h2 id="learning-rate-scheduling">Learning Rate Scheduling<a class="headerlink" href="#learning-rate-scheduling" title="Permanent link">&para;</a></h2>
-<p><strong>Conservative approach (unstable training):</strong>
+<p>优化THETA超参数的系统指南。</p>
+<hr />
+<h2 id="_2">学习率调度<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p><strong>保守方法（训练不稳定时）：</strong>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span>--models<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -1698,7 +1896,7 @@
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span>--epochs<span class="w"> </span><span class="m">150</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div></p>
-<p><strong>Standard approach:</strong>
+<p><strong>标准方法：</strong>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span>--models<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -1709,7 +1907,7 @@
 </span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span>--epochs<span class="w"> </span><span class="m">100</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div></p>
-<p><strong>Aggressive approach (slow convergence):</strong>
+<p><strong>激进方法（收敛慢时）：</strong>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>--models<span class="w"> </span>theta<span class="w"> </span><span class="se">\</span>
@@ -1720,140 +1918,140 @@
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span>--epochs<span class="w"> </span><span class="m">80</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div></p>
-<p>Monitor training loss curves to determine if adjustment is needed.</p>
+<p>监控训练损失曲线以确定是否需要调整。</p>
 <hr />
-<h2 id="batch-size-optimization">Batch Size Optimization<a class="headerlink" href="#batch-size-optimization" title="Permanent link">&para;</a></h2>
+<h2 id="_3">批大小优化<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Batch Size</th>
-<th>Advantages</th>
-<th>Disadvantages</th>
+<th>批大小</th>
+<th>优势</th>
+<th>劣势</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>32</td>
-<td>Lower memory, better exploration</td>
-<td>Noisy updates, slower convergence</td>
+<td>内存占用低，探索性好</td>
+<td>更新噪声大，收敛慢</td>
 </tr>
 <tr>
 <td>64</td>
-<td>Balanced (default)</td>
+<td>平衡（默认）</td>
 <td>—</td>
 </tr>
 <tr>
 <td>128</td>
-<td>Stable updates, faster epochs</td>
-<td>Higher memory, may overfit</td>
+<td>更新稳定，轮次更快</td>
+<td>内存占用高，可能过拟合</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="kl-annealing-strategies">KL Annealing Strategies<a class="headerlink" href="#kl-annealing-strategies" title="Permanent link">&para;</a></h2>
-<p><strong>No annealing (immediate full KL):</strong>
+<h2 id="kl">KL退火策略<a class="headerlink" href="#kl" title="Permanent link">&para;</a></h2>
+<p><strong>无退火（立即完全KL）：</strong>
 <code>--kl_start 1.0 --kl_end 1.0 --kl_warmup 0</code>
-Risk: Posterior collapse, poor topic quality</p>
-<p><strong>Standard annealing (recommended):</strong>
+风险：后验坍塌，主题质量差</p>
+<p><strong>标准退火（推荐）：</strong>
 <code>--kl_start 0.0 --kl_end 1.0 --kl_warmup 50</code></p>
-<p><strong>Slow annealing (complex data):</strong>
+<p><strong>慢速退火（复杂数据）：</strong>
 <code>--kl_start 0.0 --kl_end 1.0 --kl_warmup 80</code></p>
-<p><strong>Partial annealing (fine-tuning):</strong>
+<p><strong>部分退火（微调时）：</strong>
 <code>--kl_start 0.2 --kl_end 0.8 --kl_warmup 40</code></p>
 <hr />
-<h2 id="hidden-dimension-tuning">Hidden Dimension Tuning<a class="headerlink" href="#hidden-dimension-tuning" title="Permanent link">&para;</a></h2>
+<h2 id="_4">隐藏层维度调优<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Hidden Dim</th>
-<th>Use Case</th>
+<th>隐藏层维度</th>
+<th>适用场景</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>256</td>
-<td>Small datasets or memory constrained</td>
+<td>小型数据集或内存受限</td>
 </tr>
 <tr>
 <td>512</td>
-<td>Default choice for most applications</td>
+<td>大多数应用的默认选择</td>
 </tr>
 <tr>
 <td>1024</td>
-<td>Large complex datasets when VRAM permits</td>
+<td>显存允许的大型复杂数据集</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="early-stopping-configuration">Early Stopping Configuration<a class="headerlink" href="#early-stopping-configuration" title="Permanent link">&para;</a></h2>
+<h2 id="_5">早停配置<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Patience</th>
-<th>Behavior</th>
+<th>耐心值</th>
+<th>行为</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>5</td>
-<td>Stops quickly if validation loss plateaus</td>
+<td>验证损失平台期时快速停止</td>
 </tr>
 <tr>
 <td>10</td>
-<td>Default setting</td>
+<td>默认设置</td>
 </tr>
 <tr>
 <td>20</td>
-<td>Allows longer training before stopping</td>
+<td>停止前允许更长时间训练</td>
 </tr>
 <tr>
-<td>Disabled (<code>--no_early_stopping</code>)</td>
-<td>Trains for all specified epochs</td>
+<td>禁用（<code>--no_early_stopping</code>）</td>
+<td>训练所有指定轮次</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="vocabulary-size-selection">Vocabulary Size Selection<a class="headerlink" href="#vocabulary-size-selection" title="Permanent link">&para;</a></h2>
+<h2 id="_6">词汇表大小选择<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Corpus Size</th>
-<th>Vocabulary Size</th>
-<th>Coverage</th>
+<th>语料库规模</th>
+<th>词汇表大小</th>
+<th>覆盖率</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>&lt; 1K docs</td>
+<td>&lt; 1千篇文档</td>
 <td>2000-3000</td>
 <td>~85%</td>
 </tr>
 <tr>
-<td>1K-10K docs</td>
+<td>1千-1万篇文档</td>
 <td>5000</td>
 <td>~90%</td>
 </tr>
 <tr>
-<td>10K-100K docs</td>
+<td>1万-10万篇文档</td>
 <td>8000-10000</td>
 <td>~92%</td>
 </tr>
 <tr>
-<td>&gt; 100K docs</td>
+<td>&gt; 10万篇文档</td>
 <td>10000-15000</td>
 <td>~95%</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="using-different-model-sizes">Using Different Model Sizes<a class="headerlink" href="#using-different-model-sizes" title="Permanent link">&para;</a></h2>
-<h3 id="scaling-strategy">Scaling Strategy<a class="headerlink" href="#scaling-strategy" title="Permanent link">&para;</a></h3>
-<p><strong>Development workflow:</strong>
-1. Start with 0.6B model
-2. Optimize hyperparameters
-3. Scale to 4B for production
-4. Use 8B for final results if needed</p>
-<p><strong>Quick comparison:</strong>
+<h2 id="_7">使用不同模型规模<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
+<h3 id="_8">扩展策略<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h3>
+<p><strong>开发流程：</strong>
+1. 从0.6B模型开始
+2. 优化超参数
+3. 扩展到4B用于生产
+4. 如需最终结果使用8B</p>
+<p><strong>快速比较：</strong>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">for</span><span class="w"> </span>size<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>4B<span class="w"> </span>8B<span class="p">;</span><span class="w"> </span><span class="k">do</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">        </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
@@ -1864,19 +2062,19 @@ Risk: Posterior collapse, poor topic quality</p>
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">        </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="k">done</span>
 </span></code></pre></div></p>
-<h3 id="quality-vs-cost-analysis">Quality vs Cost Analysis<a class="headerlink" href="#quality-vs-cost-analysis" title="Permanent link">&para;</a></h3>
-<p><strong>0.6B → 4B:</strong>
-- Topic diversity: +3-5%
-- Coherence (NPMI): +10-15%
-- Training time: +60-80%</p>
-<p><strong>4B → 8B:</strong>
-- Topic diversity: +1-2%
-- Coherence (NPMI): +5-8%
-- Training time: +80-100%</p>
-<p>Diminishing returns suggest 4B is often the best choice for production.</p>
+<h3 id="_9">质量与成本分析<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h3>
+<p><strong>0.6B → 4B：</strong>
+- 主题多样性：+3-5%
+- 连贯性（NPMI）：+10-15%
+- 训练时间：+60-80%</p>
+<p><strong>4B → 8B：</strong>
+- 主题多样性：+1-2%
+- 连贯性（NPMI）：+5-8%
+- 训练时间：+80-100%</p>
+<p>收益递减表明4B通常是生产环境的最佳选择。</p>
 <hr />
-<h2 id="grid-search">Grid Search<a class="headerlink" href="#grid-search" title="Permanent link">&para;</a></h2>
-<p>Systematic hyperparameter exploration:</p>
+<h2 id="_10">网格搜索<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h2>
+<p>系统性超参数探索：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="ch">#!/bin/bash</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nv">topics</span><span class="o">=(</span><span class="m">15</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">25</span><span class="w"> </span><span class="m">30</span><span class="o">)</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="nv">learning_rates</span><span class="o">=(</span><span class="m">0</span>.001<span class="w"> </span><span class="m">0</span>.002<span class="w"> </span><span class="m">0</span>.005<span class="o">)</span>
@@ -1885,7 +2083,7 @@ Risk: Posterior collapse, poor topic quality</p>
 </span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="k">for</span><span class="w"> </span>K<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">topics</span><span class="p">[@]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
 </span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="k">for</span><span class="w"> </span>lr<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">learning_rates</span><span class="p">[@]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">        </span><span class="k">for</span><span class="w"> </span>hd<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">hidden_dims</span><span class="p">[@]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">            </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Training K=</span><span class="nv">$K</span><span class="s2">, lr=</span><span class="nv">$lr</span><span class="s2">, hd=</span><span class="nv">$hd</span><span class="s2">&quot;</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">            </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;训练 K=</span><span class="nv">$K</span><span class="s2">, lr=</span><span class="nv">$lr</span><span class="s2">, hd=</span><span class="nv">$hd</span><span class="s2">&quot;</span>
 </span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
 </span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">            </span>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">                </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
@@ -1906,12 +2104,12 @@ Risk: Posterior collapse, poor topic quality</p>
 </span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a><span class="k">done</span>
 </span></code></pre></div>
 <hr />
-<h2 id="batch-processing-multiple-datasets">Batch Processing Multiple Datasets<a class="headerlink" href="#batch-processing-multiple-datasets" title="Permanent link">&para;</a></h2>
+<h2 id="_11">批量处理多个数据集<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h2>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="ch">#!/bin/bash</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nv">datasets</span><span class="o">=(</span><span class="s2">&quot;news&quot;</span><span class="w"> </span><span class="s2">&quot;reviews&quot;</span><span class="w"> </span><span class="s2">&quot;papers&quot;</span><span class="w"> </span><span class="s2">&quot;social&quot;</span><span class="o">)</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="k">for</span><span class="w"> </span>dataset<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">datasets</span><span class="p">[@]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Processing </span><span class="nv">$dataset</span><span class="s2">...&quot;</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;处理 </span><span class="nv">$dataset</span><span class="s2">...&quot;</span>
 </span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
 </span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">        </span>--dataset<span class="w"> </span><span class="nv">$dataset</span><span class="w"> </span><span class="se">\</span>
@@ -1931,20 +2129,20 @@ Risk: Posterior collapse, poor topic quality</p>
 </span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a><span class="k">done</span>
 </span></code></pre></div>
 <hr />
-<h2 id="parallel-processing-on-multiple-gpus">Parallel Processing on Multiple GPUs<a class="headerlink" href="#parallel-processing-on-multiple-gpus" title="Permanent link">&para;</a></h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Terminal 1</span>
+<h2 id="gpu">多GPU并行处理<a class="headerlink" href="#gpu" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># 终端1</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nv">CUDA_VISIBLE_DEVICES</span><span class="o">=</span><span class="m">0</span><span class="w"> </span>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span>--dataset<span class="w"> </span>dataset1<span class="w"> </span>--models<span class="w"> </span>theta<span class="w"> </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="p">&amp;</span>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># Terminal 2  </span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="c1"># 终端2  </span>
 </span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="nv">CUDA_VISIBLE_DEVICES</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">    </span>--dataset<span class="w"> </span>dataset2<span class="w"> </span>--models<span class="w"> </span>theta<span class="w"> </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="p">&amp;</span>
 </span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="c1"># Terminal 3</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="c1"># 终端3</span>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="nv">CUDA_VISIBLE_DEVICES</span><span class="o">=</span><span class="m">2</span><span class="w"> </span>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">    </span>--dataset<span class="w"> </span>dataset3<span class="w"> </span>--models<span class="w"> </span>theta<span class="w"> </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="p">&amp;</span>
 </span></code></pre></div>
-<p>Each process uses a different GPU.</p>
+<p>每个进程使用不同的GPU。</p>
 
 
 
@@ -2017,10 +2215,10 @@ Risk: Posterior collapse, poor topic quality</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.action.edit"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

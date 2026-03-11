@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="基于通义千问嵌入的先进主题建模">
+        <meta name="description" content="Advanced Topic Modeling with Qwen Embeddings">
       
       
         <meta name="author" content="CodeSoul">
@@ -15,28 +15,32 @@
         <link rel="canonical" href="https://codesoul-co.github.io/THETA/zh/models/comparison/">
       
       
+        <link rel="prev" href="../baselines/">
+      
+      
+        <link rel="next" href="../../advanced/custom-datasets/">
       
       
         
-          <link rel="alternate" href="/THETA/" hreflang="en">
+          <link rel="alternate" href="../../../models/comparison/" hreflang="en">
         
-          <link rel="alternate" href="/THETA/zh/" hreflang="zh">
+          <link rel="alternate" href="./" hreflang="zh">
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
     
     
       
-        <title>Model Comparison - THETA 主题模型</title>
+        <title>模型比较 - THETA Topic Model</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -55,7 +59,7 @@
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#model-comparison" class="md-skip">
+        <a href="#_1" class="md-skip">
           跳转至
         </a>
       
@@ -96,7 +100,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="页眉">
-    <a href="../.." title="THETA 主题模型" class="md-header__button md-logo" aria-label="THETA 主题模型" data-md-component="logo">
+    <a href="../../" title="THETA Topic Model" class="md-header__button md-logo" aria-label="THETA Topic Model" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -110,13 +114,13 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            THETA 主题模型
+            THETA Topic Model
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Model Comparison
+              模型比较
             
           </span>
         </div>
@@ -163,13 +167,13 @@
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="/THETA/" hreflang="en" class="md-select__link">
+            <a href="../../../models/comparison/" hreflang="en" class="md-select__link">
               English
             </a>
           </li>
         
           <li class="md-select__item">
-            <a href="/THETA/zh/" hreflang="zh" class="md-select__link">
+            <a href="./" hreflang="zh" class="md-select__link">
               中文
             </a>
           </li>
@@ -249,7 +253,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../index_zh/" class="md-tabs__link">
+      <a href="../../" class="md-tabs__link">
         
   
   
@@ -270,7 +274,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../getting-started/overview_zh/" class="md-tabs__link">
+        <a href="../../getting-started/overview/" class="md-tabs__link">
           
   
   
@@ -290,7 +294,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../user-guide/data-preparation_zh/" class="md-tabs__link">
+        <a href="../../user-guide/data-preparation/" class="md-tabs__link">
           
   
   
@@ -306,11 +310,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../theta_zh/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../theta/" class="md-tabs__link">
           
   
   
@@ -330,7 +336,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../advanced/custom-datasets_zh/" class="md-tabs__link">
+        <a href="../../advanced/custom-datasets/" class="md-tabs__link">
           
   
   
@@ -350,7 +356,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../api/prepare-data_zh/" class="md-tabs__link">
+        <a href="../../api/prepare-data/" class="md-tabs__link">
           
   
   
@@ -370,7 +376,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../examples/english-dataset_zh/" class="md-tabs__link">
+        <a href="../../examples/english-dataset/" class="md-tabs__link">
           
   
   
@@ -388,7 +394,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../troubleshooting_zh/" class="md-tabs__link">
+      <a href="../../troubleshooting/" class="md-tabs__link">
         
   
   
@@ -407,7 +413,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../appendix/faq_zh/" class="md-tabs__link">
+      <a href="../../appendix/faq/" class="md-tabs__link">
         
   
   
@@ -448,13 +454,13 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="THETA 主题模型" class="md-nav__button md-logo" aria-label="THETA 主题模型" data-md-component="logo">
+    <a href="../../" title="THETA Topic Model" class="md-nav__button md-logo" aria-label="THETA Topic Model" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    THETA 主题模型
+    THETA Topic Model
   </label>
   
     <div class="md-nav__source">
@@ -478,7 +484,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../index_zh/" class="md-nav__link">
+      <a href="../../" class="md-nav__link">
         
   
   
@@ -557,7 +563,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/overview_zh/" class="md-nav__link">
+      <a href="../../getting-started/overview/" class="md-nav__link">
         
   
   
@@ -585,7 +591,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/installation_zh/" class="md-nav__link">
+      <a href="../../getting-started/installation/" class="md-nav__link">
         
   
   
@@ -613,7 +619,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/quickstart_zh/" class="md-nav__link">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
         
   
   
@@ -700,7 +706,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/data-preparation_zh/" class="md-nav__link">
+      <a href="../../user-guide/data-preparation/" class="md-nav__link">
         
   
   
@@ -728,7 +734,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/preprocessing_zh/" class="md-nav__link">
+      <a href="../../user-guide/preprocessing/" class="md-nav__link">
         
   
   
@@ -756,7 +762,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/training_zh/" class="md-nav__link">
+      <a href="../../user-guide/training/" class="md-nav__link">
         
   
   
@@ -784,7 +790,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/evaluation_zh/" class="md-nav__link">
+      <a href="../../user-guide/evaluation/" class="md-nav__link">
         
   
   
@@ -812,7 +818,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/visualization_zh/" class="md-nav__link">
+      <a href="../../user-guide/visualization/" class="md-nav__link">
         
   
   
@@ -844,26 +850,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
@@ -881,7 +892,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -899,7 +910,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../theta_zh/" class="md-nav__link">
+      <a href="../theta/" class="md-nav__link">
         
   
   
@@ -927,7 +938,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../baselines_zh/" class="md-nav__link">
+      <a href="../baselines/" class="md-nav__link">
         
   
   
@@ -952,10 +963,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../comparison_zh/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模型比较
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -971,6 +1009,131 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        性能比较
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        选择指南
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        计算需求
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        嵌入比较
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        模型选择工作流程
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="模型选择工作流程">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤1：确定需求
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤2：选择初始模型
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤3：评估和比较
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        步骤4：如有需要，向上扩展
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1042,7 +1205,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/custom-datasets_zh/" class="md-nav__link">
+      <a href="../../advanced/custom-datasets/" class="md-nav__link">
         
   
   
@@ -1070,7 +1233,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/hyperparameters_zh/" class="md-nav__link">
+      <a href="../../advanced/hyperparameters/" class="md-nav__link">
         
   
   
@@ -1098,7 +1261,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/chinese-data_zh/" class="md-nav__link">
+      <a href="../../advanced/chinese-data/" class="md-nav__link">
         
   
   
@@ -1126,7 +1289,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/distributed-training_zh/" class="md-nav__link">
+      <a href="../../advanced/distributed-training/" class="md-nav__link">
         
   
   
@@ -1213,7 +1376,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/prepare-data_zh/" class="md-nav__link">
+      <a href="../../api/prepare-data/" class="md-nav__link">
         
   
   
@@ -1241,7 +1404,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/run-pipeline_zh/" class="md-nav__link">
+      <a href="../../api/run-pipeline/" class="md-nav__link">
         
   
   
@@ -1269,7 +1432,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/visualization_zh/" class="md-nav__link">
+      <a href="../../api/visualization/" class="md-nav__link">
         
   
   
@@ -1356,7 +1519,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/english-dataset_zh/" class="md-nav__link">
+      <a href="../../examples/english-dataset/" class="md-nav__link">
         
   
   
@@ -1384,7 +1547,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/chinese-dataset_zh/" class="md-nav__link">
+      <a href="../../examples/chinese-dataset/" class="md-nav__link">
         
   
   
@@ -1412,7 +1575,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/supervised-learning_zh/" class="md-nav__link">
+      <a href="../../examples/supervised-learning/" class="md-nav__link">
         
   
   
@@ -1447,7 +1610,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../troubleshooting_zh/" class="md-nav__link">
+      <a href="../../troubleshooting/" class="md-nav__link">
         
   
   
@@ -1474,7 +1637,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../appendix/faq_zh/" class="md-nav__link">
+      <a href="../../appendix/faq/" class="md-nav__link">
         
   
   
@@ -1521,10 +1684,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#performance-comparison" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Performance Comparison
+        性能比较
       
     </span>
   </a>
@@ -1532,10 +1695,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#selection-guidelines" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Selection Guidelines
+        选择指南
       
     </span>
   </a>
@@ -1543,10 +1706,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#computational-requirements" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Computational Requirements
+        计算需求
       
     </span>
   </a>
@@ -1554,10 +1717,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#embedding-comparison" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Embedding Comparison
+        嵌入比较
       
     </span>
   </a>
@@ -1565,22 +1728,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#model-selection-workflow" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Model Selection Workflow
+        模型选择工作流程
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Model Selection Workflow">
+    <nav class="md-nav" aria-label="模型选择工作流程">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#step-1-determine-requirements" class="md-nav__link">
+  <a href="#1" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 1: Determine Requirements
+        步骤1：确定需求
       
     </span>
   </a>
@@ -1588,10 +1751,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-2-choose-initial-model" class="md-nav__link">
+  <a href="#2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 2: Choose Initial Model
+        步骤2：选择初始模型
       
     </span>
   </a>
@@ -1599,10 +1762,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-3-evaluate-and-compare" class="md-nav__link">
+  <a href="#3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 3: Evaluate and Compare
+        步骤3：评估和比较
       
     </span>
   </a>
@@ -1610,10 +1773,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-4-scale-up-if-needed" class="md-nav__link">
+  <a href="#4" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Step 4: Scale Up If Needed
+        步骤4：如有需要，向上扩展
       
     </span>
   </a>
@@ -1642,7 +1805,7 @@
 
 
   
-    <a href="https://github.com/CodeSoul-co/THETA/edit/main/doc/models/comparison.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/CodeSoul-co/THETA/edit/main/doc/models/comparison.zh.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1650,21 +1813,23 @@
   
 
 
-<h1 id="model-comparison">Model Comparison<a class="headerlink" href="#model-comparison" title="Permanent link">&para;</a></h1>
-<p>Comprehensive comparison of all models supported by THETA.</p>
+<h1 id="_1">模型比较<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<p><strong><a href="./">English</a></strong> | <strong><a href="./">中文</a></strong></p>
 <hr />
-<h2 id="performance-comparison">Performance Comparison<a class="headerlink" href="#performance-comparison" title="Permanent link">&para;</a></h2>
-<p>Typical performance on benchmark datasets:</p>
+<p>THETA支持的所有模型的全面比较。</p>
+<hr />
+<h2 id="_2">性能比较<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<p>在基准数据集上的典型性能：</p>
 <table>
 <thead>
 <tr>
-<th>Model</th>
+<th>模型</th>
 <th>TD</th>
 <th>NPMI</th>
 <th>C_V</th>
 <th>PPL</th>
-<th>Speed</th>
-<th>VRAM</th>
+<th>速度</th>
+<th>显存</th>
 </tr>
 </thead>
 <tbody>
@@ -1674,7 +1839,7 @@
 <td>0.25</td>
 <td>0.45</td>
 <td>180</td>
-<td>Fast</td>
+<td>快</td>
 <td>0GB</td>
 </tr>
 <tr>
@@ -1683,7 +1848,7 @@
 <td>0.32</td>
 <td>0.52</td>
 <td>165</td>
-<td>Medium</td>
+<td>中</td>
 <td>4GB</td>
 </tr>
 <tr>
@@ -1692,7 +1857,7 @@
 <td>0.38</td>
 <td>0.58</td>
 <td>155</td>
-<td>Medium</td>
+<td>中</td>
 <td>6GB</td>
 </tr>
 <tr>
@@ -1701,7 +1866,7 @@
 <td>0.42</td>
 <td>0.64</td>
 <td>145</td>
-<td>Medium</td>
+<td>中</td>
 <td>8GB</td>
 </tr>
 <tr>
@@ -1710,7 +1875,7 @@
 <td>0.48</td>
 <td>0.69</td>
 <td>138</td>
-<td>Slow</td>
+<td>慢</td>
 <td>16GB</td>
 </tr>
 <tr>
@@ -1719,190 +1884,190 @@
 <td>0.52</td>
 <td>0.72</td>
 <td>132</td>
-<td>Slowest</td>
+<td>最慢</td>
 <td>28GB</td>
 </tr>
 </tbody>
 </table>
-<p>Values are approximate and vary by dataset. Higher is better for TD, NPMI, C_V. Lower is better for PPL.</p>
+<p>数值为近似值，随数据集变化。TD、NPMI、C_V越高越好。PPL越低越好。</p>
 <hr />
-<h2 id="selection-guidelines">Selection Guidelines<a class="headerlink" href="#selection-guidelines" title="Permanent link">&para;</a></h2>
-<p><strong>Use LDA when:</strong>
-- Need fast baseline results
-- Interpretability is critical
-- No GPU available
-- Computing topic distributions for new documents frequently</p>
-<p><strong>Use ETM when:</strong>
-- Want better performance than LDA
-- Have GPU available
-- Need moderate computational budget
-- Comparing against original ETM papers</p>
-<p><strong>Use CTM when:</strong>
-- Need contextualized understanding
-- Want good balance of quality and speed
-- Following recent topic modeling literature
-- Working with standard-size corpora</p>
-<p><strong>Use DTM when:</strong>
-- Analyzing temporal dynamics
-- Have time-stamped documents
-- Studying topic evolution
-- Investigating emerging trends</p>
-<p><strong>Use THETA-0.6B when:</strong>
-- Need better quality than CTM
-- Have 8-12GB VRAM available
-- Rapid experimentation required</p>
-<p><strong>Use THETA-4B when:</strong>
-- Need high-quality results
-- Have 16-20GB VRAM available
-- Production deployment</p>
-<p><strong>Use THETA-8B when:</strong>
-- Need highest possible quality
-- Have 24-32GB VRAM available
-- Critical applications</p>
+<h2 id="_3">选择指南<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<p><strong>使用LDA当：</strong>
+- 需要快速基线结果
+- 可解释性至关重要
+- 无GPU可用
+- 频繁为新文档计算主题分布</p>
+<p><strong>使用ETM当：</strong>
+- 需要比LDA更好的性能
+- 有GPU可用
+- 需要适中的计算预算
+- 与原始ETM论文进行比较</p>
+<p><strong>使用CTM当：</strong>
+- 需要上下文理解
+- 需要质量和速度的良好平衡
+- 遵循近期主题建模文献
+- 处理标准规模的语料库</p>
+<p><strong>使用DTM当：</strong>
+- 分析时间动态
+- 有带时间戳的文档
+- 研究主题演化
+- 调查新兴趋势</p>
+<p><strong>使用THETA-0.6B当：</strong>
+- 需要比CTM更好的质量
+- 有8-12GB显存可用
+- 需要快速实验</p>
+<p><strong>使用THETA-4B当：</strong>
+- 需要高质量结果
+- 有16-20GB显存可用
+- 生产环境部署</p>
+<p><strong>使用THETA-8B当：</strong>
+- 需要最高可能的质量
+- 有24-32GB显存可用
+- 关键应用</p>
 <hr />
-<h2 id="computational-requirements">Computational Requirements<a class="headerlink" href="#computational-requirements" title="Permanent link">&para;</a></h2>
-<p>Training time comparison on 10K document corpus:</p>
+<h2 id="_4">计算需求<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<p>在1万文档语料库上的训练时间比较：</p>
 <table>
 <thead>
 <tr>
-<th>Model</th>
-<th>CPU Time</th>
-<th>GPU Time</th>
-<th>VRAM</th>
-<th>Storage</th>
+<th>模型</th>
+<th>CPU时间</th>
+<th>GPU时间</th>
+<th>显存</th>
+<th>存储</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>LDA</td>
-<td>15 min</td>
-<td>N/A</td>
+<td>15分钟</td>
+<td>不适用</td>
 <td>0GB</td>
 <td>100MB</td>
 </tr>
 <tr>
 <td>ETM</td>
-<td>N/A</td>
-<td>20 min</td>
+<td>不适用</td>
+<td>20分钟</td>
 <td>4GB</td>
 <td>500MB</td>
 </tr>
 <tr>
 <td>CTM</td>
-<td>N/A</td>
-<td>25 min</td>
+<td>不适用</td>
+<td>25分钟</td>
 <td>6GB</td>
 <td>800MB</td>
 </tr>
 <tr>
 <td>THETA-0.6B</td>
-<td>N/A</td>
-<td>30 min</td>
+<td>不适用</td>
+<td>30分钟</td>
 <td>8GB</td>
 <td>2GB</td>
 </tr>
 <tr>
 <td>THETA-4B</td>
-<td>N/A</td>
-<td>50 min</td>
+<td>不适用</td>
+<td>50分钟</td>
 <td>16GB</td>
 <td>6GB</td>
 </tr>
 <tr>
 <td>THETA-8B</td>
-<td>N/A</td>
-<td>90 min</td>
+<td>不适用</td>
+<td>90分钟</td>
 <td>28GB</td>
 <td>12GB</td>
 </tr>
 </tbody>
 </table>
-<p>Times assume single GPU (V100 or A100).</p>
+<p>时间假设使用单GPU（V100或A100）。</p>
 <hr />
-<h2 id="embedding-comparison">Embedding Comparison<a class="headerlink" href="#embedding-comparison" title="Permanent link">&para;</a></h2>
+<h2 id="_5">嵌入比较<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Model</th>
-<th>Embedding</th>
-<th>Dimension</th>
-<th>Contextual</th>
-<th>Pre-trained</th>
+<th>模型</th>
+<th>嵌入</th>
+<th>维度</th>
+<th>上下文</th>
+<th>预训练</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>LDA</td>
-<td>None</td>
-<td>N/A</td>
-<td>No</td>
-<td>N/A</td>
+<td>无</td>
+<td>不适用</td>
+<td>否</td>
+<td>不适用</td>
 </tr>
 <tr>
 <td>ETM</td>
 <td>Word2Vec</td>
 <td>300</td>
-<td>No</td>
-<td>Yes</td>
+<td>否</td>
+<td>是</td>
 </tr>
 <tr>
 <td>CTM</td>
 <td>SBERT</td>
 <td>768</td>
-<td>Yes</td>
-<td>Yes</td>
+<td>是</td>
+<td>是</td>
 </tr>
 <tr>
 <td>THETA-0.6B</td>
 <td>Qwen3</td>
 <td>1024</td>
-<td>Yes</td>
-<td>Yes</td>
+<td>是</td>
+<td>是</td>
 </tr>
 <tr>
 <td>THETA-4B</td>
 <td>Qwen3</td>
 <td>2560</td>
-<td>Yes</td>
-<td>Yes</td>
+<td>是</td>
+<td>是</td>
 </tr>
 <tr>
 <td>THETA-8B</td>
 <td>Qwen3</td>
 <td>4096</td>
-<td>Yes</td>
-<td>Yes</td>
+<td>是</td>
+<td>是</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="model-selection-workflow">Model Selection Workflow<a class="headerlink" href="#model-selection-workflow" title="Permanent link">&para;</a></h2>
-<h3 id="step-1-determine-requirements">Step 1: Determine Requirements<a class="headerlink" href="#step-1-determine-requirements" title="Permanent link">&para;</a></h3>
-<p>Consider:
-- Dataset size (number of documents)
-- Available computational resources (GPU memory)
-- Time constraints
-- Quality requirements (research vs prototyping)</p>
-<h3 id="step-2-choose-initial-model">Step 2: Choose Initial Model<a class="headerlink" href="#step-2-choose-initial-model" title="Permanent link">&para;</a></h3>
-<p>Default recommendations:
-- Prototyping: THETA-0.6B or CTM
-- Production: THETA-4B
-- Research: THETA-8B
-- Quick baseline: LDA
-- Temporal analysis: DTM</p>
-<h3 id="step-3-evaluate-and-compare">Step 3: Evaluate and Compare<a class="headerlink" href="#step-3-evaluate-and-compare" title="Permanent link">&para;</a></h3>
-<p>Train multiple models:
+<h2 id="_6">模型选择工作流程<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<h3 id="1">步骤1：确定需求<a class="headerlink" href="#1" title="Permanent link">&para;</a></h3>
+<p>考虑：
+- 数据集规模（文档数量）
+- 可用计算资源（显存）
+- 时间限制
+- 质量要求（研究 vs 原型开发）</p>
+<h3 id="2">步骤2：选择初始模型<a class="headerlink" href="#2" title="Permanent link">&para;</a></h3>
+<p>默认推荐：
+- 原型开发：THETA-0.6B 或 CTM
+- 生产环境：THETA-4B
+- 研究：THETA-8B
+- 快速基线：LDA
+- 时间分析：DTM</p>
+<h3 id="3">步骤3：评估和比较<a class="headerlink" href="#3" title="Permanent link">&para;</a></h3>
+<p>训练多个模型：
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span>--models<span class="w"> </span>lda,etm,ctm,theta<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span>
 </span></code></pre></div></p>
-<h3 id="step-4-scale-up-if-needed">Step 4: Scale Up If Needed<a class="headerlink" href="#step-4-scale-up-if-needed" title="Permanent link">&para;</a></h3>
+<h3 id="4">步骤4：如有需要，向上扩展<a class="headerlink" href="#4" title="Permanent link">&para;</a></h3>
 <ul>
-<li>THETA-0.6B → THETA-4B: Significant quality improvement</li>
-<li>THETA-4B → THETA-8B: Marginal quality improvement</li>
-<li>Consider collecting more data before scaling model size</li>
+<li>THETA-0.6B → THETA-4B：显著质量提升</li>
+<li>THETA-4B → THETA-8B：边际质量提升</li>
+<li>在扩展模型规模前，考虑收集更多数据</li>
 </ul>
 
 
@@ -1976,10 +2141,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.action.edit"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
