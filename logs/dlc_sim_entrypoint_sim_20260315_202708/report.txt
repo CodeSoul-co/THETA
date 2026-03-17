@@ -1,0 +1,21 @@
+DLC Entrypoint Simulation Test Report
+======================================
+Date: Sun Mar 15 20:27:41 CST 2026
+Test ID: entrypoint_sim_20260315_202708
+
+Results:
+  PASSED:  31
+  FAILED:  0
+  SKIPPED: 1
+  TOTAL:   32
+  
+Pass Rate: 96%
+
+Test Categories:
+  1. PATH CONNECTIVITY    - Verify paths work from any CWD
+  2. LOG COMPLETENESS     - Ensure all logs are captured
+  3. LANGUAGE ISOLATION   - Verify en/cn separation
+  4. EXIT HANDLING        - Test graceful exit on errors
+  5. DLC ENVIRONMENT      - Simulate DLC container
+
+Log Directory: /root/autodl-tmp/THETA/logs/dlc_sim_entrypoint_sim_20260315_202708
