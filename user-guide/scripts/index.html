@@ -1,0 +1,3459 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Advanced Topic Modeling with Qwen Embeddings">
+      
+      
+        <meta name="author" content="CodeSoul">
+      
+      
+        <link rel="canonical" href="https://codesoul-co.github.io/THETA/user-guide/scripts/">
+      
+      
+        <link rel="prev" href="../visualization/">
+      
+      
+        <link rel="next" href="../../models/theta/">
+      
+      
+        
+          <link rel="alternate" href="./" hreflang="en">
+        
+          <link rel="alternate" href="../../zh/user-guide/scripts/" hreflang="zh">
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Shell Scripts Reference - THETA Topic Model</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#shell-scripts-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="THETA Topic Model" class="md-header__button md-logo" aria-label="THETA Topic Model" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            THETA Topic Model
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Shell Scripts Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../../zh/user-guide/scripts/" hreflang="zh" class="md-select__link">
+              中文
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CodeSoul-co/THETA" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CodeSoul-co/THETA
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/overview/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../data-preparation/" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../models/theta/" class="md-tabs__link">
+          
+  
+  
+  Models
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../advanced/custom-datasets/" class="md-tabs__link">
+          
+  
+  
+  Advanced
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/prepare-data/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../examples/english-dataset/" class="md-tabs__link">
+          
+  
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../troubleshooting/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Troubleshooting
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../appendix/faq/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Appendix
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="THETA Topic Model" class="md-nav__button md-logo" aria-label="THETA Topic Model" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    THETA Topic Model
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CodeSoul-co/THETA" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CodeSoul-co/THETA
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-preparation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Preparation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../preprocessing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preprocessing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evaluation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evaluation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../visualization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shell Scripts Reference
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shell Scripts Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#script-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Script Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-data-cleaning-02_clean_datash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A) Data Cleaning — 02_clean_data.sh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b-data-preparation-03_prepare_datash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B) Data Preparation — 03_prepare_data.sh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#c-theta-model-training-04_train_thetash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C) THETA Model Training — 04_train_theta.sh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d-baseline-model-training-05_train_baselinesh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D) Baseline Model Training — 05_train_baseline.sh
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="D) Baseline Model Training — 05_train_baseline.sh">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supported-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported Models
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#complete-per-model-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete Per-Model Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameter-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter Reference
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e-visualization-06_visualizesh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E) Visualization — 06_visualize.sh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#f-evaluation-07_evaluatesh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        F) Evaluation — 07_evaluate.sh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#g-model-comparison-08_compare_modelssh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        G) Model Comparison — 08_compare_models.sh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#h-multi-gpu-training-12_train_multi_gpush" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        H) Multi-GPU Training — 12_train_multi_gpu.sh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#i-agent-api-14_start_agent_apish" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        I) Agent API — 14_start_agent_api.sh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#j-batch-processing-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        J) Batch Processing Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#k-end-to-end-example-edu_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        K) End-to-End Example: edu_data
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Models
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/theta/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    THETA Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/baselines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Baseline Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../models/comparison/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model Comparison
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Advanced
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/custom-datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/hyperparameters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hyperparameter Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/chinese-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chinese Data Processing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/distributed-training/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Distributed Training
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/prepare-data/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    prepare_data.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/run-pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    run_pipeline.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/visualization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/english-dataset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    English Dataset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/chinese-dataset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chinese Dataset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/supervised-learning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Supervised Learning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../appendix/faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#script-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Script Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-data-cleaning-02_clean_datash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A) Data Cleaning — 02_clean_data.sh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b-data-preparation-03_prepare_datash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B) Data Preparation — 03_prepare_data.sh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#c-theta-model-training-04_train_thetash" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C) THETA Model Training — 04_train_theta.sh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#d-baseline-model-training-05_train_baselinesh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D) Baseline Model Training — 05_train_baseline.sh
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="D) Baseline Model Training — 05_train_baseline.sh">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supported-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported Models
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#complete-per-model-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete Per-Model Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameter-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter Reference
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e-visualization-06_visualizesh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E) Visualization — 06_visualize.sh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#f-evaluation-07_evaluatesh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        F) Evaluation — 07_evaluate.sh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#g-model-comparison-08_compare_modelssh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        G) Model Comparison — 08_compare_models.sh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#h-multi-gpu-training-12_train_multi_gpush" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        H) Multi-GPU Training — 12_train_multi_gpu.sh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#i-agent-api-14_start_agent_apish" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        I) Agent API — 14_start_agent_api.sh
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#j-batch-processing-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        J) Batch Processing Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#k-end-to-end-example-edu_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        K) End-to-End Example: edu_data
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/CodeSoul-co/THETA/edit/main/doc/user-guide/scripts.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="shell-scripts-reference">Shell Scripts Reference<a class="headerlink" href="#shell-scripts-reference" title="Permanent link">&para;</a></h1>
+<p>All scripts are <strong>non-interactive</strong> (pure command-line parameters), suitable for DLC/batch environments. No stdin input required.</p>
+<h2 id="script-overview">Script Overview<a class="headerlink" href="#script-overview" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Script</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>01_setup.sh</code></td>
+<td>Install dependencies and download data from HuggingFace</td>
+</tr>
+<tr>
+<td><code>02_clean_data.sh</code></td>
+<td>Clean raw text data (tokenization, stopword removal, lemmatization)</td>
+</tr>
+<tr>
+<td><code>02_generate_embeddings.sh</code></td>
+<td>Generate Qwen embeddings (sub-script of 03, for failure recovery)</td>
+</tr>
+<tr>
+<td><code>03_prepare_data.sh</code></td>
+<td>One-stop data preparation: BOW + embeddings for all 12 models</td>
+</tr>
+<tr>
+<td><code>04_train_theta.sh</code></td>
+<td>Train THETA model (train + evaluate + visualize)</td>
+</tr>
+<tr>
+<td><code>05_train_baseline.sh</code></td>
+<td>Train 11 baseline models for comparison with THETA</td>
+</tr>
+<tr>
+<td><code>06_visualize.sh</code></td>
+<td>Generate visualizations for trained models</td>
+</tr>
+<tr>
+<td><code>07_evaluate.sh</code></td>
+<td>Standalone evaluation with 7 unified metrics</td>
+</tr>
+<tr>
+<td><code>08_compare_models.sh</code></td>
+<td>Cross-model metric comparison table</td>
+</tr>
+<tr>
+<td><code>09_download_from_hf.sh</code></td>
+<td>Download pre-trained data from HuggingFace</td>
+</tr>
+<tr>
+<td><code>10_quick_start_english.sh</code></td>
+<td>Quick start for English datasets</td>
+</tr>
+<tr>
+<td><code>11_quick_start_chinese.sh</code></td>
+<td>Quick start for Chinese datasets</td>
+</tr>
+<tr>
+<td><code>12_train_multi_gpu.sh</code></td>
+<td>Multi-GPU training with DistributedDataParallel</td>
+</tr>
+<tr>
+<td><code>13_test_agent.sh</code></td>
+<td>Test LLM Agent connection and functionality</td>
+</tr>
+<tr>
+<td><code>14_start_agent_api.sh</code></td>
+<td>Start the Agent API server (FastAPI)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="a-data-cleaning-02_clean_datash">A) Data Cleaning — <code>02_clean_data.sh</code><a class="headerlink" href="#a-data-cleaning-02_clean_datash" title="Permanent link">&para;</a></h2>
+<p>Row-by-row text cleaning with user-specified column selection. Two modes:
+- <strong>CSV mode</strong>: User specifies <code>--text_column</code> (cleaned) and <code>--label_columns</code> (preserved as-is)
+- <strong>Directory mode</strong>: Convert docx/txt files into a single cleaned CSV</p>
+<p><strong>Supported languages</strong>: <code>english</code>, <code>chinese</code>, <code>german</code>, <code>spanish</code></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># 1. Preview columns (recommended first step for CSV)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>bash<span class="w"> </span>scripts/02_clean_data.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span>--input<span class="w"> </span>data/FCPB/complaints_text_only.csv<span class="w"> </span>--preview
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># 2. Clean text column only</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>bash<span class="w"> </span>scripts/02_clean_data.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span>--input<span class="w"> </span>data/FCPB/complaints_text_only.csv<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span>--language<span class="w"> </span>english<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span>--text_column<span class="w"> </span><span class="s1">&#39;Consumer complaint narrative&#39;</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="c1"># 3. Clean text + keep label column</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>bash<span class="w"> </span>scripts/02_clean_data.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">    </span>--input<span class="w"> </span>data/hatespeech/hatespeech_text_only.csv<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span>--language<span class="w"> </span>english<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span>--text_column<span class="w"> </span>cleaned_content<span class="w"> </span>--label_columns<span class="w"> </span>Label
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="c1"># 4. Keep ALL columns, only clean the text column</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>bash<span class="w"> </span>scripts/02_clean_data.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">    </span>--input<span class="w"> </span>raw.csv<span class="w"> </span>--language<span class="w"> </span>english<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">    </span>--text_column<span class="w"> </span>text<span class="w"> </span>--keep_all
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="c1"># 5. Directory mode (docx/txt → CSV)</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>bash<span class="w"> </span>scripts/02_clean_data.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">    </span>--input<span class="w"> </span>data/edu_data/<span class="w"> </span>--language<span class="w"> </span>chinese
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--input</code></td>
+<td>✓</td>
+<td>Input CSV file or directory (docx/txt)</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>--language</code></td>
+<td>✓ (not for preview)</td>
+<td>Data language: english, chinese, german, spanish</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>--text_column</code></td>
+<td>✓ (CSV mode)</td>
+<td>Name of the text column to clean</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>--label_columns</code></td>
+<td></td>
+<td>Comma-separated label/metadata columns to keep as-is</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>--keep_all</code></td>
+<td></td>
+<td>Keep ALL original columns (only text column is cleaned)</td>
+<td>false</td>
+</tr>
+<tr>
+<td><code>--preview</code></td>
+<td></td>
+<td>Show CSV columns and sample rows, then exit</td>
+<td>false</td>
+</tr>
+<tr>
+<td><code>--output</code></td>
+<td></td>
+<td>Output CSV path</td>
+<td>auto-generated</td>
+</tr>
+<tr>
+<td><code>--min_words</code></td>
+<td></td>
+<td>Min words per document after cleaning</td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong>: <code>data/{dataset}/{dataset}_cleaned.csv</code></p>
+<hr />
+<h2 id="b-data-preparation-03_prepare_datash">B) Data Preparation — <code>03_prepare_data.sh</code><a class="headerlink" href="#b-data-preparation-03_prepare_datash" title="Permanent link">&para;</a></h2>
+<p>One-stop data preparation for all 12 models. Generates BOW matrix and model-specific embeddings.</p>
+<p><strong>Data requirements by model</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Type</th>
+<th>Data Needed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lda, hdp, btm</td>
+<td>Traditional</td>
+<td>BOW only</td>
+</tr>
+<tr>
+<td>stm</td>
+<td>Traditional</td>
+<td>BOW + covariates (document metadata)</td>
+</tr>
+<tr>
+<td>nvdm, gsm, prodlda</td>
+<td>Neural</td>
+<td>BOW only</td>
+</tr>
+<tr>
+<td>etm</td>
+<td>Neural</td>
+<td>BOW + Word2Vec</td>
+</tr>
+<tr>
+<td>ctm</td>
+<td>Neural</td>
+<td>BOW + SBERT</td>
+</tr>
+<tr>
+<td>dtm</td>
+<td>Neural</td>
+<td>BOW + SBERT + time slices</td>
+</tr>
+<tr>
+<td>bertopic</td>
+<td>Neural</td>
+<td>SBERT + raw text</td>
+</tr>
+<tr>
+<td>theta</td>
+<td>THETA</td>
+<td>BOW + Qwen embeddings</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note</strong>: Models 1-7 (BOW-only) share the same data experiment. Prepare once, train all.</p>
+</blockquote>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># ---- Baseline models ----</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># BOW-only models (lda, hdp, btm, nvdm, gsm, prodlda share this)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>bash<span class="w"> </span>scripts/03_prepare_data.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>lda<span class="w"> </span>--vocab_size<span class="w"> </span><span class="m">3500</span><span class="w"> </span>--language<span class="w"> </span>chinese
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># CTM (BOW + SBERT embeddings)</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>bash<span class="w"> </span>scripts/03_prepare_data.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>ctm<span class="w"> </span>--vocab_size<span class="w"> </span><span class="m">3500</span><span class="w"> </span>--language<span class="w"> </span>chinese
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="c1"># ETM (BOW + Word2Vec embeddings)</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>bash<span class="w"> </span>scripts/03_prepare_data.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>etm<span class="w"> </span>--vocab_size<span class="w"> </span><span class="m">3500</span><span class="w"> </span>--language<span class="w"> </span>chinese
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="c1"># DTM (BOW + SBERT + time slices, requires time column)</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>bash<span class="w"> </span>scripts/03_prepare_data.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>dtm<span class="w"> </span>--vocab_size<span class="w"> </span><span class="m">3500</span><span class="w"> </span>--language<span class="w"> </span>chinese<span class="w"> </span>--time_column<span class="w"> </span>year
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="c1"># BERTopic (SBERT + raw text)</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>bash<span class="w"> </span>scripts/03_prepare_data.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>bertopic<span class="w"> </span>--vocab_size<span class="w"> </span><span class="m">3500</span><span class="w"> </span>--language<span class="w"> </span>chinese
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="c1"># ---- THETA model ----</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="c1"># Zero-shot (fastest, no training needed)</span>
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>bash<span class="w"> </span>scripts/03_prepare_data.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>theta<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="w">    </span>--vocab_size<span class="w"> </span><span class="m">3500</span><span class="w"> </span>--language<span class="w"> </span>chinese
+</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>
+</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="c1"># Unsupervised (LoRA fine-tuned Qwen embeddings)</span>
+</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>bash<span class="w"> </span>scripts/03_prepare_data.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>theta<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>unsupervised<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="w">    </span>--vocab_size<span class="w"> </span><span class="m">3500</span><span class="w"> </span>--language<span class="w"> </span>chinese
+</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
+</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="c1"># Supervised (requires label column)</span>
+</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>bash<span class="w"> </span>scripts/03_prepare_data.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>theta<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>supervised<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-38"><a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="w">    </span>--vocab_size<span class="w"> </span><span class="m">3500</span><span class="w"> </span>--language<span class="w"> </span>chinese
+</span><span id="__span-1-39"><a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
+</span><span id="__span-1-40"><a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="c1"># ---- Advanced options ----</span>
+</span><span id="__span-1-41"><a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>
+</span><span id="__span-1-42"><a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a><span class="c1"># BOW only (skip embedding generation)</span>
+</span><span id="__span-1-43"><a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>bash<span class="w"> </span>scripts/03_prepare_data.sh<span class="w"> </span>--dataset<span class="w"> </span>mydata<span class="w"> </span>--model<span class="w"> </span>theta<span class="w"> </span>--bow-only<span class="w"> </span>--vocab_size<span class="w"> </span><span class="m">5000</span>
+</span><span id="__span-1-44"><a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>
+</span><span id="__span-1-45"><a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="c1"># Check if data files already exist</span>
+</span><span id="__span-1-46"><a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>bash<span class="w"> </span>scripts/03_prepare_data.sh<span class="w"> </span>--dataset<span class="w"> </span>mydata<span class="w"> </span>--model<span class="w"> </span>theta<span class="w"> </span>--check-only
+</span><span id="__span-1-47"><a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>
+</span><span id="__span-1-48"><a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="c1"># Custom vocabulary size and max sequence length</span>
+</span><span id="__span-1-49"><a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>bash<span class="w"> </span>scripts/03_prepare_data.sh<span class="w"> </span>--dataset<span class="w"> </span>mydata<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-50"><a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a><span class="w">    </span>--model<span class="w"> </span>theta<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-51"><a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="w">    </span>--vocab_size<span class="w"> </span><span class="m">10000</span><span class="w"> </span>--batch_size<span class="w"> </span><span class="m">64</span><span class="w"> </span>--gpu<span class="w"> </span><span class="m">0</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--dataset</code></td>
+<td>✓</td>
+<td>Dataset name</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>--model</code></td>
+<td>✓</td>
+<td>Target model: lda, hdp, stm (requires covariates), btm, nvdm, gsm, prodlda, ctm, etm, dtm, bertopic, theta</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>--model_size</code></td>
+<td></td>
+<td>Qwen model size (theta only): 0.6B, 4B, 8B</td>
+<td>0.6B</td>
+</tr>
+<tr>
+<td><code>--mode</code></td>
+<td></td>
+<td>Embedding mode (theta only): zero_shot, unsupervised, supervised</td>
+<td>zero_shot</td>
+</tr>
+<tr>
+<td><code>--vocab_size</code></td>
+<td></td>
+<td>Vocabulary size</td>
+<td>5000</td>
+</tr>
+<tr>
+<td><code>--batch_size</code></td>
+<td></td>
+<td>Embedding generation batch size</td>
+<td>32</td>
+</tr>
+<tr>
+<td><code>--gpu</code></td>
+<td></td>
+<td>GPU device ID</td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>--language</code></td>
+<td></td>
+<td>Data language: english, chinese (controls tokenization)</td>
+<td>english</td>
+</tr>
+<tr>
+<td><code>--bow-only</code></td>
+<td></td>
+<td>Only generate BOW, skip embeddings</td>
+<td>false</td>
+</tr>
+<tr>
+<td><code>--check-only</code></td>
+<td></td>
+<td>Only check if files exist</td>
+<td>false</td>
+</tr>
+<tr>
+<td><code>--time_column</code></td>
+<td></td>
+<td>Time column name (DTM only)</td>
+<td>year</td>
+</tr>
+<tr>
+<td><code>--label_column</code></td>
+<td></td>
+<td>Label column (theta supervised only)</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>--emb_epochs</code></td>
+<td></td>
+<td>Embedding fine-tuning epochs (theta only)</td>
+<td>10</td>
+</tr>
+<tr>
+<td><code>--emb_batch_size</code></td>
+<td></td>
+<td>Embedding fine-tuning batch size (theta only)</td>
+<td>8</td>
+</tr>
+<tr>
+<td><code>--exp_name</code></td>
+<td></td>
+<td>Experiment name tag</td>
+<td>auto-generated</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Embedding recovery</strong> — If embedding generation fails (e.g., OOM), re-run only the embedding step:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bash<span class="w"> </span>scripts/02_generate_embeddings.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>--batch_size<span class="w"> </span><span class="m">4</span><span class="w"> </span>--exp_dir<span class="w"> </span>result/0.6B/edu_data/data/exp_xxx
+</span></code></pre></div>
+<hr />
+<h2 id="c-theta-model-training-04_train_thetash">C) THETA Model Training — <code>04_train_theta.sh</code><a class="headerlink" href="#c-theta-model-training-04_train_thetash" title="Permanent link">&para;</a></h2>
+<p>Train THETA model with integrated training + evaluation + visualization.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># ---- Basic usage ----</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># Zero-shot mode (simplest command)</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>bash<span class="w"> </span>scripts/04_train_theta.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># Unsupervised mode</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>bash<span class="w"> </span>scripts/04_train_theta.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>unsupervised<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="c1"># Supervised mode (requires label column)</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>bash<span class="w"> </span>scripts/04_train_theta.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">    </span>--dataset<span class="w"> </span>hatespeech<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>supervised<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="c1"># Larger model for better quality</span>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>bash<span class="w"> </span>scripts/04_train_theta.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="w">    </span>--dataset<span class="w"> </span>hatespeech<span class="w"> </span>--model_size<span class="w"> </span>4B<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="c1"># ---- Full parameters ----</span>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>bash<span class="w"> </span>scripts/04_train_theta.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--epochs<span class="w"> </span><span class="m">100</span><span class="w"> </span>--batch_size<span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a><span class="w">    </span>--hidden_dim<span class="w"> </span><span class="m">512</span><span class="w"> </span>--learning_rate<span class="w"> </span><span class="m">0</span>.002<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a><span class="w">    </span>--kl_start<span class="w"> </span><span class="m">0</span>.0<span class="w"> </span>--kl_end<span class="w"> </span><span class="m">1</span>.0<span class="w"> </span>--kl_warmup<span class="w"> </span><span class="m">50</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="w">    </span>--patience<span class="w"> </span><span class="m">10</span><span class="w"> </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span>--language<span class="w"> </span>zh
+</span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>
+</span><span id="__span-3-28"><a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a><span class="c1"># Custom KL annealing</span>
+</span><span id="__span-3-29"><a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>bash<span class="w"> </span>scripts/04_train_theta.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-30"><a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a><span class="w">    </span>--dataset<span class="w"> </span>hatespeech<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-31"><a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--epochs<span class="w"> </span><span class="m">200</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-32"><a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a><span class="w">    </span>--kl_start<span class="w"> </span><span class="m">0</span>.1<span class="w"> </span>--kl_end<span class="w"> </span><span class="m">0</span>.8<span class="w"> </span>--kl_warmup<span class="w"> </span><span class="m">40</span>
+</span><span id="__span-3-33"><a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>
+</span><span id="__span-3-34"><a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a><span class="c1"># ---- Specify data experiment ----</span>
+</span><span id="__span-3-35"><a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a>
+</span><span id="__span-3-36"><a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a>bash<span class="w"> </span>scripts/04_train_theta.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-37"><a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-38"><a id="__codelineno-3-38" name="__codelineno-3-38" href="#__codelineno-3-38"></a><span class="w">    </span>--data_exp<span class="w"> </span>exp_20260208_151906_vocab3500_theta_0.6B_zero_shot<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-39"><a id="__codelineno-3-39" name="__codelineno-3-39" href="#__codelineno-3-39"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--epochs<span class="w"> </span><span class="m">50</span><span class="w"> </span>--language<span class="w"> </span>zh
+</span><span id="__span-3-40"><a id="__codelineno-3-40" name="__codelineno-3-40" href="#__codelineno-3-40"></a>
+</span><span id="__span-3-41"><a id="__codelineno-3-41" name="__codelineno-3-41" href="#__codelineno-3-41"></a><span class="c1"># ---- Skip options ----</span>
+</span><span id="__span-3-42"><a id="__codelineno-3-42" name="__codelineno-3-42" href="#__codelineno-3-42"></a>
+</span><span id="__span-3-43"><a id="__codelineno-3-43" name="__codelineno-3-43" href="#__codelineno-3-43"></a><span class="c1"># Skip visualization (train + evaluate only, faster)</span>
+</span><span id="__span-3-44"><a id="__codelineno-3-44" name="__codelineno-3-44" href="#__codelineno-3-44"></a>bash<span class="w"> </span>scripts/04_train_theta.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-45"><a id="__codelineno-3-45" name="__codelineno-3-45" href="#__codelineno-3-45"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-46"><a id="__codelineno-3-46" name="__codelineno-3-46" href="#__codelineno-3-46"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--skip-viz
+</span><span id="__span-3-47"><a id="__codelineno-3-47" name="__codelineno-3-47" href="#__codelineno-3-47"></a>
+</span><span id="__span-3-48"><a id="__codelineno-3-48" name="__codelineno-3-48" href="#__codelineno-3-48"></a><span class="c1"># Skip training (evaluate + visualize existing model)</span>
+</span><span id="__span-3-49"><a id="__codelineno-3-49" name="__codelineno-3-49" href="#__codelineno-3-49"></a>bash<span class="w"> </span>scripts/04_train_theta.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-50"><a id="__codelineno-3-50" name="__codelineno-3-50" href="#__codelineno-3-50"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-51"><a id="__codelineno-3-51" name="__codelineno-3-51" href="#__codelineno-3-51"></a><span class="w">    </span>--skip-train<span class="w"> </span>--language<span class="w"> </span>zh
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--dataset</code></td>
+<td>✓</td>
+<td>Dataset name</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>--model_size</code></td>
+<td></td>
+<td>Qwen model size: 0.6B, 4B, 8B</td>
+<td>0.6B</td>
+</tr>
+<tr>
+<td><code>--mode</code></td>
+<td></td>
+<td>Embedding mode: zero_shot, unsupervised, supervised</td>
+<td>zero_shot</td>
+</tr>
+<tr>
+<td><code>--num_topics</code></td>
+<td></td>
+<td>Number of topics K</td>
+<td>20</td>
+</tr>
+<tr>
+<td><code>--epochs</code></td>
+<td></td>
+<td>Training epochs</td>
+<td>100</td>
+</tr>
+<tr>
+<td><code>--batch_size</code></td>
+<td></td>
+<td>Training batch size</td>
+<td>64</td>
+</tr>
+<tr>
+<td><code>--hidden_dim</code></td>
+<td></td>
+<td>Encoder hidden dimension</td>
+<td>512</td>
+</tr>
+<tr>
+<td><code>--learning_rate</code></td>
+<td></td>
+<td>Learning rate</td>
+<td>0.002</td>
+</tr>
+<tr>
+<td><code>--kl_start</code></td>
+<td></td>
+<td>KL annealing start weight</td>
+<td>0.0</td>
+</tr>
+<tr>
+<td><code>--kl_end</code></td>
+<td></td>
+<td>KL annealing end weight</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td><code>--kl_warmup</code></td>
+<td></td>
+<td>KL warmup epochs</td>
+<td>50</td>
+</tr>
+<tr>
+<td><code>--patience</code></td>
+<td></td>
+<td>Early stopping patience</td>
+<td>10</td>
+</tr>
+<tr>
+<td><code>--gpu</code></td>
+<td></td>
+<td>GPU device ID</td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>--language</code></td>
+<td></td>
+<td>Visualization language: en, zh</td>
+<td>en</td>
+</tr>
+<tr>
+<td><code>--skip-train</code></td>
+<td></td>
+<td>Skip training, only evaluate</td>
+<td>false</td>
+</tr>
+<tr>
+<td><code>--skip-viz</code></td>
+<td></td>
+<td>Skip visualization</td>
+<td>false</td>
+</tr>
+<tr>
+<td><code>--data_exp</code></td>
+<td></td>
+<td>Data experiment ID</td>
+<td>auto latest</td>
+</tr>
+<tr>
+<td><code>--exp_name</code></td>
+<td></td>
+<td>Experiment name tag</td>
+<td>auto-generated</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="d-baseline-model-training-05_train_baselinesh">D) Baseline Model Training — <code>05_train_baseline.sh</code><a class="headerlink" href="#d-baseline-model-training-05_train_baselinesh" title="Permanent link">&para;</a></h2>
+<p>Train 11 baseline topic models for comparison with THETA.</p>
+<h3 id="supported-models">Supported Models<a class="headerlink" href="#supported-models" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Type</th>
+<th>Description</th>
+<th>Model-Specific Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>lda</strong></td>
+<td>Traditional</td>
+<td>Latent Dirichlet Allocation</td>
+<td><code>--max_iter</code></td>
+</tr>
+<tr>
+<td><strong>hdp</strong></td>
+<td>Traditional</td>
+<td>Hierarchical Dirichlet Process (auto topic count)</td>
+<td><code>--max_topics</code>, <code>--alpha</code></td>
+</tr>
+<tr>
+<td><strong>stm</strong></td>
+<td>Traditional</td>
+<td>Structural Topic Model (<strong>requires covariates</strong>)</td>
+<td><code>--max_iter</code></td>
+</tr>
+<tr>
+<td><strong>btm</strong></td>
+<td>Traditional</td>
+<td>Biterm Topic Model (best for short texts)</td>
+<td><code>--n_iter</code>, <code>--alpha</code>, <code>--beta</code></td>
+</tr>
+<tr>
+<td><strong>nvdm</strong></td>
+<td>Neural</td>
+<td>Neural Variational Document Model</td>
+<td><code>--epochs</code>, <code>--dropout</code></td>
+</tr>
+<tr>
+<td><strong>gsm</strong></td>
+<td>Neural</td>
+<td>Gaussian Softmax Model</td>
+<td><code>--epochs</code>, <code>--dropout</code></td>
+</tr>
+<tr>
+<td><strong>prodlda</strong></td>
+<td>Neural</td>
+<td>Product of Experts LDA</td>
+<td><code>--epochs</code>, <code>--dropout</code></td>
+</tr>
+<tr>
+<td><strong>ctm</strong></td>
+<td>Neural</td>
+<td>Contextualized Topic Model (requires SBERT)</td>
+<td><code>--epochs</code>, <code>--inference_type</code></td>
+</tr>
+<tr>
+<td><strong>etm</strong></td>
+<td>Neural</td>
+<td>Embedded Topic Model (requires Word2Vec)</td>
+<td><code>--epochs</code></td>
+</tr>
+<tr>
+<td><strong>dtm</strong></td>
+<td>Neural</td>
+<td>Dynamic Topic Model (requires timestamps)</td>
+<td><code>--epochs</code></td>
+</tr>
+<tr>
+<td><strong>bertopic</strong></td>
+<td>Neural</td>
+<td>BERT-based Topic Model (auto topic count)</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<h3 id="complete-per-model-examples">Complete Per-Model Examples<a class="headerlink" href="#complete-per-model-examples" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="c1"># 1. LDA — Latent Dirichlet Allocation</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1">#    Type: Traditional | Data: BOW only</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>lda<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>lda<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--max_iter<span class="w"> </span><span class="m">200</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span>--language<span class="w"> </span>zh<span class="w"> </span>--with-viz<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">    </span>--data_exp<span class="w"> </span>exp_20260208_153424_vocab3500_lda<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="w">    </span>--exp_name<span class="w"> </span>lda_full
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="c1"># 2. HDP — Hierarchical Dirichlet Process</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a><span class="c1">#    Note: Auto-determines topic count, --num_topics is IGNORED</span>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>hdp
+</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>hdp<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a><span class="w">    </span>--max_topics<span class="w"> </span><span class="m">150</span><span class="w"> </span>--alpha<span class="w"> </span><span class="m">1</span>.0<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span>--language<span class="w"> </span>zh<span class="w"> </span>--with-viz<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a><span class="w">    </span>--data_exp<span class="w"> </span>exp_20260208_153424_vocab3500_lda<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a><span class="w">    </span>--exp_name<span class="w"> </span>hdp_full
+</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>
+</span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a><span class="c1"># 3. STM — Structural Topic Model</span>
+</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a><span class="c1">#    REQUIRES covariates — auto-skipped if dataset has no metadata</span>
+</span><span id="__span-4-34"><a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-35"><a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a><span class="c1">#</span>
+</span><span id="__span-4-36"><a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a><span class="c1"># To use STM:</span>
+</span><span id="__span-4-37"><a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a><span class="c1">#   1. Ensure your cleaned CSV has metadata columns</span>
+</span><span id="__span-4-38"><a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a><span class="c1">#   2. Register covariates in ETM/config.py → DATASET_CONFIGS</span>
+</span><span id="__span-4-39"><a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a><span class="c1">#   3. Prepare data (same as other BOW models)</span>
+</span><span id="__span-4-40"><a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a><span class="c1">#   4. Train STM</span>
+</span><span id="__span-4-41"><a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a>
+</span><span id="__span-4-42"><a id="__codelineno-4-42" name="__codelineno-4-42" href="#__codelineno-4-42"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-43"><a id="__codelineno-4-43" name="__codelineno-4-43" href="#__codelineno-4-43"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset_with_covariates<span class="w"> </span>--models<span class="w"> </span>stm<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-4-44"><a id="__codelineno-4-44" name="__codelineno-4-44" href="#__codelineno-4-44"></a>
+</span><span id="__span-4-45"><a id="__codelineno-4-45" name="__codelineno-4-45" href="#__codelineno-4-45"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-46"><a id="__codelineno-4-46" name="__codelineno-4-46" href="#__codelineno-4-46"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset_with_covariates<span class="w"> </span>--models<span class="w"> </span>stm<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-47"><a id="__codelineno-4-47" name="__codelineno-4-47" href="#__codelineno-4-47"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--max_iter<span class="w"> </span><span class="m">200</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-48"><a id="__codelineno-4-48" name="__codelineno-4-48" href="#__codelineno-4-48"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span>--language<span class="w"> </span>en<span class="w"> </span>--with-viz<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-49"><a id="__codelineno-4-49" name="__codelineno-4-49" href="#__codelineno-4-49"></a><span class="w">    </span>--data_exp<span class="w"> </span>exp_20260208_153424_vocab3500_lda<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-50"><a id="__codelineno-4-50" name="__codelineno-4-50" href="#__codelineno-4-50"></a><span class="w">    </span>--exp_name<span class="w"> </span>stm_full
+</span><span id="__span-4-51"><a id="__codelineno-4-51" name="__codelineno-4-51" href="#__codelineno-4-51"></a>
+</span><span id="__span-4-52"><a id="__codelineno-4-52" name="__codelineno-4-52" href="#__codelineno-4-52"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-53"><a id="__codelineno-4-53" name="__codelineno-4-53" href="#__codelineno-4-53"></a><span class="c1"># 4. BTM — Biterm Topic Model</span>
+</span><span id="__span-4-54"><a id="__codelineno-4-54" name="__codelineno-4-54" href="#__codelineno-4-54"></a><span class="c1">#    Best suited for short texts (tweets, comments)</span>
+</span><span id="__span-4-55"><a id="__codelineno-4-55" name="__codelineno-4-55" href="#__codelineno-4-55"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-56"><a id="__codelineno-4-56" name="__codelineno-4-56" href="#__codelineno-4-56"></a>
+</span><span id="__span-4-57"><a id="__codelineno-4-57" name="__codelineno-4-57" href="#__codelineno-4-57"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-58"><a id="__codelineno-4-58" name="__codelineno-4-58" href="#__codelineno-4-58"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>btm<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-4-59"><a id="__codelineno-4-59" name="__codelineno-4-59" href="#__codelineno-4-59"></a>
+</span><span id="__span-4-60"><a id="__codelineno-4-60" name="__codelineno-4-60" href="#__codelineno-4-60"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-61"><a id="__codelineno-4-61" name="__codelineno-4-61" href="#__codelineno-4-61"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>btm<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-62"><a id="__codelineno-4-62" name="__codelineno-4-62" href="#__codelineno-4-62"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--n_iter<span class="w"> </span><span class="m">100</span><span class="w"> </span>--alpha<span class="w"> </span><span class="m">1</span>.0<span class="w"> </span>--beta<span class="w"> </span><span class="m">0</span>.01<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-63"><a id="__codelineno-4-63" name="__codelineno-4-63" href="#__codelineno-4-63"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span>--language<span class="w"> </span>zh<span class="w"> </span>--with-viz<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-64"><a id="__codelineno-4-64" name="__codelineno-4-64" href="#__codelineno-4-64"></a><span class="w">    </span>--data_exp<span class="w"> </span>exp_20260208_153424_vocab3500_lda<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-65"><a id="__codelineno-4-65" name="__codelineno-4-65" href="#__codelineno-4-65"></a><span class="w">    </span>--exp_name<span class="w"> </span>btm_full
+</span><span id="__span-4-66"><a id="__codelineno-4-66" name="__codelineno-4-66" href="#__codelineno-4-66"></a>
+</span><span id="__span-4-67"><a id="__codelineno-4-67" name="__codelineno-4-67" href="#__codelineno-4-67"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-68"><a id="__codelineno-4-68" name="__codelineno-4-68" href="#__codelineno-4-68"></a><span class="c1"># 5. NVDM / 6. GSM / 7. ProdLDA — BOW-only neural models</span>
+</span><span id="__span-4-69"><a id="__codelineno-4-69" name="__codelineno-4-69" href="#__codelineno-4-69"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-70"><a id="__codelineno-4-70" name="__codelineno-4-70" href="#__codelineno-4-70"></a>
+</span><span id="__span-4-71"><a id="__codelineno-4-71" name="__codelineno-4-71" href="#__codelineno-4-71"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-72"><a id="__codelineno-4-72" name="__codelineno-4-72" href="#__codelineno-4-72"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>nvdm<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-4-73"><a id="__codelineno-4-73" name="__codelineno-4-73" href="#__codelineno-4-73"></a>
+</span><span id="__span-4-74"><a id="__codelineno-4-74" name="__codelineno-4-74" href="#__codelineno-4-74"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-75"><a id="__codelineno-4-75" name="__codelineno-4-75" href="#__codelineno-4-75"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>nvdm<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-76"><a id="__codelineno-4-76" name="__codelineno-4-76" href="#__codelineno-4-76"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--epochs<span class="w"> </span><span class="m">200</span><span class="w"> </span>--batch_size<span class="w"> </span><span class="m">128</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-77"><a id="__codelineno-4-77" name="__codelineno-4-77" href="#__codelineno-4-77"></a><span class="w">    </span>--hidden_dim<span class="w"> </span><span class="m">512</span><span class="w"> </span>--learning_rate<span class="w"> </span><span class="m">0</span>.002<span class="w"> </span>--dropout<span class="w"> </span><span class="m">0</span>.2<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-78"><a id="__codelineno-4-78" name="__codelineno-4-78" href="#__codelineno-4-78"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span>--language<span class="w"> </span>zh<span class="w"> </span>--with-viz<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-79"><a id="__codelineno-4-79" name="__codelineno-4-79" href="#__codelineno-4-79"></a><span class="w">    </span>--data_exp<span class="w"> </span>exp_20260208_153424_vocab3500_lda<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-80"><a id="__codelineno-4-80" name="__codelineno-4-80" href="#__codelineno-4-80"></a><span class="w">    </span>--exp_name<span class="w"> </span>nvdm_full
+</span><span id="__span-4-81"><a id="__codelineno-4-81" name="__codelineno-4-81" href="#__codelineno-4-81"></a>
+</span><span id="__span-4-82"><a id="__codelineno-4-82" name="__codelineno-4-82" href="#__codelineno-4-82"></a><span class="c1"># (Replace nvdm with gsm or prodlda for those models)</span>
+</span><span id="__span-4-83"><a id="__codelineno-4-83" name="__codelineno-4-83" href="#__codelineno-4-83"></a>
+</span><span id="__span-4-84"><a id="__codelineno-4-84" name="__codelineno-4-84" href="#__codelineno-4-84"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-85"><a id="__codelineno-4-85" name="__codelineno-4-85" href="#__codelineno-4-85"></a><span class="c1"># 8. CTM — Contextualized Topic Model</span>
+</span><span id="__span-4-86"><a id="__codelineno-4-86" name="__codelineno-4-86" href="#__codelineno-4-86"></a><span class="c1">#    Requires SBERT data_exp (prepared with --model ctm)</span>
+</span><span id="__span-4-87"><a id="__codelineno-4-87" name="__codelineno-4-87" href="#__codelineno-4-87"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-88"><a id="__codelineno-4-88" name="__codelineno-4-88" href="#__codelineno-4-88"></a>
+</span><span id="__span-4-89"><a id="__codelineno-4-89" name="__codelineno-4-89" href="#__codelineno-4-89"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-90"><a id="__codelineno-4-90" name="__codelineno-4-90" href="#__codelineno-4-90"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>ctm<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-4-91"><a id="__codelineno-4-91" name="__codelineno-4-91" href="#__codelineno-4-91"></a>
+</span><span id="__span-4-92"><a id="__codelineno-4-92" name="__codelineno-4-92" href="#__codelineno-4-92"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-93"><a id="__codelineno-4-93" name="__codelineno-4-93" href="#__codelineno-4-93"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>ctm<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-94"><a id="__codelineno-4-94" name="__codelineno-4-94" href="#__codelineno-4-94"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--epochs<span class="w"> </span><span class="m">100</span><span class="w"> </span>--inference_type<span class="w"> </span>zeroshot<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-95"><a id="__codelineno-4-95" name="__codelineno-4-95" href="#__codelineno-4-95"></a><span class="w">    </span>--batch_size<span class="w"> </span><span class="m">64</span><span class="w"> </span>--hidden_dim<span class="w"> </span><span class="m">512</span><span class="w"> </span>--learning_rate<span class="w"> </span><span class="m">0</span>.002<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-96"><a id="__codelineno-4-96" name="__codelineno-4-96" href="#__codelineno-4-96"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span>--language<span class="w"> </span>zh<span class="w"> </span>--with-viz<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-97"><a id="__codelineno-4-97" name="__codelineno-4-97" href="#__codelineno-4-97"></a><span class="w">    </span>--data_exp<span class="w"> </span>exp_20260208_154645_vocab3500_ctm<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-98"><a id="__codelineno-4-98" name="__codelineno-4-98" href="#__codelineno-4-98"></a><span class="w">    </span>--exp_name<span class="w"> </span>ctm_zeroshot
+</span><span id="__span-4-99"><a id="__codelineno-4-99" name="__codelineno-4-99" href="#__codelineno-4-99"></a>
+</span><span id="__span-4-100"><a id="__codelineno-4-100" name="__codelineno-4-100" href="#__codelineno-4-100"></a><span class="c1"># Combined inference (uses both BOW and SBERT)</span>
+</span><span id="__span-4-101"><a id="__codelineno-4-101" name="__codelineno-4-101" href="#__codelineno-4-101"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-102"><a id="__codelineno-4-102" name="__codelineno-4-102" href="#__codelineno-4-102"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>ctm<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-103"><a id="__codelineno-4-103" name="__codelineno-4-103" href="#__codelineno-4-103"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--epochs<span class="w"> </span><span class="m">100</span><span class="w"> </span>--inference_type<span class="w"> </span>combined<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-104"><a id="__codelineno-4-104" name="__codelineno-4-104" href="#__codelineno-4-104"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span>--language<span class="w"> </span>zh<span class="w"> </span>--with-viz
+</span><span id="__span-4-105"><a id="__codelineno-4-105" name="__codelineno-4-105" href="#__codelineno-4-105"></a>
+</span><span id="__span-4-106"><a id="__codelineno-4-106" name="__codelineno-4-106" href="#__codelineno-4-106"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-107"><a id="__codelineno-4-107" name="__codelineno-4-107" href="#__codelineno-4-107"></a><span class="c1"># 9. ETM — Embedded Topic Model (BOW + Word2Vec)</span>
+</span><span id="__span-4-108"><a id="__codelineno-4-108" name="__codelineno-4-108" href="#__codelineno-4-108"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-109"><a id="__codelineno-4-109" name="__codelineno-4-109" href="#__codelineno-4-109"></a>
+</span><span id="__span-4-110"><a id="__codelineno-4-110" name="__codelineno-4-110" href="#__codelineno-4-110"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-111"><a id="__codelineno-4-111" name="__codelineno-4-111" href="#__codelineno-4-111"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>etm<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-4-112"><a id="__codelineno-4-112" name="__codelineno-4-112" href="#__codelineno-4-112"></a>
+</span><span id="__span-4-113"><a id="__codelineno-4-113" name="__codelineno-4-113" href="#__codelineno-4-113"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-114"><a id="__codelineno-4-114" name="__codelineno-4-114" href="#__codelineno-4-114"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>etm<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-115"><a id="__codelineno-4-115" name="__codelineno-4-115" href="#__codelineno-4-115"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--epochs<span class="w"> </span><span class="m">200</span><span class="w"> </span>--batch_size<span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-116"><a id="__codelineno-4-116" name="__codelineno-4-116" href="#__codelineno-4-116"></a><span class="w">    </span>--hidden_dim<span class="w"> </span><span class="m">512</span><span class="w"> </span>--learning_rate<span class="w"> </span><span class="m">0</span>.002<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-117"><a id="__codelineno-4-117" name="__codelineno-4-117" href="#__codelineno-4-117"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span>--language<span class="w"> </span>zh<span class="w"> </span>--with-viz<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-118"><a id="__codelineno-4-118" name="__codelineno-4-118" href="#__codelineno-4-118"></a><span class="w">    </span>--data_exp<span class="w"> </span>exp_20260208_153424_vocab3500_lda<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-119"><a id="__codelineno-4-119" name="__codelineno-4-119" href="#__codelineno-4-119"></a><span class="w">    </span>--exp_name<span class="w"> </span>etm_full
+</span><span id="__span-4-120"><a id="__codelineno-4-120" name="__codelineno-4-120" href="#__codelineno-4-120"></a>
+</span><span id="__span-4-121"><a id="__codelineno-4-121" name="__codelineno-4-121" href="#__codelineno-4-121"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-122"><a id="__codelineno-4-122" name="__codelineno-4-122" href="#__codelineno-4-122"></a><span class="c1"># 10. DTM — Dynamic Topic Model (requires timestamps)</span>
+</span><span id="__span-4-123"><a id="__codelineno-4-123" name="__codelineno-4-123" href="#__codelineno-4-123"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-124"><a id="__codelineno-4-124" name="__codelineno-4-124" href="#__codelineno-4-124"></a>
+</span><span id="__span-4-125"><a id="__codelineno-4-125" name="__codelineno-4-125" href="#__codelineno-4-125"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-126"><a id="__codelineno-4-126" name="__codelineno-4-126" href="#__codelineno-4-126"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>dtm<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-4-127"><a id="__codelineno-4-127" name="__codelineno-4-127" href="#__codelineno-4-127"></a>
+</span><span id="__span-4-128"><a id="__codelineno-4-128" name="__codelineno-4-128" href="#__codelineno-4-128"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-129"><a id="__codelineno-4-129" name="__codelineno-4-129" href="#__codelineno-4-129"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>dtm<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-130"><a id="__codelineno-4-130" name="__codelineno-4-130" href="#__codelineno-4-130"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--epochs<span class="w"> </span><span class="m">200</span><span class="w"> </span>--batch_size<span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-131"><a id="__codelineno-4-131" name="__codelineno-4-131" href="#__codelineno-4-131"></a><span class="w">    </span>--hidden_dim<span class="w"> </span><span class="m">512</span><span class="w"> </span>--learning_rate<span class="w"> </span><span class="m">0</span>.002<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-132"><a id="__codelineno-4-132" name="__codelineno-4-132" href="#__codelineno-4-132"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span>--language<span class="w"> </span>zh<span class="w"> </span>--with-viz<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-133"><a id="__codelineno-4-133" name="__codelineno-4-133" href="#__codelineno-4-133"></a><span class="w">    </span>--data_exp<span class="w"> </span>exp_20260208_171413_vocab3500_dtm<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-134"><a id="__codelineno-4-134" name="__codelineno-4-134" href="#__codelineno-4-134"></a><span class="w">    </span>--exp_name<span class="w"> </span>dtm_full
+</span><span id="__span-4-135"><a id="__codelineno-4-135" name="__codelineno-4-135" href="#__codelineno-4-135"></a>
+</span><span id="__span-4-136"><a id="__codelineno-4-136" name="__codelineno-4-136" href="#__codelineno-4-136"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-137"><a id="__codelineno-4-137" name="__codelineno-4-137" href="#__codelineno-4-137"></a><span class="c1"># 11. BERTopic — Auto-determines topic count</span>
+</span><span id="__span-4-138"><a id="__codelineno-4-138" name="__codelineno-4-138" href="#__codelineno-4-138"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-139"><a id="__codelineno-4-139" name="__codelineno-4-139" href="#__codelineno-4-139"></a>
+</span><span id="__span-4-140"><a id="__codelineno-4-140" name="__codelineno-4-140" href="#__codelineno-4-140"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-141"><a id="__codelineno-4-141" name="__codelineno-4-141" href="#__codelineno-4-141"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>bertopic
+</span><span id="__span-4-142"><a id="__codelineno-4-142" name="__codelineno-4-142" href="#__codelineno-4-142"></a>
+</span><span id="__span-4-143"><a id="__codelineno-4-143" name="__codelineno-4-143" href="#__codelineno-4-143"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-144"><a id="__codelineno-4-144" name="__codelineno-4-144" href="#__codelineno-4-144"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>bertopic<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-145"><a id="__codelineno-4-145" name="__codelineno-4-145" href="#__codelineno-4-145"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span><span class="w"> </span>--language<span class="w"> </span>zh<span class="w"> </span>--with-viz<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-146"><a id="__codelineno-4-146" name="__codelineno-4-146" href="#__codelineno-4-146"></a><span class="w">    </span>--data_exp<span class="w"> </span>exp_20260208_154645_vocab3500_ctm<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-147"><a id="__codelineno-4-147" name="__codelineno-4-147" href="#__codelineno-4-147"></a><span class="w">    </span>--exp_name<span class="w"> </span>bertopic_full
+</span><span id="__span-4-148"><a id="__codelineno-4-148" name="__codelineno-4-148" href="#__codelineno-4-148"></a>
+</span><span id="__span-4-149"><a id="__codelineno-4-149" name="__codelineno-4-149" href="#__codelineno-4-149"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-150"><a id="__codelineno-4-150" name="__codelineno-4-150" href="#__codelineno-4-150"></a><span class="c1"># Batch training (multiple models at once)</span>
+</span><span id="__span-4-151"><a id="__codelineno-4-151" name="__codelineno-4-151" href="#__codelineno-4-151"></a><span class="c1"># ============================================================</span>
+</span><span id="__span-4-152"><a id="__codelineno-4-152" name="__codelineno-4-152" href="#__codelineno-4-152"></a>
+</span><span id="__span-4-153"><a id="__codelineno-4-153" name="__codelineno-4-153" href="#__codelineno-4-153"></a><span class="c1"># Train all BOW-only models (share the same data_exp)</span>
+</span><span id="__span-4-154"><a id="__codelineno-4-154" name="__codelineno-4-154" href="#__codelineno-4-154"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-155"><a id="__codelineno-4-155" name="__codelineno-4-155" href="#__codelineno-4-155"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-156"><a id="__codelineno-4-156" name="__codelineno-4-156" href="#__codelineno-4-156"></a><span class="w">    </span>--models<span class="w"> </span>lda,hdp,btm,nvdm,gsm,prodlda<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-157"><a id="__codelineno-4-157" name="__codelineno-4-157" href="#__codelineno-4-157"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--epochs<span class="w"> </span><span class="m">100</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-158"><a id="__codelineno-4-158" name="__codelineno-4-158" href="#__codelineno-4-158"></a><span class="w">    </span>--data_exp<span class="w"> </span>exp_20260208_153424_vocab3500_lda
+</span><span id="__span-4-159"><a id="__codelineno-4-159" name="__codelineno-4-159" href="#__codelineno-4-159"></a>
+</span><span id="__span-4-160"><a id="__codelineno-4-160" name="__codelineno-4-160" href="#__codelineno-4-160"></a><span class="c1"># Train CTM + BERTopic (share SBERT data_exp)</span>
+</span><span id="__span-4-161"><a id="__codelineno-4-161" name="__codelineno-4-161" href="#__codelineno-4-161"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-162"><a id="__codelineno-4-162" name="__codelineno-4-162" href="#__codelineno-4-162"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>ctm,bertopic<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-163"><a id="__codelineno-4-163" name="__codelineno-4-163" href="#__codelineno-4-163"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--epochs<span class="w"> </span><span class="m">100</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-164"><a id="__codelineno-4-164" name="__codelineno-4-164" href="#__codelineno-4-164"></a><span class="w">    </span>--data_exp<span class="w"> </span>exp_20260208_154645_vocab3500_ctm
+</span><span id="__span-4-165"><a id="__codelineno-4-165" name="__codelineno-4-165" href="#__codelineno-4-165"></a>
+</span><span id="__span-4-166"><a id="__codelineno-4-166" name="__codelineno-4-166" href="#__codelineno-4-166"></a><span class="c1"># Skip training, only evaluate and visualize existing model</span>
+</span><span id="__span-4-167"><a id="__codelineno-4-167" name="__codelineno-4-167" href="#__codelineno-4-167"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-168"><a id="__codelineno-4-168" name="__codelineno-4-168" href="#__codelineno-4-168"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>lda<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--skip-train
+</span><span id="__span-4-169"><a id="__codelineno-4-169" name="__codelineno-4-169" href="#__codelineno-4-169"></a>
+</span><span id="__span-4-170"><a id="__codelineno-4-170" name="__codelineno-4-170" href="#__codelineno-4-170"></a><span class="c1"># Enable visualization (disabled by default)</span>
+</span><span id="__span-4-171"><a id="__codelineno-4-171" name="__codelineno-4-171" href="#__codelineno-4-171"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-172"><a id="__codelineno-4-172" name="__codelineno-4-172" href="#__codelineno-4-172"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>lda<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-4-173"><a id="__codelineno-4-173" name="__codelineno-4-173" href="#__codelineno-4-173"></a><span class="w">    </span>--with-viz<span class="w"> </span>--language<span class="w"> </span>zh
+</span></code></pre></div>
+<blockquote>
+<p><strong>Important notes</strong>:
+- BTM uses Gibbs sampling and is very slow on long documents (samples max 50 words/doc). Best for short texts.
+- HDP and BERTopic auto-determine topic count; <code>--num_topics</code> is ignored for these models.
+- STM requires document-level covariates. If your dataset has no <code>covariate_columns</code> in <code>DATASET_CONFIGS</code>, STM will be automatically skipped.
+- DTM requires a data experiment containing <code>time_slices.json</code> (prepared with <code>--model dtm</code>).
+- CTM and BERTopic require a data experiment containing SBERT embeddings.</p>
+</blockquote>
+<h3 id="parameter-reference">Parameter Reference<a class="headerlink" href="#parameter-reference" title="Permanent link">&para;</a></h3>
+<p><strong>Common parameters</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Required</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--dataset</code></td>
+<td>✓</td>
+<td>Dataset name</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>--models</code></td>
+<td>✓</td>
+<td>Model list (comma-separated)</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>--num_topics</code></td>
+<td></td>
+<td>Number of topics (ignored for hdp/bertopic)</td>
+<td>20</td>
+</tr>
+<tr>
+<td><code>--vocab_size</code></td>
+<td></td>
+<td>Vocabulary size</td>
+<td>5000</td>
+</tr>
+<tr>
+<td><code>--epochs</code></td>
+<td></td>
+<td>Training epochs (neural models)</td>
+<td>100</td>
+</tr>
+<tr>
+<td><code>--batch_size</code></td>
+<td></td>
+<td>Batch size</td>
+<td>64</td>
+</tr>
+<tr>
+<td><code>--hidden_dim</code></td>
+<td></td>
+<td>Hidden layer dimension</td>
+<td>512</td>
+</tr>
+<tr>
+<td><code>--learning_rate</code></td>
+<td></td>
+<td>Learning rate</td>
+<td>0.002</td>
+</tr>
+<tr>
+<td><code>--gpu</code></td>
+<td></td>
+<td>GPU device ID</td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>--language</code></td>
+<td></td>
+<td>Visualization language: en, zh</td>
+<td>en</td>
+</tr>
+<tr>
+<td><code>--skip-train</code></td>
+<td></td>
+<td>Skip training</td>
+<td>false</td>
+</tr>
+<tr>
+<td><code>--with-viz</code></td>
+<td></td>
+<td>Enable visualization</td>
+<td>false</td>
+</tr>
+<tr>
+<td><code>--data_exp</code></td>
+<td></td>
+<td>Data experiment ID</td>
+<td>auto latest</td>
+</tr>
+<tr>
+<td><code>--exp_name</code></td>
+<td></td>
+<td>Experiment name tag</td>
+<td>auto-generated</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Model-specific parameters</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Applicable Models</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--max_iter</code></td>
+<td>lda, stm</td>
+<td>Max iterations (EM algorithm)</td>
+<td>100</td>
+</tr>
+<tr>
+<td><code>--max_topics</code></td>
+<td>hdp</td>
+<td>Max topic count</td>
+<td>150</td>
+</tr>
+<tr>
+<td><code>--n_iter</code></td>
+<td>btm</td>
+<td>Gibbs sampling iterations</td>
+<td>100</td>
+</tr>
+<tr>
+<td><code>--alpha</code></td>
+<td>hdp, btm</td>
+<td>Alpha prior</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td><code>--beta</code></td>
+<td>btm</td>
+<td>Beta prior</td>
+<td>0.01</td>
+</tr>
+<tr>
+<td><code>--inference_type</code></td>
+<td>ctm</td>
+<td>Inference type: zeroshot, combined</td>
+<td>zeroshot</td>
+</tr>
+<tr>
+<td><code>--dropout</code></td>
+<td>Neural models (nvdm, gsm, prodlda, ctm, etm, dtm)</td>
+<td>Dropout rate</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="e-visualization-06_visualizesh">E) Visualization — <code>06_visualize.sh</code><a class="headerlink" href="#e-visualization-06_visualizesh" title="Permanent link">&para;</a></h2>
+<p>Generate visualizations for trained models without re-training.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># THETA model visualization</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>bash<span class="w"> </span>scripts/06_visualize.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span>--language<span class="w"> </span>zh
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># English charts + high DPI (for papers)</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>bash<span class="w"> </span>scripts/06_visualize.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span>--language<span class="w"> </span>en<span class="w"> </span>--dpi<span class="w"> </span><span class="m">600</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="c1"># Baseline model visualization</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>bash<span class="w"> </span>scripts/06_visualize.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">    </span>--baseline<span class="w"> </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>lda<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--language<span class="w"> </span>zh
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="c1"># HDP (auto topic count, use actual K from training)</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>bash<span class="w"> </span>scripts/06_visualize.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">    </span>--baseline<span class="w"> </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>hdp<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">150</span><span class="w"> </span>--language<span class="w"> </span>zh
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="c1"># DTM (includes topic evolution charts)</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>bash<span class="w"> </span>scripts/06_visualize.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="w">    </span>--baseline<span class="w"> </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>dtm<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--language<span class="w"> </span>zh
+</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a>
+</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="c1"># Specify a model experiment explicitly</span>
+</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>bash<span class="w"> </span>scripts/06_visualize.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-5-23"><a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="w">    </span>--baseline<span class="w"> </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>ctm<span class="w"> </span>--model_exp<span class="w"> </span>exp_20260208_xxx<span class="w"> </span>--language<span class="w"> </span>zh
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--dataset</code></td>
+<td>Dataset name (required)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--baseline</code></td>
+<td>Baseline model mode</td>
+<td>false</td>
+</tr>
+<tr>
+<td><code>--model</code></td>
+<td>Baseline model name</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--model_exp</code></td>
+<td>Model experiment ID (auto-selects latest if not specified)</td>
+<td>auto latest</td>
+</tr>
+<tr>
+<td><code>--model_size</code></td>
+<td>THETA model size</td>
+<td>0.6B</td>
+</tr>
+<tr>
+<td><code>--mode</code></td>
+<td>THETA mode</td>
+<td>zero_shot</td>
+</tr>
+<tr>
+<td><code>--language</code></td>
+<td>Visualization language: en, zh</td>
+<td>en</td>
+</tr>
+<tr>
+<td><code>--dpi</code></td>
+<td>Image DPI</td>
+<td>300</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Generated charts</strong> (20+ types):</p>
+<table>
+<thead>
+<tr>
+<th>Chart</th>
+<th>Description</th>
+<th>Filename</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Topic Table</td>
+<td>Top words per topic</td>
+<td>topic_table.png</td>
+</tr>
+<tr>
+<td>Topic Network</td>
+<td>Inter-topic similarity network</td>
+<td>topic_network.png</td>
+</tr>
+<tr>
+<td>Document Clusters</td>
+<td>UMAP document distribution</td>
+<td>doc_topic_umap.png</td>
+</tr>
+<tr>
+<td>Cluster Heatmap</td>
+<td>Topic-document heatmap</td>
+<td>cluster_heatmap.png</td>
+</tr>
+<tr>
+<td>Topic Proportion</td>
+<td>Document proportion per topic</td>
+<td>topic_proportion.png</td>
+</tr>
+<tr>
+<td>Training Loss</td>
+<td>Loss curve</td>
+<td>training_loss.png</td>
+</tr>
+<tr>
+<td>Evaluation Metrics</td>
+<td>7-metric radar chart</td>
+<td>metrics.png</td>
+</tr>
+<tr>
+<td>Topic Coherence</td>
+<td>Per-topic NPMI</td>
+<td>topic_coherence.png</td>
+</tr>
+<tr>
+<td>Topic Exclusivity</td>
+<td>Per-topic exclusivity</td>
+<td>topic_exclusivity.png</td>
+</tr>
+<tr>
+<td>Word Clouds</td>
+<td>All topic word clouds</td>
+<td>topic_wordclouds.png</td>
+</tr>
+<tr>
+<td>Topic Similarity</td>
+<td>Inter-topic cosine similarity</td>
+<td>topic_similarity.png</td>
+</tr>
+<tr>
+<td>pyLDAvis</td>
+<td>Interactive topic explorer</td>
+<td>pyldavis_interactive.html</td>
+</tr>
+<tr>
+<td>Per-topic Words</td>
+<td>Per-topic word weights</td>
+<td>topics/topic_N/word_importance.png</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="f-evaluation-07_evaluatesh">F) Evaluation — <code>07_evaluate.sh</code><a class="headerlink" href="#f-evaluation-07_evaluatesh" title="Permanent link">&para;</a></h2>
+<p>Standalone evaluation with 7 unified metrics.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Evaluate baseline models</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>bash<span class="w"> </span>scripts/07_evaluate.sh<span class="w"> </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>lda<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>bash<span class="w"> </span>scripts/07_evaluate.sh<span class="w"> </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>hdp<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">150</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>bash<span class="w"> </span>scripts/07_evaluate.sh<span class="w"> </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>ctm<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>bash<span class="w"> </span>scripts/07_evaluate.sh<span class="w"> </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>etm<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>bash<span class="w"> </span>scripts/07_evaluate.sh<span class="w"> </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>dtm<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>bash<span class="w"> </span>scripts/07_evaluate.sh<span class="w"> </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>bertopic<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="c1"># With custom vocab size</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>bash<span class="w"> </span>scripts/07_evaluate.sh<span class="w"> </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>lda<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--vocab_size<span class="w"> </span><span class="m">3500</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="c1"># Evaluate THETA models</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>bash<span class="w"> </span>scripts/07_evaluate.sh<span class="w"> </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>theta<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>zero_shot
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>bash<span class="w"> </span>scripts/07_evaluate.sh<span class="w"> </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>theta<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>unsupervised
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>bash<span class="w"> </span>scripts/07_evaluate.sh<span class="w"> </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>theta<span class="w"> </span>--model_size<span class="w"> </span>4B<span class="w"> </span>--mode<span class="w"> </span>supervised
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--dataset</code></td>
+<td>Dataset name (required)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--model</code></td>
+<td>Model name (required): lda, hdp, stm, btm, nvdm, gsm, prodlda, ctm, etm, dtm, bertopic, theta</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--num_topics</code></td>
+<td>Number of topics</td>
+<td>20</td>
+</tr>
+<tr>
+<td><code>--vocab_size</code></td>
+<td>Vocabulary size</td>
+<td>5000</td>
+</tr>
+<tr>
+<td><code>--model_size</code></td>
+<td>THETA model size: 0.6B, 4B, 8B</td>
+<td>0.6B</td>
+</tr>
+<tr>
+<td><code>--mode</code></td>
+<td>THETA mode: zero_shot, unsupervised, supervised</td>
+<td>zero_shot</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Evaluation Metrics (7 metrics)</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Full Name</th>
+<th>Direction</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>TD</strong></td>
+<td>Topic Diversity</td>
+<td>↑ Higher is better</td>
+<td>Proportion of unique words across topics</td>
+</tr>
+<tr>
+<td><strong>iRBO</strong></td>
+<td>Inverse Rank-Biased Overlap</td>
+<td>↑ Higher is better</td>
+<td>Rank-based topic diversity</td>
+</tr>
+<tr>
+<td><strong>NPMI</strong></td>
+<td>Normalized PMI</td>
+<td>↑ Higher is better</td>
+<td>Normalized pointwise mutual information coherence</td>
+</tr>
+<tr>
+<td><strong>C_V</strong></td>
+<td>C_V Coherence</td>
+<td>↑ Higher is better</td>
+<td>Sliding-window based coherence</td>
+</tr>
+<tr>
+<td><strong>UMass</strong></td>
+<td>UMass Coherence</td>
+<td>→ Closer to 0 is better</td>
+<td>Document co-occurrence based coherence</td>
+</tr>
+<tr>
+<td><strong>Exclusivity</strong></td>
+<td>Topic Exclusivity</td>
+<td>↑ Higher is better</td>
+<td>How exclusive words are to their topics</td>
+</tr>
+<tr>
+<td><strong>PPL</strong></td>
+<td>Perplexity</td>
+<td>↓ Lower is better</td>
+<td>Model fit (lower = better generalization)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="g-model-comparison-08_compare_modelssh">G) Model Comparison — <code>08_compare_models.sh</code><a class="headerlink" href="#g-model-comparison-08_compare_modelssh" title="Permanent link">&para;</a></h2>
+<p>Cross-model metric comparison table.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Compare all baseline models</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>bash<span class="w"> </span>scripts/08_compare_models.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span>--models<span class="w"> </span>lda,hdp,btm,nvdm,gsm,prodlda,ctm,etm,dtm,bertopic<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># Compare traditional models only</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>bash<span class="w"> </span>scripts/08_compare_models.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>lda,hdp,btm<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="c1"># Compare neural models only</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>bash<span class="w"> </span>scripts/08_compare_models.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>nvdm,gsm,prodlda,ctm,etm,dtm<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="c1"># Export to CSV</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>bash<span class="w"> </span>scripts/08_compare_models.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>lda,hdp,nvdm,gsm,prodlda,ctm,etm,dtm<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--output<span class="w"> </span>comparison.csv
+</span></code></pre></div>
+<p><strong>Example output</strong>:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>================================================================================
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>Model Comparison: edu_data (K=20)
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>================================================================================
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>Model              TD     iRBO     NPMI      C_V    UMass  Exclusivity        PPL
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>--------------------------------------------------------------------------------
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>lda            0.8500   0.7200   0.0512   0.4231  -2.1234       0.6543     123.45
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>prodlda        0.9200   0.8100   0.0634   0.4567  -1.8765       0.7234      98.76
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>ctm            0.8800   0.7800   0.0589   0.4412  -1.9876       0.6987     105.32
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>--------------------------------------------------------------------------------
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>Best Models:
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>  - Best TD (Topic Diversity): prodlda (0.9200)
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>  - Best NPMI (Coherence):     prodlda (0.0634)
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>  - Best PPL (Perplexity):     prodlda (98.76)
+</span></code></pre></div></p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--dataset</code></td>
+<td>Dataset name (required)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--models</code></td>
+<td>Comma-separated model list (required)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>--num_topics</code></td>
+<td>Number of topics</td>
+<td>20</td>
+</tr>
+<tr>
+<td><code>--output</code></td>
+<td>Output CSV file path</td>
+<td>terminal only</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="h-multi-gpu-training-12_train_multi_gpush">H) Multi-GPU Training — <code>12_train_multi_gpu.sh</code><a class="headerlink" href="#h-multi-gpu-training-12_train_multi_gpush" title="Permanent link">&para;</a></h2>
+<p>THETA supports multi-GPU training using PyTorch DistributedDataParallel (DDP).</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Train with 2 GPUs</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>bash<span class="w"> </span>scripts/12_train_multi_gpu.sh<span class="w"> </span>--dataset<span class="w"> </span>hatespeech<span class="w"> </span>--num_gpus<span class="w"> </span><span class="m">2</span><span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="c1"># Full parameters</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>bash<span class="w"> </span>scripts/12_train_multi_gpu.sh<span class="w"> </span>--dataset<span class="w"> </span>hatespeech<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">    </span>--num_gpus<span class="w"> </span><span class="m">4</span><span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">25</span><span class="w"> </span>--epochs<span class="w"> </span><span class="m">150</span><span class="w"> </span>--batch_size<span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">    </span>--hidden_dim<span class="w"> </span><span class="m">768</span><span class="w"> </span>--learning_rate<span class="w"> </span><span class="m">0</span>.001
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="c1"># Custom master port (for multiple concurrent jobs)</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>bash<span class="w"> </span>scripts/12_train_multi_gpu.sh<span class="w"> </span>--dataset<span class="w"> </span>socialTwitter<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">    </span>--num_gpus<span class="w"> </span><span class="m">2</span><span class="w"> </span>--master_port<span class="w"> </span><span class="m">29501</span>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="c1"># Or use torchrun directly</span>
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>torchrun<span class="w"> </span>--nproc_per_node<span class="o">=</span><span class="m">2</span><span class="w"> </span>--master_port<span class="o">=</span><span class="m">29500</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="w">    </span>ETM/main.py<span class="w"> </span>train<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="w">    </span>--dataset<span class="w"> </span>hatespeech<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--epochs<span class="w"> </span><span class="m">100</span>
+</span></code></pre></div>
+<hr />
+<h2 id="i-agent-api-14_start_agent_apish">I) Agent API — <code>14_start_agent_api.sh</code><a class="headerlink" href="#i-agent-api-14_start_agent_apish" title="Permanent link">&para;</a></h2>
+<p>Start the AI Agent API server for interactive analysis.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Start the Agent API (default port 8000)</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>bash<span class="w"> </span>scripts/14_start_agent_api.sh<span class="w"> </span>--port<span class="w"> </span><span class="m">8000</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="c1"># Test agent connection</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>bash<span class="w"> </span>scripts/13_test_agent.sh
+</span></code></pre></div>
+<p>API endpoints: <code>POST /chat</code>, <code>POST /api/chat/v2</code>, <code>POST /api/interpret/metrics</code>, <code>POST /api/interpret/topics</code>, <code>POST /api/vision/analyze</code>. See <code>agent/docs/API_REFERENCE.md</code> for full details.</p>
+<hr />
+<h2 id="j-batch-processing-examples">J) Batch Processing Examples<a class="headerlink" href="#j-batch-processing-examples" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Train THETA across multiple datasets</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="k">for</span><span class="w"> </span>dataset<span class="w"> </span><span class="k">in</span><span class="w"> </span>hatespeech<span class="w"> </span>mental_health<span class="w"> </span>socialTwitter<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">    </span>bash<span class="w"> </span>scripts/04_train_theta.sh<span class="w"> </span>--dataset<span class="w"> </span><span class="nv">$dataset</span><span class="w"> </span><span class="se">\</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">        </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="k">done</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="c1"># Compare different topic counts</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="k">for</span><span class="w"> </span>k<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="m">15</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">25</span><span class="w"> </span><span class="m">30</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">    </span>bash<span class="w"> </span>scripts/04_train_theta.sh<span class="w"> </span>--dataset<span class="w"> </span>hatespeech<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">        </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span>--num_topics<span class="w"> </span><span class="nv">$k</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="k">done</span>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="c1"># Generate visualizations for all trained baseline models</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="k">for</span><span class="w"> </span>model<span class="w"> </span><span class="k">in</span><span class="w"> </span>lda<span class="w"> </span>etm<span class="w"> </span>ctm<span class="w"> </span>prodlda<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+</span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="w">    </span>bash<span class="w"> </span>scripts/06_visualize.sh<span class="w"> </span>--baseline<span class="w"> </span>--dataset<span class="w"> </span>hatespeech<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="w">        </span>--model<span class="w"> </span><span class="nv">$model</span><span class="w"> </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--language<span class="w"> </span>en
+</span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a><span class="k">done</span>
+</span></code></pre></div>
+<hr />
+<h2 id="k-end-to-end-example-edu_data">K) End-to-End Example: edu_data<a class="headerlink" href="#k-end-to-end-example-edu_data" title="Permanent link">&para;</a></h2>
+<p>Complete workflow using <code>edu_data</code> (823 Chinese education policy documents).</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># 1. Setup</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>bash<span class="w"> </span>scripts/01_setup.sh
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="c1"># 2. Data cleaning</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>bash<span class="w"> </span>scripts/02_clean_data.sh<span class="w"> </span>--input<span class="w"> </span>/root/autodl-tmp/data/edu_data/<span class="w"> </span>--language<span class="w"> </span>chinese
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="c1"># 3. Data preparation — baselines</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>bash<span class="w"> </span>scripts/03_prepare_data.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>lda<span class="w"> </span>--vocab_size<span class="w"> </span><span class="m">3500</span><span class="w"> </span>--language<span class="w"> </span>chinese
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>bash<span class="w"> </span>scripts/03_prepare_data.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>ctm<span class="w"> </span>--vocab_size<span class="w"> </span><span class="m">3500</span><span class="w"> </span>--language<span class="w"> </span>chinese
+</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>bash<span class="w"> </span>scripts/03_prepare_data.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>dtm<span class="w"> </span>--vocab_size<span class="w"> </span><span class="m">3500</span><span class="w"> </span>--language<span class="w"> </span>chinese<span class="w"> </span>--time_column<span class="w"> </span>year
+</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>
+</span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a><span class="c1"># 4. Data preparation — THETA</span>
+</span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a>bash<span class="w"> </span>scripts/03_prepare_data.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-17"><a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model<span class="w"> </span>theta<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a><span class="w">    </span>--vocab_size<span class="w"> </span><span class="m">3500</span><span class="w"> </span>--language<span class="w"> </span>chinese
+</span><span id="__span-12-19"><a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a>
+</span><span id="__span-12-20"><a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a><span class="c1"># 5. Train baselines</span>
+</span><span id="__span-12-21"><a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a>bash<span class="w"> </span>scripts/05_train_baseline.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-22"><a id="__codelineno-12-22" name="__codelineno-12-22" href="#__codelineno-12-22"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--models<span class="w"> </span>lda,hdp,btm,nvdm,gsm,prodlda<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-23"><a id="__codelineno-12-23" name="__codelineno-12-23" href="#__codelineno-12-23"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--epochs<span class="w"> </span><span class="m">100</span>
+</span><span id="__span-12-24"><a id="__codelineno-12-24" name="__codelineno-12-24" href="#__codelineno-12-24"></a>
+</span><span id="__span-12-25"><a id="__codelineno-12-25" name="__codelineno-12-25" href="#__codelineno-12-25"></a><span class="c1"># 6. Train THETA</span>
+</span><span id="__span-12-26"><a id="__codelineno-12-26" name="__codelineno-12-26" href="#__codelineno-12-26"></a>bash<span class="w"> </span>scripts/04_train_theta.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-27"><a id="__codelineno-12-27" name="__codelineno-12-27" href="#__codelineno-12-27"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-28"><a id="__codelineno-12-28" name="__codelineno-12-28" href="#__codelineno-12-28"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span><span class="w"> </span>--epochs<span class="w"> </span><span class="m">100</span><span class="w"> </span>--language<span class="w"> </span>zh
+</span><span id="__span-12-29"><a id="__codelineno-12-29" name="__codelineno-12-29" href="#__codelineno-12-29"></a>
+</span><span id="__span-12-30"><a id="__codelineno-12-30" name="__codelineno-12-30" href="#__codelineno-12-30"></a><span class="c1"># 7. Compare models</span>
+</span><span id="__span-12-31"><a id="__codelineno-12-31" name="__codelineno-12-31" href="#__codelineno-12-31"></a>bash<span class="w"> </span>scripts/08_compare_models.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-32"><a id="__codelineno-12-32" name="__codelineno-12-32" href="#__codelineno-12-32"></a><span class="w">    </span>--dataset<span class="w"> </span>edu_data<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-33"><a id="__codelineno-12-33" name="__codelineno-12-33" href="#__codelineno-12-33"></a><span class="w">    </span>--models<span class="w"> </span>lda,hdp,btm,nvdm,gsm,prodlda,ctm,etm<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-12-34"><a id="__codelineno-12-34" name="__codelineno-12-34" href="#__codelineno-12-34"></a><span class="w">    </span>--num_topics<span class="w"> </span><span class="m">20</span>
+</span></code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024-2026 CodeSoul
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/CodeSoul-co/THETA" target="_blank" rel="noopener" title="GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
