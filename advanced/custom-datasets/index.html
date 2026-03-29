@@ -1825,14 +1825,14 @@
 <h2 id="complete-workflow-for-english-data">Complete Workflow for English Data<a class="headerlink" href="#complete-workflow-for-english-data" title="Permanent link">&para;</a></h2>
 <p>Example using a new dataset named <code>news_articles</code>:</p>
 <p><strong>Step 1: Create dataset directory</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>/root/autodl-tmp/data/news_articles
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>./data/news_articles
 </span></code></pre></div>
 <p><strong>Step 2: Place cleaned CSV file</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cp<span class="w"> </span>/path/to/cleaned_news.csv<span class="w"> </span>/root/autodl-tmp/data/news_articles/news_articles_cleaned.csv
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cp<span class="w"> </span>/path/to/cleaned_news.csv<span class="w"> </span>./data/news_articles/news_articles_cleaned.csv
 </span></code></pre></div>
 <p>File naming convention: <code>{dataset_name}_cleaned.csv</code></p>
 <p><strong>Step 3: Preprocess data</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">cd</span><span class="w"> </span>/root/autodl-tmp/ETM
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">cd</span><span class="w"> </span>./THETA
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>--dataset<span class="w"> </span>news_articles<span class="w"> </span><span class="se">\</span>
@@ -1872,7 +1872,7 @@
 </span></code></pre></div>
 <p><strong>Step 6: Review results</strong></p>
 <p>Results location:
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>/root/autodl-tmp/result/0.6B/news_articles/zero_shot/
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>./result/0.6B/news_articles/zero_shot/
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>├── metrics/evaluation_results.json
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>└── visualizations/
 </span></code></pre></div></p>
@@ -1880,11 +1880,11 @@
 <h2 id="complete-workflow-for-chinese-data">Complete Workflow for Chinese Data<a class="headerlink" href="#complete-workflow-for-chinese-data" title="Permanent link">&para;</a></h2>
 <p>Example using a dataset named <code>weibo_posts</code>:</p>
 <p><strong>Step 1-2: Setup</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>/root/autodl-tmp/data/weibo_posts
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>cp<span class="w"> </span>/path/to/cleaned_weibo.csv<span class="w"> </span>/root/autodl-tmp/data/weibo_posts/weibo_posts_cleaned.csv
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>./data/weibo_posts
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>cp<span class="w"> </span>/path/to/cleaned_weibo.csv<span class="w"> </span>./data/weibo_posts/weibo_posts_cleaned.csv
 </span></code></pre></div>
 <p><strong>Step 3: Preprocess Chinese data</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nb">cd</span><span class="w"> </span>/root/autodl-tmp/ETM
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nb">cd</span><span class="w"> </span>./THETA
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span>--dataset<span class="w"> </span>weibo_posts<span class="w"> </span><span class="se">\</span>
@@ -1914,7 +1914,7 @@
 <h2 id="starting-from-raw-data">Starting from Raw Data<a class="headerlink" href="#starting-from-raw-data" title="Permanent link">&para;</a></h2>
 <p>Process uncleaned data in a single pipeline:</p>
 <p><strong>English raw data:</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">cd</span><span class="w"> </span>/root/autodl-tmp/ETM
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">cd</span><span class="w"> </span>./THETA
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">    </span>--dataset<span class="w"> </span>news_articles<span class="w"> </span><span class="se">\</span>
@@ -1925,7 +1925,7 @@
 </span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">    </span>--batch_size<span class="w"> </span><span class="m">32</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="w">    </span>--max_length<span class="w"> </span><span class="m">512</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">    </span>--clean<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">    </span>--raw-input<span class="w"> </span>/root/autodl-tmp/data/news_articles/raw_data.csv<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">    </span>--raw-input<span class="w"> </span>./data/news_articles/raw_data.csv<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="w">    </span>--language<span class="w"> </span>english<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div>
@@ -1939,7 +1939,7 @@
 </span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">    </span>--batch_size<span class="w"> </span><span class="m">32</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">    </span>--max_length<span class="w"> </span><span class="m">512</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">    </span>--clean<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="w">    </span>--raw-input<span class="w"> </span>/root/autodl-tmp/data/weibo_posts/raw_data.csv<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="w">    </span>--raw-input<span class="w"> </span>./data/weibo_posts/raw_data.csv<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="w">    </span>--language<span class="w"> </span>chinese<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div>

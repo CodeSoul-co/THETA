@@ -1706,8 +1706,8 @@
 <p>中文文本需要与英文不同的处理方式：</p>
 <p><strong>数据清洗：</strong>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python<span class="w"> </span>-m<span class="w"> </span>dataclean.main<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span>--input<span class="w"> </span>/root/autodl-tmp/data/chinese_corpus/raw_data.csv<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span>--output<span class="w"> </span>/root/autodl-tmp/data/chinese_corpus/chinese_corpus_cleaned.csv<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span>--input<span class="w"> </span>./data/chinese_corpus/raw_data.csv<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span>--output<span class="w"> </span>./data/chinese_corpus/chinese_corpus_cleaned.csv<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span>--language<span class="w"> </span>chinese
 </span></code></pre></div></p>
 <p>中文清洗操作：
@@ -1744,7 +1744,7 @@
 <h2 id="_3">中文可视化<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <p>中文可视化需要正确的字体配置：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>-m<span class="w"> </span>visualization.run_visualization<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--result_dir<span class="w"> </span>/root/autodl-tmp/result/0.6B<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--result_dir<span class="w"> </span>./result/0.6B<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--dataset<span class="w"> </span>chinese_corpus<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span>--mode<span class="w"> </span>zero_shot<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span>--model_size<span class="w"> </span><span class="m">0</span>.6B<span class="w"> </span><span class="se">\</span>

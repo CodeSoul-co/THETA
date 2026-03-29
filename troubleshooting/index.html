@@ -2392,11 +2392,11 @@
 <h2 id="data-issues">Data Issues<a class="headerlink" href="#data-issues" title="Permanent link">&para;</a></h2>
 <h3 id="file-not-found">File Not Found<a class="headerlink" href="#file-not-found" title="Permanent link">&para;</a></h3>
 <p><strong>Problem:</strong>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>FileNotFoundError: /root/autodl-tmp/data/my_dataset/my_dataset_cleaned.csv
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>FileNotFoundError: ./data/my_dataset/my_dataset_cleaned.csv
 </span></code></pre></div></p>
 <p><strong>Solution:</strong> Verify naming convention <code>{dataset_name}_cleaned.csv</code>:
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>/root/autodl-tmp/data/my_dataset
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>cp<span class="w"> </span>your_file.csv<span class="w"> </span>/root/autodl-tmp/data/my_dataset/my_dataset_cleaned.csv
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>./data/my_dataset
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>cp<span class="w"> </span>your_file.csv<span class="w"> </span>./data/my_dataset/my_dataset_cleaned.csv
 </span></code></pre></div></p>
 <h3 id="missing-required-columns">Missing Required Columns<a class="headerlink" href="#missing-required-columns" title="Permanent link">&para;</a></h3>
 <p><strong>Problem:</strong>
@@ -2612,7 +2612,7 @@
 <tbody>
 <tr>
 <td>"Dataset directory does not exist"</td>
-<td><code>mkdir -p /root/autodl-tmp/data/my_dataset</code></td>
+<td><code>mkdir -p ./data/my_dataset</code></td>
 </tr>
 <tr>
 <td>"Preprocessed files not found"</td>

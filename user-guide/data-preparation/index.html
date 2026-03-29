@@ -1776,11 +1776,11 @@
 <h2 id="data-cleaning">Data Cleaning<a class="headerlink" href="#data-cleaning" title="Permanent link">&para;</a></h2>
 <p>Raw text often contains noise that degrades topic quality. The data cleaning module handles common issues in both English and Chinese text.</p>
 <h3 id="english-data-cleaning">English Data Cleaning<a class="headerlink" href="#english-data-cleaning" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">cd</span><span class="w"> </span>/root/autodl-tmp/ETM
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">cd</span><span class="w"> </span>./THETA
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>python<span class="w"> </span>-m<span class="w"> </span>dataclean.main<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span>--input<span class="w"> </span>/root/autodl-tmp/data/raw_data.csv<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span>--output<span class="w"> </span>/root/autodl-tmp/data/cleaned_data.csv<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span>--input<span class="w"> </span>./data/raw_data.csv<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span>--output<span class="w"> </span>./data/cleaned_data.csv<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span>--language<span class="w"> </span>english
 </span></code></pre></div>
 <p>The cleaning process removes:
@@ -1792,8 +1792,8 @@
 <h3 id="chinese-data-cleaning">Chinese Data Cleaning<a class="headerlink" href="#chinese-data-cleaning" title="Permanent link">&para;</a></h3>
 <p>Chinese text requires specialized processing for proper segmentation and cleaning.</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>python<span class="w"> </span>-m<span class="w"> </span>dataclean.main<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span>--input<span class="w"> </span>/root/autodl-tmp/data/raw_data.csv<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>--output<span class="w"> </span>/root/autodl-tmp/data/cleaned_data.csv<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span>--input<span class="w"> </span>./data/raw_data.csv<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span>--output<span class="w"> </span>./data/cleaned_data.csv<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>--language<span class="w"> </span>chinese
 </span></code></pre></div>
 <p>Additional steps for Chinese:
@@ -1803,8 +1803,8 @@
 <h3 id="batch-cleaning">Batch Cleaning<a class="headerlink" href="#batch-cleaning" title="Permanent link">&para;</a></h3>
 <p>Process multiple files in a directory:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>-m<span class="w"> </span>dataclean.main<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--input<span class="w"> </span>/root/autodl-tmp/data/raw/<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--output<span class="w"> </span>/root/autodl-tmp/data/cleaned/<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span>--input<span class="w"> </span>./data/raw/<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span>--output<span class="w"> </span>./data/cleaned/<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span>--language<span class="w"> </span>english
 </span></code></pre></div>
 <p>All CSV files in the input directory will be processed and saved to the output directory with the same filenames.</p>

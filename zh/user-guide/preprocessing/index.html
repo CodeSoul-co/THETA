@@ -1871,7 +1871,7 @@
 <h2 id="theta">THETA模型预处理<a class="headerlink" href="#theta" title="Permanent link">&para;</a></h2>
 <h3 id="_2">基本预处理<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
 <p>对于名为 <code>my_dataset</code> 且带有清洗后CSV文件的数据集：</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">cd</span><span class="w"> </span>/root/autodl-tmp/ETM
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">cd</span><span class="w"> </span>./THETA
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
@@ -1884,10 +1884,10 @@
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div>
 <p>此命令：
-1. 从 <code>/root/autodl-tmp/data/my_dataset/my_dataset_cleaned.csv</code> 加载CSV
+1. 从 <code>./data/my_dataset/my_dataset_cleaned.csv</code> 加载CSV
 2. 生成Qwen嵌入（0.6B模型维度为1024）
 3. 构建词汇表大小为5000的词袋
-4. 将输出保存到 <code>/root/autodl-tmp/result/0.6B/my_dataset/bow/</code></p>
+4. 将输出保存到 <code>./result/0.6B/my_dataset/bow/</code></p>
 <h3 id="_3">模型规模选择<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
 <p><strong>0.6B模型 - 大多数用例的默认选择</strong></p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
@@ -2022,7 +2022,7 @@
 </span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">    </span>--batch_size<span class="w"> </span><span class="m">32</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">    </span>--max_length<span class="w"> </span><span class="m">512</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">    </span>--clean<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">    </span>--raw-input<span class="w"> </span>/root/autodl-tmp/data/my_dataset/raw_data.csv<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">    </span>--raw-input<span class="w"> </span>./data/my_dataset/raw_data.csv<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">    </span>--language<span class="w"> </span>english<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div></p>
@@ -2036,7 +2036,7 @@
 </span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">    </span>--batch_size<span class="w"> </span><span class="m">32</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">    </span>--max_length<span class="w"> </span><span class="m">512</span><span class="w"> </span><span class="se">\</span>
 </span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">    </span>--clean<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">    </span>--raw-input<span class="w"> </span>/root/autodl-tmp/data/my_dataset/raw_data.csv<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">    </span>--raw-input<span class="w"> </span>./data/my_dataset/raw_data.csv<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">    </span>--language<span class="w"> </span>chinese<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">    </span>--gpu<span class="w"> </span><span class="m">0</span>
 </span></code></pre></div></p>
@@ -2052,7 +2052,7 @@
 </span></code></pre></div>
 <p>预期输出：
 <div class="language-text highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>检查数据集预处理文件：my_dataset
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>✓ BOW数据：/root/autodl-tmp/result/0.6B/my_dataset/bow/
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>✓ BOW数据：./result/0.6B/my_dataset/bow/
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>✓ 嵌入：qwen_embeddings_zeroshot.npy（1024维）
 </span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>✓ 词汇表：vocab.pkl（5000词）
 </span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>✓ 文档索引：doc_indices.npy
@@ -2071,7 +2071,7 @@
 - TF-IDF向量（用于CTM）
 - Word2Vec嵌入（用于ETM）
 - 文档-词项矩阵（用于LDA）</p>
-<p>输出位置：<code>/root/autodl-tmp/result/baseline/my_dataset/bow/</code></p>
+<p>输出位置：<code>./result/baseline/my_dataset/bow/</code></p>
 <hr />
 <h2 id="dtm">DTM模型预处理<a class="headerlink" href="#dtm" title="Permanent link">&para;</a></h2>
 <p>DTM需要CSV中的时间信息。指定时间列名：</p>

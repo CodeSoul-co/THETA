@@ -2392,11 +2392,11 @@
 <h2 id="_6">数据问题<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
 <h3 id="_7">文件未找到<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h3>
 <p><strong>问题：</strong>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>FileNotFoundError: /root/autodl-tmp/data/my_dataset/my_dataset_cleaned.csv
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>FileNotFoundError: ./data/my_dataset/my_dataset_cleaned.csv
 </span></code></pre></div></p>
 <p><strong>解决方案：</strong> 验证命名规则 <code>{数据集名称}_cleaned.csv</code>：
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>/root/autodl-tmp/data/my_dataset
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>cp<span class="w"> </span>your_file.csv<span class="w"> </span>/root/autodl-tmp/data/my_dataset/my_dataset_cleaned.csv
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>./data/my_dataset
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>cp<span class="w"> </span>your_file.csv<span class="w"> </span>./data/my_dataset/my_dataset_cleaned.csv
 </span></code></pre></div></p>
 <h3 id="_8">缺少必需列<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h3>
 <p><strong>问题：</strong>
@@ -2617,7 +2617,7 @@
 <tbody>
 <tr>
 <td>"Dataset directory does not exist"</td>
-<td><code>mkdir -p /root/autodl-tmp/data/my_dataset</code></td>
+<td><code>mkdir -p ./data/my_dataset</code></td>
 </tr>
 <tr>
 <td>"Preprocessed files not found"</td>

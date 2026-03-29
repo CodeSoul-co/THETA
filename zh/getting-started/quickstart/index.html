@@ -1784,14 +1784,14 @@
 </tbody>
 </table>
 <p>将您的CSV文件保存到数据目录：</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>/root/autodl-tmp/data/my_dataset
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>cp<span class="w"> </span>your_data.csv<span class="w"> </span>/root/autodl-tmp/data/my_dataset/my_dataset_cleaned.csv
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>./data/my_dataset
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>cp<span class="w"> </span>your_data.csv<span class="w"> </span>./data/my_dataset/my_dataset_cleaned.csv
 </span></code></pre></div>
 <p>注意：CSV文件名必须遵循 <code>{数据集名称}_cleaned.csv</code> 的格式。</p>
 <hr />
 <h2 id="2">步骤2：预处理数据<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
 <p>生成嵌入和词袋表示：</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">cd</span><span class="w"> </span>/root/autodl-tmp/ETM
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">cd</span><span class="w"> </span>./THETA
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
@@ -1808,14 +1808,14 @@
 2. 为所有文档生成通义千问嵌入
 3. 创建词袋表示
 4. 构建词汇表
-5. 将预处理数据保存到 <code>/root/autodl-tmp/result/0.6B/my_dataset/bow/</code></p>
+5. 将预处理数据保存到 <code>./result/0.6B/my_dataset/bow/</code></p>
 <p><strong>预期输出：</strong>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>加载数据集：my_dataset
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>处理1000篇文档...
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>生成嵌入：100%|████████| 32/32 [00:45&lt;00:00, 1.41秒/批]
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>构建词汇表（大小=5000）...
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>保存预处理数据...
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>完成！文件保存到 /root/autodl-tmp/result/0.6B/my_dataset/bow/
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>完成！文件保存到 ./result/0.6B/my_dataset/bow/
 </span></code></pre></div></p>
 <p>验证数据文件是否已创建：</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>python<span class="w"> </span>prepare_data.py<span class="w"> </span><span class="se">\</span>
@@ -1919,7 +1919,7 @@
 <hr />
 <h2 id="4">步骤4：查看结果<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
 <p>训练后，结果保存在：</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>/root/autodl-tmp/result/0.6B/my_dataset/zero_shot/
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>./result/0.6B/my_dataset/zero_shot/
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>├── checkpoints/
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>│   └── best_model.pt
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>├── metrics/
@@ -1933,7 +1933,7 @@
 </span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>    └── pyldavis.html
 </span></code></pre></div>
 <p><strong>查看评估指标：</strong></p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>cat<span class="w"> </span>/root/autodl-tmp/result/0.6B/my_dataset/zero_shot/metrics/evaluation_results.json
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>cat<span class="w"> </span>./result/0.6B/my_dataset/zero_shot/metrics/evaluation_results.json
 </span></code></pre></div>
 <p>示例输出：
 <div class="language-json highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="p">{</span>
