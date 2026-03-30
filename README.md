@@ -51,6 +51,23 @@ conda activate theta
 bash scripts/env_setup.sh
 ```
 
+### Step 4: Configure Environment Variables
+
+```bash
+# Copy configuration template
+cp .env.example .env
+
+# Edit .env file to configure model paths
+# At minimum, configure: QWEN_MODEL_0_6B and SBERT_MODEL_PATH
+```
+
+### Step 5: Load Environment Variables
+
+```bash
+# Load environment variables to current shell (required for subsequent scripts)
+source scripts/env_setup.sh
+```
+
 **Model Download Links**:
 
 | Model | Purpose | Download Link |

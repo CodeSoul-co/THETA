@@ -223,3 +223,7 @@ data/*
 # Ignore large binary files
 *.npy
 *.npz
+
+# Model weights (keep directory structure but ignore model files)
+models/*
+!models/.gitkeep

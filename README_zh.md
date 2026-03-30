@@ -45,10 +45,38 @@ conda create -n theta python=3.10 -y
 conda activate theta
 ```
 
-### 步骤 3：安装依赖 + 下载模型
+### 步骤 3：安装系统编译工具（BTM 模型需要）
 
 ```bash
-bash scripts/env_setup.sh
+apt-get update
+apt-get install -y autoconf automake libtool build-essential
+```
+
+### 步骤 4：安装 Python 依赖
+
+```bash
+# 先安装 bitermplus（需要从源码编译）
+pip install git+https://github.com/maximtrp/bitermplus.git
+
+# 安装其余所有依赖
+pip install -r src/models/requirements.txt
+```
+
+### 步骤 5：配置环境变量
+
+```bash
+# 复制配置模板
+cp .env.example .env
+
+# 编辑 .env 文件，配置模型路径
+# 至少需要配置：QWEN_MODEL_0_6B 和 SBERT_MODEL_PATH
+```
+
+### 步骤 6：加载环境变量
+
+```bash
+# 加载环境变量到当前 shell（必须执行，确保后续脚本能读取配置）
+source scripts/env_setup.sh
 ```
 
 **模型下载地址**：
