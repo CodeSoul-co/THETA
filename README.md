@@ -64,6 +64,9 @@ cp .env.example .env
 ### Step 5: Load Environment Variables
 
 ```bash
+# If you encounter "$'\r': command not found" error, fix Windows line endings first
+sed -i 's/\r$//' scripts/env_setup.sh
+
 # Load environment variables to current shell (required for subsequent scripts)
 source scripts/env_setup.sh
 ```
@@ -200,26 +203,37 @@ THETA model and baseline model result paths are **different**, please note the d
 ### THETA Model Results
 
 ```
-result/{model_size}/{dataset}/
-├── data/exp_{timestamp}/           # Preprocessed data
+result/{dataset}/{model_size}/theta/exp_{timestamp}/
+├── config.json                     # Experiment configuration
+├── metrics.json                    # 7 evaluation metrics
+├── data/                           # Preprocessed data
 │   ├── bow/                        # BOW matrix
-│   ├── embeddings/                 # Qwen embedding vectors
-│   └── config.json
-├── models/exp_{timestamp}_k{K}_e{E}_{mode}/
-│   ├── config.json                 # Experiment configuration
-│   ├── model/                      # Model parameters
-│   │   ├── theta_{timestamp}.npy   # Document-topic distribution
-│   │   ├── beta_{timestamp}.npy    # Topic-word distribution
-│   │   ├── etm_model_{timestamp}.pt
-│   │   └── training_history_{timestamp}.json
-│   ├── evaluation/
-│   │   └── metrics_{timestamp}.json  # 7 evaluation metrics
-│   ├── topic_words/
-│   └── visualization/
-└── zero_shot/visualization/        # Visualization output
-    └── viz_{timestamp}/
-        ├── global/                 # Global comparison charts
-        └── topic/                  # Topic details
+│   │   ├── bow_matrix.npy
+│   │   ├── vocab.txt
+│   │   ├── vocab.json
+│   │   └── vocab_embeddings.npy
+│   └── embeddings/                 # Qwen document embeddings
+│       ├── embeddings.npy
+│       └── metadata.json
+├── theta/                          # Model parameters (fixed filenames, no timestamp)
+│   ├── theta.npy                   # Document-topic distribution (D × K)
+│   ├── beta.npy                    # Topic-word distribution (K × V)
+│   ├── topic_embeddings.npy        # Topic embedding vectors
+│   ├── topic_words.json            # Topic word list
+│   ├── training_history.json       # Training history
+│   └── etm_model.pt                # PyTorch model
+└── {lang}/                         # Visualization output (zh or en)
+    ├── global/                     # Global charts
+    │   ├── topic_table.csv
+    │   ├── topic_network.png
+    │   ├── topic_similarity.png
+    │   ├── topic_wordcloud.png
+    │   ├── 7_core_metrics.png
+    │   └── ...
+    └── topic/                      # Topic details
+        ├── topic_1/
+        │   └── word_importance.png
+        └── ...
 ```
 
 ### Baseline Model Results (LDA, CTM, BTM, etc.)
@@ -250,8 +264,8 @@ result/{dataset}/{user_id}/{model}/exp_{timestamp}/
 
 | Model Type | Result Path |
 |------------|-------------|
-| THETA | `result/{model_size}/{dataset}/models/exp_*` |
-| Baseline Models | `result/{dataset}/{user_id}/{model}/exp_*` |
+| THETA | `result/{dataset}/{model_size}/theta/exp_{timestamp}/` |
+| Baseline Models | `result/{dataset}/{user_id}/{model}/exp_{timestamp}/` |
 
 ---
 

@@ -854,13 +854,14 @@ def prepare_theta_data(args):
     if args.exp_name:
         exp_id = f"{exp_id}_{args.exp_name}"
     
-    # Output directory - new structure: {model_size}/{dataset}/data/{exp_id}/
-    result_base = Path(RESULT_DIR) / model_size / dataset
-    exp_dir = result_base / 'data' / exp_id
-    exp_dir.mkdir(parents=True, exist_ok=True)
+    # Output directory - new structure: result/{dataset}/{model_size}/theta/exp_{timestamp}/data/
+    result_base = Path(RESULT_DIR) / dataset / model_size / 'theta'
+    exp_dir = result_base / exp_id
+    data_dir = exp_dir / 'data'
+    data_dir.mkdir(parents=True, exist_ok=True)
     
-    bow_dir = exp_dir / 'bow'
-    emb_dir = exp_dir / 'embeddings'
+    bow_dir = data_dir / 'bow'
+    emb_dir = data_dir / 'embeddings'
     
     # Save config.json with all parameters
     config = {

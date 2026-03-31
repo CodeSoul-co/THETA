@@ -75,6 +75,9 @@ cp .env.example .env
 ### 步骤 6：加载环境变量
 
 ```bash
+# 如果遇到 "$'\r': command not found" 错误，先修复 Windows 换行符
+sed -i 's/\r$//' scripts/env_setup.sh
+
 # 加载环境变量到当前 shell（必须执行，确保后续脚本能读取配置）
 source scripts/env_setup.sh
 ```
@@ -211,26 +214,37 @@ THETA 模型和基线模型的结果路径**不同**，请注意区分：
 ### THETA 模型结果
 
 ```
-result/{model_size}/{dataset}/
-├── data/exp_{timestamp}/           # 预处理数据
+result/{dataset}/{model_size}/theta/exp_{timestamp}/
+├── config.json                     # 实验配置
+├── metrics.json                    # 7 大评估指标
+├── data/                           # 预处理数据
 │   ├── bow/                        # 词袋矩阵
-│   ├── embeddings/                 # Qwen 嵌入向量
-│   └── config.json
-├── models/exp_{timestamp}_k{K}_e{E}_{mode}/
-│   ├── config.json                 # 实验配置
-│   ├── model/                      # 模型参数
-│   │   ├── theta_{timestamp}.npy   # 文档-主题分布
-│   │   ├── beta_{timestamp}.npy    # 主题-词分布
-│   │   ├── etm_model_{timestamp}.pt
-│   │   └── training_history_{timestamp}.json
-│   ├── evaluation/
-│   │   └── metrics_{timestamp}.json  # 7 大评估指标
-│   ├── topic_words/
-│   └── visualization/
-└── zero_shot/visualization/        # 可视化输出
-    └── viz_{timestamp}/
-        ├── global/                 # 全局对比图
-        └── topic/                  # 主题详情
+│   │   ├── bow_matrix.npy
+│   │   ├── vocab.txt
+│   │   ├── vocab.json
+│   │   └── vocab_embeddings.npy
+│   └── embeddings/                 # Qwen 文档嵌入
+│       ├── embeddings.npy
+│       └── metadata.json
+├── theta/                          # 模型参数（固定文件名，无时间戳）
+│   ├── theta.npy                   # 文档-主题分布 (D × K)
+│   ├── beta.npy                    # 主题-词分布 (K × V)
+│   ├── topic_embeddings.npy        # 主题嵌入向量
+│   ├── topic_words.json            # 主题词列表
+│   ├── training_history.json       # 训练历史
+│   └── etm_model.pt                # PyTorch 模型
+└── {lang}/                         # 可视化输出 (zh 或 en)
+    ├── global/                     # 全局图表
+    │   ├── 主题表.csv
+    │   ├── 主题网络图.png
+    │   ├── 主题相似度.png
+    │   ├── 主题词云.png
+    │   ├── 7项核心指标图.png
+    │   └── ...
+    └── topic/                      # 主题详情
+        ├── topic_1/
+        │   └── 词重要性图.png
+        └── ...
 ```
 
 ### 基线模型结果（LDA、CTM、BTM 等）
@@ -261,8 +275,8 @@ result/{dataset}/{user_id}/{model}/exp_{timestamp}/
 
 | 模型类型 | 结果路径 |
 |----------|----------|
-| THETA | `result/{model_size}/{dataset}/models/exp_*` |
-| 基线模型 | `result/{dataset}/{user_id}/{model}/exp_*` |
+| THETA | `result/{dataset}/{model_size}/theta/exp_{timestamp}/` |
+| 基线模型 | `result/{dataset}/{user_id}/{model}/exp_{timestamp}/` |
 
 ---
 

@@ -8,6 +8,16 @@
 # Usage (in other scripts):
 #   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 #   source "$SCRIPT_DIR/env_setup.sh"
+#
+# WARNING: If you modify .env variables, you MUST unset the old values first!
+#   Otherwise the shell will keep using the cached values.
+#   
+#   Option 1: Unset all THETA-related variables before re-sourcing:
+#     unset QWEN_MODEL_0_6B QWEN_MODEL_4B QWEN_MODEL_8B SBERT_MODEL_PATH
+#     unset DATA_DIR WORKSPACE_DIR RESULT_DIR PROJECT_ROOT
+#     source scripts/env_setup.sh
+#
+#   Option 2: Start a new shell session
 # =============================================================================
 
 # Detect PROJECT_ROOT from script location
@@ -52,9 +62,6 @@ export MODELS_DIR="${MODELS_DIR:-$SRC_DIR/models}"
 
 # ETM_DIR alias for backward compatibility with existing scripts
 export ETM_DIR="${ETM_DIR:-$MODELS_DIR}"
-
-# Embedding module directory
-export EMBEDDING_DIR="${EMBEDDING_DIR:-$SRC_DIR/embedding}"
 
 # Agent module directory
 export AGENT_DIR="${AGENT_DIR:-$PROJECT_ROOT/agent}"
@@ -136,7 +143,6 @@ print_env_info() {
     echo "PROJECT_ROOT:         $PROJECT_ROOT"
     echo "SRC_DIR:              $SRC_DIR"
     echo "MODELS_DIR:           $MODELS_DIR"
-    echo "EMBEDDING_DIR:        $EMBEDDING_DIR"
     echo "AGENT_DIR:            $AGENT_DIR"
     echo "DATA_DIR:             $DATA_DIR"
     echo "WORKSPACE_DIR:        $WORKSPACE_DIR"

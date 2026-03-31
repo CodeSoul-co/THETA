@@ -227,10 +227,10 @@ def load_doc_embeddings(
 ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
     """Load document embeddings from result/{dataset}/{mode}/embeddings/"""
     embedding_dir = config.embeddings_dir
-    # Support multiple embedding file naming conventions
+    # Support multiple embedding file naming conventions (prefer simple name first)
     emb_candidates = [
-        os.path.join(embedding_dir, f"{config.data.dataset}_{config.embedding.mode}_embeddings.npy"),
         os.path.join(embedding_dir, "embeddings.npy"),
+        os.path.join(embedding_dir, f"{config.data.dataset}_{config.embedding.mode}_embeddings.npy"),
     ]
     emb_path = emb_candidates[0]  # default for error message
     for candidate in emb_candidates:
@@ -682,25 +682,25 @@ def save_results(
         f.write('\n'.join(vocab))
     logger.info(f"BOW saved to {config.bow_dir}")
     
-    # Save model outputs to model_dir
-    np.save(os.path.join(config.model_dir, f"theta_{timestamp}.npy"), theta)
-    np.save(os.path.join(config.model_dir, f"beta_{timestamp}.npy"), beta)
-    np.save(os.path.join(config.model_dir, f"topic_embeddings_{timestamp}.npy"), topic_emb)
+    # Save model outputs to model_dir (fixed filenames without timestamp)
+    np.save(os.path.join(config.model_dir, "theta.npy"), theta)
+    np.save(os.path.join(config.model_dir, "beta.npy"), beta)
+    np.save(os.path.join(config.model_dir, "topic_embeddings.npy"), topic_emb)
     
     # Save topic words
     topic_words_dict = {str(k): words for k, words in topic_words}
-    with open(os.path.join(config.model_dir, f"topic_words_{timestamp}.json"), 'w') as f:
+    with open(os.path.join(config.model_dir, "topic_words.json"), 'w') as f:
         json.dump(topic_words_dict, f, indent=2, ensure_ascii=False)
     
     # Save training history
-    with open(os.path.join(config.model_dir, f"training_history_{timestamp}.json"), 'w') as f:
+    with open(os.path.join(config.model_dir, "training_history.json"), 'w') as f:
         json.dump(history, f, indent=2)
     
     # Save model weights
-    torch.save(model.state_dict(), os.path.join(config.model_dir, f"etm_model_{timestamp}.pt"))
+    torch.save(model.state_dict(), os.path.join(config.model_dir, "etm_model.pt"))
     
-    # Save config
-    config.save(os.path.join(config.model_dir, f"config_{timestamp}.json"))
+    # Save config to exp_dir (parent of model_dir)
+    config.save(os.path.join(config.exp_dir, "config.json"))
     
     # Save timestamps if available (for temporal analysis)
     if timestamps is not None and len(timestamps) > 0:
@@ -728,20 +728,18 @@ def run_evaluation(
     from evaluation.topic_metrics import compute_all_metrics
     from evaluation.topic_metrics import TopicMetrics
     
-    # Find latest results if no timestamp
-    if timestamp is None:
-        result_files = sorted(Path(config.model_dir).glob("theta_*.npy"), reverse=True)
-        if not result_files:
-            raise FileNotFoundError(f"No results found in {config.model_dir}")
-        timestamp = result_files[0].stem.replace("theta_", "")
+    # Load results from model_dir (fixed filenames)
+    theta_path = os.path.join(config.model_dir, "theta.npy")
+    if not os.path.exists(theta_path):
+        raise FileNotFoundError(f"No results found in {config.model_dir}")
     
-    logger.info(f"Evaluating results with timestamp: {timestamp}")
+    logger.info(f"Evaluating results from: {config.model_dir}")
     
     # Load results from model_dir
-    theta = np.load(os.path.join(config.model_dir, f"theta_{timestamp}.npy"))
-    beta = np.load(os.path.join(config.model_dir, f"beta_{timestamp}.npy"))
+    theta = np.load(os.path.join(config.model_dir, "theta.npy"))
+    beta = np.load(os.path.join(config.model_dir, "beta.npy"))
     
-    with open(os.path.join(config.model_dir, f"topic_words_{timestamp}.json"), 'r') as f:
+    with open(os.path.join(config.model_dir, "topic_words.json"), 'r') as f:
         topic_words = json.load(f)
     
     # Load BOW matrix from bow_dir (or regenerate if not exists)
@@ -775,9 +773,8 @@ def run_evaluation(
     logger.info(f"  7. PPL:         {metrics.get('PPL', 1000):.2f}")
     logger.info("=" * 60)
     
-    # Save metrics to evaluation_dir
-    os.makedirs(config.evaluation_dir, exist_ok=True)
-    metrics_path = os.path.join(config.evaluation_dir, f"metrics_{timestamp}.json")
+    # Save metrics to exp_dir (fixed filename)
+    metrics_path = os.path.join(config.exp_dir, "metrics.json")
     
     # Convert numpy types to Python native types for JSON serialization
     def convert_to_serializable(obj):

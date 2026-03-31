@@ -408,40 +408,43 @@ def get_workspace_path(dataset_name: str = "", model_size: str = "0.6B") -> Path
 def get_result_path(
     dataset_name: str = "",
     model_size: str = "0.6B",
-    model_name: str = "",
+    model_name: str = "theta",
     task_name: str = "",
     lang: str = ""
 ) -> Path:
     """
     Get result path for model-specific outputs.
     
-    Unified Structure: result/{model_size}/{dataset_name}/{model_name}/{task_name}/
-    (Removed default_user redundancy)
+    New Structure: result/{dataset}/{model_size}/theta/exp_{timestamp}/
     
     Args:
         dataset_name: Dataset name
         model_size: Model size (0.6B, 4B, 8B)
         model_name: Model name (theta, dtm, stm, lda, ctm, etc.)
         task_name: Task/experiment name (default: exp_YYYYMMDD_HHMMSS)
-        lang: Language for visualization output ('en' or 'cn')
+        lang: Language for visualization output ('zh' or 'en')
     
     Directory Structure:
-        result/{model_size}/{dataset_name}/
-        ├── data/               # Preprocessed data (BOW, embeddings)
-        │   └── exp_*/
-        ├── models/             # Model outputs
-        │   └── exp_*/
-        │       ├── model/      # Model parameters
-        │       │   ├── theta_*.npy
-        │       │   ├── beta_*.npy
-        │       │   └── *.pt
-        │       ├── evaluation/ # Metrics
-        │       └── visualization/
-        └── logs/
+        result/{dataset}/{model_size}/theta/exp_{timestamp}/
+        ├── config.json         # Experiment config
+        ├── data/               # Preprocessed data
+        │   ├── bow/
+        │   └── embeddings/
+        ├── theta/              # Model outputs
+        │   ├── theta.npy
+        │   ├── beta.npy
+        │   ├── topic_words.json
+        │   └── etm_model.pt
+        ├── metrics.json        # Evaluation metrics
+        └── {lang}/             # Visualization (zh or en)
+            ├── global/
+            └── topic/
     """
-    path = BASE_RESULT / model_size
+    path = BASE_RESULT
     if dataset_name:
         path = path / dataset_name
+    if model_size:
+        path = path / model_size
     if model_name:
         path = path / model_name
     if task_name:
@@ -819,26 +822,26 @@ class PipelineConfig:
     def result_base_dir(self) -> str:
         """
         Result directory for model outputs.
-        Structure: result/{model_size}/{dataset_name}/models/{timestamp}/
+        New structure: result/{dataset}/{model_size}/theta/exp_{timestamp}/
         """
         ts = self.timestamp or self.train_exp or ""
-        # Unified path: result/{model_size}/{dataset}/models/{exp_id}/
-        return str(get_result_path(self.data.dataset, self.model_size, "models", ts))
+        return str(get_result_path(self.data.dataset, self.model_size, "theta", ts))
     
     @property
     def model_dir(self) -> str:
-        """Directory for trained model and matrices (theta, beta)"""
-        return os.path.join(self.result_base_dir, "model")
+        """Directory for trained model and matrices (theta, beta): exp_*/theta/"""
+        return os.path.join(self.result_base_dir, "theta")
     
     @property
     def evaluation_dir(self) -> str:
-        """Directory for evaluation results"""
-        return os.path.join(self.result_base_dir, "evaluation")
+        """Directory for evaluation results (deprecated, use exp_dir/metrics.json)"""
+        return self.result_base_dir
     
     @property
     def visualization_dir(self) -> str:
-        """Directory for visualizations"""
-        return os.path.join(self.result_base_dir, "visualization")
+        """Directory for visualizations: exp_*/{lang}/"""
+        lang = self.visualization.language if hasattr(self, 'visualization') else 'zh'
+        return os.path.join(self.result_base_dir, lang)
     
     @property
     def log_dir(self) -> str:
@@ -853,38 +856,40 @@ class PipelineConfig:
     
     @property
     def dataset_base_dir(self) -> str:
-        """Legacy: Base directory for this dataset"""
+        """Base directory for this dataset
+        
+        New structure: result/{dataset}/{model_size}/theta/
+        """
         if self.model_size:
-            return os.path.join(self.output_base_dir, self.model_size, self.data.dataset)
-        return os.path.join(self.output_base_dir, self.data.dataset)
+            return os.path.join(self.output_base_dir, self.data.dataset, self.model_size, "theta")
+        return os.path.join(self.output_base_dir, self.data.dataset, "theta")
     
     @property
-    def data_exp_dir(self) -> str:
-        """Legacy: Data experiment directory"""
-        if self.data_exp:
-            return os.path.join(self.dataset_base_dir, "data", self.data_exp)
+    def exp_dir(self) -> str:
+        """Experiment directory: result/{dataset}/{model_size}/theta/exp_{timestamp}/"""
+        if self.train_exp:
+            return os.path.join(self.dataset_base_dir, self.train_exp)
         return self.dataset_base_dir
     
     @property
+    def data_exp_dir(self) -> str:
+        """Data directory within experiment: exp_*/data/"""
+        return os.path.join(self.exp_dir, "data")
+    
+    @property
     def result_dir(self) -> str:
-        """Legacy: Training result directory"""
-        if self.train_exp:
-            return os.path.join(self.dataset_base_dir, "models", self.train_exp)
-        return os.path.join(self.dataset_base_dir, self.embedding.mode)
+        """Model output directory: exp_*/theta/"""
+        return os.path.join(self.exp_dir, "theta")
     
     @property
     def embeddings_dir(self) -> str:
-        """Legacy: Directory for document embeddings"""
-        if self.data_exp:
-            return os.path.join(self.data_exp_dir, "embeddings")
-        return os.path.join(self.dataset_base_dir, self.embedding.mode, "embeddings")
+        """Directory for document embeddings: exp_*/data/embeddings/"""
+        return os.path.join(self.data_exp_dir, "embeddings")
     
     @property
     def bow_dir(self) -> str:
-        """Legacy: Directory for BOW matrices and vocabulary"""
-        if self.data_exp:
-            return os.path.join(self.data_exp_dir, "bow")
-        return os.path.join(self.dataset_base_dir, "bow")
+        """Directory for BOW matrices and vocabulary: exp_*/data/bow/"""
+        return os.path.join(self.data_exp_dir, "bow")
     
     # Legacy properties for backward compatibility
     @property

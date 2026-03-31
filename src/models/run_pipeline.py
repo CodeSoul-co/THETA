@@ -92,12 +92,12 @@ ALL_MODELS = [
 MODEL_SIZES = ['0.6B', '4B', '8B']
 
 
-def find_workspace_dir(dataset: str, model_size: str = "0.6B", workspace_dir: str = None) -> Path:
-    """Find workspace directory for shared matrices.
+def find_workspace_dir(dataset: str, user_id: str = "default_user", workspace_dir: str = None) -> Path:
+    """Find workspace directory for shared matrices (baseline models).
     
     Args:
         dataset: Dataset name
-        model_size: Model size (0.6B, 4B, 8B)
+        user_id: User identifier
         workspace_dir: Explicit workspace directory (overrides auto-detection)
     
     Returns:
@@ -109,8 +109,8 @@ def find_workspace_dir(dataset: str, model_size: str = "0.6B", workspace_dir: st
             return ws
         raise FileNotFoundError(f"Workspace directory not found: {ws}")
     
-    # Use unified structure: workspace/{model_size}/{dataset}/
-    ws = get_workspace_path(dataset, model_size)
+    # Baseline workspace structure: data/workspace/{dataset}/{user_id}/
+    ws = Path(DATA_DIR) / 'workspace' / dataset / user_id
     if ws.exists() and (ws / 'bow_matrix.npy').exists():
         print(f"  [Workspace] Using: {ws}")
         return ws
@@ -257,38 +257,32 @@ def get_model_list(models_str: str) -> List[str]:
 
 
 def check_theta_data_files(dataset: str, model_size: str, mode: str, data_exp_dir: str = '') -> Dict[str, Any]:
-    """Check if data files required for THETA model exist"""
-    result_base = Path(RESULT_DIR) / model_size / dataset
+    """Check if data files required for THETA model exist
     
+    New structure: result/{dataset}/{model_size}/theta/exp_*/data/
+    """
     if data_exp_dir:
-        # New exp structure: data/{exp_id}/embeddings/ and data/{exp_id}/bow/
+        # New exp structure: exp_*/data/embeddings/ and exp_*/data/bow/
         exp_path = Path(data_exp_dir)
+        data_path = exp_path / 'data'
         emb_candidates = [
-            exp_path / 'embeddings' / 'embeddings.npy',
-            exp_path / 'embeddings' / f'{dataset}_{mode}_embeddings.npy',
+            data_path / 'embeddings' / 'embeddings.npy',
+            data_path / 'embeddings' / f'{dataset}_{mode}_embeddings.npy',
         ]
-        bow_base = exp_path / 'bow'
+        bow_base = data_path / 'bow'
     else:
-        # Legacy structure: {mode}/embeddings/ and bow/
+        # Fallback: search in dataset base
+        result_base = Path(RESULT_DIR) / dataset / model_size / 'theta'
         emb_candidates = [
-            result_base / mode / 'embeddings' / f'{dataset}_{mode}_embeddings.npy',
-            result_base / mode / 'embeddings' / 'embeddings.npy',
+            result_base / 'data' / 'embeddings' / 'embeddings.npy',
         ]
-        bow_base = result_base / 'bow'
+        bow_base = result_base / 'data' / 'bow'
     
     emb_path = emb_candidates[0]  # default (for error message)
     for candidate in emb_candidates:
         if candidate.exists():
             emb_path = candidate
             break
-    
-    # Also check 4B/8B format: {model_size}/{dataset}/embedding/
-    if not emb_path.exists() and not data_exp_dir:
-        emb_path_v2_dir = result_base / 'embedding'
-        if emb_path_v2_dir.exists():
-            for f in emb_path_v2_dir.glob(f'{mode}_embeddings_*.npy'):
-                emb_path = f
-                break
     
     # Files to check
     files_to_check = {
@@ -369,29 +363,36 @@ def print_data_check_result(model: str, status: Dict[str, Any]):
 
 
 def _is_complete_theta_exp(exp_dir: Path) -> bool:
-    """Check if a THETA data experiment has all required files."""
+    """Check if a THETA experiment has all required data files.
+    
+    New structure: exp_*/data/bow/ and exp_*/data/embeddings/
+    """
+    data_dir = exp_dir / 'data'
     return (
-        (exp_dir / 'bow' / 'bow_matrix.npy').exists() and
-        (exp_dir / 'embeddings' / 'embeddings.npy').exists()
+        (data_dir / 'bow' / 'bow_matrix.npy').exists() and
+        (data_dir / 'embeddings' / 'embeddings.npy').exists()
     )
 
 
-def find_theta_data_exp(dataset: str, model_size: str, data_exp: str = '') -> str:
-    """Find THETA data experiment directory.
+def find_theta_data_exp(dataset: str, model_size: str, mode: str, data_exp: str = '') -> str:
+    """Find THETA experiment directory with data.
+    
+    New structure: result/{dataset}/{model_size}/theta/exp_*/
     
     Args:
         dataset: Dataset name
         model_size: Model size (0.6B, 4B, 8B)
-        data_exp: Data experiment ID, 'select' for interactive, '' for latest/legacy
+        mode: Training mode (zero_shot, supervised, unsupervised) - kept for compatibility
+        data_exp: Experiment ID, 'select' for interactive, '' for latest
     
     Returns:
-        Path to data experiment directory, or empty string for legacy mode
+        Path to experiment directory, or empty string if not found
     """
-    data_base = Path(RESULT_DIR) / model_size / dataset / 'data'
+    theta_base = Path(RESULT_DIR) / dataset / model_size / 'theta'
     
     # Check if new exp structure exists
-    if data_base.exists():
-        exp_dirs = sorted(data_base.glob('exp_*'), key=lambda p: p.stat().st_mtime, reverse=True)
+    if theta_base.exists():
+        exp_dirs = sorted(theta_base.glob('exp_*'), key=lambda p: p.stat().st_mtime, reverse=True)
         if exp_dirs:
             if data_exp and data_exp != 'select':
                 # Explicit data_exp specified — use it even if incomplete
@@ -423,7 +424,7 @@ def run_theta(args) -> Dict[str, Any]:
     result = {'model': 'theta', 'dataset': args.dataset, 'mode': args.mode, 'model_size': args.model_size}
     
     # Resolve data experiment
-    data_exp_dir = find_theta_data_exp(args.dataset, args.model_size, getattr(args, 'data_exp', ''))
+    data_exp_dir = find_theta_data_exp(args.dataset, args.model_size, args.mode, getattr(args, 'data_exp', ''))
     if data_exp_dir:
         data_exp_id = Path(data_exp_dir).name
         print(f"  Data experiment: {data_exp_id}")
@@ -435,11 +436,17 @@ def run_theta(args) -> Dict[str, Any]:
         result['train_status'] = 'data_missing'
         return result
     
-    # Generate training experiment ID
-    train_exp_id = generate_model_exp_id(args.exp_name)
-    train_exp_dir = Path(RESULT_DIR) / args.model_size / args.dataset / 'models' / train_exp_id
-    train_exp_dir.mkdir(parents=True, exist_ok=True)
-    print(f"  Train experiment: {train_exp_id}")
+    # Use the same experiment directory as data preparation
+    # New structure: result/{dataset}/{model_size}/theta/exp_{timestamp}/
+    # Training outputs (theta/, metrics.json) go into the same exp directory as data
+    if data_exp_dir:
+        train_exp_dir = Path(data_exp_dir)
+        train_exp_id = train_exp_dir.name
+    else:
+        train_exp_id = generate_model_exp_id(args.exp_name)
+        train_exp_dir = Path(RESULT_DIR) / args.dataset / args.model_size / 'theta' / train_exp_id
+        train_exp_dir.mkdir(parents=True, exist_ok=True)
+    print(f"  Experiment: {train_exp_id}")
     print(f"  Output directory: {train_exp_dir}")
     
     # Save training config

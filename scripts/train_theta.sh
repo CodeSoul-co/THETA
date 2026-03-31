@@ -153,20 +153,21 @@ if [ -z "$DATASET" ]; then
 fi
 
 # Auto-select data_exp if not provided
+# New structure: result/{dataset}/{model_size}/theta/exp_*/
 if [ -z "$DATA_EXP" ]; then
-    THETA_DATA_DIR="$RESULT_DIR/$MODEL_SIZE/$DATASET/data"
-    if [ -d "$THETA_DATA_DIR" ]; then
-        LATEST_EXP=$(ls -dt "$THETA_DATA_DIR"/exp_* 2>/dev/null | head -1)
+    THETA_BASE_DIR="$RESULT_DIR/$DATASET/$MODEL_SIZE/theta"
+    if [ -d "$THETA_BASE_DIR" ]; then
+        LATEST_EXP=$(ls -dt "$THETA_BASE_DIR"/exp_* 2>/dev/null | head -1)
         if [ -n "$LATEST_EXP" ]; then
             DATA_EXP=$(basename "$LATEST_EXP")
-            echo "[INFO] Auto-selected data experiment: $DATA_EXP"
+            echo "[INFO] Auto-selected experiment: $DATA_EXP"
             # Read mode from config if not explicitly set
-            EXP_CONFIG="$THETA_DATA_DIR/$DATA_EXP/config.json"
+            EXP_CONFIG="$THETA_BASE_DIR/$DATA_EXP/config.json"
             if [ -f "$EXP_CONFIG" ]; then
                 CONFIG_MODE=$(python3 -c "import json; print(json.load(open('$EXP_CONFIG')).get('mode',''))" 2>/dev/null)
                 if [ -n "$CONFIG_MODE" ] && [ "$MODE" = "zero_shot" ]; then
                     MODE="$CONFIG_MODE"
-                    echo "[INFO] Mode from data experiment config: $MODE"
+                    echo "[INFO] Mode from experiment config: $MODE"
                 fi
             fi
         fi
@@ -184,32 +185,32 @@ echo "Epochs:      $EPOCHS"
 echo "Language:    $LANGUAGE"
 echo ""
 
-# Data path checking - supports both exp structure and legacy
-THETA_DATA_BASE="$RESULT_DIR/$MODEL_SIZE/$DATASET"
+# Data path checking - new structure: result/{dataset}/{model_size}/theta/exp_*/
+THETA_BASE="$RESULT_DIR/$DATASET/$MODEL_SIZE/theta"
 
-# Function to find latest data experiment
-find_latest_data_exp() {
-    LATEST_EXP=$(ls -dt "$THETA_DATA_BASE/data"/exp_* 2>/dev/null | head -1)
-    if [ -n "$LATEST_EXP" ] && [ -f "$LATEST_EXP/embeddings/embeddings.npy" ]; then
+# Function to find latest experiment with data
+find_latest_exp() {
+    LATEST_EXP=$(ls -dt "$THETA_BASE"/exp_* 2>/dev/null | head -1)
+    if [ -n "$LATEST_EXP" ] && [ -f "$LATEST_EXP/data/embeddings/embeddings.npy" ]; then
         echo $(basename "$LATEST_EXP")
     fi
 }
 
-# If DATA_EXP not specified, try to find existing data
+# If DATA_EXP not specified, try to find existing experiment
 if [ -z "$DATA_EXP" ]; then
-    DATA_EXP=$(find_latest_data_exp)
+    DATA_EXP=$(find_latest_exp)
 fi
 
 if [ -n "$DATA_EXP" ]; then
-    # New exp structure
-    THETA_EXP_DIR="$THETA_DATA_BASE/data/$DATA_EXP"
-    THETA_EMB_DIR="$THETA_EXP_DIR/embeddings"
-    THETA_BOW_DIR="$THETA_EXP_DIR/bow"
-    echo "Data experiment: $DATA_EXP"
+    # New exp structure: exp_*/data/
+    THETA_EXP_DIR="$THETA_BASE/$DATA_EXP"
+    THETA_EMB_DIR="$THETA_EXP_DIR/data/embeddings"
+    THETA_BOW_DIR="$THETA_EXP_DIR/data/bow"
+    echo "Experiment: $DATA_EXP"
 else
     # Legacy structure (fallback)
-    THETA_EMB_DIR="$THETA_DATA_BASE/$MODE/embeddings"
-    THETA_BOW_DIR="$THETA_DATA_BASE/bow"
+    THETA_EMB_DIR="$THETA_BASE/data/embeddings"
+    THETA_BOW_DIR="$THETA_BASE/data/bow"
 fi
 
 echo "Data path check:"
@@ -304,5 +305,5 @@ eval $CMD
 echo ""
 echo "=========================================="
 echo "Training completed!"
-echo "Results saved to: $RESULT_DIR/$MODEL_SIZE/$DATASET/models/"
+echo "Results saved to: $RESULT_DIR/$DATASET/$MODEL_SIZE/theta/"
 echo "=========================================="

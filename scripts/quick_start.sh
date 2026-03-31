@@ -25,7 +25,7 @@ source "$SCRIPT_DIR/env_setup.sh"
 
 # Default values
 DATASET=""
-LANGUAGE="en"
+LANGUAGE="cn"
 MIN_DOCUMENT_COUNT=5
 
 # Parse arguments
@@ -69,12 +69,14 @@ if [ -z "$DATASET" ]; then
 fi
 
 # Map language code to full name for dataclean
-if [ "$LANGUAGE" = "zh" ]; then
+if [ "$LANGUAGE" = "zh" ] || [ "$LANGUAGE" = "chinese" ] || [ "$LANGUAGE" = "cn" ]; then
     LANGUAGE_FULL="chinese"
     LANGUAGE_DISPLAY="Chinese"
+    LANGUAGE="zh"
 else
     LANGUAGE_FULL="english"
     LANGUAGE_DISPLAY="English"
+    LANGUAGE="en"
 fi
 
 echo "=========================================="
@@ -86,26 +88,56 @@ echo ""
 
 # Step 1: Create dataset directory and check input
 echo "[1/5] Checking input data..."
-mkdir -p "$DATA_DIR/$DATASET"
+
+# Clean DATA_DIR from .env (remove trailing slashes, whitespace, and \r)
+# Keep the value from .env, just clean format issues
+DATA_DIR=$(echo "$DATA_DIR" | sed 's:/*$::' | tr -d '\r\n')
+
+# Convert relative path to absolute path for find command compatibility
+# This still uses the path from .env, just makes it absolute
+if [[ "$DATA_DIR" == ./* ]]; then
+    DATA_DIR="$PROJECT_ROOT/${DATA_DIR#./}"
+elif [[ "$DATA_DIR" != /* ]]; then
+    # If it's a relative path without ./, also convert to absolute
+    DATA_DIR="$PROJECT_ROOT/$DATA_DIR"
+fi
+
+# Full path to dataset
+DATASET_PATH="$DATA_DIR/$DATASET"
+echo "Dataset path: $DATASET_PATH"
+
+# Check if dataset directory exists
+if [ ! -d "$DATASET_PATH" ]; then
+    echo ""
+    echo "============================================================"
+    echo "[ERROR] Dataset directory not found: $DATASET_PATH"
+    echo "============================================================"
+    echo "Please create the directory and place your data files there."
+    echo "============================================================"
+    exit 1
+fi
+
+mkdir -p "$DATASET_PATH"
 
 # Check for existing CSV file
-CSV_FILE=$(ls "$DATA_DIR/$DATASET"/*_cleaned.csv 2>/dev/null | head -1)
+CSV_FILE=$(ls "$DATASET_PATH"/*_cleaned.csv 2>/dev/null | head -1)
 if [ -z "$CSV_FILE" ]; then
-    CSV_FILE=$(ls "$DATA_DIR/$DATASET"/*.csv 2>/dev/null | head -1)
+    CSV_FILE=$(ls "$DATASET_PATH"/*.csv 2>/dev/null | head -1)
 fi
 
 # If no CSV, check for raw documents and convert
 if [ -z "$CSV_FILE" ]; then
-    # Count raw documents (docx, pdf, txt, doc, rtf, md)
-    DOC_COUNT=$(find "$DATA_DIR/$DATASET" -type f \( -name "*.docx" -o -name "*.pdf" -o -name "*.txt" -o -name "*.doc" -o -name "*.rtf" -o -name "*.md" \) 2>/dev/null | wc -l)
+    # Count raw documents recursively (docx, pdf, txt, doc, rtf, md)
+    # Exclude temporary files starting with ~$
+    DOC_COUNT=$(find "$DATASET_PATH" -type f \( -name "*.docx" -o -name "*.pdf" -o -name "*.txt" -o -name "*.doc" -o -name "*.rtf" -o -name "*.md" \) ! -name "~\$*" 2>/dev/null | wc -l)
     
     if [ "$DOC_COUNT" -eq 0 ]; then
         echo ""
         echo "============================================================"
-        echo "[ERROR] No data found in $DATA_DIR/$DATASET/"
+        echo "[ERROR] No data found in $DATASET_PATH"
         echo "============================================================"
         echo "Please place one of the following:"
-        echo "  - Raw documents: .docx, .pdf, .txt files"
+        echo "  - Raw documents: .docx, .pdf, .txt files (supports subdirectories)"
         echo "  - Pre-cleaned CSV: ${DATASET}_cleaned.csv"
         echo "============================================================"
         exit 1
@@ -126,15 +158,15 @@ if [ -z "$CSV_FILE" ]; then
         exit 1
     fi
     
-    echo "Found $DOC_COUNT raw documents, converting to CSV..."
+    echo "Found $DOC_COUNT raw documents (recursive search), converting to CSV..."
     echo ""
     
     # Step 1.5: Convert raw documents to CSV using dataclean
     echo "[1.5/5] Converting documents to CSV..."
-    CSV_FILE="$DATA_DIR/$DATASET/${DATASET}_cleaned.csv"
+    CSV_FILE="$DATASET_PATH/${DATASET}_cleaned.csv"
     
     # Use PYTHONPATH to avoid cd path issues
-    PYTHONPATH="$ETM_DIR:$PYTHONPATH" python -m dataclean.main convert "$DATA_DIR/$DATASET" "$CSV_FILE" --language $LANGUAGE_FULL --recursive
+    PYTHONPATH="$ETM_DIR:$PYTHONPATH" python -m dataclean.main convert "$DATASET_PATH" "$CSV_FILE" --language $LANGUAGE_FULL --recursive
     
     echo "✓ CSV generated: $CSV_FILE"
     echo ""
@@ -200,13 +232,13 @@ echo "THETA Pipeline Completed Successfully!"
 echo "=========================================="
 echo ""
 echo "Results saved to:"
-echo "  $RESULT_DIR/0.6B/$DATASET/"
+echo "  $RESULT_DIR/$DATASET/0.6B/theta/exp_*/"
 echo ""
 echo "Key outputs:"
-echo "  - Model:        $RESULT_DIR/0.6B/$DATASET/models/exp_*/model/"
-echo "  - Embeddings:   $RESULT_DIR/0.6B/$DATASET/data/exp_*/embeddings/"
-echo "  - BOW:          $RESULT_DIR/0.6B/$DATASET/data/exp_*/bow/"
-echo "  - Evaluation:   $RESULT_DIR/0.6B/$DATASET/models/exp_*/evaluation/"
-echo "  - Visualization: $RESULT_DIR/0.6B/$DATASET/models/exp_*/visualization/"
+echo "  - Config:       $RESULT_DIR/$DATASET/0.6B/theta/exp_*/config.json"
+echo "  - Data:         $RESULT_DIR/$DATASET/0.6B/theta/exp_*/data/"
+echo "  - Model:        $RESULT_DIR/$DATASET/0.6B/theta/exp_*/theta/"
+echo "  - Metrics:      $RESULT_DIR/$DATASET/0.6B/theta/exp_*/metrics.json"
+echo "  - Visualization: $RESULT_DIR/$DATASET/0.6B/theta/exp_*/{lang}/"
 echo ""
 echo "=========================================="
