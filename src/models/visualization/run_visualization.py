@@ -58,23 +58,21 @@ def load_visualization_data(result_dir, dataset, mode, model_size=None, model_ex
     result_dir = Path(result_dir)
     result_base = result_dir.parent if model_size and model_size in str(result_dir) else result_dir
     
-    # Auto-discover directories based on new structure
-    # New structure: result/{dataset}/{model_size}/theta/exp_*/
-    #   - exp_*/theta/       -> model files (theta.npy, beta.npy, topic_words.json)
-    #   - exp_*/data/bow/    -> BOW files
-    #   - exp_*/metrics.json -> evaluation metrics
-    
+    # Auto-discover directories based on actual structure
     model_dir = None
+    topic_words_dir = None
     bow_dir = None
-    exp_dir = None
+    evaluation_dir = None
     
-    def find_exp_dir():
-        """Search for experiment directory with model files"""
-        # New structure: result/{dataset}/{model_size}/theta/exp_*/
+    # Strategy 1: Find model files (theta_*.npy, beta_*.npy) by searching
+    def find_model_dir():
+        """Search for directory containing theta_*.npy files"""
+        # Unified structure: result/{model_size}/{dataset}/models/exp_*/theta/ or model/
         search_paths = [
-            result_base / dataset / model_size / 'theta' if model_size else None,
-            result_dir / dataset / model_size / 'theta' if model_size else None,
-            result_dir,
+            result_dir / dataset / 'models' if model_size and model_size in str(result_dir) else None,
+            result_base / model_size / dataset / 'models' if model_size else None,
+            result_base / dataset / 'models',
+            result_dir / dataset,
         ]
         search_paths = [p for p in search_paths if p is not None]
         
@@ -83,82 +81,145 @@ def load_visualization_data(result_dir, dataset, mode, model_size=None, model_ex
                 continue
             # Find latest exp_* directory with model files
             exp_dirs = sorted(search_path.glob('exp_*'), key=os.path.getmtime, reverse=True)
-            for ed in exp_dirs:
-                theta_dir = ed / 'theta'
-                # Check for new structure (theta.npy without timestamp)
-                if theta_dir.exists() and (theta_dir / 'theta.npy').exists():
-                    if model_exp is None or ed.name == model_exp:
-                        return ed, theta_dir
-                # Also check for legacy structure (theta_*.npy with timestamp)
-                if theta_dir.exists() and list(theta_dir.glob('theta_*.npy')):
-                    if model_exp is None or ed.name == model_exp:
-                        return ed, theta_dir
+            for exp_dir in exp_dirs:
+                # Try both theta/ and model/ subdirectories
+                for subdir in ['theta', 'model']:
+                    model_path = exp_dir / subdir
+                    if model_path.exists() and list(model_path.glob('theta_*.npy')):
+                        if model_exp is None or exp_dir.name == model_exp:
+                            return model_path, exp_dir
         return None, None
     
+    # Strategy 2: Find topic_words directory
+    def find_topic_words_dir():
+        """Search for directory containing topic_words_*.json files"""
+        search_paths = [
+            result_dir / dataset / 'models' if model_size and model_size in str(result_dir) else result_base / model_size / dataset / 'models' if model_size else None,
+            result_base / model_size / dataset / 'models' if model_size else None,
+            result_dir / 'models',
+        ]
+        search_paths = [p for p in search_paths if p is not None]
+        
+        for search_path in search_paths:
+            if not search_path.exists():
+                continue
+            exp_dirs = sorted(search_path.glob('exp_*'), key=os.path.getmtime, reverse=True)
+            for exp_dir in exp_dirs:
+                tw_path = exp_dir / 'topic_words'
+                if tw_path.exists() and list(tw_path.glob('topic_words_*.json')):
+                    if model_exp is None or exp_dir.name == model_exp:
+                        return tw_path
+        return None
+    
+    # Strategy 3: Find BOW directory
+    def find_bow_dir():
+        """Search for directory containing bow_matrix.npy or vocab.json"""
+        search_paths = [
+            result_dir / dataset / 'data' if model_size and model_size in str(result_dir) else result_base / model_size / dataset / 'data' if model_size else None,
+            result_base / model_size / dataset / 'data' if model_size else None,
+            result_dir / 'data',
+            result_base / dataset / 'bow',
+        ]
+        search_paths = [p for p in search_paths if p is not None]
+        
+        for search_path in search_paths:
+            if not search_path.exists():
+                continue
+            # Check for exp_* subdirectories
+            exp_dirs = sorted(search_path.glob('exp_*'), key=os.path.getmtime, reverse=True)
+            for exp_dir in exp_dirs:
+                bow_path = exp_dir / 'bow'
+                if bow_path.exists() and (list(bow_path.glob('vocab.*')) or list(bow_path.glob('bow_matrix.*'))):
+                    return bow_path
+            # Check direct bow directory
+            if (search_path / 'bow').exists():
+                return search_path / 'bow'
+        return None
+    
     # Execute discovery
-    exp_dir, model_dir = find_exp_dir()
+    model_dir, exp_dir = find_model_dir()
+    topic_words_dir = find_topic_words_dir()
+    bow_dir = find_bow_dir()
     
     if exp_dir:
-        # New structure: data is in exp_*/data/bow/
-        bow_dir = exp_dir / 'data' / 'bow'
-        if not bow_dir.exists():
-            bow_dir = None
+        evaluation_dir = exp_dir / 'evaluation'
+    
+    # Fallback to legacy structure if discovery failed
+    if model_dir is None:
+        # Try legacy paths
+        if model_size:
+            base_dir = result_dir / model_size / dataset / mode if model_size not in str(result_dir) else result_dir / dataset / mode
+        else:
+            base_dir = result_dir / dataset / mode
+        
+        if (base_dir / 'model').exists():
+            model_dir = base_dir / 'model'
+            evaluation_dir = base_dir / 'evaluation'
+            topic_words_dir = base_dir / 'topic_words'
+            bow_dir = base_dir / 'bow' if (base_dir / 'bow').exists() else None
     
     if model_dir is None:
-        raise FileNotFoundError(f"Could not find model directory with theta.npy files. Searched in: {result_dir}, {result_base}")
+        raise FileNotFoundError(f"Could not find model directory with theta_*.npy files. Searched in: {result_dir}, {result_base}")
+    
+    # Legacy config-based BOW resolution as final fallback
+    if bow_dir is None:
+        config_file = model_dir.parent / 'config.json' if model_dir else None
+        if config_file and config_file.exists():
+            try:
+                with open(config_file, 'r') as f:
+                    train_config = json.load(f)
+                data_exp = train_config.get('data_exp', '')
+                ms = train_config.get('model_size', model_size or '')
+                ds = train_config.get('dataset', dataset)
+                if data_exp and data_exp != 'legacy':
+                    # New exp structure: find bow in data exp dir
+                    candidate = result_dir.parent.parent / 'data' / data_exp / 'bow'
+                    if not candidate.exists() and ms:
+                        result_base_env = Path(os.environ.get('RESULT_DIR', 'result'))
+                        candidate = result_base_env / ms / ds / 'data' / data_exp / 'bow'
+                    if candidate.exists():
+                        bow_dir = candidate
+            except Exception:
+                pass
     
     print(f"\n{'='*60}")
     print(f"Loading visualization data")
     print(f"{'='*60}")
-    print(f"Experiment directory: {exp_dir}")
     print(f"Model directory: {model_dir}")
+    if topic_words_dir:
+        print(f"Topic words directory: {topic_words_dir}")
     if bow_dir:
         print(f"BOW directory: {bow_dir}")
+    if evaluation_dir:
+        print(f"Evaluation directory: {evaluation_dir}")
     
     data = {}
     
-    # Load theta (document-topic distribution) - try fixed name first, then legacy
-    theta_path = model_dir / 'theta.npy'
-    if theta_path.exists():
-        data['theta'] = np.load(theta_path)
+    # Load theta (document-topic distribution)
+    theta_file = find_latest_file(model_dir, "theta_*.npy")
+    if theta_file:
+        data['theta'] = np.load(theta_file)
         print(f"✓ Loaded theta: {data['theta'].shape}")
     else:
-        theta_file = find_latest_file(model_dir, "theta_*.npy")
-        if theta_file:
-            data['theta'] = np.load(theta_file)
-            print(f"✓ Loaded theta: {data['theta'].shape}")
-        else:
-            raise FileNotFoundError(f"theta not found in {model_dir}")
+        raise FileNotFoundError(f"theta not found in {model_dir}")
     
-    # Load beta (topic-word distribution) - try fixed name first, then legacy
-    beta_path = model_dir / 'beta.npy'
-    if beta_path.exists():
-        data['beta'] = np.load(beta_path)
+    # Load beta (topic-word distribution)
+    beta_file = find_latest_file(model_dir, "beta_*.npy")
+    if beta_file:
+        data['beta'] = np.load(beta_file)
         print(f"✓ Loaded beta: {data['beta'].shape}")
     else:
-        beta_file = find_latest_file(model_dir, "beta_*.npy")
-        if beta_file:
-            data['beta'] = np.load(beta_file)
-            print(f"✓ Loaded beta: {data['beta'].shape}")
-        else:
-            raise FileNotFoundError(f"beta not found in {model_dir}")
+        raise FileNotFoundError(f"beta not found in {model_dir}")
     
-    # Load topic embeddings - try fixed name first, then legacy
-    emb_path = model_dir / 'topic_embeddings.npy'
-    if emb_path.exists():
-        data['topic_embeddings'] = np.load(emb_path)
+    # Load topic embeddings
+    emb_file = find_latest_file(model_dir, "topic_embeddings_*.npy")
+    if emb_file:
+        data['topic_embeddings'] = np.load(emb_file)
         print(f"✓ Loaded topic_embeddings: {data['topic_embeddings'].shape}")
-    else:
-        emb_file = find_latest_file(model_dir, "topic_embeddings_*.npy")
-        if emb_file:
-            data['topic_embeddings'] = np.load(emb_file)
-            print(f"✓ Loaded topic_embeddings: {data['topic_embeddings'].shape}")
     
-    # Load topic words - try fixed name first, then legacy
-    words_path = model_dir / 'topic_words.json'
-    if words_path.exists():
-        words_file = words_path
-    else:
+    # Load topic words - try topic_words_dir first, then model_dir
+    words_file = find_latest_file(topic_words_dir, "topic_words_*.json")
+    if not words_file:
         words_file = find_latest_file(model_dir, "topic_words_*.json")
     
     if words_file:
@@ -189,31 +250,19 @@ def load_visualization_data(result_dir, dataset, mode, model_size=None, model_ex
             data['topic_words'].append((i, words))
         print(f"⚠ Generated topic_words from beta: {len(data['topic_words'])} topics")
     
-    # Load training history - try fixed name first, then legacy
-    history_path = model_dir / 'training_history.json'
-    if history_path.exists():
-        with open(history_path, 'r', encoding='utf-8') as f:
+    # Load training history
+    history_file = find_latest_file(model_dir, "training_history_*.json")
+    if history_file:
+        with open(history_file, 'r', encoding='utf-8') as f:
             data['training_history'] = json.load(f)
         print(f"✓ Loaded training_history: {len(data['training_history'].get('train_loss', []))} epochs")
-    else:
-        history_file = find_latest_file(model_dir, "training_history_*.json")
-        if history_file:
-            with open(history_file, 'r', encoding='utf-8') as f:
-                data['training_history'] = json.load(f)
-            print(f"✓ Loaded training_history: {len(data['training_history'].get('train_loss', []))} epochs")
     
-    # Load evaluation metrics - try exp_dir/metrics.json first, then legacy
-    metrics_path = exp_dir / 'metrics.json' if exp_dir else None
-    if metrics_path and metrics_path.exists():
-        with open(metrics_path, 'r', encoding='utf-8') as f:
+    # Load evaluation metrics
+    metrics_file = find_latest_file(evaluation_dir, "metrics_*.json")
+    if metrics_file:
+        with open(metrics_file, 'r', encoding='utf-8') as f:
             data['metrics'] = json.load(f)
         print(f"✓ Loaded metrics")
-    else:
-        metrics_file = find_latest_file(model_dir.parent if model_dir else None, "metrics_*.json")
-        if metrics_file:
-            with open(metrics_file, 'r', encoding='utf-8') as f:
-                data['metrics'] = json.load(f)
-            print(f"✓ Loaded metrics")
     
     # Load vocab
     vocab_file = bow_dir / 'vocab.txt'
@@ -239,18 +288,12 @@ def load_visualization_data(result_dir, dataset, mode, model_size=None, model_ex
         data['timestamps'] = np.load(ts_file, allow_pickle=True)
         print(f"✓ Loaded timestamps: {len(data['timestamps'])}")
     
-    # Load config - try exp_dir/config.json first, then legacy
-    config_path = exp_dir / 'config.json' if exp_dir else None
-    if config_path and config_path.exists():
-        with open(config_path, 'r', encoding='utf-8') as f:
+    # Load config
+    config_file = find_latest_file(model_dir, "config_*.json")
+    if config_file:
+        with open(config_file, 'r', encoding='utf-8') as f:
             data['config'] = json.load(f)
         print(f"✓ Loaded config")
-    else:
-        config_file = find_latest_file(model_dir, "config_*.json")
-        if config_file:
-            with open(config_file, 'r', encoding='utf-8') as f:
-                data['config'] = json.load(f)
-            print(f"✓ Loaded config")
     
     print(f"{'='*60}\n")
     
@@ -281,26 +324,36 @@ def run_all_visualizations(
     Returns:
         Path to output directory
     """
-    # Load data and get exp_dir from the loading process
+    # Load data
     data = load_visualization_data(result_dir, dataset, mode, model_size)
     
     # Determine output directory
-    # New structure: result/{dataset}/{model_size}/theta/exp_*/{lang}/
+    # New structure: result/{model_size}/{dataset}/{language}/
     if output_dir is None:
         result_dir = Path(result_dir)
         result_base = result_dir.parent if model_size and model_size in str(result_dir) else result_dir
         
         # Find latest experiment directory
-        theta_base = result_base / dataset / model_size / 'theta' if model_size else result_base / dataset / 'theta'
+        theta_base = result_base / dataset / 'models' if model_size and model_size in str(result_dir) else result_base / model_size / dataset / 'models' if model_size else result_base / dataset / 'models'
         if theta_base.exists():
             exp_dirs = sorted(theta_base.glob('exp_*'), key=lambda p: p.stat().st_mtime, reverse=True)
             if exp_dirs:
-                # Output to exp_*/{lang}/ (zh or en)
-                output_dir = exp_dirs[0] / language
+                # Output to result/{model_size}/{dataset}/{lang}/
+                if model_size and model_size in str(result_dir):
+                    output_dir = result_dir / dataset / language
+                elif model_size:
+                    output_dir = result_base / model_size / dataset / language
+                else:
+                    output_dir = result_base / dataset / language
             else:
                 output_dir = theta_base / language
         else:
-            output_dir = result_dir / dataset / language
+            if model_size and model_size in str(result_dir):
+                output_dir = result_dir / dataset / language
+            elif model_size:
+                output_dir = result_base / model_size / dataset / language
+            else:
+                output_dir = result_dir / dataset / language
     
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -343,98 +396,103 @@ def run_all_visualizations(
         
         viz = TopicVisualizer(output_dir=str(output_dir / 'global'), dpi=dpi, language=language)
         
-        # Define filenames based on language
-        filenames = {
-            'topic_words_bars': '主题词条形图.png' if language == 'zh' else 'topic_words_bars.png',
-            'topic_similarity': '主题相似度.png' if language == 'zh' else 'topic_similarity.png',
-            'doc_topic_umap': '文档主题分布_UMAP.png' if language == 'zh' else 'doc_topic_umap.png',
-            'training_history': '训练历史.png' if language == 'zh' else 'training_history.png',
-            'metrics': '评估指标.png' if language == 'zh' else 'metrics.png',
-            'topic_wordclouds': '主题词云.png' if language == 'zh' else 'topic_wordclouds.png',
-            'pyldavis_intertopic': '主题间距离图.png' if language == 'zh' else 'pyldavis_intertopic.png',
-        }
-        
-        # Topic word bars
+        # Topic word bars (split into individual per-topic charts)
         viz.visualize_topic_words(
             data['topic_words'],
-            num_words=10,
-            filename=filenames['topic_words_bars']
+            num_words=10
         )
-        print(f"  ✓ {filenames['topic_words_bars']}")
+        print(f"  ✓ Per-topic word distribution charts generated")
         
         # Topic similarity heatmap
+        topic_sim_filename = '主题相似度.png' if language == 'zh' else 'topic_similarity.png'
         viz.visualize_topic_similarity(
             data['beta'],
             data['topic_words'],
-            filename=filenames['topic_similarity']
+            filename=topic_sim_filename
         )
-        print(f"  ✓ {filenames['topic_similarity']}")
+        print(f"  ✓ {topic_sim_filename}")
         
         # Document-topic distribution
+        doc_topic_filename = '文档主题分布_UMAP.png' if language == 'zh' else 'doc_topic_umap.png'
         viz.visualize_document_topics(
             data['theta'],
             method='umap',
             max_docs=5000,
-            filename=filenames['doc_topic_umap']
+            filename=doc_topic_filename
         )
-        print(f"  ✓ {filenames['doc_topic_umap']}")
+        print(f"  ✓ {doc_topic_filename}")
         
-        # Training history
-        if data.get('training_history'):
-            viz.visualize_training_history(
-                data['training_history'],
-                filename=filenames['training_history']
-            )
-            print(f"  ✓ {filenames['training_history']}")
-        
+        # Training history composite chart removed (single charts already generated by generator)
+
         # Metrics
         if data.get('metrics'):
             viz.visualize_metrics(
                 data['metrics'],
-                filename=filenames['metrics']
+                filename='metrics.png'
             )
-            print(f"  ✓ {filenames['metrics']}")
+            print(f"  ✓ metrics.png")
         
         # Word clouds (if wordcloud package available)
         try:
             viz.visualize_all_wordclouds(
                 data['topic_words'],
                 num_words=30,
-                filename=filenames['topic_wordclouds']
+                filename='topic_wordclouds.png'
             )
-            print(f"  ✓ {filenames['topic_wordclouds']}")
+            print(f"  ✓ topic_wordclouds.png")
         except Exception as e:
-            print(f"  ⚠ {filenames['topic_wordclouds']} skipped: {e}")
+            print(f"  ⚠ topic_wordclouds skipped: {e}")
         
-        # pyLDAvis-style visualization (Intertopic Distance Map)
+        # pyLDAvis-style visualization (split into two separate charts)
         try:
-            viz.visualize_pyldavis_style(
+            viz.visualize_intertopic_distance(
                 data['theta'],
+                data['beta']
+            )
+            print(f"  ✓ Intertopic Distance Map generated")
+        except Exception as e:
+            print(f"  ⚠ intertopic_distance skipped: {e}")
+        
+        try:
+            viz.visualize_topic_word_frequency(
                 data['beta'],
                 data['topic_words'],
                 selected_topic=0,
-                n_words=30,
-                filename=filenames['pyldavis_intertopic']
+                n_words=30
             )
-            print(f"  ✓ {filenames['pyldavis_intertopic']}")
+            print(f"  ✓ Top Salient Terms chart generated")
         except Exception as e:
-            print(f"  ⚠ pyldavis_intertopic skipped: {e}")
+            print(f"  ⚠ topic_word_frequency skipped: {e}")
+        
+        # pyLDAvis-style combined visualization
+        try:
+            if data.get('bow_matrix') is not None:
+                pyldavis_filename = 'pyLDAvis风格图.png' if language == 'zh' else 'pyldavis_style.png'
+                viz.visualize_pyldavis_style(
+                    data['theta'],
+                    data['beta'],
+                    data['bow_matrix'],
+                    data['vocab'],
+                    filename=pyldavis_filename
+                )
+                print(f"  ✓ {pyldavis_filename}")
+        except Exception as e:
+            print(f"  ⚠ pyldavis_style skipped: {e}")
         
         # Also generate interactive HTML version if pyLDAvis is available
         try:
             from visualization.topic_visualizer import generate_pyldavis_visualization
-            pyldavis_filename = '主题交互式可视化.html' if language == 'zh' else 'pyldavis_interactive.html'
             html_path = generate_pyldavis_visualization(
                 theta=data['theta'],
                 beta=data['beta'],
                 bow_matrix=data.get('bow_matrix'),
                 vocab=data['vocab'],
-                output_path=str(output_dir / 'global' / pyldavis_filename)
+                output_path=str(output_dir / 'global' / 'pyldavis_interactive.html')
             )
             if html_path:
-                print(f"  ✓ {pyldavis_filename}")
+                print(f"  ✓ pyldavis_interactive.html")
         except Exception as e:
-            print(f"  ⚠ {pyldavis_filename} skipped: {e}")
+            print(f"  ⚠ pyldavis_interactive.html skipped: {e}")
         
     except Exception as e:
         print(f"  ⚠ Additional visualizations error: {e}")
@@ -1069,8 +1127,8 @@ def run_baseline_visualization(
                     'pyldavis_interactive': 'pyldavis_interactive.html',
                 }
             
-            viz.visualize_topic_words(data['topic_words'], num_words=10, filename=filenames['topic_words_bars'])
-            print(f"  ✓ {filenames['topic_words_bars']}")
+            viz.visualize_topic_words(data['topic_words'], num_words=10)
+            print(f"  ✓ Per-topic word distribution charts generated")
             
             viz.visualize_topic_similarity(data['beta'], data['topic_words'], filename=filenames['topic_similarity'])
             print(f"  ✓ {filenames['topic_similarity']}")
@@ -1086,11 +1144,11 @@ def run_baseline_visualization(
                 print(f"  ⚠ {filenames['topic_wordclouds']} skipped: {e}")
             
             try:
-                viz.visualize_pyldavis_style(data['theta'], data['beta'], data['topic_words'], 
-                                            selected_topic=0, n_words=30, filename=filenames['pyldavis_intertopic'])
-                print(f"  ✓ {filenames['pyldavis_intertopic']}")
+                viz.visualize_intertopic_distance(data['theta'], data['beta'])
+                viz.visualize_topic_word_frequency(data['beta'], data['topic_words'], selected_topic=0, n_words=30)
+                print(f"  ✓ pyldavis split charts generated")
             except Exception as e:
-                print(f"  ⚠ {filenames['pyldavis_intertopic']} skipped: {e}")
+                print(f"  ⚠ pyldavis charts skipped: {e}")
             
             try:
                 from visualization.topic_visualizer import generate_pyldavis_visualization

@@ -121,29 +121,74 @@ class TopicVisualizer:
         """设置中文字体支持"""
         import matplotlib
         import matplotlib.font_manager as fm
+        import platform
+        import os
+        
+        # Platform-specific font paths
+        system = platform.system().lower()
+        font_paths = []
+        
+        if system == 'windows':
+            # Windows font paths
+            windows_fonts = [
+                'C:/Windows/Fonts/msyh.ttc',      # Microsoft YaHei
+                'C:/Windows/Fonts/simhei.ttf',    # SimHei
+                'C:/Windows/Fonts/simsun.ttc',    # SimSun
+                'C:/Windows/Fonts/NSimSun.ttf',   # NSimSun
+            ]
+            font_paths.extend(windows_fonts)
+        elif system == 'linux':
+            # Linux font paths
+            linux_fonts = [
+                '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc',
+                '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc',
+                '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
+            ]
+            font_paths.extend(linux_fonts)
+        elif system == 'darwin':  # macOS
+            mac_fonts = [
+                '/System/Library/Fonts/PingFang.ttc',
+                '/System/Library/Fonts/STHeiti Light.ttc',
+                '/System/Library/Fonts/STHeiti Medium.ttc',
+            ]
+            font_paths.extend(mac_fonts)
+        
+        # Try to load fonts
+        fonts_loaded = []
+        for fp in font_paths:
+            if os.path.exists(fp):
+                try:
+                    fm.fontManager.addfont(fp)
+                    fonts_loaded.append(fp)
+                except Exception as e:
+                    print(f"Warning: Could not load font {fp}: {e}")
         
         chinese_fonts = [
+            'Microsoft YaHei',
+            'SimHei',
+            'PingFang SC',
             'WenQuanYi Micro Hei',
             'WenQuanYi Zen Hei',
             'Noto Sans CJK SC',         # Google Noto
-            'SimHei',
-            'Microsoft YaHei',
-            'PingFang SC',
+            'SimSun',
+            'NSimSun',
             'DejaVu Sans'
         ]
         matplotlib.rcParams['font.sans-serif'] = chinese_fonts
         matplotlib.rcParams['axes.unicode_minus'] = False
         
+        # Store font path for wordcloud usage
         self.chinese_font_path = None
-        font_paths = [
-            '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc',
-            '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc',
-            '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
-        ]
         for fp in font_paths:
             if os.path.exists(fp):
                 self.chinese_font_path = fp
                 break
+        
+        # Log font loading status
+        if fonts_loaded:
+            print(f"✓ Loaded {len(fonts_loaded)} Chinese fonts for proper text display")
+        else:
+            print("⚠ Warning: No Chinese fonts found, text may appear as squares")
     
     def _get_label(self, key: str) -> str:
         """获取双语标签"""
@@ -217,7 +262,6 @@ class TopicVisualizer:
                 ).generate_from_frequencies(word_freq)
                 
                 ax.imshow(wc, interpolation='bilinear')
-                ax.set_title(self._get_topic_label(topic_idx), fontsize=16)
                 ax.axis('off')
                 
                 figs.append(fig)
@@ -230,94 +274,70 @@ class TopicVisualizer:
             
             return figs
         else:
-            # Create bar plots for topics with Spectral colormap
-            n_cols = min(5, num_topics)
-            n_rows = (num_topics + n_cols - 1) // n_cols
-            
-            fig, axes = plt.subplots(
-                n_rows, n_cols,
-                figsize=(4 * n_cols, 2.5 * n_rows),
-                facecolor='white'
-            )
-            
-            # Flatten axes for easier indexing
-            if n_rows * n_cols > 1:
-                axes = axes.flatten()
-            else:
-                axes = [axes]
-            
-            # Use Spectral colormap for different topic colors
+            # Generate one individual chart per topic
             colors = plt.cm.Spectral(np.linspace(0, 1, num_topics))
+            saved_paths = []
             
             for i, (topic_idx, words) in enumerate(topic_words[:num_topics]):
-                if i >= len(axes):
-                    break
-                    
-                ax = axes[i]
+                fig, ax = plt.subplots(figsize=(8, 6), facecolor='white')
                 
-                # Extract words and probabilities
                 top_words = [word for word, _ in words[:num_words]]
                 top_probs = [prob for _, prob in words[:num_words]]
                 
-                # Create horizontal bar plot with topic-specific color
                 y_pos = np.arange(len(top_words))
                 ax.barh(y_pos, top_probs, align='center', color=colors[i], edgecolor='white', linewidth=0.5)
                 ax.set_yticks(y_pos)
-                ax.set_yticklabels(top_words, fontsize=8)
-                ax.invert_yaxis()  # Labels read top-to-bottom
-                ax.set_title(self._get_topic_label(topic_idx), fontsize=10, fontweight='bold')
-                ax.tick_params(axis='x', labelsize=7)
+                ax.set_yticklabels(top_words, fontsize=9)
+                ax.invert_yaxis()
+                ax.tick_params(axis='x', labelsize=8)
                 ax.spines['top'].set_visible(False)
                 ax.spines['right'].set_visible(False)
+                
+                plt.tight_layout()
+                
+                # Save to corresponding topic folder instead of global folder
+                if self.language == 'zh':
+                    topic_filename = f'主题{topic_idx + 1} 词语分布.png'
+                else:
+                    topic_filename = f'Topic {topic_idx + 1} Word Distribution.png'
+                
+                # Create topic directory path
+                topic_dir = os.path.join(self.output_dir, '..', 'topic', f'topic_{topic_idx + 1}')
+                os.makedirs(topic_dir, exist_ok=True)
+                topic_filepath = os.path.join(topic_dir, topic_filename)
+                
+                fig.savefig(topic_filepath, dpi=self.dpi, bbox_inches='tight')
+                logger.info(f"Figure saved to {topic_filepath}")
+                saved_paths.append(topic_filepath)
+                plt.close(fig)
             
-            # Hide unused subplots
-            for j in range(i + 1, len(axes)):
-                axes[j].axis('off')
-            
-            plt.suptitle(self._get_label('top_words_per_topic'), fontsize=14, fontweight='bold', y=1.02)
-            plt.tight_layout()
-            
-            # Save or show
-            return self._save_or_show(fig, filename)
+            return saved_paths
     
     def visualize_all_wordclouds(
         self,
         topic_words: List[Tuple[int, List[Tuple[str, float]]]],
         num_words: int = 30,
         filename: str = None
-    ) -> plt.Figure:
+    ) -> List[str]:
         """
-        Generate a single figure with all topic wordclouds in a grid.
+        Generate individual wordcloud figures for each topic.
         
         Args:
             topic_words: List of (topic_idx, [(word, prob), ...])
             num_words: Number of words per wordcloud
-            filename: Filename to save visualization
+            filename: Filename to save visualization (ignored, individual files created)
             
         Returns:
-            Figure with all wordclouds
+            List of saved file paths
         """
         if not WORDCLOUD_AVAILABLE:
             logger.warning("WordCloud package not available")
-            return None
+            return []
         
-        num_topics = len(topic_words)
-        n_cols = min(5, num_topics)
-        n_rows = (num_topics + n_cols - 1) // n_cols
-        
-        fig, axes = plt.subplots(
-            n_rows, n_cols,
-            figsize=(4 * n_cols, 3 * n_rows),
-            facecolor='white'
-        )
-        
-        if n_rows * n_cols > 1:
-            axes = axes.flatten()
-        else:
-            axes = [axes]
+        saved_paths = []
         
         # Use viridis colormap for different topic colors
-        colors = plt.cm.viridis(np.linspace(0.1, 0.9, num_topics))
+        colors = plt.cm.viridis(np.linspace(0.1, 0.9, len(topic_words)))
         
         def make_color_func(color):
             """Create a color function with proper closure"""
@@ -331,17 +351,16 @@ class TopicVisualizer:
             return color_func
         
         for i, (topic_idx, words) in enumerate(topic_words):
-            if i >= len(axes):
-                break
+            # Create individual figure for each topic
+            fig, ax = plt.subplots(figsize=(8, 6), facecolor='white')
             
-            ax = axes[i]
             word_freq = {word: prob for word, prob in words[:num_words]}
             
             try:
                 wc_kwargs = {
                     'background_color': 'white',
-                    'width': 400,
-                    'height': 300,
+                    'width': 800,
+                    'height': 600,
                     'max_words': num_words,
                     'random_state': self.random_state,
                     'color_func': make_color_func(colors[i])
@@ -355,17 +374,24 @@ class TopicVisualizer:
             except Exception as e:
                 ax.text(0.5, 0.5, f'Topic {topic_idx + 1}\n(error)', ha='center', va='center')
             
-            ax.set_title(self._get_topic_label(topic_idx), fontsize=11, fontweight='bold')
             ax.axis('off')
+            
+            # Save to corresponding topic folder
+            topic_dir = os.path.join(self.output_dir, '..', 'topic', f'topic_{topic_idx + 1}')
+            os.makedirs(topic_dir, exist_ok=True)
+            
+            if self.language == 'zh':
+                topic_filename = f'主题{topic_idx + 1} 词云.png'
+            else:
+                topic_filename = f'Topic {topic_idx + 1} Word Cloud.png'
+            
+            topic_filepath = os.path.join(topic_dir, topic_filename)
+            fig.savefig(topic_filepath, dpi=self.dpi, bbox_inches='tight', facecolor='white')
+            logger.info(f"Word cloud saved to {topic_filepath}")
+            saved_paths.append(topic_filepath)
+            plt.close(fig)
         
-        # Hide unused subplots
-        for j in range(len(topic_words), len(axes)):
-            axes[j].axis('off')
-        
-        plt.suptitle(self._get_label('topic_word_clouds'), fontsize=16, fontweight='bold', y=1.02)
-        plt.tight_layout()
-        
-        return self._save_or_show(fig, filename)
+        return saved_paths
     
     def visualize_combined_wordcloud(
         self,
@@ -492,7 +518,6 @@ class TopicVisualizer:
                        ha='center', va='bottom', fontsize=10, fontweight='bold')
         
         ax.set_ylabel(self._get_label('value'), fontsize=12)
-        ax.set_title(self._get_label('etm_metrics'), fontsize=14, fontweight='bold')
         ax.tick_params(axis='x', rotation=15)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
@@ -575,7 +600,8 @@ class TopicVisualizer:
             square=True,
             cbar_kws={'shrink': 0.8, 'label': self._get_label('similarity')}
         )
-        ax.set_title(f"{self._get_label('topic_similarity_matrix')} ({metric.title()})", fontsize=16, fontweight='bold')
+        # Remove title as requested
+        # ax.set_title(f"{self._get_label('topic_similarity_matrix')} ({metric.title()})", fontsize=16, fontweight='bold')
         
         # Rotate x-axis labels for readability
         plt.xticks(rotation=45, ha='right', fontsize=fontsize)
@@ -692,12 +718,12 @@ class TopicVisualizer:
             ncol=1
         )
         
-        # Add figure caption
-        if self.language == 'zh':
-            caption = f'图: 文档-主题分布 ({method.upper()}, n={max_docs:,}, K={num_topics})'
-        else:
-            caption = f'Figure: Document-topic distribution ({method.upper()}, n={max_docs:,}, K={num_topics})'
-        fig.text(0.5, 0.02, caption, ha='center', fontsize=10, style='italic')
+        # Remove figure caption as requested
+        # if self.language == 'zh':
+        #     caption = f'图: 文档-主题分布 ({method.upper()}, n={max_docs:,}, K={num_topics})'
+        # else:
+        #     caption = f'Figure: Document-topic distribution ({method.upper()}, n={max_docs:,}, K={num_topics})'
+        # fig.text(0.5, 0.02, caption, ha='center', fontsize=10, style='italic')
         
         plt.tight_layout(rect=[0, 0.05, 1, 1])
         
@@ -710,55 +736,11 @@ class TopicVisualizer:
         filename: str = None
     ) -> plt.Figure:
         """
-        Visualize training history including loss and perplexity curves.
-        
-        Args:
-            history: Dictionary containing training history
-            filename: Filename to save visualization
-            
-        Returns:
-            Figure
+        Deprecated: Single training charts already exist in visualization_generator.
+        Skipped to avoid duplication.
         """
-        fig, axes = plt.subplots(1, 2, figsize=(14, 5), facecolor='white')
-        
-        # Plot 1: Training and Validation Loss
-        ax1 = axes[0]
-        if 'train_loss' in history:
-            epochs = range(1, len(history['train_loss']) + 1)
-            ax1.plot(epochs, history['train_loss'], 'b-', linewidth=2, label='Train Loss')
-        if 'val_loss' in history:
-            epochs = range(1, len(history['val_loss']) + 1)
-            ax1.plot(epochs, history['val_loss'], 'r--', linewidth=2, label='Val Loss')
-        
-        ax1.set_xlabel(self._get_label('epoch'), fontsize=11)
-        ax1.set_ylabel(self._get_label('loss'), fontsize=11)
-        ax1.set_title(self._get_label('train_val_loss'), fontsize=12, fontweight='bold')
-        ax1.legend(fontsize=10)
-        ax1.grid(True, alpha=0.3)
-        ax1.spines['top'].set_visible(False)
-        ax1.spines['right'].set_visible(False)
-        
-        # Plot 2: Perplexity
-        ax2 = axes[1]
-        if 'perplexity' in history:
-            epochs = range(1, len(history['perplexity']) + 1)
-            ax2.plot(epochs, history['perplexity'], 'g-', linewidth=2, label='Validation Perplexity')
-        if 'train_perplexity' in history:
-            epochs = range(1, len(history['train_perplexity']) + 1)
-            ax2.plot(epochs, history['train_perplexity'], 'b--', linewidth=2, label='Train Perplexity')
-        
-        ax2.set_xlabel(self._get_label('epoch'), fontsize=11)
-        ax2.set_ylabel(self._get_label('perplexity'), fontsize=11)
-        ax2.set_title(self._get_label('perplexity_training'), fontsize=12, fontweight='bold')
-        ax2.legend(fontsize=10)
-        ax2.grid(True, alpha=0.3)
-        ax2.spines['top'].set_visible(False)
-        ax2.spines['right'].set_visible(False)
-        
-        plt.tight_layout()
-        
-        # Save or show
-        return self._save_or_show(fig, filename)
+        print("  [SKIP] training_history composite chart (single charts already generated)")
+        return None
     
     def visualize_topic_embeddings(
         self,
@@ -830,7 +812,6 @@ class TopicVisualizer:
                     textcoords='offset points'
                 )
         
-        ax.set_title(f'Topic Embeddings ({method.upper()})', fontsize=16)
         ax.set_xlabel(f'{method.upper()} Dimension 1')
         ax.set_ylabel(f'{method.upper()} Dimension 2')
         
@@ -887,7 +868,6 @@ class TopicVisualizer:
         ax.set_xticklabels([self._get_topic_label(i, short=True) for i in range(num_topics)], fontsize=9)
         ax.set_xlabel(self._get_label('topic'), fontsize=12)
         ax.set_ylabel(self._get_label('average_proportion'), fontsize=12)
-        ax.set_title(self._get_label('topic_proportions'), fontsize=14, fontweight='bold')
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.set_ylim(0, max(topic_props) * 1.15)
@@ -895,6 +875,127 @@ class TopicVisualizer:
         plt.tight_layout()
         
         # Save or show
+        return self._save_or_show(fig, filename)
+    
+    def visualize_intertopic_distance(
+        self,
+        theta: np.ndarray,
+        beta: np.ndarray,
+        filename: str = None
+    ) -> plt.Figure:
+        """
+        Create Intertopic Distance Map (left panel of pyLDAvis-style).
+        
+        Args:
+            theta: Document-topic distribution matrix (D x K)
+            beta: Topic-word distribution matrix (K x V)
+            filename: Filename to save. If None, uses language-aware default.
+            
+        Returns:
+            Figure
+        """
+        from sklearn.decomposition import PCA
+        from sklearn.manifold import TSNE
+        
+        n_topics = beta.shape[0]
+        topic_proportions = theta.mean(axis=0)
+        
+        # PCA/t-SNE for topic positions
+        if n_topics > 3:
+            tsne = TSNE(n_components=2, random_state=42, perplexity=min(5, n_topics-1),
+                        max_iter=1000, learning_rate='auto', init='pca')
+            topic_coords = tsne.fit_transform(beta)
+        else:
+            pca = PCA(n_components=2)
+            topic_coords = pca.fit_transform(beta)
+        
+        topic_coords = topic_coords * 2.0
+        
+        fig, ax = plt.subplots(figsize=(14, 10))
+        
+        cmap = plt.cm.tab20
+        colors = [cmap(i / n_topics) for i in range(n_topics)]
+        sizes = topic_proportions * 15000 + 1500
+        sorted_indices = np.argsort(-sizes)
+        
+        for idx, i in enumerate(sorted_indices):
+            z_order = 2 + (n_topics - idx)
+            ax.scatter(topic_coords[i, 0], topic_coords[i, 1],
+                       s=sizes[i], c=[colors[i]], alpha=0.75,
+                       edgecolors='white', linewidths=3, zorder=z_order)
+            ax.annotate(str(i+1), (topic_coords[i, 0], topic_coords[i, 1]),
+                        ha='center', va='center', fontsize=14, fontweight='bold',
+                        zorder=z_order + 100)
+        
+        ax.set_xlabel('PC1', fontsize=14)
+        ax.set_ylabel('PC2', fontsize=14)
+        ax.axhline(y=0, color='gray', linestyle='-', linewidth=0.5)
+        ax.axvline(x=0, color='gray', linestyle='-', linewidth=0.5)
+        ax.grid(True, alpha=0.3)
+        
+        marginal_label = self._get_label('marginal_topic_dist')
+        ax.text(0.05, 0.05, f'{marginal_label}\n2%  ●\n5%  ⬤',
+                transform=ax.transAxes, fontsize=11, verticalalignment='bottom',
+                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+        
+        plt.tight_layout()
+        
+        if filename is None:
+            filename = '主题间距离图.png' if self.language == 'zh' else 'Intertopic Distance Map.png'
+        return self._save_or_show(fig, filename)
+    
+    def visualize_topic_word_frequency(
+        self,
+        beta: np.ndarray,
+        topic_words: List[Tuple[int, List[Tuple[str, float]]]],
+        selected_topic: int = 0,
+        n_words: int = 30,
+        filename: str = None
+    ) -> plt.Figure:
+        """
+        Create Top-N Salient Terms chart (right panel of pyLDAvis-style).
+        
+        Args:
+            beta: Topic-word distribution matrix (K x V)
+            topic_words: List of (topic_idx, [(word, prob), ...])
+            selected_topic: Topic to show word frequencies for
+            n_words: Number of top words to display
+            filename: Filename to save. If None, uses language-aware default.
+            
+        Returns:
+            Figure
+        """
+        top_words = []
+        for idx, words in topic_words:
+            if idx == selected_topic:
+                top_words = words[:n_words]
+                break
+        
+        fig, ax = plt.subplots(figsize=(14, 10))
+        
+        if top_words:
+            words_list = [w for w, p in top_words]
+            probs_list = [p for w, p in top_words]
+            
+            overall_freq = np.array(probs_list) * 100
+            y_pos = np.arange(len(words_list))
+            
+            ax.barh(y_pos, overall_freq, color='steelblue', alpha=0.7,
+                    label=self._get_label('overall_term_freq'))
+            topic_freq = np.array(probs_list) * 80
+            ax.barh(y_pos, topic_freq, color='indianred', alpha=0.8,
+                    label=self._get_label('estimated_term_freq'))
+            
+            ax.set_yticks(y_pos)
+            ax.set_yticklabels(words_list, fontsize=11)
+            ax.invert_yaxis()
+            ax.set_xlabel(self._get_label('frequency'), fontsize=14)
+            ax.legend(loc='lower right', fontsize=11)
+        
+        plt.tight_layout()
+        
+        if filename is None:
+            filename = '最显著词汇.png' if self.language == 'zh' else 'Top Salient Terms.png'
         return self._save_or_show(fig, filename)
     
     def visualize_pyldavis_style(
@@ -907,121 +1008,11 @@ class TopicVisualizer:
         filename: str = None
     ) -> plt.Figure:
         """
-        Create pyLDAvis-style visualization with topic distance map and word frequency bars.
-        
-        Args:
-            theta: Document-topic distribution matrix (D x K)
-            beta: Topic-word distribution matrix (K x V)
-            topic_words: List of (topic_idx, [(word, prob), ...])
-            selected_topic: Topic to show word frequencies for
-            n_words: Number of top words to display
-            filename: Filename to save visualization
-            
-        Returns:
-            Figure
+        Deprecated combined view. Now calls split functions for individual charts.
         """
-        from sklearn.decomposition import PCA
-        from matplotlib.gridspec import GridSpec
-        
-        n_topics = beta.shape[0]
-        topic_proportions = theta.mean(axis=0)
-        
-        # PCA for topic positions - use t-SNE for better separation
-        from sklearn.manifold import TSNE
-        if n_topics > 3:
-            # Use t-SNE for better topic separation
-            tsne = TSNE(n_components=2, random_state=42, perplexity=min(5, n_topics-1), 
-                       max_iter=1000, learning_rate='auto', init='pca')
-            topic_coords = tsne.fit_transform(beta)
-        else:
-            pca = PCA(n_components=2)
-            topic_coords = pca.fit_transform(beta)
-        
-        # Scale coordinates to spread out more
-        topic_coords = topic_coords * 2.0
-        
-        # Create figure with two panels (larger size)
-        fig = plt.figure(figsize=(28, 14))
-        gs = GridSpec(1, 2, width_ratios=[1.3, 1])
-        
-        # Left panel: Intertopic Distance Map (larger)
-        ax1 = fig.add_subplot(gs[0])
-        
-        # Use tab20 colormap for more distinct colors
-        cmap = plt.cm.tab20
-        colors = [cmap(i / n_topics) for i in range(n_topics)]
-        
-        # Plot topics as circles with size proportional to prevalence (larger sizes)
-        sizes = topic_proportions * 15000 + 1500
-        
-        # Sort by size (largest first) so smaller circles are drawn on top
-        sorted_indices = np.argsort(-sizes)
-        
-        for idx, i in enumerate(sorted_indices):
-            z_order = 2 + (n_topics - idx)  # Smaller circles get higher zorder
-            ax1.scatter(topic_coords[i, 0], topic_coords[i, 1], 
-                        s=sizes[i], c=[colors[i]], alpha=0.75, 
-                        edgecolors='white', linewidths=3, zorder=z_order)
-            ax1.annotate(str(i+1), (topic_coords[i, 0], topic_coords[i, 1]),
-                        ha='center', va='center', fontsize=14, fontweight='bold',
-                        zorder=z_order + 100)
-        
-        ax1.set_xlabel('PC1', fontsize=14)
-        ax1.set_ylabel('PC2', fontsize=14)
-        title_main = self._get_label('intertopic_distance')
-        title_sub = self._get_label('via_mds')
-        ax1.set_title(f'{title_main}\n{title_sub}', fontsize=16, fontweight='bold')
-        ax1.axhline(y=0, color='gray', linestyle='-', linewidth=0.5)
-        ax1.axvline(x=0, color='gray', linestyle='-', linewidth=0.5)
-        ax1.grid(True, alpha=0.3)
-        
-        # Add marginal topic distribution legend
-        marginal_label = self._get_label('marginal_topic_dist')
-        ax1.text(0.05, 0.05, f'{marginal_label}\n2%  ●\n5%  ⬤', 
-                 transform=ax1.transAxes, fontsize=11, verticalalignment='bottom',
-                 bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
-        
-        # Right panel: Top-N most salient terms
-        ax2 = fig.add_subplot(gs[1])
-        
-        # Get top words for selected topic
-        top_words = []
-        for idx, words in topic_words:
-            if idx == selected_topic:
-                top_words = words[:n_words]
-                break
-        
-        if top_words:
-            words_list = [w for w, p in top_words]
-            probs_list = [p for w, p in top_words]
-            
-            # Scale for display
-            overall_freq = np.array(probs_list) * 100
-            y_pos = np.arange(len(words_list))
-            
-            # Plot bars
-            bars = ax2.barh(y_pos, overall_freq, color='steelblue', alpha=0.7, 
-                           label=self._get_label('overall_term_freq'))
-            
-            # Highlight estimated term frequency within selected topic
-            topic_freq = np.array(probs_list) * 80
-            ax2.barh(y_pos, topic_freq, color='indianred', alpha=0.8, 
-                     label=self._get_label('estimated_term_freq'))
-            
-            ax2.set_yticks(y_pos)
-            ax2.set_yticklabels(words_list, fontsize=11)
-            ax2.invert_yaxis()
-            ax2.set_xlabel(self._get_label('frequency'), fontsize=14)
-            salient_label = self._get_label('top_salient_terms')
-            topic_label = self._get_topic_label(selected_topic)
-            ax2.set_title(f'Top-{n_words} {salient_label} ({topic_label})', 
-                         fontsize=16, fontweight='bold')
-            ax2.legend(loc='lower right', fontsize=11)
-        
-        plt.tight_layout()
-        
-        # Save or show
-        return self._save_or_show(fig, filename)
+        self.visualize_intertopic_distance(theta, beta)
+        self.visualize_topic_word_frequency(beta, topic_words, selected_topic, n_words)
+        return None
 
 
 def load_etm_results(results_dir: str, timestamp: str = None):

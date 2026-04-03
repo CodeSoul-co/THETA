@@ -82,6 +82,7 @@ class VisualizationGenerator:
         """Setup fonts for proper display."""
         import matplotlib.font_manager as fm
         import os
+        import platform
         
         cache_dir = matplotlib.get_cachedir()
         for f in os.listdir(cache_dir) if os.path.exists(cache_dir) else []:
@@ -96,11 +97,82 @@ class VisualizationGenerator:
         except:
             pass
         
+        # Platform-specific font paths
+        system = platform.system().lower()
         if self.language == 'zh':
-            font_paths = [
-                '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc',
-                '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc',
+            font_paths = []
+            
+            if system == 'windows':
+                # Windows font paths
+                windows_fonts = [
+                    'C:/Windows/Fonts/msyh.ttc',      # Microsoft YaHei
+                    'C:/Windows/Fonts/simhei.ttf',    # SimHei
+                    'C:/Windows/Fonts/simsun.ttc',    # SimSun
+                    'C:/Windows/Fonts/NSimSun.ttf',   # NSimSun
+                ]
+                font_paths.extend(windows_fonts)
+            elif system == 'linux':
+                # Linux font paths
+                linux_fonts = [
+                    '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc',
+                    '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc',
+                    '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
+                ]
+                font_paths.extend(linux_fonts)
+            elif system == 'darwin':  # macOS
+                mac_fonts = [
+                    '/System/Library/Fonts/PingFang.ttc',
+                    '/System/Library/Fonts/STHeiti Light.ttc',
+                    '/System/Library/Fonts/STHeiti Medium.ttc',
+                ]
+                font_paths.extend(mac_fonts)
+            
+            # Try to load fonts
+            fonts_loaded = []
+            for fp in font_paths:
+                if os.path.exists(fp):
+                    try:
+                        fm.fontManager.addfont(fp)
+                        fonts_loaded.append(fp)
+                    except Exception as e:
+                        print(f"Warning: Could not load font {fp}: {e}")
+            
+            chinese_fonts = [
+                'Microsoft YaHei',
+                'SimHei',
+                'PingFang SC',
+                'WenQuanYi Micro Hei',
+                'WenQuanYi Zen Hei',
+                'Noto Sans CJK SC',
+                'Source Han Sans CN',
+                'Heiti SC',
+                'SimSun',
+                'NSimSun',
+                'DejaVu Sans'
             ]
+            matplotlib.rcParams['font.sans-serif'] = chinese_fonts
+            matplotlib.rcParams['axes.unicode_minus'] = False
+            
+            # Log font loading status
+            if fonts_loaded:
+                print(f"✓ Loaded {len(fonts_loaded)} Chinese fonts for proper text display")
+            else:
+                print("⚠ Warning: No Chinese fonts found, text may appear as squares")
+        else:
+            # English font setup
+            font_paths = []
+            
+            if system == 'windows':
+                font_paths.extend([
+                    'C:/Windows/Fonts/arial.ttf',
+                    'C:/Windows/Fonts/calibri.ttf',
+                ])
+            elif system == 'linux':
+                font_paths.extend([
+                    '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc',
+                    '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc',
+                ])
+            
             for fp in font_paths:
                 if os.path.exists(fp):
                     try:
@@ -108,31 +180,7 @@ class VisualizationGenerator:
                     except:
                         pass
             
-            chinese_fonts = [
-                'WenQuanYi Micro Hei',
-                'WenQuanYi Zen Hei',
-                'Noto Sans CJK SC',
-                'Source Han Sans CN',
-                'SimHei',
-                'Microsoft YaHei',
-                'PingFang SC',
-                'Heiti SC',
-                'DejaVu Sans'
-            ]
-            matplotlib.rcParams['font.sans-serif'] = chinese_fonts
-            matplotlib.rcParams['axes.unicode_minus'] = False
-        else:
-            font_paths = [
-                '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc',
-                '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc',
-            ]
-            for fp in font_paths:
-                if os.path.exists(fp):
-                    try:
-                        fm.fontManager.addfont(fp)
-                    except:
-                        pass
-            matplotlib.rcParams['font.sans-serif'] = ['WenQuanYi Micro Hei', 'WenQuanYi Zen Hei', 'DejaVu Sans', 'Arial']
+            matplotlib.rcParams['font.sans-serif'] = ['Arial', 'Microsoft YaHei', 'WenQuanYi Micro Hei', 'WenQuanYi Zen Hei', 'DejaVu Sans']
             matplotlib.rcParams['axes.unicode_minus'] = False
     
     def _create_output_dirs(self):
@@ -220,36 +268,38 @@ class VisualizationGenerator:
         return labels.get(key, {}).get(self.language, key)
     
     def _get_filename(self, key):
-        """Get filename based on language."""
+        """Get filename based on language (using chart title as filename)."""
         filenames = {
-            'topic_table': {'en': 'topic_table.png', 'zh': '主题表.png'},
-            'topic_network': {'en': 'topic_network.png', 'zh': '主题网络图.png'},
-            'doc_clusters': {'en': 'doc_clusters.png', 'zh': '文档聚类图.png'},
-            'clustering_heatmap': {'en': 'clustering_heatmap.png', 'zh': '聚类热力图.png'},
-            'clusters_outliers': {'en': 'clusters_outliers.png', 'zh': '聚类离群点图.png'},
-            'topic_proportion_pie': {'en': 'topic_proportion_pie.png', 'zh': '主题占比饼图.png'},
-            'doc_volume': {'en': 'doc_volume.png', 'zh': '文档数量时序图.png'},
-            'representative_topic_evolution': {'en': 'representative_topic_evolution.png', 'zh': '代表性主题演化图.png'},
-            'kl_divergence': {'en': 'kl_divergence.png', 'zh': 'KL散度图.png'},
-            'vocab_evolution': {'en': 'vocab_evolution.png', 'zh': '词汇演化图.png'},
-            'topic_sankey': {'en': 'topic_sankey.png', 'zh': '主题桑基图.png'},
-            'topic_sankey_html': {'en': 'topic_sankey.html', 'zh': '主题桑基图.html'},
-            'topic_similarity_evolution': {'en': 'topic_similarity_evolution.png', 'zh': '主题相似度演化图.png'},
-            'all_topics_strength_table': {'en': 'all_topics_strength_table.png', 'zh': '主题强度表.png'},
-            'dim_heatmap': {'en': 'dim_heatmap.png', 'zh': '维度热力图.png'},
-            'domain_topic_distribution': {'en': 'domain_topic_distribution.png', 'zh': '领域主题分布图.png'},
-            'training_loss': {'en': 'training_loss.png', 'zh': '训练损失图.png'},
-            'training_recon_kl': {'en': 'training_recon_kl.png', 'zh': '重构KL损失图.png'},
-            'training_summary': {'en': 'training_summary.png', 'zh': '训练总结图.png'},
-            'training_perplexity': {'en': 'training_perplexity.png', 'zh': '训练困惑度图.png'},
-            'topic_coherence': {'en': 'topic_coherence.png', 'zh': '主题一致性图.png'},
-            'topic_exclusivity': {'en': 'topic_exclusivity.png', 'zh': '主题排他性图.png'},
-            'topic_significance': {'en': 'topic_significance.png', 'zh': '主题显著性图.png'},
-            'topic_num_evaluation': {'en': 'topic_num_evaluation.png', 'zh': '主题数评估图.png'},
-            'word_importance': {'en': 'word_importance.png', 'zh': '词重要性图.png'},
-            'word_cloud': {'en': 'word_cloud.png', 'zh': '词云图.png'},
-            'topic_evolution': {'en': 'topic_evolution.png', 'zh': '主题演化图.png'},
-            'word_distribution_change': {'en': 'word_distribution_change.png', 'zh': '词分布变化图.png'},
+            'topic_table': {'en': 'Topic Identification Results.png', 'zh': '主题识别结果.png'},
+            'topic_network': {'en': 'Topic Correlation Network.png', 'zh': '主题相关性网络.png'},
+            'doc_clusters': {'en': 'Document Clustering by Dominant Topic.png', 'zh': '文档主题聚类.png'},
+            'clustering_heatmap': {'en': 'Topic Clustering Heatmap with Dendrogram.png', 'zh': '主题聚类热力图.png'},
+            'clusters_outliers': {'en': 'Document Clusters with Outlier Detection.png', 'zh': '文档聚类与离群点检测.png'},
+            'topic_proportion_pie': {'en': 'Topic Proportion Distribution.png', 'zh': '主题占比分布.png'},
+            'doc_volume': {'en': 'Document Volume Over Time.png', 'zh': '文档数量时序变化.png'},
+            'representative_topic_evolution': {'en': 'Representative Topic Evolution.png', 'zh': '代表性主题演化.png'},
+            'kl_divergence': {'en': 'Topic Distribution KL Divergence Over Time.png', 'zh': '主题分布KL散度时序变化.png'},
+            'vocab_evolution': {'en': 'High-Frequency Word Evolution.png', 'zh': '高频词演变.png'},
+            'topic_sankey': {'en': 'Topic Evolution Sankey Diagram.png', 'zh': '主题演化桑基图.png'},
+            'topic_sankey_html': {'en': 'Topic Evolution Sankey Diagram.html', 'zh': '主题演化桑基图.html'},
+            'topic_similarity_evolution': {'en': 'Topic Distribution Similarity Evolution.png', 'zh': '主题分布相似度演化.png'},
+            'all_topics_strength_table': {'en': 'Topic Strength by Year.png', 'zh': '各年度主题强度.png'},
+            'dim_heatmap': {'en': 'Dimension-Topic Heatmap.png', 'zh': '维度-主题热力图.png'},
+            'domain_topic_distribution': {'en': 'Domain Topic Distribution Over Time.png', 'zh': '领域主题分布时序变化.png'},
+            'training_loss': {'en': 'Training Loss.png', 'zh': '训练损失.png'},
+            'training_recon_kl': {'en': 'Reconstruction and KL Loss.png', 'zh': '重构损失与KL损失.png'},
+            'training_summary': {'en': 'Training Summary.png', 'zh': '训练总结.png'},
+            'training_perplexity': {'en': 'Training Perplexity.png', 'zh': '训练困惑度.png'},
+            '7_core_metrics': {'en': '7 Core Metrics.png', 'zh': '7项核心指标.png'},
+            'topic_coherence': {'en': 'Topic Coherence.png', 'zh': '主题一致性.png'},
+            'topic_exclusivity': {'en': 'Topic Exclusivity.png', 'zh': '主题排他性.png'},
+            'topic_significance': {'en': 'Topic Significance Ranking.png', 'zh': '主题显著性排名.png'},
+            'topic_num_evaluation': {'en': 'Topic Number Evaluation.png', 'zh': '主题数评估.png'},
+            'word_importance': {'en': 'Word Importance.png', 'zh': '词重要性.png'},
+            'word_cloud': {'en': 'Word Cloud.png', 'zh': '词云.png'},
+            'topic_evolution': {'en': 'Topic Evolution.png', 'zh': '主题演化.png'},
+            'word_distribution_change': {'en': 'Word Distribution Change.png', 'zh': '词分布变化.png'},
+            'word_sense_evolution': {'en': 'Word Semantic Evolution.png', 'zh': '词语义演化.png'},
         }
         return filenames.get(key, {}).get(self.language, f'{key}.png')
     
@@ -303,9 +353,10 @@ class VisualizationGenerator:
         
         # Save CSV to global directory
         csv_df = pd.DataFrame(csv_data)
-        csv_path = self.global_dir / 'topic_table.csv'
+        csv_filename = '主题表.csv' if self.language == 'zh' else 'topic_table.csv'
+        csv_path = self.global_dir / csv_filename
         csv_df.to_csv(csv_path, index=False, encoding='utf-8-sig')
-        print(f"  ✓ topic_table.csv")
+        print(f"  ✓ {csv_filename}")
     
     def generate_topic_network(self):
         """Generate topic correlation network graph."""
@@ -350,8 +401,6 @@ class VisualizationGenerator:
         labels = nx.get_node_attributes(G, 'label')
         nx.draw_networkx_labels(G, pos, labels, ax=ax, font_size=8)
         
-        title = self._get_title('topic_network')
-        ax.set_title(title, fontsize=14)
         ax.axis('off')
         
         # Add margins to prevent content from being clipped
@@ -434,9 +483,9 @@ class VisualizationGenerator:
             borderpad=0.2
         )
         
-        # Add figure caption
-        caption = f"{self._get_label('figure')}: {self._get_label('doc_clustering_caption')} (n={n_samples:,}, K={self.n_topics})"
-        fig.text(0.5, 0.02, caption, ha='center', fontsize=10, style='italic')
+        # Remove figure caption as requested
+        # caption = f"{self._get_label('figure')}: {self._get_label('doc_clustering_caption')} (n={n_samples:,}, K={self.n_topics})"
+        # fig.text(0.5, 0.02, caption, ha='center', fontsize=10, style='italic')
         
         plt.tight_layout(rect=[0, 0.05, 1, 1])
         plt.savefig(self.global_dir / self._get_filename('doc_clusters'), dpi=self.dpi, 
@@ -501,28 +550,29 @@ class VisualizationGenerator:
         # Create figure with square layout
         fig = plt.figure(figsize=(12, 12), facecolor='white')
         
-        # Define axes positions [left, bottom, width, height]
-        # Layout: left dendrogram | moderate gap | square heatmap | colorbar
-        ax_dendro_left = fig.add_axes([0.02, 0.12, 0.10, 0.68])  # Left dendrogram
-        ax_dendro_top = fig.add_axes([0.18, 0.82, 0.62, 0.10])   # Top dendrogram
-        ax_heatmap = fig.add_axes([0.18, 0.12, 0.62, 0.68])      # Square heatmap
-        ax_colorbar = fig.add_axes([0.83, 0.12, 0.02, 0.68])     # Colorbar
+        # 1. 严格统一坐标轴的物理位置和大小 (强制正方形 0.62 x 0.62)
+        ax_dendro_left = fig.add_axes([0.02, 0.12, 0.10, 0.62])  # Left dendrogram
+        ax_dendro_top = fig.add_axes([0.18, 0.78, 0.62, 0.10])   # Top dendrogram
+        ax_heatmap = fig.add_axes([0.18, 0.12, 0.62, 0.62])      # Square heatmap
+        ax_colorbar = fig.add_axes([0.83, 0.12, 0.02, 0.62])     # Colorbar
         
-        # Draw left dendrogram
+        # 2. Draw left dendrogram (强制消除边距并反转Y轴)
         dendro_left = dendrogram(linkage_matrix, orientation='left', ax=ax_dendro_left, 
                                   no_labels=True, color_threshold=0, above_threshold_color='#1f77b4')
         ax_dendro_left.set_xticks([])
         ax_dendro_left.set_yticks([])
+        ax_dendro_left.set_ylim(n_valid * 10, 0) # 【对齐核心1】消除Y轴边距并反转
         ax_dendro_left.spines['top'].set_visible(False)
         ax_dendro_left.spines['right'].set_visible(False)
         ax_dendro_left.spines['bottom'].set_visible(False)
         ax_dendro_left.spines['left'].set_visible(False)
         
-        # Draw top dendrogram
+        # 3. Draw top dendrogram (强制消除X轴边距)
         dendro_top = dendrogram(linkage_matrix, orientation='top', ax=ax_dendro_top,
                                  no_labels=True, color_threshold=0, above_threshold_color='#1f77b4')
         ax_dendro_top.set_xticks([])
         ax_dendro_top.set_yticks([])
+        ax_dendro_top.set_xlim(0, n_valid * 10) # 【对齐核心2】消除X轴边距
         ax_dendro_top.spines['top'].set_visible(False)
         ax_dendro_top.spines['right'].set_visible(False)
         ax_dendro_top.spines['bottom'].set_visible(False)
@@ -533,25 +583,27 @@ class VisualizationGenerator:
         topic_corr_ordered = topic_corr[order, :][:, order]
         labels_ordered = [topic_labels[i] for i in order]
         
-        # Draw heatmap (no grid lines for smooth gradient)
-        im = ax_heatmap.imshow(topic_corr_ordered, cmap='RdBu_r', vmin=-1, vmax=1, aspect='equal')
+        # 4. Draw heatmap (改用 auto 并强制锁定边界)
+        im = ax_heatmap.imshow(topic_corr_ordered, cmap='RdBu_r', vmin=-1, vmax=1, aspect='auto')
+        
+        # 【对齐核心3】手动锁定热力图的边界
+        ax_heatmap.set_xlim(-0.5, n_valid - 0.5)
+        ax_heatmap.set_ylim(n_valid - 0.5, -0.5)
         
         # Set tick labels
         fontsize = 7 if n_valid > 20 else 9
         ax_heatmap.set_xticks(range(n_valid))
         ax_heatmap.set_yticks(range(n_valid))
-        ax_heatmap.set_xticklabels(labels_ordered, rotation=45, ha='right', fontsize=fontsize)
-        ax_heatmap.set_yticklabels(labels_ordered, fontsize=fontsize)
         
-        # Move y-axis labels to left side (default)
-        ax_heatmap.yaxis.tick_left()
+        # Move X-axis labels to top
+        ax_heatmap.xaxis.tick_top()  # Move X-axis ticks and labels to top
+        ax_heatmap.set_xticklabels(labels_ordered, rotation=45, ha='left', fontsize=fontsize)  # 45度旋转，左对齐避免重叠
+        ax_heatmap.yaxis.tick_left()  # Y轴 labels保持在左侧
+        ax_heatmap.set_yticklabels(labels_ordered, fontsize=fontsize)
         
         # Add colorbar on the right
         cbar = fig.colorbar(im, cax=ax_colorbar)
         cbar.set_label(self._get_label('correlation'), fontsize=10, rotation=270, labelpad=15)
-        
-        # Set title
-        fig.suptitle(self._get_title('clustering_heatmap'), fontsize=14, y=0.97)
         
         plt.savefig(self.global_dir / self._get_filename('clustering_heatmap'), dpi=self.dpi, 
                     bbox_inches='tight', facecolor='white')
@@ -655,9 +707,9 @@ class VisualizationGenerator:
             borderpad=0.2
         )
         
-        # Add figure caption
-        caption = f"{self._get_label('figure')}: {self._get_label('doc_clusters_outliers_caption')} (n={n_samples:,}, {self._get_label('outliers')}={n_outliers})"
-        fig.text(0.5, 0.02, caption, ha='center', fontsize=10, style='italic')
+        # Remove figure caption as requested
+        # caption = f"{self._get_label('figure')}: {self._get_label('doc_clusters_outliers_caption')} (n={n_samples:,}, {self._get_label('outliers')}={n_outliers})"
+        # fig.text(0.5, 0.02, caption, ha='center', fontsize=10, style='italic')
         
         plt.tight_layout(rect=[0, 0.05, 1, 1])
         plt.savefig(self.global_dir / self._get_filename('clusters_outliers'), dpi=self.dpi, 
@@ -736,9 +788,6 @@ class VisualizationGenerator:
         for text in texts:
             text.set_fontsize(8)
         
-        title = self._get_title('topic_proportion_pie')
-        ax.set_title(title, fontsize=14, fontweight='bold', pad=20)
-        
         plt.tight_layout()
         plt.savefig(self.global_dir / self._get_filename('topic_proportion_pie'), dpi=self.dpi,
                    bbox_inches='tight', facecolor='white')
@@ -800,7 +849,6 @@ class VisualizationGenerator:
         
         ax.set_xlabel(self._get_label('year'), fontsize=12)
         ax.set_ylabel(self._get_label('proportion'), fontsize=12)
-        ax.set_title(self._get_title('representative_topic_evolution'), fontsize=14, fontweight='bold')
         ax.legend(loc='upper left', bbox_to_anchor=(1.02, 1), fontsize=9)
         ax.grid(True, alpha=0.3)
         
@@ -845,7 +893,6 @@ class VisualizationGenerator:
         ax.set_xticklabels(year_pairs, rotation=45, ha='right')
         ax.set_xlabel(self._get_label('time_period'), fontsize=12)
         ax.set_ylabel(self._get_label('cosine_similarity'), fontsize=12)
-        ax.set_title(self._get_title('topic_similarity_evolution'), fontsize=14, fontweight='bold')
         ax.set_ylim(0, 1)
         ax.grid(True, alpha=0.3, axis='y')
         
@@ -895,9 +942,6 @@ class VisualizationGenerator:
         for i in range(len(df.columns)):
             table[(0, i)].set_text_props(color='white', fontweight='bold')
         
-        title = self._get_title('all_topics_strength_table')
-        ax.set_title(title, fontsize=14, pad=20)
-        
         plt.savefig(self.global_dir / self._get_filename('all_topics_strength_table'), dpi=self.dpi,
                    bbox_inches='tight', facecolor='white')
         plt.close()
@@ -943,15 +987,11 @@ class VisualizationGenerator:
                 ax.plot(unique_years, props, 'o-', color=colors[t_idx], 
                        linewidth=2, markersize=6, label=f"T{topic_idx+1}")
             
-            ax.set_title(f'{dim}', fontsize=11, fontweight='bold')
             ax.set_xlabel(self._get_label('year'), fontsize=10)
             if d_idx == 0:
                 ax.set_ylabel(self._get_label('proportion'), fontsize=10)
             ax.legend(loc='best', fontsize=8)
             ax.grid(True, alpha=0.3)
-        
-        title = 'Domain Topic Distribution Over Time'
-        fig.suptitle(title, fontsize=14, fontweight='bold', y=1.02)
         
         plt.tight_layout()
         plt.savefig(self.global_dir / self._get_filename('domain_topic_distribution'), dpi=self.dpi,
@@ -976,7 +1016,6 @@ class VisualizationGenerator:
         ax.set_xlabel(self._get_label('year'), fontsize=12)
         ax.set_ylabel(self._get_label('document_count'), fontsize=12)
         
-        ax.set_title(self._get_title('doc_volume'), fontsize=14)
         ax.grid(True, alpha=0.3)
         
         plt.tight_layout()
@@ -1029,7 +1068,6 @@ class VisualizationGenerator:
         ax.set_xlabel(self._get_label('time_period'), fontsize=12)
         ax.set_ylabel(self._get_label('kl_divergence'), fontsize=12)
         
-        ax.set_title(self._get_label('topic_similarity_change'), fontsize=14)
         ax.grid(True, alpha=0.3)
         
         plt.tight_layout()
@@ -1065,8 +1103,6 @@ class VisualizationGenerator:
         
         plt.colorbar(im, ax=ax, label=self._get_label('proportion'))
         
-        ax.set_title(self._get_label('dim_topic_heatmap'), fontsize=14)
-        
         plt.tight_layout()
         plt.savefig(self.global_dir / self._get_filename('dim_heatmap'), dpi=self.dpi, 
                    bbox_inches='tight', facecolor='white')
@@ -1100,13 +1136,10 @@ class VisualizationGenerator:
         
         ax.set_xlabel(self._get_label('weight'), fontsize=12)
         
-        title = f"{self._get_label('topic')} {topic_idx + 1} {self._get_label('word_importance') if self.language == 'en' else '词重要性'}"
-        ax.set_title(title, fontsize=14)
-        
         ax.grid(True, axis='x', alpha=0.3)
         
         plt.tight_layout()
-        plt.savefig(topic_dir / 'word_importance.png', dpi=self.dpi, 
+        plt.savefig(topic_dir / self._get_filename('word_importance'), dpi=self.dpi, 
                    bbox_inches='tight', facecolor='white')
         plt.close()
     
@@ -1154,13 +1187,11 @@ class VisualizationGenerator:
         ax.set_xlabel(self._get_label('year'), fontsize=12)
         ax.set_ylabel(self._get_label('proportion'), fontsize=12)
         
-        title = f"{self._get_label('topic')} {topic_idx + 1} {self._get_title('topic_evolution')}"
-        ax.set_title(title, fontsize=14)
         ax.legend(loc='upper left', bbox_to_anchor=(1.02, 1), fontsize=9)
         ax.grid(True, alpha=0.3)
         
         plt.tight_layout()
-        plt.savefig(topic_dir / 'evolution.png', dpi=self.dpi, 
+        plt.savefig(topic_dir / self._get_filename('topic_evolution'), dpi=self.dpi, 
                    bbox_inches='tight', facecolor='white')
         plt.close()
     
@@ -1211,10 +1242,7 @@ class VisualizationGenerator:
         for i in range(len(df.columns)):
             table[(0, i)].set_text_props(color='white', fontweight='bold')
         
-        title = f"{self._get_label('topic')} {topic_idx + 1} {self._get_label('word_dist_change')}"
-        ax.set_title(title, fontsize=14, pad=20)
-        
-        plt.savefig(topic_dir / 'word_dist_change.png', dpi=self.dpi, 
+        plt.savefig(topic_dir / self._get_filename('word_distribution_change'), dpi=self.dpi, 
                    bbox_inches='tight', facecolor='white')
         plt.close()
     
@@ -1253,13 +1281,11 @@ class VisualizationGenerator:
         ax.set_xlabel(self._get_label('year'), fontsize=12)
         ax.set_ylabel(self._get_label('weight'), fontsize=12)
         
-        title = f"{self._get_label('topic')} {topic_idx + 1} {self._get_label('word_sense_evolution')}"
-        ax.set_title(title, fontsize=14)
         ax.legend(loc='upper left', bbox_to_anchor=(1.02, 1), fontsize=9)
         ax.grid(True, alpha=0.3)
         
         plt.tight_layout()
-        plt.savefig(topic_dir / 'word_sense.png', dpi=self.dpi, 
+        plt.savefig(topic_dir / self._get_filename('word_sense_evolution'), dpi=self.dpi, 
                    bbox_inches='tight', facecolor='white')
         plt.close()
     
@@ -1282,7 +1308,6 @@ class VisualizationGenerator:
                 ax.plot(epochs, self.training_history['val_loss'], 'r-', label=self._get_label('val_loss'), linewidth=2)
             ax.set_xlabel(self._get_label('epoch'))
             ax.set_ylabel(self._get_label('loss'))
-            ax.set_title(self._get_label('training_val_loss'))
             ax.legend()
             ax.grid(True, alpha=0.3)
             plt.tight_layout()
@@ -1300,7 +1325,6 @@ class VisualizationGenerator:
                 ax.plot(epochs, self.training_history['kl_loss'], 'm-', label=self._get_label('kl_loss'), linewidth=2)
             ax.set_xlabel(self._get_label('epoch'))
             ax.set_ylabel(self._get_label('loss'))
-            ax.set_title(self._get_label('recon_kl_loss'))
             ax.legend()
             ax.grid(True, alpha=0.3)
             plt.tight_layout()
@@ -1315,37 +1339,36 @@ class VisualizationGenerator:
             ax.plot(epochs, self.training_history['perplexity'], 'c-', linewidth=2)
             ax.set_xlabel(self._get_label('epoch'))
             ax.set_ylabel(self._get_label('perplexity'))
-            ax.set_title(self._get_label('perplexity'))
             ax.grid(True, alpha=0.3)
             plt.tight_layout()
-            plt.savefig(self.global_dir / 'training_perplexity.png', dpi=self.dpi,
+            plt.savefig(self.global_dir / self._get_filename('training_perplexity'), dpi=self.dpi,
                        bbox_inches='tight', facecolor='white')
             plt.close()
-            print("  ✓ training_perplexity.png")
+            print(f"  ✓ {self._get_filename('training_perplexity')}")
         
-        # Figure 4: Training Summary
-        summary_text = []
-        if 'best_val_loss' in self.training_history:
-            summary_text.append(f"Best Val Loss: {self.training_history['best_val_loss']:.4f}")
-        if 'test_loss' in self.training_history:
-            summary_text.append(f"Test Loss: {self.training_history['test_loss']:.4f}")
-        if 'epochs_trained' in self.training_history:
-            summary_text.append(f"Epochs Trained: {self.training_history['epochs_trained']}")
-        if 'perplexity' in self.training_history:
-            summary_text.append(f"Final Perplexity: {self.training_history['perplexity'][-1]:.2f}")
-        
-        if summary_text:
-            fig, ax = plt.subplots(figsize=(8, 5))
-            ax.axis('off')
-            ax.text(0.5, 0.5, '\n'.join(summary_text), transform=ax.transAxes,
-                    fontsize=16, verticalalignment='center', horizontalalignment='center',
-                    bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.5))
-            ax.set_title(self._get_title('training_summary'), fontsize=14)
-            plt.tight_layout()
-            plt.savefig(self.global_dir / self._get_filename('training_summary'), dpi=self.dpi,
-                       bbox_inches='tight', facecolor='white')
-            plt.close()
-            print(f"  ✓ {self._get_filename('training_summary')}")
+        # Remove training summary figure as requested
+        # # Figure 4: Training Summary
+        # summary_text = []
+        # if 'best_val_loss' in self.training_history:
+        #     summary_text.append(f"Best Val Loss: {self.training_history['best_val_loss']:.4f}")
+        # if 'test_loss' in self.training_history:
+        #     summary_text.append(f"Test Loss: {self.training_history['test_loss']:.4f}")
+        # if 'epochs_trained' in self.training_history:
+        #     summary_text.append(f"Epochs Trained: {self.training_history['epochs_trained']}")
+        # if 'perplexity' in self.training_history:
+        #     summary_text.append(f"Final Perplexity: {self.training_history['perplexity'][-1]:.2f}")
+        # 
+        # if summary_text:
+        #     fig, ax = plt.subplots(figsize=(8, 5))
+        #     ax.axis('off')
+        #     ax.text(0.5, 0.5, '\n'.join(summary_text), transform=ax.transAxes,
+        #             fontsize=16, verticalalignment='center', horizontalalignment='center',
+        #             bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.5))
+        #     plt.tight_layout()
+        #     plt.savefig(self.global_dir / self._get_filename('training_summary'), dpi=self.dpi,
+        #                bbox_inches='tight', facecolor='white')
+        #     plt.close()
+        #     print(f"  ✓ {self._get_filename('training_summary')}")
     
     def generate_vocab_evolution(self):
         """Generate vocabulary evolution chart (top words frequency over time)."""
@@ -1396,7 +1419,6 @@ class VisualizationGenerator:
         
         ax.set_xlabel(self._get_label('year'))
         ax.set_ylabel(self._get_label('word_frequency'))
-        ax.set_title(self._get_label('top_words_freq_evolution'), fontsize=14)
         ax.legend(loc='upper left', bbox_to_anchor=(1.02, 1), fontsize=9)
         ax.grid(True, alpha=0.3)
         
@@ -1445,10 +1467,6 @@ class VisualizationGenerator:
         
         ax.set_xlabel(self._get_label('topic'))
         ax.set_ylabel(self._get_label('coherence_score'))
-        ax.set_title(self._get_label('topic_coherence_by_metric'), fontsize=14)
-        ax.set_xticks(x + width * (len(available_coherence) - 1) / 2)
-        topic_labels = [f"{self._get_label('topic')}{i+1}" if self.language == 'zh' else f'T{i+1}' for i in range(self.n_topics)]
-        ax.set_xticklabels(topic_labels)
         ax.legend()
         ax.grid(True, alpha=0.3, axis='y')
         
@@ -1489,10 +1507,6 @@ class VisualizationGenerator:
             ax.bar(x, exclusivity, color='steelblue')
             ax.set_xlabel(self._get_label('topic'))
             ax.set_ylabel(self._get_label('exclusivity'))
-            ax.set_title(self._get_label('per_topic_exclusivity'))
-            ax.set_xticks(x)
-            topic_labels = [f"{self._get_label('topic')}{i+1}" if self.language == 'zh' else f'T{i+1}' for i in range(len(exclusivity))]
-            ax.set_xticklabels(topic_labels)
             ax.axhline(y=np.mean(exclusivity), color='red', linestyle='--', label=self._get_label('mean'))
             ax.legend()
             ax.grid(True, alpha=0.3, axis='y')
@@ -1503,75 +1517,28 @@ class VisualizationGenerator:
             print(f"  ✓ {self._get_filename('topic_exclusivity')}")
     
     def generate_metrics_summary(self):
-        """Generate metrics summary bar chart showing 6 normalized metrics (excluding PPL).
-        
-        Uses 7 Core Metrics naming: TD, iRBO, NPMI, C_V, UMass, Exclusivity
-        PPL is shown separately in generate_7_core_metrics_chart.
-        """
-        if self.metrics is None:
-            print("  [SKIP] metrics_summary (no metrics)")
-            return
-        
-        # 7 Core Metrics (6 normalized + PPL separate)
-        metric_keys = ['TD', 'iRBO', 'NPMI', 'C_V', 'UMass', 'Exclusivity']
-        metric_labels_zh = ['TD (多样性)', 'iRBO', 'NPMI', 'C_V', 'UMass', '排他性']
-        metric_labels_en = ['TD', 'iRBO', 'NPMI', 'C_V', 'UMass', 'Exclusivity']
-        
-        values = []
-        labels = []
-        for i, key in enumerate(metric_keys):
-            val = self.metrics.get(key)
-            if val is not None:
-                values.append(float(val))
-                labels.append(metric_labels_zh[i] if self.language == 'zh' else metric_labels_en[i])
-        
-        if not values:
-            print("  [SKIP] metrics_summary (no valid metrics found)")
-            return
-        
-        fig, ax = plt.subplots(figsize=(10, 6), facecolor='white')
-        
-        colors = plt.cm.Set2(np.linspace(0, 1, len(labels)))
-        bars = ax.bar(range(len(labels)), values, color=colors, edgecolor='black', linewidth=0.8)
-        
-        for bar, val in zip(bars, values):
-            height = bar.get_height()
-            ax.annotate(f'{val:.4f}',
-                       xy=(bar.get_x() + bar.get_width() / 2, height),
-                       xytext=(0, 3),
-                       textcoords="offset points",
-                       ha='center', va='bottom', fontsize=10, fontweight='bold')
-        
-        ax.set_xticks(range(len(labels)))
-        ax.set_xticklabels(labels, rotation=15, ha='right')
-        ax.set_ylabel('分数' if self.language == 'zh' else 'Score', fontsize=12)
-        ax.set_title('6项质量指标' if self.language == 'zh' else '6 Quality Metrics', fontsize=14, fontweight='bold')
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.set_ylim(0, max(max(values) * 1.15, 1.0))
-        
-        plt.tight_layout()
-        plt.savefig(self.global_dir / 'metrics_summary.png', dpi=self.dpi, bbox_inches='tight', facecolor='white')
-        plt.close()
-        print(f"  ✓ metrics_summary.png")
+        """Deprecated: Overlaps with generate_7_core_metrics_chart. Skipped."""
+        print("  [SKIP] metrics_summary (replaced by 7_core_metrics_chart)")
+        return
     
     def generate_7_core_metrics_chart(self):
-        """Generate 7 core metrics summary chart.
+        """Generate 7 core metrics summary chart with dual Y-axis layout.
         
         7 Core Metrics Standard:
-        1. TD (Topic Diversity)
-        2. iRBO (Inverse Rank-Biased Overlap)
-        3. NPMI (Normalized PMI)
-        4. C_V (C_V Coherence)
-        5. UMass (UMass Coherence)
-        6. Exclusivity (Topic Exclusivity)
-        7. PPL (Perplexity)
+        1. TD (Topic Diversity) - Left Y-axis
+        2. iRBO (Inverse Rank-Biased Overlap) - Left Y-axis  
+        3. NPMI (Normalized PMI) - Left Y-axis
+        4. C_V (C_V Coherence) - Left Y-axis
+        5. UMass (UMass Coherence) - Left Y-axis
+        6. Exclusivity (Topic Exclusivity) - Left Y-axis
+        7. PPL (Perplexity) - Right Y-axis
         """
         if self.metrics is None:
             print("  [SKIP] 7_core_metrics_chart (no metrics)")
             return
         
-        fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+        fig, ax_left = plt.subplots(figsize=(16, 6), facecolor='white')
+        ax_right = ax_left.twinx()  # 创建右侧Y轴
         
         # Left: 6 normalized metrics (0-1 scale)
         metric_names = ['TD', 'iRBO', 'NPMI', 'C_V', 'UMass', 'Exclusivity']
@@ -1584,17 +1551,26 @@ class VisualizationGenerator:
                 val = 0.0
             metric_values.append(float(val))
         
+        # 设置左侧柱状图位置（0-5位置）
+        left_positions = np.arange(len(metric_names))
+        width = 0.6  # 增大柱子宽度，减小间隔
+        
+        # 严格保留原图的颜色
         colors = plt.cm.Set2(np.linspace(0, 1, len(metric_names)))
-        bars = axes[0].bar(metric_names, metric_values, color=colors, edgecolor='black', linewidth=1.2)
+        bars_left = ax_left.bar(left_positions, metric_values, width, color=colors, 
+                              edgecolor='black', linewidth=0.8)
         
-        for bar, val in zip(bars, metric_values):
-            axes[0].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
-                        f'{val:.3f}', ha='center', va='bottom', fontsize=10)
-        
-        axes[0].set_ylabel(self._get_label('score'))
-        title_left = '质量指标 (6/7)' if self.language == 'zh' else 'Quality Metrics (6/7)'
-        axes[0].set_title(title_left, fontsize=14)
-        axes[0].set_ylim(0, max(max(metric_values) * 1.15, 1.0))
+        # 为左侧柱子添加数值标签，处理负值情况
+        for bar, val in zip(bars_left, metric_values):
+            height = bar.get_height()
+            if val >= 0:
+                # 正值：标签在柱子顶部
+                ax_left.text(bar.get_x() + bar.get_width()/2, height + 0.01,
+                            f'{val:.3f}', ha='center', va='bottom', fontsize=10)
+            else:
+                # 负值：标签在柱子底部
+                ax_left.text(bar.get_x() + bar.get_width()/2, height - 0.01,
+                            f'{val:.3f}', ha='center', va='top', fontsize=10)
         
         # Right: PPL (separate scale)
         ppl_value = self.metrics.get('PPL') or self.metrics.get('perplexity') or 1000.0
@@ -1602,22 +1578,49 @@ class VisualizationGenerator:
             ppl_value = 1000.0
         ppl_value = float(ppl_value)
         
-        axes[1].bar(['PPL'], [ppl_value], color='coral', edgecolor='black', linewidth=1.2)
-        axes[1].text(0, ppl_value + ppl_value * 0.02, f'{ppl_value:.1f}',
-                    ha='center', va='bottom', fontsize=12, fontweight='bold')
-        axes[1].set_ylabel(self._get_label('perplexity'))
-        title_right = '困惑度 (7/7)' if self.language == 'zh' else 'Perplexity (7/7)'
-        axes[1].set_title(title_right, fontsize=14)
-        axes[1].set_ylim(0, ppl_value * 1.2)
+        # 设置右侧柱状图位置（6.5位置，与左侧柱子错开）
+        right_position = [6.5]  # 单独位置
+        bars_right = ax_right.bar(right_position, [ppl_value], width, color='coral', 
+                               edgecolor='black', linewidth=0.8, alpha=0.8)
         
-        main_title = '7项核心指标' if self.language == 'zh' else '7 Core Metrics'
-        plt.suptitle(main_title, fontsize=14)
+        # 为右侧柱子添加数值标签
+        ax_right.text(right_position[0], ppl_value + ppl_value * 0.02, f'{ppl_value:.1f}',
+                   ha='center', va='bottom', fontsize=12, fontweight='bold', color='coral')
+        
+        # 设置左侧Y轴（质量指标），支持负值显示
+        min_val = min(metric_values) if metric_values else 0
+        max_val = max(metric_values) if metric_values else 1.0
+        y_min = min(min_val * 1.2, -0.5) if min_val < 0 else 0  # 负值时向下扩展
+        y_max = max(max_val * 1.2, 1.0)
+        ax_left.set_ylabel('Quality Metrics Score', fontsize=12, color='black')
+        ax_left.set_ylim(y_min, y_max)  # 动态范围，支持负值
+        
+        # 设置右侧Y轴（困惑度）
+        ax_right.set_ylabel('Perplexity (PPL)', fontsize=12, color='coral')
+        ax_right.set_ylim(0, 1600)  # 右轴范围：0~1600
+        ax_right.tick_params(axis='y', labelcolor='coral')
+        
+        # 设置X轴标签
+        all_labels = metric_names + ['PPL']
+        all_positions = list(left_positions) + right_position
+        ax_left.set_xticks(all_positions)
+        ax_left.set_xticklabels(all_labels, rotation=15, ha='right')
+        
+        # 设置网格和边框
+        ax_left.grid(True, alpha=0.3, axis='y')
+        ax_left.spines['top'].set_visible(False)
+        ax_left.spines['right'].set_visible(False)
+        ax_right.spines['top'].set_visible(False)
+        ax_right.spines['left'].set_visible(False)
+        
+        # 删除右上角图例
+        # 不添加图例，使图表更简洁
+        
         plt.tight_layout()
         
-        filename = '7_core_metrics.png'
-        plt.savefig(self.global_dir / filename, dpi=self.dpi, bbox_inches='tight', facecolor='white')
+        plt.savefig(self.global_dir / self._get_filename('7_core_metrics'), dpi=self.dpi, bbox_inches='tight', facecolor='white')
         plt.close()
-        print(f"  ✓ {filename}")
+        print(f"  ✓ {self._get_filename('7_core_metrics')}")
     
     def generate_topic_significance_chart(self):
         """Generate topic significance chart for visualization.
@@ -1653,7 +1656,6 @@ class VisualizationGenerator:
         ax.set_yticks(range(len(sorted_sig)))
         ax.set_yticklabels(sorted_labels)
         ax.set_xlabel(self._get_label('significance_score'))
-        ax.set_title(self._get_label('topic_significance_ranking'))
         ax.invert_yaxis()
         
         plt.tight_layout()
@@ -1720,8 +1722,6 @@ class VisualizationGenerator:
         ax.set_xticks(k_values)
         ax.legend(loc='best', fontsize=10)
         ax.grid(True, alpha=0.3)
-        
-        ax.set_title(self._get_label('topic_num_evaluation'), fontsize=14, fontweight='bold')
         
         plt.tight_layout()
         plt.savefig(self.global_dir / self._get_filename('topic_num_evaluation'), dpi=self.dpi,
@@ -1953,10 +1953,39 @@ class VisualizationGenerator:
         
         font_prop = None
         if self.language == 'zh':
-            font_path = '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc'
-            import os
-            if os.path.exists(font_path):
-                font_prop = fm.FontProperties(fname=font_path)
+            import platform
+            system = platform.system().lower()
+            
+            # Try platform-specific font paths
+            font_candidates = []
+            if system == 'windows':
+                font_candidates = [
+                    'C:/Windows/Fonts/msyh.ttc',      # Microsoft YaHei
+                    'C:/Windows/Fonts/simhei.ttf',    # SimHei
+                    'C:/Windows/Fonts/simsun.ttc',    # SimSun
+                    'C:/Windows/Fonts/NSimSun.ttf',   # NSimSun
+                ]
+            elif system == 'linux':
+                font_candidates = [
+                    '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc',
+                    '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc',
+                    '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
+                ]
+            elif system == 'darwin':  # macOS
+                font_candidates = [
+                    '/System/Library/Fonts/PingFang.ttc',
+                    '/System/Library/Fonts/STHeiti Light.ttc',
+                    '/System/Library/Fonts/STHeiti Medium.ttc',
+                ]
+            
+            for font_path in font_candidates:
+                if os.path.exists(font_path):
+                    try:
+                        font_prop = fm.FontProperties(fname=font_path)
+                        break
+                    except Exception as e:
+                        print(f"Warning: Could not load font {font_path}: {e}")
+                        continue
         
         years = sorted(set([t.year for t in self.timestamps]))
         if len(years) < 2:
@@ -2119,10 +2148,6 @@ class VisualizationGenerator:
         ax.set_ylim(0, 1)
         ax.axis('off')
         
-        title = '主题演化桑基图' if self.language == 'zh' else 'Topic Evolution Sankey Diagram'
-        title_kwargs = {'fontproperties': font_prop} if font_prop else {}
-        ax.set_title(title, fontsize=16, fontweight='bold', pad=25, **title_kwargs)
-        
         plt.tight_layout()
         plt.savefig(self.global_dir / self._get_filename('topic_sankey'), dpi=self.dpi,
                    bbox_inches='tight', facecolor='white')
@@ -2227,7 +2252,6 @@ class VisualizationGenerator:
         else:
             print("  [Skip] No training history available")
         if self.metrics is not None:
-            safe_generate(self.generate_metrics_summary, 'metrics_summary')
             safe_generate(self.generate_topic_coherence_chart, 'topic_coherence_chart')
             safe_generate(self.generate_topic_diversity_chart, 'topic_diversity_chart')
             safe_generate(self.generate_7_core_metrics_chart, '7_core_metrics_chart')
@@ -2238,11 +2262,12 @@ class VisualizationGenerator:
         print(f"\n[Per-Topic Charts]")
         for topic_idx in range(self.n_topics):
             print(f"  Topic {topic_idx + 1}/{self.n_topics}...", end=' ')
-            try:
-                self.generate_topic_word_importance(topic_idx)
-                chart_count += 1
-            except Exception as e:
-                print(f"[Error] word_importance: {e}", end=' ')
+            # Skip word_importance chart (duplicate of topic word distribution from TopicVisualizer)
+            # try:
+            #     self.generate_topic_word_importance(topic_idx)
+            #     chart_count += 1
+            # except Exception as e:
+            #     print(f"[Error] word_importance: {e}", end=' ')
             if self.timestamps is not None:
                 try:
                     self.generate_topic_evolution(topic_idx)
