@@ -219,7 +219,9 @@ class OriginalETM(NeuralTopicModel):
         
         log_word_dist = self.decode(theta, beta)
         
-        recon_loss = -(bow * log_word_dist).sum(dim=1).mean()
+        # 使用归一化BOW计算loss，与encode()中保持一致
+        bow_norm = bow / (bow.sum(dim=1, keepdim=True) + 1e-10)
+        recon_loss = -(bow_norm * log_word_dist).sum(dim=1).mean()
         
         kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1).mean()
         

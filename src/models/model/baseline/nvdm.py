@@ -21,6 +21,8 @@ from ..base import NeuralTopicModel
 def kld_normal(mu: torch.Tensor, log_sigma: torch.Tensor) -> torch.Tensor:
     """KL divergence to standard normal distribution.
     
+    KL(N(mu, sigma^2) || N(0, 1)) = 0.5 * (mu^2 + sigma^2 - 1 - log(sigma^2))
+    
     Args:
         mu: Mean, shape (batch_size, dim)
         log_sigma: Log standard deviation, shape (batch_size, dim)
@@ -28,7 +30,7 @@ def kld_normal(mu: torch.Tensor, log_sigma: torch.Tensor) -> torch.Tensor:
     Returns:
         KL divergence, shape (batch_size,)
     """
-    return -0.5 * (1 - mu ** 2 + 2 * log_sigma - torch.exp(2 * log_sigma)).sum(dim=-1)
+    return -0.5 * (1 + 2 * log_sigma - mu ** 2 - torch.exp(2 * log_sigma)).sum(dim=-1)
 
 
 class NormalParameter(nn.Module):

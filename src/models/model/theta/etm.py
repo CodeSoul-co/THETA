@@ -133,14 +133,12 @@ class ETM(nn.Module):
         
         # Decode: theta -> word distribution
         log_word_dist = self.decoder(theta, beta)
-        word_dist = torch.exp(log_word_dist)
         
         output = {
             'theta': theta,
             'z': z,
             'beta': beta,
-            'log_word_dist': log_word_dist,
-            'word_dist': word_dist
+            'log_word_dist': log_word_dist
         }
         
         if compute_loss:
@@ -262,6 +260,8 @@ class ETM(nn.Module):
         """
         Compute perplexity on given data.
         
+        Perplexity = exp(avg negative log likelihood per word)
+        
         Args:
             doc_embeddings: Document embeddings
             bow_targets: BOW targets
@@ -273,10 +273,12 @@ class ETM(nn.Module):
         with torch.no_grad():
             output = self.forward(doc_embeddings, bow_targets, compute_loss=True)
             
-            # Perplexity = exp(avg negative log likelihood per word)
-            total_words = bow_targets.sum()
-            avg_nll = output['recon_loss'] * bow_targets.shape[0] / total_words
-            perplexity = torch.exp(avg_nll).item()
+            # 计算每个文档的NLL，然后除以每个文档的词数
+            log_word_dist = output['log_word_dist']
+            nll_per_doc = -torch.sum(bow_targets * log_word_dist, dim=-1)
+            word_counts = bow_targets.sum(dim=-1)
+            # 计算每个文档的per-word NLL，然后取平均
+            perplexity = torch.exp((nll_per_doc / (word_counts + 1e-10)).mean()).item()
         
         return perplexity
         

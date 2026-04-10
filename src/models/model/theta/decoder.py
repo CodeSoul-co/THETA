@@ -55,18 +55,19 @@ class ETMDecoder(nn.Module):
                 requires_grad=train_embeddings
             )
         else:
-            # Initialize random embeddings
-            # Use std=0.1 to create meaningful logit differences after dot product
+            # Initialize random embeddings using Xavier initialization
             self.word_embeddings = nn.Parameter(
-                torch.randn(vocab_size, embedding_dim) * 0.1,
+                torch.empty(vocab_size, embedding_dim),
                 requires_grad=True
             )
+            nn.init.xavier_uniform_(self.word_embeddings)
         
         # Topic embeddings (alpha in original ETM)
-        # Use larger std for topic embeddings to create sharper initial beta
+        # Use Xavier initialization for consistency
         self.topic_embeddings = nn.Parameter(
-            torch.randn(num_topics, embedding_dim) * 0.5
+            torch.empty(num_topics, embedding_dim)
         )
+        nn.init.xavier_uniform_(self.topic_embeddings)
     
     def get_beta(self) -> torch.Tensor:
         """
