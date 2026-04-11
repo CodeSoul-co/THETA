@@ -572,9 +572,9 @@ kill -9 <PID>
 @article{duan2026theta,
   title={THETA: A Textual Hybrid Embedding-based Topic Analysis Framework and AI Scientist Agent for Scalable Computational Social Science},
   author={Codesoul.co},
-  journal={arXiv preprint arXiv:2603.05972},
+  journal={TBD},
   year={2026},
-  doi={10.48550/arXiv.2603.05972}
+  doi={TBD}
 }
 ```
 
@@ -584,7 +584,6 @@ kill -9 <PID>
 
 如有问题，请联系：
 - duanzhenke@code-soul.com
-- panjiqun@code-soul.com
 - lixin@code-soul.com
 
 ---
