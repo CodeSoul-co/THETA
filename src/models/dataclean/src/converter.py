@@ -12,6 +12,7 @@ from tqdm import tqdm
 import PyPDF2
 from pdfminer.high_level import extract_text as pdfminer_extract_text
 from pdf2docx import Converter as PDFToDocxConverter
+import pandas as pd
 
 
 class TextConverter:
@@ -22,7 +23,7 @@ class TextConverter:
     
     def __init__(self):
         """Initialize the TextConverter class."""
-        self.supported_formats = ['.txt', '.pdf', '.csv', '.json', '.xml', '.html', '.PDF', '.docx']
+        self.supported_formats = ['.txt', '.pdf', '.csv', '.json', '.xml', '.html', '.PDF', '.docx', '.xlsx', '.xls']
     
     def is_supported(self, file_path):
         """
@@ -214,6 +215,30 @@ class TextConverter:
             print(f"Error extracting text from TXT {file_path}: {e}")
             return ""
     
+    def extract_text_from_xlsx(self, file_path):
+        """
+        Extract text from an Excel file (.xlsx or .xls).
+        
+        Args:
+            file_path (str): Path to the Excel file
+            
+        Returns:
+            str: Extracted text content
+        """
+        try:
+            df = pd.read_excel(file_path)
+            # Convert all cells to string and join
+            text_parts = []
+            for col in df.columns:
+                text_parts.append(str(col))
+            for _, row in df.iterrows():
+                row_text = ' '.join([str(val) for val in row.values if pd.notna(val)])
+                text_parts.append(row_text)
+            return '\n'.join(text_parts)
+        except Exception as e:
+            print(f"Error extracting text from Excel {file_path}: {e}")
+            return ""
+    
     def extract_text(self, file_path):
         """
         Extract text from the file.
@@ -242,6 +267,8 @@ class TextConverter:
             return self.extract_text_from_html(file_path)
         elif ext == '.txt':
             return self.extract_text_from_txt(file_path)
+        elif ext in ['.xlsx', '.xls']:
+            return self.extract_text_from_xlsx(file_path)
         else:
             # Try to read as plain text for unsupported formats
             try:
