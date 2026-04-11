@@ -298,9 +298,10 @@ if [ -z "$WORKSPACE_DIR" ] || [ ! -f "$WORKSPACE_DIR/bow_matrix.npy" ]; then
         NEED_SBERT="True"
     fi
     
-    # Resolve to absolute paths before cd (DATA_DIR/RESULT_DIR may be relative)
+    # Resolve to absolute paths before cd (may be relative in env_setup.sh)
     ABS_DATA_DIR="$(cd "$PROJECT_ROOT" && realpath "$DATA_DIR")"
     ABS_RESULT_DIR="$(cd "$PROJECT_ROOT" && realpath "$RESULT_DIR")"
+    ABS_SBERT_MODEL="$(cd "$PROJECT_ROOT" && realpath "${SBERT_MODEL_PATH:-models/sbert/sentence-transformers/all-MiniLM-L6-v2}")"
 
     cd "$ETM_DIR"
     python -c "
@@ -313,7 +314,8 @@ result = prepare_baseline_data(
     vocab_size=$VOCAB_SIZE,
     data_dir='$ABS_DATA_DIR',
     save_dir='$ABS_RESULT_DIR/baseline/$DATASET/data',
-    generate_sbert=$NEED_SBERT
+    generate_sbert=$NEED_SBERT,
+    sbert_model='$ABS_SBERT_MODEL'
 )
 print(f'Prepared {len(result[\"texts\"])} documents')
 print(f'BOW shape: {result[\"bow_matrix\"].shape}')
