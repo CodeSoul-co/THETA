@@ -561,9 +561,9 @@ If you find **THETA** useful in your research, please consider citing our paper:
 @article{duan2026theta,
   title={THETA: A Textual Hybrid Embedding-based Topic Analysis Framework and AI Scientist Agent for Scalable Computational Social Science},
   author={Codesoul.co},
-  journal={arXiv preprint arXiv:2603.05972},
+  journal={TBD},
   year={2026},
-  doi={10.48550/arXiv.2603.05972}
+  doi={TBD}
 }
 ```
 
@@ -573,7 +573,6 @@ If you find **THETA** useful in your research, please consider citing our paper:
 
 For questions, please contact:
 - duanzhenke@code-soul.com
-- panjiqun@code-soul.com
 - lixin@code-soul.com
 
 ---
