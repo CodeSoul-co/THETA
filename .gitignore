@@ -220,6 +220,10 @@ data/*
 !data/workspace/.gitkeep
 !data/.gitkeep
 
+# Keep example folder (for onboarding)
+!data/example/
+!data/example/**
+
 # Ignore large binary files
 *.npy
 *.npz
