@@ -225,13 +225,25 @@ for DS in "${DATASETS[@]}"; do
             THETA_BASE="$RESULT_DIR/$DS/$MODEL_SIZE/theta"
 
             _check_data_ready() {
-                local latest
-                latest=$(ls -dt "$THETA_BASE"/exp_* 2>/dev/null | head -1)
-                if [ -n "$latest" ] && \
-                   [ -f "$latest/data/embeddings/embeddings.npy" ] && \
-                   [ -f "$latest/data/bow/bow_matrix.npy" ]; then
-                    echo "$latest"
-                fi
+                for exp in $(ls -dt "$THETA_BASE"/exp_* 2>/dev/null); do
+                    [ -f "$exp/data/embeddings/embeddings.npy" ] || continue
+                    [ -f "$exp/data/bow/bow_matrix.npy" ]        || continue
+                    # Verify the exp was prepared with the same mode
+                    local cfg="$exp/config.json"
+                    if [ -f "$cfg" ]; then
+                        local saved_mode
+                        saved_mode=$(python3 -c "
+import json, sys
+try:
+    m = json.load(open('$cfg'))
+    print(m.get('embedding', {}).get('mode', ''))
+except: print('')
+" 2>/dev/null)
+                        [ "$saved_mode" = "$MODE" ] || continue
+                    fi
+                    echo "$exp"
+                    return
+                done
             }
 
             EXISTING=$(_check_data_ready || true)
