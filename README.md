@@ -19,13 +19,14 @@
 ## Table of Contents
 
 1. [Quick Start: 5-Minute Setup](#quick-start-5-minute-setup)
-2. [Configuration System: From Hardware to Experiments](#configuration-system-from-hardware-to-experiments)
-3. [Running Modes: Beginner vs Expert](#running-modes-beginner-vs-expert)
-4. [Output Map: Where Are the Results?](#output-map-where-are-the-results)
-5. [Scientific Evaluation Standards](#scientific-evaluation-standards)
-6. [Supported Models](#supported-models)
-7. [Training Parameters Reference](#training-parameters-reference)
-8. [FAQ](#faq)
+2. [Data Format Requirements](#data-format-requirements)
+3. [Configuration System: From Hardware to Experiments](#configuration-system-from-hardware-to-experiments)
+4. [Running Modes: Beginner vs Expert](#running-modes-beginner-vs-expert)
+5. [Output Map: Where Are the Results?](#output-map-where-are-the-results)
+6. [Scientific Evaluation Standards](#scientific-evaluation-standards)
+7. [Supported Models](#supported-models)
+8. [Training Parameters Reference](#training-parameters-reference)
+9. [FAQ](#faq)
 
 ---
 
@@ -85,6 +86,34 @@ models/
 ├── qwen3_embedding_0.6B/
 └── sbert/sentence-transformers/all-MiniLM-L6-v2/
 ```
+
+---
+
+## Data Format Requirements
+
+THETA uses a **strict column naming convention** for data files.
+
+### Column Naming Convention
+
+| Purpose | Column Name | Required For | Format |
+|---------|-------------|--------------|--------|
+| **Text** | `text` | All models | String |
+| **Timestamp** | `timestamp` | DTM | `2026`, `2026-10-17`, or `2026-10-17 14:30:00` |
+| **Covariates** | `cov_*` | STM | Prefix with `cov_` (e.g., `cov_province`) |
+| **Label** | `label` | Supervised | String or integer |
+
+### Model-Specific Requirements
+
+| Model | Required Columns |
+|-------|------------------|
+| **DTM** | `text`, `timestamp` |
+| **STM** | `text`, `cov_*` |
+
+> ⚠️ **DTM Note**: Only supports **year-level** granularity. Dates like `2026-10-17` are converted to `2026`.
+> 
+> ⚠️ **STM Note**: All covariate columns **must** use the `cov_` prefix.
+
+📁 **See [example/DATA_FORMAT_TEMPLATE.md](example/DATA_FORMAT_TEMPLATE.md) for CSV templates.**
 
 ---
 
