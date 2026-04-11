@@ -571,7 +571,7 @@ kill -9 <PID>
 ```bibtex
 @article{duan2026theta,
   title={THETA: A Textual Hybrid Embedding-based Topic Analysis Framework and AI Scientist Agent for Scalable Computational Social Science},
-  author={Duan, Zhenke and Li, Xin},
+  author={Codesoul.co},
   journal={arXiv preprint arXiv:2603.05972},
   year={2026},
   doi={10.48550/arXiv.2603.05972}
