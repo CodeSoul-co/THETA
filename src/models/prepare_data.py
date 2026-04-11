@@ -292,105 +292,75 @@ def auto_detect_columns(df: pd.DataFrame) -> Dict[str, Any]:
     """
     Auto-detect time column and covariate columns from DataFrame.
     
-    Time column detection:
-        - Look for columns named: year, timestamp, date, time, created_at, published_at, etc.
-        - Check if column contains date-like or year-like values
+    STRICT COLUMN NAMING CONVENTION:
+    ================================
+    - Text column: must be named 'text'
+    - Time column: must be named 'timestamp' (supports year/date/datetime formats)
+    - Covariate columns: must be prefixed with 'cov_' (e.g., cov_province, cov_category)
+    - Label column: must be named 'label'
     
-    Covariate column detection:
-        - Look for categorical columns with reasonable cardinality (2-50 unique values)
-        - Exclude text columns (avg length > 100 chars)
-        - Exclude ID-like columns (all unique values)
+    Time format support:
+        - Year only: 2026 (integer)
+        - Date: 2026-10-17 or 2026/10/17
+        - Datetime: 2026-10-17 14:30:00
+        Note: All formats are converted to YEAR for DTM analysis
     
     Returns:
         dict with 'time_column', 'time_type', 'covariate_columns', 'column_info'
     """
     result = {
         'time_column': None,
-        'time_type': None,  # 'year', 'date', 'timestamp'
+        'time_type': None,  # 'year', 'date', 'datetime'
         'covariate_columns': [],
         'column_info': {}
     }
     
-    # Common time column names (priority order)
-    time_column_names = [
-        'year', 'Year', 'YEAR',
-        'timestamp', 'Timestamp', 'TIMESTAMP',
-        'date', 'Date', 'DATE',
-        'time', 'Time', 'TIME',
-        'created_at', 'created_time', 'publish_date', 'published_at',
-        'datetime', 'DateTime', 'DATETIME',
-        '年份', '时间', '日期'
-    ]
-    
-    # Columns to exclude from covariates
-    exclude_patterns = [
-        'id', 'ID', 'Id', '_id', 'index', 'Index',
-        'text', 'content', 'Content', 'Text', 'cleaned_content',
-        'title', 'Title', 'description', 'Description',
-        'url', 'URL', 'link', 'path', 'file'
-    ]
-    
-    # 1. Detect time column
-    for col_name in time_column_names:
-        if col_name in df.columns:
-            result['time_column'] = col_name
-            # Determine time type
-            sample = df[col_name].dropna().head(100)
-            if len(sample) > 0:
-                first_val = str(sample.iloc[0])
-                if len(first_val) == 4 and first_val.isdigit():
-                    result['time_type'] = 'year'
-                elif '-' in first_val or '/' in first_val:
-                    result['time_type'] = 'date'
-                else:
-                    result['time_type'] = 'timestamp'
-            break
-    
-    # If no named time column found, try to detect by content
-    if result['time_column'] is None:
-        for col in df.columns:
-            if df[col].dtype in ['int64', 'float64']:
-                # Check if values look like years (1900-2100)
-                sample = df[col].dropna()
+    # 1. Detect time column - STRICT MODE: require 'timestamp' column
+    if 'timestamp' in df.columns:
+        result['time_column'] = 'timestamp'
+        # Determine time type from content
+        sample = df['timestamp'].dropna().head(100)
+        if len(sample) > 0:
+            first_val = str(sample.iloc[0])
+            if len(first_val) == 4 and first_val.isdigit():
+                result['time_type'] = 'year'
+            elif ' ' in first_val and ':' in first_val:
+                result['time_type'] = 'datetime'
+            elif '-' in first_val or '/' in first_val:
+                result['time_type'] = 'date'
+            else:
+                result['time_type'] = 'year'
+    else:
+        # Fallback for backward compatibility (with warning)
+        legacy_time_names = [
+            'year', 'Year', 'YEAR',
+            'date', 'Date', 'DATE',
+            'time', 'Time', 'TIME',
+            'created_at', 'created_time', 'publish_date', 'published_at',
+            'datetime', 'DateTime', 'DATETIME',
+            '年份', '时间', '日期'
+        ]
+        for col_name in legacy_time_names:
+            if col_name in df.columns:
+                result['time_column'] = col_name
+                result['_legacy_warning'] = f"Using legacy time column '{col_name}'. Please rename to 'timestamp'."
+                # Determine time type
+                sample = df[col_name].dropna().head(100)
                 if len(sample) > 0:
-                    min_val, max_val = sample.min(), sample.max()
-                    if 1900 <= min_val <= 2100 and 1900 <= max_val <= 2100:
-                        result['time_column'] = col
+                    first_val = str(sample.iloc[0])
+                    if len(first_val) == 4 and first_val.isdigit():
                         result['time_type'] = 'year'
-                        break
-            elif df[col].dtype == 'object':
-                # Try to parse as date
-                try:
-                    parsed = pd.to_datetime(df[col].head(100), errors='coerce')
-                    if parsed.notna().sum() > 50:  # >50% parseable
-                        result['time_column'] = col
+                    elif '-' in first_val or '/' in first_val:
                         result['time_type'] = 'date'
-                        break
-                except:
-                    pass
+                    else:
+                        result['time_type'] = 'year'
+                break
     
-    # 2. Detect covariate columns
+    # 2. Detect covariate columns - STRICT MODE: require 'cov_' prefix
     for col in df.columns:
-        # Skip if it's the time column
-        if col == result['time_column']:
-            continue
-        
-        # Skip if matches exclude patterns
-        if any(pattern in col for pattern in exclude_patterns):
-            continue
-        
-        # Skip if it's a text column (long strings)
-        if df[col].dtype == 'object':
-            avg_len = df[col].fillna('').astype(str).str.len().mean()
-            if avg_len > 100:  # Likely text content
-                continue
-        
-        # Check cardinality
-        n_unique = df[col].nunique()
-        n_total = len(df)
-        
-        # Good covariate: 2-50 unique values, not all unique (ID-like)
-        if 2 <= n_unique <= 50 and n_unique < n_total * 0.9:
+        if col.startswith('cov_'):
+            # This is a covariate column
+            n_unique = df[col].nunique()
             result['covariate_columns'].append(col)
             result['column_info'][col] = {
                 'dtype': str(df[col].dtype),
@@ -398,40 +368,117 @@ def auto_detect_columns(df: pd.DataFrame) -> Dict[str, Any]:
                 'sample_values': df[col].dropna().unique()[:5].tolist()
             }
     
+    # Fallback: detect potential covariates without prefix (with warning)
+    if not result['covariate_columns']:
+        # Columns to exclude from covariates
+        exclude_patterns = [
+            'id', 'ID', 'Id', '_id', 'index', 'Index',
+            'text', 'content', 'Content', 'Text', 'cleaned_content',
+            'title', 'Title', 'description', 'Description',
+            'url', 'URL', 'link', 'path', 'file', 'timestamp', 'label'
+        ]
+        
+        legacy_covariates = []
+        for col in df.columns:
+            # Skip time column
+            if col == result['time_column']:
+                continue
+            
+            # Skip if matches exclude patterns
+            if any(pattern in col for pattern in exclude_patterns):
+                continue
+            
+            # Skip if it's a text column (long strings)
+            if df[col].dtype == 'object':
+                avg_len = df[col].fillna('').astype(str).str.len().mean()
+                if avg_len > 100:
+                    continue
+            
+            # Check cardinality
+            n_unique = df[col].nunique()
+            n_total = len(df)
+            
+            # Good covariate: 2-50 unique values, not all unique (ID-like)
+            if 2 <= n_unique <= 50 and n_unique < n_total * 0.9:
+                legacy_covariates.append(col)
+                result['column_info'][col] = {
+                    'dtype': str(df[col].dtype),
+                    'n_unique': n_unique,
+                    'sample_values': df[col].dropna().unique()[:5].tolist(),
+                    '_legacy': True
+                }
+        
+        if legacy_covariates:
+            result['covariate_columns'] = legacy_covariates
+            result['_covariate_warning'] = (
+                f"Detected potential covariates without 'cov_' prefix: {legacy_covariates}. "
+                f"Please rename to 'cov_<name>' format (e.g., cov_province, cov_category)."
+            )
+    
     return result
 
 
 def print_column_detection_result(detection_result: Dict[str, Any], df: pd.DataFrame):
     """Print auto-detection results in a user-friendly format."""
     print(f"\n{'='*60}")
-    print("Column Auto-Detection Results")
+    print("Column Auto-Detection Results (Strict Mode)")
     print(f"{'='*60}")
+    
+    # Print naming convention reminder
+    print(f"\n[Naming Convention]")
+    print(f"  - Text column: 'text'")
+    print(f"  - Time column: 'timestamp' (supports: 2026, 2026-10-17, 2026-10-17 14:30:00)")
+    print(f"  - Covariate columns: 'cov_<name>' (e.g., cov_province, cov_category)")
+    print(f"  - Label column: 'label'")
     
     # Time column
     if detection_result['time_column']:
         time_col = detection_result['time_column']
         time_type = detection_result['time_type']
         sample = df[time_col].dropna().head(5).tolist()
-        print(f"\n[Time Column] ✓ Detected: '{time_col}' (type: {time_type})")
+        
+        if time_col == 'timestamp':
+            print(f"\n[Time Column] ✓ '{time_col}' (type: {time_type})")
+        else:
+            print(f"\n[Time Column] ⚠ Using legacy column '{time_col}' (type: {time_type})")
+            print(f"  → Please rename to 'timestamp' for strict compliance")
         print(f"  Sample values: {sample}")
+        print(f"  Note: All formats will be converted to YEAR for DTM analysis")
     else:
         print(f"\n[Time Column] ✗ Not detected")
-        print(f"  Tip: Add a column named 'year', 'date', or 'timestamp'")
+        print(f"  Tip: Add a column named 'timestamp'")
+        print(f"  Supported formats: 2026 | 2026-10-17 | 2026-10-17 14:30:00")
+    
+    # Print legacy warning if exists
+    if '_legacy_warning' in detection_result:
+        print(f"  [WARNING] {detection_result['_legacy_warning']}")
     
     # Covariate columns
     cov_cols = detection_result['covariate_columns']
     if cov_cols:
-        print(f"\n[Covariate Columns] ✓ Detected {len(cov_cols)} columns:")
+        has_prefix = all(col.startswith('cov_') for col in cov_cols)
+        if has_prefix:
+            print(f"\n[Covariate Columns] ✓ Detected {len(cov_cols)} columns:")
+        else:
+            print(f"\n[Covariate Columns] ⚠ Detected {len(cov_cols)} potential columns (missing 'cov_' prefix):")
+        
         for col in cov_cols[:10]:  # Show max 10
             info = detection_result['column_info'].get(col, {})
             n_unique = info.get('n_unique', '?')
             samples = info.get('sample_values', [])[:3]
-            print(f"  - {col}: {n_unique} unique values, e.g., {samples}")
+            is_legacy = info.get('_legacy', False)
+            prefix = "  → " if is_legacy else "  - "
+            suffix = " (rename to cov_" + col + ")" if is_legacy else ""
+            print(f"{prefix}{col}: {n_unique} unique values, e.g., {samples}{suffix}")
         if len(cov_cols) > 10:
             print(f"  ... and {len(cov_cols) - 10} more")
     else:
         print(f"\n[Covariate Columns] ✗ None detected")
-        print(f"  Tip: Add categorical columns like 'category', 'source', 'region'")
+        print(f"  Tip: Add columns with 'cov_' prefix (e.g., cov_province, cov_category)")
+    
+    # Print covariate warning if exists
+    if '_covariate_warning' in detection_result:
+        print(f"  [WARNING] {detection_result['_covariate_warning']}")
     
     print(f"{'='*60}\n")
 
@@ -463,36 +510,50 @@ def find_data_file(dataset: str) -> Optional[Path]:
 
 
 def load_texts(data_path: Path) -> Tuple[List[str], Optional[np.ndarray]]:
-    """Load text data"""
+    """Load text data
+    
+    Column naming convention (strict mode):
+    - Text column: must be named 'text'
+    - Label column: must be named 'label'
+    """
     print(f"Loading data from {data_path}")
     df = pd.read_csv(data_path)
     
-    # Find text column
+    # Find text column - strict mode: require 'text' column
     text_col = None
-    for col in ['cleaned_content', 'clean_text', 'cleaned_text', 'text', 'content', 'Text',
-                 'Consumer complaint narrative', 'narrative']:
-        if col in df.columns:
-            text_col = col
-            break
+    if 'text' in df.columns:
+        text_col = 'text'
+    else:
+        # Fallback for backward compatibility (will show warning)
+        for col in ['cleaned_content', 'clean_text', 'cleaned_text', 'content', 'Text',
+                     'Consumer complaint narrative', 'narrative']:
+            if col in df.columns:
+                text_col = col
+                print(f"  [WARNING] Using legacy column name '{text_col}'. "
+                      f"Please rename to 'text' for strict compliance.")
+                break
     
-    # Fallback: use the longest-string column
     if text_col is None:
-        str_cols = [c for c in df.columns if df[c].dtype == 'object']
-        if str_cols:
-            text_col = max(str_cols, key=lambda c: df[c].astype(str).str.len().mean())
-            print(f"  Auto-detected text column: '{text_col}'")
-    
-    if text_col is None:
-        raise ValueError(f"No text column found. Columns: {df.columns.tolist()}")
+        raise ValueError(
+            f"Text column 'text' not found. "
+            f"Please rename your text column to 'text'. "
+            f"Available columns: {df.columns.tolist()}"
+        )
     
     texts = df[text_col].fillna('').astype(str).tolist()
     
-    # Find label column
+    # Find label column - strict mode: require 'label' column
     labels = None
-    for col in ['label', 'Label', 'labels', 'category', 'subreddit_id']:
-        if col in df.columns:
-            labels = df[col].values
-            break
+    if 'label' in df.columns:
+        labels = df['label'].values
+    else:
+        # Fallback for backward compatibility
+        for col in ['Label', 'labels', 'category', 'subreddit_id']:
+            if col in df.columns:
+                labels = df[col].values
+                print(f"  [WARNING] Using legacy label column '{col}'. "
+                      f"Please rename to 'label' for strict compliance.")
+                break
     
     print(f"Loaded {len(texts)} documents, text_col={text_col}")
     return texts, labels
