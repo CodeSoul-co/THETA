@@ -298,6 +298,10 @@ if [ -z "$WORKSPACE_DIR" ] || [ ! -f "$WORKSPACE_DIR/bow_matrix.npy" ]; then
         NEED_SBERT="True"
     fi
     
+    # Resolve to absolute paths before cd (DATA_DIR/RESULT_DIR may be relative)
+    ABS_DATA_DIR="$(cd "$PROJECT_ROOT" && realpath "$DATA_DIR")"
+    ABS_RESULT_DIR="$(cd "$PROJECT_ROOT" && realpath "$RESULT_DIR")"
+
     cd "$ETM_DIR"
     python -c "
 import sys
@@ -307,8 +311,8 @@ from model.baseline_data import prepare_baseline_data
 result = prepare_baseline_data(
     dataset='$DATASET',
     vocab_size=$VOCAB_SIZE,
-    data_dir='$DATA_DIR',
-    save_dir='$RESULT_DIR/baseline/$DATASET/data',
+    data_dir='$ABS_DATA_DIR',
+    save_dir='$ABS_RESULT_DIR/baseline/$DATASET/data',
     generate_sbert=$NEED_SBERT
 )
 print(f'Prepared {len(result[\"texts\"])} documents')
@@ -319,11 +323,11 @@ if result.get('sbert_embeddings') is not None:
     
     # Find the newly created workspace
     # Try exp_* pattern first, then dataset name pattern
-    WORKSPACE_DIR=$(ls -dt "$RESULT_DIR/baseline/$DATASET/data"/exp_* 2>/dev/null | head -1)
+    WORKSPACE_DIR=$(ls -dt "$ABS_RESULT_DIR/baseline/$DATASET/data"/exp_* 2>/dev/null | head -1)
     if [ -z "$WORKSPACE_DIR" ] || [ ! -f "$WORKSPACE_DIR/bow_matrix.npy" ]; then
         # Try dataset name as subdirectory
-        if [ -f "$RESULT_DIR/baseline/$DATASET/data/$DATASET/bow_matrix.npy" ]; then
-            WORKSPACE_DIR="$RESULT_DIR/baseline/$DATASET/data/$DATASET"
+        if [ -f "$ABS_RESULT_DIR/baseline/$DATASET/data/$DATASET/bow_matrix.npy" ]; then
+            WORKSPACE_DIR="$ABS_RESULT_DIR/baseline/$DATASET/data/$DATASET"
         fi
     fi
     
