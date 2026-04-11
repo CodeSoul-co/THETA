@@ -214,6 +214,7 @@ for DS in "${DATASETS[@]}"; do
             --batch_size 32 \
             --max_length 512 \
             --gpu "$GPU"
+        cd "$PROJECT_ROOT"
 
         DATA_EXP=$(basename "$(_check_data_ready)")
         if [ -z "$DATA_EXP" ]; then
