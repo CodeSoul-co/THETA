@@ -231,3 +231,6 @@ data/*
 # Model weights (keep directory structure but ignore model files)
 models/*
 !models/.gitkeep
+
+# IDE
+CLAUDE.md
