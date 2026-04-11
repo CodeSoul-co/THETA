@@ -119,7 +119,7 @@ if [ "$LIST_DATASETS" = true ]; then
         [ "$name" = "example" ] && continue
         csv=$(ls "$d"*_cleaned.csv 2>/dev/null | head -1)
         if [ -n "$csv" ]; then
-            rows=$(python3 -c "import csv; print(sum(1 for _ in open('$csv'))-1)" 2>/dev/null || echo "?")
+            rows=$(python3 -c "import pandas as pd; print(len(pd.read_csv('$csv')))" 2>/dev/null || echo "?")
             echo "  $name  ($rows rows)"
         fi
     done
