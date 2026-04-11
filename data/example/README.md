@@ -1,55 +1,55 @@
-# 数据上传说明
+# Data Upload Guide
 
-将你的数据集放入 `data/{数据集名称}/` 目录下，按以下规范命名列。
+Place your dataset in the `data/{dataset_name}/` directory and follow the column naming conventions below.
 
-## 目录结构
+## Directory Structure
 
 ```
 data/
-├── example/                  ← 本示例文件夹
+├── example/                  ← this example folder
 │   └── example_cleaned.csv
-└── {你的数据集}/
-    └── {数据集名称}_cleaned.csv
+└── {your_dataset}/
+    └── {dataset_name}_cleaned.csv
 ```
 
-## 必需列
+## Required Columns
 
-| 列名 | 说明 | 是否必填 |
-|------|------|----------|
-| `text` | 正文内容（字符串） | ✅ 必填 |
-| `timestamp` | 发布日期，如 `2026-04-01` | DTM 必填 |
-| `cov_*` | 协变量，前缀 `cov_`，如 `cov_platform` | STM 必填 |
-| `label` | 分类标签（有监督模式） | 可选 |
+| Column | Description | Required |
+|--------|-------------|----------|
+| `text` | Document text content (string) | ✅ Always |
+| `timestamp` | Publication date, e.g. `2026-04-01` | DTM only |
+| `cov_*` | Covariate columns with `cov_` prefix, e.g. `cov_platform` | STM only |
+| `label` | Category label for supervised mode | Optional |
 
-## 支持的文件格式
+## Supported File Formats
 
-- `.csv`（推荐，需包含 `text` 列）
-- `.xlsx`（会自动转换）
-- `.txt` / `.docx` / `.pdf`（每个文件视为一篇文档）
+- `.csv` (recommended — must contain a `text` column)
+- `.xlsx` (auto-converted)
+- `.txt` / `.docx` / `.pdf` (each file treated as one document)
 
-## 日期格式
+## Timestamp Formats
 
-`timestamp` 列支持以下格式，DTM 分析统一转为年份：
+The `timestamp` column accepts the following formats. All are converted to **year-level** granularity for DTM analysis:
 
 ```
-2026          ← 年份
-2026-04-01    ← 日期（推荐）
-2026-04-01 14:30:00  ← 完整时间
+2026                  ← year only
+2026-04-01            ← date (recommended)
+2026-04-01 14:30:00   ← full datetime
 ```
 
-## 快速启动
+## Quick Start
 
 ```bash
-# 将数据放入 data/{数据集名}/ 后执行：
-conda run -n theta bash scripts/quick_start.sh {数据集名}
+# Place your data in data/{dataset_name}/, then run:
+conda run -n theta bash scripts/quick_start.sh {dataset_name}
 
-# 示例运行本 example 数据集：
+# Run with the example dataset:
 conda run -n theta bash scripts/quick_start.sh example
 ```
 
-## 参考示例
+## Example File
 
-见本目录 `example_cleaned.csv`，包含：
-- 10 条中英文混合文本
-- `text`、`timestamp`、`cov_platform` 三列
-- 覆盖微信公众号、twitter、知乎、reddit、小红书五个平台
+See `example_cleaned.csv` in this directory, which contains:
+- 10 documents in mixed Chinese and English
+- Columns: `text`, `timestamp`, `cov_platform`
+- Topics covering environment, transportation, healthcare, education, and supply chain
