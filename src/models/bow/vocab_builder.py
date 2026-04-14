@@ -22,6 +22,17 @@ try:
 except ImportError:
     JIEBA_AVAILABLE = False
 
+# Import StopwordManager for language detection and stopword loading
+try:
+    from utils.stopword_manager import StopwordManager
+    STOPWORD_MANAGER_AVAILABLE = True
+except ImportError:
+    try:
+        from ..utils.stopword_manager import StopwordManager
+        STOPWORD_MANAGER_AVAILABLE = True
+    except ImportError:
+        STOPWORD_MANAGER_AVAILABLE = False
+
 
 @dataclass
 class VocabConfig:
@@ -62,110 +73,9 @@ class VocabBuilder:
     for all downstream ETM models.
     """
     
-    # Basic English stopwords
-    ENGLISH_STOPWORDS = {
-        'a', 'an', 'the', 'and', 'or', 'but', 'if', 'then', 'else', 'when',
-        'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into',
-        'through', 'during', 'before', 'after', 'above', 'below', 'to',
-        'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under',
-        'again', 'further', 'then', 'once', 'here', 'there', 'where', 'why',
-        'how', 'all', 'each', 'few', 'more', 'most', 'other', 'some', 'such',
-        'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too',
-        'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now',
-        'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you',
-        'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his',
-        'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself',
-        'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which',
-        'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are',
-        'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having',
-        'do', 'does', 'did', 'doing', 'would', 'could', 'ought', 'im', 'youre',
-        'hes', 'shes', 'its', 'were', 'theyre', 'ive', 'youve', 'weve',
-        'theyve', 'id', 'youd', 'hed', 'shed', 'wed', 'theyd', 'ill', 'youll',
-        'hell', 'shell', 'well', 'theyll', 'isnt', 'arent', 'wasnt', 'werent',
-        'hasnt', 'havent', 'hadnt', 'doesnt', 'dont', 'didnt', 'wont', 'wouldnt',
-        'shant', 'shouldnt', 'cant', 'cannot', 'couldnt', 'mustnt', 'lets',
-        'thats', 'whos', 'whats', 'heres', 'theres', 'whens', 'wheres', 'whys',
-        'hows', 'because', 'as', 'until', 'while', 'of', 'also', 'get', 'got',
-        'like', 'one', 'two', 'even', 'still', 'way', 'want', 'go', 'going',
-        'know', 'think', 'see', 'come', 'make', 'take', 'use', 'find', 'give',
-        'tell', 'say', 'said', 'really', 'much', 'many', 'back', 'thing',
-        'things', 'something', 'anything', 'nothing', 'everything', 'someone',
-        'anyone', 'everyone', 'people', 'time', 'year', 'years', 'day', 'days',
-        'url_link', 'user_mention', 'http', 'https', 'www', 'com',
-        # Social media noise words
-        'rt', 'retweet', 'user', 'users', 'url', 'link', 'mention', 'via',
-        'lol', 'lmao', 'lmfao', 'rofl', 'haha', 'hahaha', 'hahahaha', 'hehe',
-        'omg', 'omfg', 'wtf', 'wth', 'smh', 'tbh', 'imo', 'imho', 'fyi',
-        'wanna', 'gonna', 'gotta', 'kinda', 'sorta', 'dunno', 'lemme',
-        'yeah', 'yea', 'yep', 'nope', 'nah', 'ok', 'okay', 'alright',
-        'hey', 'hi', 'hello', 'bye', 'goodbye', 'thanks', 'thank', 'please', 'pls',
-        'guys', 'dude', 'bro', 'man', 'girl', 'boy', 'sir', 'maam',
-        'll', 've', 're', 'amp', 'gt', 'lt', 'quot',
-        'follow', 'followers', 'following', 'tweet', 'tweets', 'dm', 'dms',
-        'right', 'left', 'maybe', 'must', 'need', 'needs', 'try', 'trying',
-        'today', 'tomorrow', 'yesterday', 'tonight', 'morning', 'night',
-        'week', 'month', 'hour', 'hours', 'minute', 'minutes', 'second',
-        'first', 'last', 'next', 'new', 'old', 'good', 'bad', 'best', 'worst',
-        'great', 'nice', 'cool', 'awesome', 'amazing', 'love', 'hate', 'feel',
-        'look', 'looks', 'looking', 'check', 'video', 'photo', 'pic', 'pics',
-        'free', 'live', 'home', 'work', 'life', 'world', 'place',
-        'youtube', 'facebook', 'instagram', 'twitter', 'tiktok', 'snapchat',
-        # High-frequency low-value words
-        'blog', 'post', 'site', 'website', 'page', 'click', 'read', 'share',
-        'happy', 'hope', 'wish', 'wait', 'want', 'let', 'got', 'getting',
-        'really', 'actually', 'literally', 'basically', 'definitely', 'probably',
-        'always', 'never', 'every', 'any', 'another', 'also', 'still', 'yet',
-        'shit', 'fuck', 'damn', 'hell', 'ass', 'crap', 'suck', 'sucks',
-        'bored', 'boring', 'tired', 'sleep', 'bed', 'wake', 'woke',
-        # Portuguese stopwords
-        'que', 'por', 'pra', 'para', 'uma', 'vou', 'mais', 'meu', 'mas', 'ver',
-        'com', 'nao', 'isso', 'esse', 'essa', 'aqui', 'ali', 'muito', 'bem',
-        # Spanish stopwords
-        'que', 'por', 'para', 'una', 'con', 'los', 'las', 'del', 'mas', 'pero',
-        # Indonesian stopwords
-        'yang', 'aku', 'gue', 'aja', 'apa', 'ada', 'kan', 'ama', 'gak', 'ini',
-        'itu', 'sama', 'udah', 'lagi', 'mau', 'kalo', 'bisa', 'jadi', 'banget',
-        # French stopwords
-        'les', 'pour', 'une', 'des', 'dans', 'sur', 'avec', 'pas', 'est', 'sont',
-        # Dutch stopwords
-        'van', 'een', 'met', 'ben', 'het', 'dat', 'voor', 'naar', 'zijn', 'hebben',
-        # German additional stopwords
-        'für', 'auf', 'aus', 'bei', 'nach', 'vor', 'über', 'unter', 'zwischen'
-    }
-    
-    # German stopwords
-    GERMAN_STOPWORDS = {
-        'der', 'die', 'das', 'den', 'dem', 'des', 'ein', 'eine', 'einer',
-        'einem', 'einen', 'und', 'oder', 'aber', 'wenn', 'dann', 'als',
-        'auch', 'nur', 'noch', 'schon', 'so', 'wie', 'was', 'wer', 'wo',
-        'wann', 'warum', 'ich', 'du', 'er', 'sie', 'es', 'wir', 'ihr',
-        'sie', 'mein', 'dein', 'sein', 'ihr', 'unser', 'euer', 'ist',
-        'sind', 'war', 'waren', 'hat', 'haben', 'hatte', 'hatten', 'wird',
-        'werden', 'wurde', 'wurden', 'kann', 'konnte', 'muss', 'musste',
-        'soll', 'sollte', 'will', 'wollte', 'darf', 'durfte', 'nicht',
-        'kein', 'keine', 'mit', 'von', 'zu', 'bei', 'nach', 'vor', 'auf',
-        'in', 'an', 'um', 'durch', 'fur', 'gegen', 'ohne', 'unter', 'uber',
-        'zwischen', 'hinter', 'neben', 'aus', 'seit', 'bis', 'wegen',
-        'trotz', 'wahrend', 'herr', 'frau', 'dame', 'herren', 'damen'
-    }
-    
-    # Chinese stopwords
-    CHINESE_STOPWORDS = {
-        '的', '了', '是', '在', '我', '有', '和', '就', '不', '人', '都', '一',
-        '一个', '上', '也', '很', '到', '说', '要', '去', '你', '会', '着',
-        '没有', '看', '好', '自己', '这', '那', '她', '他', '它', '们', '这个',
-        '那个', '什么', '怎么', '为什么', '哪', '哪里', '谁', '多少', '几',
-        '能', '可以', '应该', '必须', '得', '把', '被', '让', '给', '对',
-        '从', '向', '往', '跟', '比', '在于', '关于', '对于', '由于', '因为',
-        '所以', '但是', '然而', '而且', '并且', '或者', '如果', '虽然', '即使',
-        '只要', '只有', '除非', '无论', '不管', '还是', '而是', '不是', '就是',
-        '这样', '那样', '怎样', '如何', '为何', '何时', '何地', '之', '其',
-        '或', '与', '及', '等', '等等', '以', '以及', '而', '且', '但', '却',
-        '又', '再', '还', '已', '已经', '正在', '将', '将要', '曾', '曾经',
-        '吗', '呢', '吧', '啊', '呀', '哦', '嗯', '哈', '嘿', '喂', '哎',
-        '这些', '那些', '某', '某些', '每', '各', '任何', '所有', '一些',
-        '有些', '没', '无', '非', '未', '别', '请', '让', '使', '令'
-    }
+    # Stopwords are now loaded dynamically via StopwordManager
+    # These class-level sets are kept as fallback only
+    _FALLBACK_STOPWORDS = {'a', 'an', 'the', 'and', 'or', 'is', 'are', 'was', 'were', 'be', 'been', 'being'}
     
     def __init__(self, config: Optional[VocabConfig] = None, dev_mode: bool = False):
         """
@@ -178,12 +88,10 @@ class VocabBuilder:
         self.config = config or VocabConfig()
         self.dev_mode = dev_mode
         
-        # Build stopwords set
-        self.stopwords = self.ENGLISH_STOPWORDS.copy()
-        if self.config.language in ['de', 'multi']:
-            self.stopwords.update(self.GERMAN_STOPWORDS)
-        if self.config.language in ['zh', 'multi']:
-            self.stopwords.update(self.CHINESE_STOPWORDS)
+        # Initialize stopword manager (will be populated when documents are added)
+        self.stopword_manager = None
+        self.stopwords = set()
+        self._detected_language = None
         
         # Vocabulary data
         self.word2idx: Dict[str, int] = {}
@@ -206,7 +114,7 @@ class VocabBuilder:
     
     def _tokenize(self, text: str) -> List[str]:
         """
-        Tokenize text into words. Supports English, German, and Chinese.
+        Tokenize text into words. Uses StopwordManager for language-aware tokenization.
         
         Args:
             text: Input text
@@ -219,21 +127,24 @@ class VocabBuilder:
         
         tokens = []
         
-        # Check if text contains Chinese
-        if self._has_chinese(text) and self.config.language in ['zh', 'multi']:
-            if JIEBA_AVAILABLE:
-                # Use jieba for Chinese text
-                chinese_tokens = list(jieba.cut(text))
-                tokens.extend(chinese_tokens)
-            else:
-                # Fallback: character-level tokenization for Chinese
-                for char in text:
-                    if self._is_chinese(char):
-                        tokens.append(char)
-        
-        # Also extract English/German words
-        english_tokens = re.findall(r'\b[a-zA-Z0-9äöüßÄÖÜ]+\b', text)
-        tokens.extend(english_tokens)
+        # Use StopwordManager's tokenization if available and language detected
+        if self.stopword_manager is not None and self._detected_language is not None:
+            tokens = self.stopword_manager.tokenize(text)
+        else:
+            # Fallback tokenization
+            # Check if text contains Chinese
+            if self._has_chinese(text):
+                if JIEBA_AVAILABLE:
+                    chinese_tokens = list(jieba.cut(text))
+                    tokens.extend(chinese_tokens)
+                else:
+                    for char in text:
+                        if self._is_chinese(char):
+                            tokens.append(char)
+            
+            # Also extract English/German words
+            english_tokens = re.findall(r'\b[a-zA-Z0-9äöüßÄÖÜ]+\b', text)
+            tokens.extend(english_tokens)
         
         # Filter tokens
         filtered = []
@@ -261,7 +172,7 @@ class VocabBuilder:
                 continue
             
             # Stopword filter
-            if self.config.remove_stopwords and token in self.stopwords:
+            if self.config.remove_stopwords and token.lower() in self.stopwords:
                 continue
             
             filtered.append(token)
@@ -284,6 +195,18 @@ class VocabBuilder:
         """
         if self.dev_mode:
             print(f"[DEV] Adding {len(texts)} documents from {dataset_name}")
+        
+        # Auto-detect language and load stopwords on first call
+        if self.stopword_manager is None and STOPWORD_MANAGER_AVAILABLE:
+            self.stopword_manager = StopwordManager()
+            # Detect language from first batch of documents
+            self._detected_language = self.stopword_manager.detect_language_from_documents(texts)
+            self.stopwords = self.stopword_manager.load_stopwords(self._detected_language)
+            print(f"[VocabBuilder] Auto-detected language: {self._detected_language}, loaded {len(self.stopwords)} stopwords")
+        elif self.stopword_manager is None:
+            # Fallback if StopwordManager not available
+            self.stopwords = self._FALLBACK_STOPWORDS.copy()
+            print(f"[VocabBuilder] Using fallback stopwords ({len(self.stopwords)} words)")
         
         self.datasets_included.append(dataset_name)
         

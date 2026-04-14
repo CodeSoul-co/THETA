@@ -45,55 +45,81 @@ def xlsx_to_csv(xlsx_path: str, csv_path: str, text_column: str = None) -> str:
     return csv_path
 
 
-def run_cli_clean(input_csv: str, output_csv: str, language: str = 'english', 
+def run_cli_clean(input_csv: str, output_csv: str, language: str = None, 
                   operations: list = None) -> str:
     """
-    Run dataclean CLI to clean the csv file.
+    Clean CSV file with multilingual support.
     
     Args:
         input_csv: Path to input csv file
         output_csv: Path to output cleaned csv file
-        language: Language for NLP processing ('english' or 'chinese')
+        language: DEPRECATED - Language is now auto-detected by StopwordManager
         operations: List of cleaning operations to apply
         
     Returns:
         Path to the cleaned csv file
     """
-    print(f"\n[Step 2] Running CLI clean: {input_csv}")
+    print(f"\n[Step 2] Cleaning CSV with multilingual detection: {input_csv}")
     
-    # Build command
+    # Use Python API directly for better multilingual support
     script_dir = Path(__file__).parent
-    main_py = script_dir / "main.py"
+    sys.path.insert(0, str(script_dir))
     
-    cmd = [
-        sys.executable, str(main_py),
-        "convert",
-        input_csv,
-        output_csv,
-        "--language", language
-    ]
+    from src.cleaner import TextCleaner
+    from src.consolidator import DataConsolidator
     
-    # Add operations if specified
-    if operations:
-        for op in operations:
-            cmd.extend(["--operations", op])
+    # Read CSV and detect language from all rows
+    df = pd.read_csv(input_csv)
+    print(f"  - Loaded {len(df)} rows")
     
-    print(f"  - Command: {' '.join(cmd)}")
+    # Find text column
+    text_col = 'text' if 'text' in df.columns else df.columns[0]
+    texts = df[text_col].astype(str).tolist()
     
-    # Run command
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    # Initialize cleaner and detect language from batch
+    cleaner = TextCleaner()
+    cleaner.detect_language_from_batch(texts)
     
-    if result.returncode != 0:
-        print(f"  - Error: {result.stderr}")
-        raise RuntimeError(f"CLI clean failed: {result.stderr}")
+    # Clean each text
+    consolidator = DataConsolidator()
+    all_data = []
+    split_count = 0
     
-    print(result.stdout)
+    for idx, row in df.iterrows():
+        text = str(row[text_col])
+        
+        # Check if needs splitting (large document)
+        if consolidator.should_auto_split(text):
+            split_results = consolidator.adaptive_split(text, f"doc_{idx}")
+            split_count += 1
+            for item in split_results:
+                cleaned = cleaner.clean_text(item['text'], operations=operations)
+                new_row = row.to_dict()
+                new_row[text_col] = cleaned
+                new_row['doc_name'] = item['doc_name']
+                new_row['paragraph_id'] = item['paragraph_id']
+                new_row['total_paragraphs'] = item['total_paragraphs']
+                all_data.append(new_row)
+        else:
+            cleaned = cleaner.clean_text(text, operations=operations)
+            new_row = row.to_dict()
+            new_row[text_col] = cleaned
+            all_data.append(new_row)
+    
+    # Save result
+    result_df = pd.DataFrame(all_data)
+    result_df.to_csv(output_csv, index=False, encoding='utf-8')
+    
+    if split_count > 0:
+        print(f"\n[自适应宏观降维] {split_count}/{len(df)} 个大文档被自动切分")
+        print(f"  → 生成 {len(all_data)} 个段落样本")
+    
     print(f"  - Cleaned file saved to: {output_csv}")
     
     return output_csv
 
 
-def clean_xlsx(input_xlsx: str, output_csv: str, language: str = 'english',
+def clean_xlsx(input_xlsx: str, output_csv: str, language: str = None,
                text_column: str = None, operations: list = None,
                keep_temp: bool = False) -> str:
     """
@@ -102,7 +128,7 @@ def clean_xlsx(input_xlsx: str, output_csv: str, language: str = 'english',
     Args:
         input_xlsx: Path to input xlsx file
         output_csv: Path to output cleaned csv file
-        language: Language for NLP processing
+        language: DEPRECATED - Language is now auto-detected
         text_column: Column name containing text to clean
         operations: List of cleaning operations
         keep_temp: Whether to keep temporary csv file
@@ -139,9 +165,9 @@ def main():
     )
     parser.add_argument('input_xlsx', help='Path to input xlsx file')
     parser.add_argument('output_csv', help='Path to output cleaned csv file')
-    parser.add_argument('--language', '-l', default='english',
-                        choices=['english', 'chinese'],
-                        help='Language for NLP processing')
+    parser.add_argument('--language', '-l', default=None,
+                        choices=['english', 'chinese', None],
+                        help='[DEPRECATED] Language is now auto-detected')
     parser.add_argument('--text-column', '-t', default=None,
                         help='Column name containing text to clean')
     parser.add_argument('--operations', '-p', action='append',

@@ -203,10 +203,10 @@ def parse_args():
     parser.add_argument('--skip-eval', action='store_true')
     parser.add_argument('--skip-viz', action='store_true')
     parser.add_argument('--gpu', type=int, default=0)
-    # Language: supports chinese/english or zh/en
+    # Visualization language (only affects chart titles and labels, NOT text processing)
     parser.add_argument('--language', type=str, default='zh', 
                         choices=['en', 'zh', 'chinese', 'english'],
-                        help='Visualization language: chinese/zh, english/en')
+                        help='Visualization display language: chinese/zh, english/en (text processing uses auto-detection)')
     parser.add_argument('--model_size', type=str, default='0.6B',
                         choices=MODEL_SIZES,
                         help='Qwen model size: 0.6B, 4B, 8B (THETA specific)')
@@ -783,7 +783,7 @@ def run_baseline(model_name: str, args) -> Dict[str, Any]:
             # Determine which languages to generate
             # Map: chinese -> zh, english -> en
             lang_map = {'chinese': 'zh', 'english': 'en', 'cn': 'zh', 'en': 'en', 'zh': 'zh'}
-            if hasattr(args, 'language') and args.language:
+            if args.language:
                 mapped_lang = lang_map.get(args.language, args.language)
                 langs_to_generate = [mapped_lang]
             else:

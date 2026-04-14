@@ -4,6 +4,11 @@
 # 
 # 系统依赖（Ubuntu/Debian）：
 # apt-get install -y autoconf automake libtool build-essential
+#
+# 中文字体支持（用于可视化图表）：
+# apt-get install -y fonts-noto-cjk fonts-wqy-zenhei fonts-wqy-microhei
+# fc-cache -fv
+# rm -rf ~/.cache/matplotlib
 # =============================================================================
 
 # =============================================================================
@@ -24,7 +29,9 @@ networkx>=2.6.0
 # =============================================================================
 jieba>=0.42.0
 gensim>=4.1.0
+langdetect>=1.0.9
 wordcloud>=1.8.0
+emoji>=2.0.0
 pyLDAvis>=3.3.0
 bitermplus>=0.6.0
 

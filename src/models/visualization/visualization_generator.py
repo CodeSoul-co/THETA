@@ -137,13 +137,21 @@ class VisualizationGenerator:
                     except Exception as e:
                         print(f"Warning: Could not load font {fp}: {e}")
             
+            # Rebuild font cache if fonts were added
+            if fonts_loaded:
+                try:
+                    fm._load_fontmanager(try_read_cache=False)
+                except:
+                    pass
+            
             chinese_fonts = [
+                'Noto Sans CJK SC',
+                'Noto Sans CJK TC',
+                'WenQuanYi Zen Hei',
+                'WenQuanYi Micro Hei',
                 'Microsoft YaHei',
                 'SimHei',
                 'PingFang SC',
-                'WenQuanYi Micro Hei',
-                'WenQuanYi Zen Hei',
-                'Noto Sans CJK SC',
                 'Source Han Sans CN',
                 'Heiti SC',
                 'SimSun',
@@ -153,11 +161,15 @@ class VisualizationGenerator:
             matplotlib.rcParams['font.sans-serif'] = chinese_fonts
             matplotlib.rcParams['axes.unicode_minus'] = False
             
-            # Log font loading status
-            if fonts_loaded:
-                print(f"✓ Loaded {len(fonts_loaded)} Chinese fonts for proper text display")
+            # Verify font availability
+            available_fonts = [f.name for f in fm.fontManager.ttflist]
+            chinese_available = [f for f in chinese_fonts if f in available_fonts]
+            
+            if chinese_available:
+                print(f"✓ Chinese fonts available: {chinese_available[0]}")
             else:
                 print("⚠ Warning: No Chinese fonts found, text may appear as squares")
+                print("  Please install: apt-get install -y fonts-noto-cjk fonts-wqy-zenhei")
         else:
             # English font setup
             font_paths = []
@@ -550,29 +562,26 @@ class VisualizationGenerator:
         # Create figure with square layout
         fig = plt.figure(figsize=(12, 12), facecolor='white')
         
-        # 1. 严格统一坐标轴的物理位置和大小 (强制正方形 0.62 x 0.62)
         ax_dendro_left = fig.add_axes([0.02, 0.12, 0.10, 0.62])  # Left dendrogram
         ax_dendro_top = fig.add_axes([0.18, 0.78, 0.62, 0.10])   # Top dendrogram
         ax_heatmap = fig.add_axes([0.18, 0.12, 0.62, 0.62])      # Square heatmap
         ax_colorbar = fig.add_axes([0.83, 0.12, 0.02, 0.62])     # Colorbar
         
-        # 2. Draw left dendrogram (强制消除边距并反转Y轴)
         dendro_left = dendrogram(linkage_matrix, orientation='left', ax=ax_dendro_left, 
                                   no_labels=True, color_threshold=0, above_threshold_color='#1f77b4')
         ax_dendro_left.set_xticks([])
         ax_dendro_left.set_yticks([])
-        ax_dendro_left.set_ylim(n_valid * 10, 0) # 【对齐核心1】消除Y轴边距并反转
+        ax_dendro_left.set_ylim(n_valid * 10, 0)
         ax_dendro_left.spines['top'].set_visible(False)
         ax_dendro_left.spines['right'].set_visible(False)
         ax_dendro_left.spines['bottom'].set_visible(False)
         ax_dendro_left.spines['left'].set_visible(False)
         
-        # 3. Draw top dendrogram (强制消除X轴边距)
         dendro_top = dendrogram(linkage_matrix, orientation='top', ax=ax_dendro_top,
                                  no_labels=True, color_threshold=0, above_threshold_color='#1f77b4')
         ax_dendro_top.set_xticks([])
         ax_dendro_top.set_yticks([])
-        ax_dendro_top.set_xlim(0, n_valid * 10) # 【对齐核心2】消除X轴边距
+        ax_dendro_top.set_xlim(0, n_valid * 10)
         ax_dendro_top.spines['top'].set_visible(False)
         ax_dendro_top.spines['right'].set_visible(False)
         ax_dendro_top.spines['bottom'].set_visible(False)
@@ -583,10 +592,8 @@ class VisualizationGenerator:
         topic_corr_ordered = topic_corr[order, :][:, order]
         labels_ordered = [topic_labels[i] for i in order]
         
-        # 4. Draw heatmap (改用 auto 并强制锁定边界)
         im = ax_heatmap.imshow(topic_corr_ordered, cmap='RdBu_r', vmin=-1, vmax=1, aspect='auto')
         
-        # 【对齐核心3】手动锁定热力图的边界
         ax_heatmap.set_xlim(-0.5, n_valid - 0.5)
         ax_heatmap.set_ylim(n_valid - 0.5, -0.5)
         
@@ -597,8 +604,8 @@ class VisualizationGenerator:
         
         # Move X-axis labels to top
         ax_heatmap.xaxis.tick_top()  # Move X-axis ticks and labels to top
-        ax_heatmap.set_xticklabels(labels_ordered, rotation=45, ha='left', fontsize=fontsize)  # 45度旋转，左对齐避免重叠
-        ax_heatmap.yaxis.tick_left()  # Y轴 labels保持在左侧
+        ax_heatmap.set_xticklabels(labels_ordered, rotation=45, ha='left', fontsize=fontsize)
+        ax_heatmap.yaxis.tick_left()
         ax_heatmap.set_yticklabels(labels_ordered, fontsize=fontsize)
         
         # Add colorbar on the right
@@ -1538,7 +1545,7 @@ class VisualizationGenerator:
             return
         
         fig, ax_left = plt.subplots(figsize=(16, 6), facecolor='white')
-        ax_right = ax_left.twinx()  # 创建右侧Y轴
+        ax_right = ax_left.twinx()
         
         # Left: 6 normalized metrics (0-1 scale)
         metric_names = ['TD', 'iRBO', 'NPMI', 'C_V', 'UMass', 'Exclusivity']
@@ -1551,24 +1558,19 @@ class VisualizationGenerator:
                 val = 0.0
             metric_values.append(float(val))
         
-        # 设置左侧柱状图位置（0-5位置）
         left_positions = np.arange(len(metric_names))
-        width = 0.6  # 增大柱子宽度，减小间隔
+        width = 0.6
         
-        # 严格保留原图的颜色
         colors = plt.cm.Set2(np.linspace(0, 1, len(metric_names)))
         bars_left = ax_left.bar(left_positions, metric_values, width, color=colors, 
                               edgecolor='black', linewidth=0.8)
         
-        # 为左侧柱子添加数值标签，处理负值情况
         for bar, val in zip(bars_left, metric_values):
             height = bar.get_height()
             if val >= 0:
-                # 正值：标签在柱子顶部
                 ax_left.text(bar.get_x() + bar.get_width()/2, height + 0.01,
                             f'{val:.3f}', ha='center', va='bottom', fontsize=10)
             else:
-                # 负值：标签在柱子底部
                 ax_left.text(bar.get_x() + bar.get_width()/2, height - 0.01,
                             f'{val:.3f}', ha='center', va='top', fontsize=10)
         
@@ -1578,43 +1580,35 @@ class VisualizationGenerator:
             ppl_value = 1000.0
         ppl_value = float(ppl_value)
         
-        # 设置右侧柱状图位置（6.5位置，与左侧柱子错开）
-        right_position = [6.5]  # 单独位置
+        right_position = [6.5]
         bars_right = ax_right.bar(right_position, [ppl_value], width, color='coral', 
                                edgecolor='black', linewidth=0.8, alpha=0.8)
         
-        # 为右侧柱子添加数值标签
         ax_right.text(right_position[0], ppl_value + ppl_value * 0.02, f'{ppl_value:.1f}',
                    ha='center', va='bottom', fontsize=12, fontweight='bold', color='coral')
         
-        # 设置左侧Y轴（质量指标），支持负值显示
         min_val = min(metric_values) if metric_values else 0
         max_val = max(metric_values) if metric_values else 1.0
-        y_min = min(min_val * 1.2, -0.5) if min_val < 0 else 0  # 负值时向下扩展
+        y_min = min(min_val * 1.2, -0.5) if min_val < 0 else 0
         y_max = max(max_val * 1.2, 1.0)
         ax_left.set_ylabel('Quality Metrics Score', fontsize=12, color='black')
-        ax_left.set_ylim(y_min, y_max)  # 动态范围，支持负值
+        ax_left.set_ylim(y_min, y_max)
         
-        # 设置右侧Y轴（困惑度）
         ax_right.set_ylabel('Perplexity (PPL)', fontsize=12, color='coral')
-        ax_right.set_ylim(0, 1600)  # 右轴范围：0~1600
+        ax_right.set_ylim(0, 1600)
         ax_right.tick_params(axis='y', labelcolor='coral')
         
-        # 设置X轴标签
         all_labels = metric_names + ['PPL']
         all_positions = list(left_positions) + right_position
         ax_left.set_xticks(all_positions)
         ax_left.set_xticklabels(all_labels, rotation=15, ha='right')
         
-        # 设置网格和边框
         ax_left.grid(True, alpha=0.3, axis='y')
         ax_left.spines['top'].set_visible(False)
         ax_left.spines['right'].set_visible(False)
         ax_right.spines['top'].set_visible(False)
         ax_right.spines['left'].set_visible(False)
         
-        # 删除右上角图例
-        # 不添加图例，使图表更简洁
         
         plt.tight_layout()
         

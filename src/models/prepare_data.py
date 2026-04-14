@@ -71,9 +71,11 @@ def parse_args():
                         help='First perform data cleaning (generate cleaned CSV from raw text)')
     parser.add_argument('--raw-input', type=str, default=None,
                         help='Raw data input path (use with --clean)')
-    parser.add_argument('--language', type=str, default='english',
-                        choices=['english', 'chinese', 'german', 'spanish', 'multi'],
-                        help='Language for tokenization and cleaning')
+    # DEPRECATED: Language is now auto-detected by StopwordManager
+    # This parameter is kept for backward compatibility but will be ignored
+    parser.add_argument('--language', type=str, default=None,
+                        choices=['english', 'chinese', 'german', 'spanish', 'multi', None],
+                        help='[DEPRECATED] Language is now auto-detected. This parameter is ignored.')
     # DTM specific parameters
     parser.add_argument('--time_column', type=str, default='year',
                         help='Time column name (DTM specific)')
@@ -96,7 +98,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def process_docx_directory(input_dir: str, dataset: str, language: str = 'chinese') -> Path:
+def process_docx_directory(input_dir: str, dataset: str, language: str = None) -> Path:
     """
     Process docx file directory, convert all docx files to CSV with timestamps
     Uses dataclean module for text extraction and cleaning
@@ -120,7 +122,7 @@ def process_docx_directory(input_dir: str, dataset: str, language: str = 'chines
     print(f"  Using dataclean module for text extraction and cleaning")
     
     converter = TextConverter()
-    cleaner = TextCleaner(language=language)
+    cleaner = TextCleaner()  # Language auto-detected by StopwordManager
     
     input_path = Path(input_dir)
     output_dir = Path(DATA_DIR) / dataset
@@ -190,19 +192,19 @@ def process_docx_directory(input_dir: str, dataset: str, language: str = 'chines
     return output_csv
 
 
-def run_dataclean(raw_input: str, dataset: str, language: str = 'english') -> Path:
+def run_dataclean(raw_input: str, dataset: str, language: str = None) -> Path:
     """
     Run data cleaning, convert raw text to cleaned CSV
     
     Args:
         raw_input: Raw data path (file or directory)
         dataset: Dataset name
-        language: Language ('english' or 'chinese')
+        language: DEPRECATED - Language is now auto-detected
     
     Returns:
         Path to cleaned CSV file
     """
-    print(f"\n[Data Cleaning] Input: {raw_input}, Language: {language}")
+    print(f"\n[Data Cleaning] Input: {raw_input}")
     
     # Import dataclean module
     sys.path.insert(0, str(Path(__file__).parent / 'dataclean'))
@@ -212,7 +214,7 @@ def run_dataclean(raw_input: str, dataset: str, language: str = 'english') -> Pa
     
     # Initialize components
     converter = TextConverter()
-    cleaner = TextCleaner(language=language)
+    cleaner = TextCleaner()  # Language auto-detected by StopwordManager
     consolidator = DataConsolidator()
     
     # Output path
@@ -835,22 +837,29 @@ def generate_sbert_embeddings(texts: List[str], output_dir: Path, batch_size: in
 
 
 def generate_word2vec_embeddings(texts: List[str], vocab: List[str], output_dir: Path, 
-                                  embedding_dim: int = 300, language: str = 'english') -> np.ndarray:
-    """Generate Word2Vec embeddings for ETM model"""
+                                  embedding_dim: int = 300, language: str = None) -> np.ndarray:
+    """Generate Word2Vec embeddings for ETM model
+    
+    Args:
+        language: DEPRECATED - Language is now auto-detected by StopwordManager
+    """
     from gensim.models import Word2Vec
     
     print(f"\n[Generating Word2Vec Embedding]")
     print(f"  Vocab size: {len(vocab)}")
     print(f"  Embedding dim: {embedding_dim}")
-    print(f"  Language: {language}")
     
-    # Tokenize texts - use jieba for Chinese, simple split for others
-    if language in ('chinese', 'zh'):
-        import jieba
-        print("  Tokenizing texts with jieba...")
-        tokenized_texts = [list(jieba.cut(text)) for text in texts]
-    else:
-        print("  Tokenizing texts with whitespace split...")
+    # Use StopwordManager for auto language detection and tokenization
+    try:
+        from utils.stopword_manager import StopwordManager
+        manager = StopwordManager()
+        detected_lang = manager.detect_language_from_documents(texts)
+        print(f"  Auto-detected language: {detected_lang}")
+        print("  Tokenizing texts with StopwordManager...")
+        tokenized_texts = [manager.tokenize(text) for text in texts]
+    except ImportError:
+        # Fallback if StopwordManager not available
+        print("  [Warning] StopwordManager not available, using simple tokenization")
         tokenized_texts = [text.lower().split() for text in texts]
     
     # Train Word2Vec
@@ -1051,7 +1060,7 @@ def prepare_baseline_data(args):
     
     # 3. Generate Word2Vec embedding (ETM specific)
     try:
-        generate_word2vec_embeddings(texts, vocab, result_dir, embedding_dim=300, language=args.language)
+        generate_word2vec_embeddings(texts, vocab, result_dir, embedding_dim=300)
     except Exception as e:
         print(f"  [Warning] Word2Vec generation failed: {e}")
         print(f"  ETM will use random initialization for word embeddings")
@@ -1174,18 +1183,104 @@ def prepare_dtm_data(args):
     
     # Convert to year (if date format)
     try:
-        if df[time_column].dtype == 'object':
-            # Try to parse date
-            parsed_dates = pd.to_datetime(df[time_column], errors='coerce')
-            if parsed_dates.notna().sum() > len(df) * 0.5:
-                time_values = parsed_dates.dt.year.fillna(2020).astype(int).values
+        if df[time_column].dtype == 'object' or df[time_column].dtype == 'string' or pd.api.types.is_string_dtype(df[time_column]):
+            import re
+            def parse_chinese_date(date_str):
+                match = re.match(r'(\d{4})年(\d{1,2})月(\d{1,2})日', str(date_str))
+                if match:
+                    return int(match.group(1))
+                # Try Excel serial number
+                if str(date_str).isdigit() and len(str(date_str)) == 5:
+                    try:
+                        from datetime import datetime, timedelta
+                        excel_date = int(date_str)
+                        base_date = datetime(1899, 12, 30)
+                        actual_date = base_date + timedelta(days=excel_date)
+                        return actual_date.year
+                    except:
+                        pass
+                return None
+            
+            # Try Chinese date parsing
+            chinese_years = df[time_column].apply(parse_chinese_date)
+            
+            # Check for backup time column (meta_modified_time) for missing values
+            backup_time_col = 'meta_modified_time' if 'meta_modified_time' in df.columns else None
+            if backup_time_col:
+                backup_years = df[backup_time_col].apply(parse_chinese_date)
+                # Fill missing from backup
+                chinese_years = chinese_years.fillna(backup_years)
+                print(f"  [Info] Using '{backup_time_col}' as backup for missing timestamps")
+            
+            # Mark valid rows (has parseable timestamp)
+            valid_mask = chinese_years.notna()
+            valid_count = valid_mask.sum()
+            
+            if valid_count > 0:
+                # Filter to only valid rows - remove documents without valid timestamp
+                invalid_count = len(df) - valid_count
+                if invalid_count > 0:
+                    print(f"  [Warning] Removing {invalid_count} documents without valid timestamp")
+                    # Update dataframe to only include valid rows
+                    df = df[valid_mask].reset_index(drop=True)
+                    texts = df[text_col].fillna('').astype(str).tolist()
+                    chinese_years = chinese_years[valid_mask].reset_index(drop=True)
+                
+                time_values = chinese_years.astype(int).values
+                print(f"  [Info] Parsed {valid_count} documents with valid timestamps")
             else:
-                # May already be year
-                time_values = pd.to_numeric(df[time_column], errors='coerce').fillna(2020).astype(int).values
+                # Try standard datetime parsing
+                parsed_dates = pd.to_datetime(df[time_column], errors='coerce')
+                valid_mask = parsed_dates.notna()
+                valid_count = valid_mask.sum()
+                
+                if valid_count > 0:
+                    invalid_count = len(df) - valid_count
+                    if invalid_count > 0:
+                        print(f"  [Warning] Removing {invalid_count} documents without valid timestamp")
+                        df = df[valid_mask].reset_index(drop=True)
+                        texts = df[text_col].fillna('').astype(str).tolist()
+                        parsed_dates = parsed_dates[valid_mask].reset_index(drop=True)
+                    
+                    time_values = parsed_dates.dt.year.astype(int).values
+                    print(f"  [Info] Parsed datetime format, {valid_count} documents")
+                else:
+                    # May already be year (numeric)
+                    numeric_vals = pd.to_numeric(df[time_column], errors='coerce')
+                    valid_mask = numeric_vals.notna()
+                    valid_count = valid_mask.sum()
+                    
+                    if valid_count > 0:
+                        invalid_count = len(df) - valid_count
+                        if invalid_count > 0:
+                            print(f"  [Warning] Removing {invalid_count} documents without valid timestamp")
+                            df = df[valid_mask].reset_index(drop=True)
+                            texts = df[text_col].fillna('').astype(str).tolist()
+                            numeric_vals = numeric_vals[valid_mask].reset_index(drop=True)
+                        
+                        time_values = numeric_vals.astype(int).values
+                    else:
+                        print(f"  [Error] No valid timestamps found in column '{time_column}'")
+                        return False
         else:
-            time_values = df[time_column].fillna(2020).astype(int).values
+            # Numeric column - filter invalid rows
+            valid_mask = df[time_column].notna()
+            valid_count = valid_mask.sum()
+            if valid_count > 0:
+                invalid_count = len(df) - valid_count
+                if invalid_count > 0:
+                    print(f"  [Warning] Removing {invalid_count} documents without valid timestamp")
+                    df = df[valid_mask].reset_index(drop=True)
+                    texts = df[text_col].fillna('').astype(str).tolist()
+                
+                time_values = df[time_column].astype(int).values
+            else:
+                print(f"  [Error] No valid timestamps found")
+                return False
     except Exception as e:
+        import traceback
         print(f"  [Warning] Time parsing failed: {e}")
+        print(f"  Traceback: {traceback.format_exc()}")
         time_values = np.zeros(len(df), dtype=int)
     
     # Calculate time slices
@@ -1376,9 +1471,9 @@ def main():
         raw_path = Path(args.raw_input)
         # Check if it's a docx directory
         if raw_path.is_dir() and list(raw_path.rglob('*.docx')):
-            process_docx_directory(args.raw_input, args.dataset, args.language)
+            process_docx_directory(args.raw_input, args.dataset)
         else:
-            run_dataclean(args.raw_input, args.dataset, args.language)
+            run_dataclean(args.raw_input, args.dataset)
     
     if args.model == 'theta':
         prepare_theta_data(args)

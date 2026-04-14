@@ -1,58 +1,74 @@
 """
 Module for cleaning text data using NLP techniques.
+
+NOTE: Stopwords are now managed by StopwordManager with automatic language detection.
 """
 import re
 import string
 import os
-import jieba
+import sys
+from pathlib import Path
+
+# Import StopwordManager
+try:
+    # Try relative import first
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+    from utils.stopword_manager import StopwordManager
+    STOPWORD_MANAGER_AVAILABLE = True
+except ImportError:
+    STOPWORD_MANAGER_AVAILABLE = False
+
+try:
+    import jieba
+    JIEBA_AVAILABLE = True
+except ImportError:
+    JIEBA_AVAILABLE = False
 
 
 class TextCleaner:
     """
     Class for cleaning text data using various NLP techniques.
+    Uses StopwordManager for automatic language detection and stopword loading.
     """
     
-    def __init__(self, language='english'):
+    def __init__(self, language=None):
         """
         Initialize the TextCleaner class.
         
         Args:
-            language (str): Language for NLP processing
+            language (str, optional): Language hint for NLP processing.
+                                      If None, language will be auto-detected.
         """
         self.language = language
+        self._detected_language = None
+        self.stopword_manager = None
+        self.stop_words = set()
         
-        # Initialize stopwords
-        if language == 'chinese':
-            # Initialize Chinese stopwords
-            self.stop_words = self._load_chinese_stopwords()
-            # Initialize jieba for Chinese segmentation
+        # Initialize StopwordManager if available
+        if STOPWORD_MANAGER_AVAILABLE:
+            self.stopword_manager = StopwordManager()
+        
+        # If language is explicitly specified, load stopwords immediately
+        if language and self.stopword_manager:
+            lang_map = {'english': 'en', 'chinese': 'zh', 'german': 'de', 
+                       'spanish': 'es', 'french': 'fr', 'multi': 'en'}
+            mapped_lang = lang_map.get(language, language)
+            self._detected_language = mapped_lang
+            self.stop_words = self.stopword_manager.load_stopwords(mapped_lang)
+        elif language == 'chinese' and JIEBA_AVAILABLE:
             jieba.initialize()
-        else:
-            # Use basic English stopwords
-            self.stop_words = self._load_english_stopwords()
     
-    def _load_english_stopwords(self):
-        """Load basic English stopwords."""
-        # Common English stopwords
-        return {
-            'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've",
-            "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself',
-            'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them',
-            'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', "that'll",
-            'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has',
-            'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or',
-            'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against',
-            'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from',
-            'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once',
-            'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more',
-            'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than',
-            'too', 'very', 's', 't', 'can', 'will', 'just', 'don', "don't", 'should', "should've",
-            'now', 'd', 'll', 'm', 'o', 're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't",
-            'didn', "didn't", 'doesn', "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't",
-            'isn', "isn't", 'ma', 'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan',
-            "shan't", 'shouldn', "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won', "won't",
-            'wouldn', "wouldn't"
-        }
+    def detect_language_from_batch(self, texts):
+        """
+        从批量文本中检测语言（支持多语言混合数据集）
+        
+        Args:
+            texts: 文本列表
+        """
+        if self.stopword_manager and not self._detected_language:
+            self._detected_language = self.stopword_manager.detect_language_from_documents(texts)
+            self.stop_words = self.stopword_manager.load_stopwords()
+            print(f"[TextCleaner] Primary language: {self._detected_language}")
     
     def remove_urls(self, text):
         """Remove URLs from text."""
@@ -69,41 +85,63 @@ class TextCleaner:
         translator = str.maketrans('', '', string.punctuation)
         return text.translate(translator)
     
-    def _load_chinese_stopwords(self):
-        """Load Chinese stopwords from file or use default set."""
-        chinese_stopwords = set()
-        # Try to find Chinese stopwords file
-        stopwords_path = os.path.join(os.path.dirname(__file__), 'chinese_stopwords.txt')
+    def remove_emojis(self, text):
+        """
+        Remove all emojis from text using the emoji library.
         
-        # If file doesn't exist, use a minimal set of common Chinese stopwords
-        if not os.path.exists(stopwords_path):
-            chinese_stopwords = {'的', '了', '和', '是', '就', '都', '而', '及', '与', '着',
-                               '或', '一个', '没有', '我们', '你们', '他们', '她们', '它们',
-                               '这个', '那个', '这些', '那些', '不', '在', '有', '我', '你',
-                               '他', '她', '它', '这', '那', '哪', '什么', '怎么', '如何'}
-        else:
-            try:
-                with open(stopwords_path, 'r', encoding='utf-8') as f:
-                    for line in f:
-                        chinese_stopwords.add(line.strip())
-            except Exception as e:
-                print(f"Error loading Chinese stopwords: {e}")
-                # Fall back to minimal set
-                chinese_stopwords = {'的', '了', '和', '是', '就', '都', '而', '及', '与', '着'}
-        
-        return chinese_stopwords
+        This is more reliable than regex as it uses the official Unicode emoji list.
+        """
+        try:
+            import emoji
+            return emoji.replace_emoji(text, replace='')
+        except ImportError:
+            # Fallback to regex if emoji library not installed
+            emoji_pattern = re.compile(
+                '['
+                '\U0001F600-\U0001F64F'  # emoticons
+                '\U0001F300-\U0001F5FF'  # symbols & pictographs
+                '\U0001F680-\U0001F6FF'  # transport & map
+                '\U0001F1E0-\U0001F1FF'  # flags
+                '\U0001F900-\U0001F9FF'  # supplemental symbols
+                '\U0001FA00-\U0001FAFF'  # extended symbols
+                '\U00002600-\U000026FF'  # misc symbols
+                '\U00002700-\U000027BF'  # dingbats
+                ']+', flags=re.UNICODE
+            )
+            return emoji_pattern.sub(r'', text)
+    
+    def _auto_detect_and_load_stopwords(self, text):
+        """Auto-detect language and load stopwords if not already done."""
+        if self.stopword_manager and not self.stop_words:
+            self._detected_language = self.stopword_manager.detect_language(text)
+            self.stop_words = self.stopword_manager.load_stopwords(self._detected_language)
+            print(f"[TextCleaner] Auto-detected language: {self._detected_language}")
     
     def tokenize_text(self, text):
-        """Tokenize text based on language."""
-        if self.language == 'chinese':
-            return list(jieba.cut(text))
-        else:
-            # Simple word tokenization by splitting on whitespace and punctuation
-            text = re.sub(r'[^\w\s]', ' ', text)
-            return text.split()
+        """Tokenize text based on detected or specified language."""
+        # Auto-detect language if not specified
+        if not self._detected_language and self.stopword_manager:
+            self._auto_detect_and_load_stopwords(text)
+        
+        # Use StopwordManager's tokenization if available
+        if self.stopword_manager and self._detected_language:
+            return self.stopword_manager.tokenize(text)
+        
+        # Fallback tokenization
+        if self._detected_language == 'zh' or self.language == 'chinese':
+            if JIEBA_AVAILABLE:
+                return list(jieba.cut(text))
+        
+        # Simple word tokenization for other languages
+        text = re.sub(r'[^\w\s]', ' ', text)
+        return text.split()
     
     def remove_stopwords(self, text):
         """Remove stopwords from text."""
+        # Auto-detect language if not done
+        if not self.stop_words and self.stopword_manager:
+            self._auto_detect_and_load_stopwords(text)
+        
         words = self.tokenize_text(text)
         filtered_words = [word for word in words if word.lower() not in self.stop_words]
         return ' '.join(filtered_words)
@@ -162,6 +200,7 @@ class TextCleaner:
             operations = [
                 'remove_urls',
                 'remove_html_tags',
+                'remove_emojis',
                 'remove_punctuation',
                 'remove_stopwords',
                 'normalize_whitespace'
@@ -175,36 +214,11 @@ class TextCleaner:
     
     def create_chinese_stopwords_file(self, file_path=None):
         """
-        Create a Chinese stopwords file with common stopwords.
+        DEPRECATED: Stopwords are now managed by StopwordManager.
+        Use resources/stopwords/zh.txt instead.
         
-        Args:
-            file_path (str, optional): Path to save the stopwords file.
-                                       If None, saves to the default location.
-        
-        Returns:
-            str: Path to the created file
+        This method is kept for backward compatibility but does nothing.
         """
-        if file_path is None:
-            file_path = os.path.join(os.path.dirname(__file__), 'chinese_stopwords.txt')
-        
-        # Common Chinese stopwords
-        chinese_stopwords = [
-            '的', '了', '和', '是', '就', '都', '而', '及', '与', '着', '或', '一个', '没有',
-            '我们', '你们', '他们', '她们', '它们', '这个', '那个', '这些', '那些', '不', '在',
-            '有', '我', '你', '他', '她', '它', '这', '那', '哪', '什么', '怎么', '如何', '为什么',
-            '因为', '所以', '但是', '然而', '如果', '虽然', '尽管', '否则', '此外', '除了', '只是',
-            '还是', '还有', '一样', '一直', '一定', '一般', '一种', '一些', '一下', '一切', '一边',
-            '一起', '上', '下', '不过', '不要', '不能', '不是', '不会', '只有', '可以', '可能',
-            '各', '各种', '各个', '好', '如此', '其', '其他', '其它', '其中', '然后', '所有',
-            '那么', '那些', '那样', '那边', '那里', '这么', '这些', '这样', '这边', '这里',
-            '过', '跟', '边', '近', '远', '等', '等等', '管', '前', '后', '左', '右', '多', '少',
-        ]
-        
-        try:
-            with open(file_path, 'w', encoding='utf-8') as f:
-                for word in chinese_stopwords:
-                    f.write(word + '\n')
-            return file_path
-        except Exception as e:
-            print(f"Error creating Chinese stopwords file: {e}")
-            return None
+        print("[WARNING] create_chinese_stopwords_file is deprecated. "
+              "Stopwords are now managed by StopwordManager in resources/stopwords/")
+        return None

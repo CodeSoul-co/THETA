@@ -25,8 +25,8 @@ def cli():
 @click.argument('input_path', type=click.Path(exists=True))
 @click.argument('output_csv', type=click.Path())
 @click.option('--recursive', '-r', is_flag=True, help='Process directories recursively')
-@click.option('--language', '-l', default='english', type=click.Choice(['english', 'chinese']), 
-              help='Language for NLP processing')
+@click.option('--language', '-l', default=None, type=click.Choice(['english', 'chinese']), 
+              help='[DEPRECATED] Language is now auto-detected')
 @click.option('--clean/--no-clean', default=True, help='Apply NLP cleaning to text')
 @click.option('--operations', '-p', multiple=True, 
               type=click.Choice(['remove_urls', 'remove_html_tags', 'remove_punctuation', 
@@ -35,9 +35,9 @@ def cli():
               help='Cleaning operations to apply')
 def convert_command(input_path, output_csv, recursive, language, clean, operations):
     """Convert text files to CSV with optional NLP cleaning."""
-    # Initialize components
+    # Initialize components (language is auto-detected by StopwordManager)
     converter = TextConverter()
-    cleaner = TextCleaner(language=language)
+    cleaner = TextCleaner()  # Language auto-detected
     consolidator = DataConsolidator()
     
     click.echo(f"Processing {input_path}...")
@@ -63,6 +63,20 @@ def convert_command(input_path, output_csv, recursive, language, clean, operatio
         # Single file
         files = [input_path]
     
+    # Pre-detect language from all files for multilingual support
+    if clean and files:
+        click.echo("Detecting language distribution...")
+        sample_texts = []
+        for f in files[:50]:  # Sample up to 50 files
+            try:
+                text = converter.extract_text(f)
+                if text:
+                    sample_texts.append(text[:500])
+            except:
+                pass
+        if sample_texts:
+            cleaner.detect_language_from_batch(sample_texts)
+    
     # Process files with adaptive splitting for large documents
     # Note: We pass raw text extractor here, cleaning happens AFTER splitting
     # to preserve paragraph boundaries
@@ -83,8 +97,8 @@ def convert_command(input_path, output_csv, recursive, language, clean, operatio
 @cli.command('clean')
 @click.argument('input_file', type=click.Path(exists=True))
 @click.argument('output_file', type=click.Path())
-@click.option('--language', '-l', default='english', type=click.Choice(['english', 'chinese']), 
-              help='Language for NLP processing')
+@click.option('--language', '-l', default=None, type=click.Choice(['english', 'chinese']), 
+              help='[DEPRECATED] Language is now auto-detected')
 @click.option('--operations', '-p', multiple=True, 
               type=click.Choice(['remove_urls', 'remove_html_tags', 'remove_punctuation', 
                                'remove_stopwords', 'normalize_whitespace', 'remove_numbers',
@@ -92,9 +106,9 @@ def convert_command(input_path, output_csv, recursive, language, clean, operatio
               help='Cleaning operations to apply')
 def clean_command(input_file, output_file, language, operations):
     """Clean a text file using NLP techniques."""
-    # Initialize components
+    # Initialize components (language is auto-detected by StopwordManager)
     converter = TextConverter()
-    cleaner = TextCleaner(language=language)
+    cleaner = TextCleaner()  # Language auto-detected
     
     click.echo(f"Extracting text from {input_file}...")
     text = converter.extract_text(input_file)
@@ -113,8 +127,8 @@ def clean_command(input_file, output_file, language, operations):
 @click.argument('input_dir', type=click.Path(exists=True, file_okay=False))
 @click.argument('output_dir', type=click.Path(file_okay=False))
 @click.option('--recursive', '-r', is_flag=True, help='Process directories recursively')
-@click.option('--language', '-l', default='english', type=click.Choice(['english', 'chinese']), 
-              help='Language for NLP processing')
+@click.option('--language', '-l', default=None, type=click.Choice(['english', 'chinese']), 
+              help='[DEPRECATED] Language is now auto-detected')
 @click.option('--operations', '-p', multiple=True, 
               type=click.Choice(['remove_urls', 'remove_html_tags', 'remove_punctuation', 
                                'remove_stopwords', 'normalize_whitespace', 'remove_numbers',
@@ -122,9 +136,9 @@ def clean_command(input_file, output_file, language, operations):
               help='Cleaning operations to apply')
 def batch_command(input_dir, output_dir, recursive, language, operations):
     """Process multiple files and save individual cleaned text files."""
-    # Initialize components
+    # Initialize components (language is auto-detected by StopwordManager)
     converter = TextConverter()
-    cleaner = TextCleaner(language=language)
+    cleaner = TextCleaner()  # Language auto-detected
     
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)

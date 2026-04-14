@@ -161,15 +161,23 @@ class TopicVisualizer:
                     fm.fontManager.addfont(fp)
                     fonts_loaded.append(fp)
                 except Exception as e:
-                    print(f"Warning: Could not load font {fp}: {e}")
+                    pass  # Silently skip if font already loaded
+        
+        # Rebuild font cache if fonts were added
+        if fonts_loaded:
+            try:
+                fm._load_fontmanager(try_read_cache=False)
+            except:
+                pass
         
         chinese_fonts = [
+            'Noto Sans CJK SC',
+            'Noto Sans CJK TC',
+            'WenQuanYi Zen Hei',
+            'WenQuanYi Micro Hei',
             'Microsoft YaHei',
             'SimHei',
             'PingFang SC',
-            'WenQuanYi Micro Hei',
-            'WenQuanYi Zen Hei',
-            'Noto Sans CJK SC',         # Google Noto
             'SimSun',
             'NSimSun',
             'DejaVu Sans'
@@ -184,11 +192,15 @@ class TopicVisualizer:
                 self.chinese_font_path = fp
                 break
         
-        # Log font loading status
-        if fonts_loaded:
-            print(f"✓ Loaded {len(fonts_loaded)} Chinese fonts for proper text display")
+        # Verify font availability
+        available_fonts = [f.name for f in fm.fontManager.ttflist]
+        chinese_available = [f for f in chinese_fonts if f in available_fonts]
+        
+        if chinese_available:
+            print(f"✓ Chinese fonts available: {chinese_available[0]}")
         else:
             print("⚠ Warning: No Chinese fonts found, text may appear as squares")
+            print("  Please install: apt-get install -y fonts-noto-cjk fonts-wqy-zenhei")
     
     def _get_label(self, key: str) -> str:
         """获取双语标签"""
@@ -720,7 +732,6 @@ class TopicVisualizer:
         
         # Remove figure caption as requested
         # if self.language == 'zh':
-        #     caption = f'图: 文档-主题分布 ({method.upper()}, n={max_docs:,}, K={num_topics})'
         # else:
         #     caption = f'Figure: Document-topic distribution ({method.upper()}, n={max_docs:,}, K={num_topics})'
         # fig.text(0.5, 0.02, caption, ha='center', fontsize=10, style='italic')
