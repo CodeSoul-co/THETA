@@ -152,6 +152,15 @@ if [ -z "$DATASET" ]; then
     exit 1
 fi
 
+# =============================================================================
+# Auto-download Qwen model if missing
+# =============================================================================
+ensure_models "qwen:$MODEL_SIZE" || {
+    echo "[ERROR] Failed to download Qwen model. Please download manually."
+    echo "[INFO] Download from: https://www.modelscope.cn/models/Qwen/Qwen3-Embedding-${MODEL_SIZE}"
+    exit 1
+}
+
 # Auto-select data_exp if not provided
 # New structure: result/{dataset}/{model_size}/theta/exp_*/
 if [ -z "$DATA_EXP" ]; then

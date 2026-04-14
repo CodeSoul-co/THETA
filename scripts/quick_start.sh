@@ -195,6 +195,14 @@ echo "[Admission Check] Found $ROW_COUNT rows (minimum: $MIN_DOCUMENT_COUNT) ✓
 # Step 2: Prepare data (generate embeddings and BOW)
 echo ""
 echo "[2/5] Preparing data (generating embeddings and BOW)..."
+
+# Auto-download Qwen model if missing
+ensure_models "qwen:0.6B" || {
+    echo "[ERROR] Failed to download Qwen model. Please download manually."
+    echo "[INFO] Download from: https://www.modelscope.cn/models/Qwen/Qwen3-Embedding-0.6B"
+    exit 1
+}
+
 cd "$ETM_DIR"
 python prepare_data.py --dataset $DATASET --model theta --model_size 0.6B --mode zero_shot --vocab_size 5000 --batch_size 32 --max_length 512 --gpu 0
 

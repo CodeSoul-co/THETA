@@ -87,6 +87,22 @@ models/
 └── sbert/sentence-transformers/all-MiniLM-L6-v2/
 ```
 
+###  Automatic Model Download
+
+THETA supports **automatic detection and download** of missing model weight files during training.
+
+**Automatic Download** (Recommended): Simply run the training command, and the system will automatically detect and download missing models:
+
+```bash
+# CTM/BERTopic training - auto-download SBERT
+bash scripts/train_baseline.sh ctm --dataset your_dataset --num_topics 20
+
+# THETA training - auto-download Qwen
+bash scripts/train_theta.sh --dataset your_dataset --model_size 0.6B
+```
+
+> **Note**: The first run may take a few minutes to download models. If automatic download fails due to network issues, please manually download from the links above.
+
 ---
 
 ## Data Format Requirements
@@ -109,11 +125,11 @@ THETA uses a **strict column naming convention** for data files.
 | **DTM** | `text`, `timestamp` |
 | **STM** | `text`, `cov_*` |
 
-> ⚠️ **DTM Note**: Only supports **year-level** granularity. Dates like `2026-10-17` are converted to `2026`.
+>  **DTM Note**: Only supports **year-level** granularity. Dates like `2026-10-17` are converted to `2026`.
 > 
-> ⚠️ **STM Note**: All covariate columns **must** use the `cov_` prefix.
+>  **STM Note**: All covariate columns **must** use the `cov_` prefix.
 
-📁 **See [example/DATA_FORMAT_TEMPLATE.md](example/DATA_FORMAT_TEMPLATE.md) for CSV templates.**
+ **See [example/DATA_FORMAT_TEMPLATE.md](example/DATA_FORMAT_TEMPLATE.md) for CSV templates.**
 
 ---
 

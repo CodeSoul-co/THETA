@@ -296,6 +296,12 @@ if [ -z "$WORKSPACE_DIR" ] || [ ! -f "$WORKSPACE_DIR/bow_matrix.npy" ]; then
     NEED_SBERT="False"
     if echo "$MODELS" | grep -qE "ctm|bertopic"; then
         NEED_SBERT="True"
+        # Auto-download SBERT model if missing
+        ensure_models sbert || {
+            echo "[ERROR] Failed to download SBERT model. Please download manually."
+            echo "[INFO] Download from: https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2"
+            exit 1
+        }
     fi
     
     # Resolve to absolute paths before cd (may be relative in env_setup.sh)

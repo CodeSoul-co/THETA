@@ -98,6 +98,22 @@ models/
 └── sbert/sentence-transformers/all-MiniLM-L6-v2/
 ```
 
+###  模型自动下载
+
+THETA 支持在训练时**自动检测并下载**缺失的模型权重文件。
+
+**自动下载**（推荐）：直接运行训练命令，系统会自动检测并下载缺失的模型：
+
+```bash
+# CTM/BERTopic 训练 - 自动下载 SBERT
+bash scripts/train_baseline.sh ctm --dataset your_dataset --num_topics 20
+
+# THETA 训练 - 自动下载 Qwen
+bash scripts/train_theta.sh --dataset your_dataset --model_size 0.6B
+```
+
+> **注意**：首次运行时，模型下载可能需要几分钟时间。如果网络问题导致自动下载失败，请参考上方表格中的下载链接手动下载。
+
 ---
 
 ## 数据格式要求
@@ -120,11 +136,11 @@ THETA 使用**严格的列名规范**来处理数据文件。
 | **DTM** | `text`, `timestamp` |
 | **STM** | `text`, `cov_*` |
 
-> ⚠️ **DTM 注意**：仅支持**年份级别**的粒度。日期如 `2026-10-17` 会被转换为 `2026`。
+>  **DTM 注意**：仅支持**年份级别**的粒度。日期如 `2026-10-17` 会被转换为 `2026`。
 > 
-> ⚠️ **STM 注意**：所有协变量列**必须**使用 `cov_` 前缀。
+>  **STM 注意**：所有协变量列**必须**使用 `cov_` 前缀。
 
-📁 **CSV 模板请参见 [example/DATA_FORMAT_TEMPLATE.zh.md](example/DATA_FORMAT_TEMPLATE.zh.md)**
+ **CSV 模板请参见 [example/DATA_FORMAT_TEMPLATE.zh.md](example/DATA_FORMAT_TEMPLATE.zh.md)**
 
 ---
 
