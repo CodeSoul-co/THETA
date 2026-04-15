@@ -438,11 +438,14 @@ def run_theta(args) -> Dict[str, Any]:
     
     # Use the same experiment directory as data preparation
     # New structure: result/{dataset}/{model_size}/theta/exp_{timestamp}/
-    # When data_exp is provided, create a separate per-run output dir so that
-    # multiple K values do not overwrite each other in the same data exp dir.
-    train_exp_id = generate_model_exp_id(args.exp_name)
-    train_exp_dir = Path(RESULT_DIR) / args.user_id / args.dataset / 'theta' / train_exp_id
-    train_exp_dir.mkdir(parents=True, exist_ok=True)
+    # Training outputs (theta/, metrics.json) go into the same exp directory as data
+    if data_exp_dir:
+        train_exp_dir = Path(data_exp_dir)
+        train_exp_id = train_exp_dir.name
+    else:
+        train_exp_id = generate_model_exp_id(args.exp_name)
+        train_exp_dir = Path(RESULT_DIR) / args.dataset / args.model_size / 'theta' / train_exp_id
+        train_exp_dir.mkdir(parents=True, exist_ok=True)
     print(f"  Experiment: {train_exp_id}")
     print(f"  Output directory: {train_exp_dir}")
     

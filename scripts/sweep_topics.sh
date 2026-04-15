@@ -236,7 +236,7 @@ for DS in "${DATASETS[@]}"; do
 import json, sys
 try:
     m = json.load(open('$cfg'))
-    print(m.get('embedding', {}).get('mode', '') or m.get('mode', ''))
+    print(m.get('embedding', {}).get('mode', ''))
 except: print('')
 " 2>/dev/null)
                         [ "$saved_mode" = "$MODE" ] || continue

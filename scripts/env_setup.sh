@@ -98,7 +98,7 @@ export HF_CACHE_DIR="${HF_CACHE_DIR:-$PROJECT_ROOT/hf_cache}"
 # =============================================================================
 
 # Base directory for embedding models (Qwen, SBERT, etc.)
-export EMBEDDING_MODELS_DIR="${EMBEDDING_MODELS_DIR:-$PROJECT_ROOT/models}"
+export EMBEDDING_MODELS_DIR="${EMBEDDING_MODELS_DIR:-$PROJECT_ROOT/embedding_models}"
 
 # Qwen model paths (based on model size)
 export QWEN_MODEL_0_6B="${QWEN_MODEL_0_6B:-$EMBEDDING_MODELS_DIR/qwen3_embedding_0.6B}"
@@ -106,7 +106,7 @@ export QWEN_MODEL_4B="${QWEN_MODEL_4B:-$EMBEDDING_MODELS_DIR/qwen3_embedding_4B}
 export QWEN_MODEL_8B="${QWEN_MODEL_8B:-$EMBEDDING_MODELS_DIR/qwen3_embedding_8B}"
 
 # SBERT model path
-export SBERT_MODEL_PATH="${SBERT_MODEL_PATH:-$PROJECT_ROOT/models/sbert/sentence-transformers/all-MiniLM-L6-v2}"
+export SBERT_MODEL_PATH="${SBERT_MODEL_PATH:-$MODELS_DIR/model/baselines/sbert/sentence-transformers/all-MiniLM-L6-v2}"
 
 # =============================================================================
 # Helper Functions
