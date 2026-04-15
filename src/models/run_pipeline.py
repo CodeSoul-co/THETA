@@ -436,7 +436,6 @@ def run_theta(args) -> Dict[str, Any]:
         result['train_status'] = 'data_missing'
         return result
     
-    # Use the same experiment directory as data preparation
     # New structure: result/{dataset}/{model_size}/theta/exp_{timestamp}/
     # Training outputs (theta/, metrics.json) go into the same exp directory as data
     if data_exp_dir:
@@ -488,7 +487,7 @@ def run_theta(args) -> Dict[str, Any]:
         '--patience', str(args.patience),
         '--language', args.language
     ]
-    # Pass experiment IDs to main.py
+    # Pass experiment IDs to main.py (unchanged behavior)
     if data_exp_dir:
         cmd.extend(['--data_exp', Path(data_exp_dir).name])
     cmd.extend(['--train_exp', train_exp_id])
@@ -507,6 +506,23 @@ def run_theta(args) -> Dict[str, Any]:
         print("  Running THETA pipeline...")
         ret = subprocess.run(cmd, cwd=str(Path(__file__).parent))
         result['train_status'] = 'completed' if ret.returncode == 0 else 'failed'
+        # Sweep-only: copy results to per-K dir under default_user so each K is preserved
+        if ret.returncode == 0 and data_exp_dir and args.exp_name:
+            import shutil
+            src_base = Path(data_exp_dir)
+            dst_base = Path(RESULT_DIR) / args.user_id / args.dataset / 'theta' / args.exp_name
+            dst_base.mkdir(parents=True, exist_ok=True)
+            for item in ['theta', 'metrics.json', 'config.json']:
+                src = src_base / item
+                dst = dst_base / item
+                if src.exists():
+                    if src.is_dir():
+                        if dst.exists():
+                            shutil.rmtree(dst)
+                        shutil.copytree(src, dst)
+                    else:
+                        shutil.copy2(src, dst)
+            print(f"  Sweep results copied to: {dst_base}")
     
     result['train_exp'] = train_exp_id
     result['data_exp'] = Path(data_exp_dir).name if data_exp_dir else ''

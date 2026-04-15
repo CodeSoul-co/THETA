@@ -38,14 +38,14 @@ TOPIC_LIST="8 10 12 14 16"
 MODEL="theta"          # theta | lda | hdp | etm | ctm | btm | prodlda | bertopic
 MODEL_SIZE="0.6B"      # only used for theta
 MODE="zero_shot"       # zero_shot | unsupervised | supervised (theta only)
-EPOCHS=100
+EPOCHS=200
 BATCH_SIZE=64
-HIDDEN_DIM=512
+HIDDEN_DIM=1024
 LEARNING_RATE=0.002
 KL_START=0.0
 KL_END=1.0
 KL_WARMUP=50
-PATIENCE=10
+PATIENCE=20
 GPU=0
 LANGUAGE="zh"
 SKIP_VIZ=false
@@ -92,11 +92,11 @@ while [[ $# -gt 0 ]]; do
             echo "THETA Options:"
             echo "  --model_size    0.6B | 4B | 8B (default: 0.6B)"
             echo "  --mode          zero_shot | unsupervised | supervised (default: zero_shot)"
-            echo "  --epochs        Training epochs (default: 100)"
+            echo "  --epochs        Training epochs (default: 200)"
             echo "  --batch_size    Batch size (default: 64)"
-            echo "  --hidden_dim    Hidden dimension (default: 512)"
+            echo "  --hidden_dim    Hidden dimension (default: 1024)"
             echo "  --learning_rate Learning rate (default: 0.002)"
-            echo "  --patience      Early stopping patience (default: 10)"
+            echo "  --patience      Early stopping patience (default: 20)"
             echo "  --gpu           GPU device ID (default: 0)"
             echo "  --language      zh | en (default: zh)"
             echo "  --skip-viz      Skip visualization"
@@ -236,7 +236,7 @@ for DS in "${DATASETS[@]}"; do
 import json, sys
 try:
     m = json.load(open('$cfg'))
-    print(m.get('embedding', {}).get('mode', ''))
+    print(m.get('embedding', {}).get('mode', '') or m.get('mode', ''))
 except: print('')
 " 2>/dev/null)
                         [ "$saved_mode" = "$MODE" ] || continue

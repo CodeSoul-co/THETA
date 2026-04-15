@@ -19,11 +19,11 @@ Environment Variables:
     
 Hyperparameter Environment Variables (optional):
     NUM_TOPICS: Number of topics (default: 20)
-    EPOCHS: Training epochs (default: 100)
+    EPOCHS: Training epochs (default: 200)
     BATCH_SIZE: Batch size (default: 64)
     VOCAB_SIZE: Vocabulary size (default: 5000)
     LEARNING_RATE: Learning rate (default: 0.002)
-    HIDDEN_DIM: Hidden dimension (default: 512)
+    HIDDEN_DIM: Hidden dimension (default: 1024)
 """
 
 import os
@@ -168,7 +168,7 @@ HEURISTIC_DEFAULTS = {
     "epochs": 100,
     "batch_size": 64,
     "vocab_size": 5000,
-    "hidden_dim": 512,
+    "hidden_dim": 1024,
     "learning_rate": 0.002,
     "min_df": 2,
     "max_df_ratio": 0.7,
@@ -636,7 +636,7 @@ class ModelConfig:
     """ETM model configuration"""
     # Architecture
     num_topics: int = 20
-    hidden_dim: int = 512
+    hidden_dim: int = 1024
     doc_embedding_dim: int = 1024
     word_embedding_dim: int = 1024
     encoder_dropout: float = 0.2
@@ -1003,7 +1003,7 @@ def _add_training_args(parser: argparse.ArgumentParser):
                         help="Number of topics (5-100)")
     parser.add_argument("--vocab_size", type=int, default=5000,
                         help="Vocabulary size (1000-20000)")
-    parser.add_argument("--hidden_dim", type=int, default=512,
+    parser.add_argument("--hidden_dim", type=int, default=1024,
                         help="Hidden dimension (256-1024)")
     
     # Training
@@ -1056,6 +1056,8 @@ def _add_training_args(parser: argparse.ArgumentParser):
                         help="Data experiment ID (for THETA exp management)")
     parser.add_argument("--train_exp", type=str, default="",
                         help="Training experiment ID (for THETA exp management)")
+    parser.add_argument("--output_base_dir", type=str, default="",
+                        help="Override base output directory (e.g. result/default_user)")
     
     # Visualization language
     parser.add_argument("--language", type=str, default="en",
@@ -1129,7 +1131,7 @@ def config_from_args(args: argparse.Namespace) -> PipelineConfig:
     # Training args with full priority resolution
     config.model.num_topics = _resolve("num_topics", getattr(args, "num_topics", None), param_type=int) or 20
     config.bow.vocab_size = _resolve("vocab_size", getattr(args, "vocab_size", None), param_type=int) or 5000
-    config.model.hidden_dim = _resolve("hidden_dim", getattr(args, "hidden_dim", None), param_type=int) or 512
+    config.model.hidden_dim = _resolve("hidden_dim", getattr(args, "hidden_dim", None), param_type=int) or 1024
     config.model.epochs = _resolve("epochs", getattr(args, "epochs", None), param_type=int) or 100
     config.model.batch_size = _resolve("batch_size", getattr(args, "batch_size", None), param_type=int) or 64
     config.model.learning_rate = _resolve("learning_rate", getattr(args, "learning_rate", None), param_type=float) or 0.002
@@ -1180,6 +1182,8 @@ def config_from_args(args: argparse.Namespace) -> PipelineConfig:
         config.data_exp = args.data_exp
     if hasattr(args, "train_exp") and args.train_exp:
         config.train_exp = args.train_exp
+    if hasattr(args, "output_base_dir") and args.output_base_dir:
+        config.output_base_dir = args.output_base_dir
     
     return config
 
@@ -1304,7 +1308,7 @@ PRESET_CONFIGS = {
         "num_topics": 20,
         "vocab_size": 5000,
         "epochs": 50,
-        "hidden_dim": 512
+        "hidden_dim": 1024
     },
     "large": {
         "num_topics": 50,
