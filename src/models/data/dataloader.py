@@ -80,7 +80,8 @@ def create_dataloader(
     pin_memory: bool = None,
     persistent_workers: bool = False,
     prefetch_factor: int = 2,
-    sampler = None
+    sampler = None,
+    drop_last: bool = True
 ) -> DataLoader:
     """
     Create a DataLoader for ETM training.
@@ -113,5 +114,6 @@ def create_dataloader(
         pin_memory=pin_memory,
         persistent_workers=persistent_workers,
         prefetch_factor=prefetch_factor if num_workers > 0 else None,
-        sampler=sampler
+        sampler=sampler,
+        drop_last=drop_last
     )
