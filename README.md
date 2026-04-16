@@ -382,126 +382,123 @@ THETA enforces **7 Gold Standard Metrics** to ensure evaluation alignment across
 
 ### Training Parameters Reference
 
-#### THETA Parameters
+#### Common Parameters
 
-| Parameter         | Type  | Default     | Range                                     | Description                      |
-| ----------------- | ----- | ----------- | ----------------------------------------- | -------------------------------- |
-| `--model_size`    | str   | `0.6B`      | `0.6B`, `4B`, `8B`                        | Qwen model size                  |
-| `--mode`          | str   | `zero_shot` | `zero_shot`, `supervised`, `unsupervised` | Embedding mode                   |
-| `--num_topics`    | int   | 20          | 5–100                                     | Number of topics K               |
-| `--num_layers`    | int   | 2           | 1–5                                       | Number of encoder hidden layers  |
-| `--hidden_dim`    | int   | 512         | 128–2048                                  | Neurons per hidden layer         |
-| `--epochs`        | int   | 100         | 10–500                                    | Training epochs                  |
-| `--batch_size`    | int   | 64          | 8–512                                     | Batch size                       |
-| `--learning_rate` | float | 0.002       | 1e-5–0.1                                  | Learning rate                    |
-| `--dropout`       | float | 0.2         | 0–0.9                                     | Encoder dropout rate             |
-| `--kl_start`      | float | 0.0         | 0–1                                       | KL annealing start weight        |
-| `--kl_end`        | float | 1.0         | 0–1                                       | KL annealing end weight          |
-| `--kl_warmup`     | int   | 50          | 0–epochs                                  | KL warmup epochs                 |
-| `--patience`      | int   | 10          | 1–50                                      | Early stopping patience          |
-| `--language`      | str   | `en`        | `en`, `zh`                                | Visualization language           |
+Shared across all or most models. Parameters marked `*` apply to neural network–based models only.
 
-#### Baseline Model Parameters
+| Parameter         | Type  | Default | Range      | Description                                           |
+| ----------------- | ----- | ------- | ---------- | ----------------------------------------------------- |
+| `--num_topics`    | int   | 20      | 5–100      | Number of topics K (upper bound for HDP; optional for BERTopic) |
+| `--vocab_size`    | int   | 5000    | 1000–20000 | Vocabulary size                                       |
+| `--epochs` *      | int   | 100     | 10–500     | Training epochs                                       |
+| `--batch_size` *  | int   | 64      | 8–512      | Mini-batch size                                       |
+| `--learning_rate` * | float | 0.002   | 1e-5–0.1   | Learning rate                                         |
+| `--dropout` *     | float | 0.2     | 0–0.9      | Encoder dropout rate                                  |
+| `--hidden_dim` *  | int   | 512     | 128–2048   | Hidden units per layer (NVDM/GSM/ProdLDA default: 256) |
+| `--num_layers` *  | int   | 2       | 1–5        | Number of encoder hidden layers                       |
+| `--patience` *    | int   | 10      | 1–50       | Early stopping patience                               |
+
+---
+
+#### Model-Specific Additional Parameters
+
+**THETA**
+
+Additional parameters beyond common defaults:
+
+| Parameter      | Type  | Default     | Range                               | Description             |
+| -------------- | ----- | ----------- | ----------------------------------- | ----------------------- |
+| `--model_size` | str   | `0.6B`      | `0.6B` / `4B` / `8B`                | Qwen model size         |
+| `--mode`       | str   | `zero_shot` | `zero_shot` / `supervised` / `unsupervised` | Embedding mode          |
+| `--kl_start`   | float | 0.0         | 0–1                                 | KL annealing start weight |
+| `--kl_end`     | float | 1.0         | 0–1                                 | KL annealing end weight |
+| `--kl_warmup`  | int   | 50          | 0–epochs                            | KL warmup epochs        |
+| `--language`   | str   | `zh`        | `en` / `zh`                         | Visualization language  |
 
 **LDA**
 
-| Parameter      | Type  | Default    | Range      | Description                    |
-| -------------- | ----- | ---------- | ---------- | ------------------------------ |
-| `--num_topics` | int   | 20         | 5–100      | Number of topics K             |
-| `--max_iter`   | int   | 100        | 10–500     | Maximum EM iterations          |
-| `--alpha`      | float | auto (1/K) | >0         | Document-topic Dirichlet prior |
-| `--vocab_size` | int   | 5000       | 1000–20000 | Vocabulary size                |
+Additional parameters beyond common defaults:
+
+| Parameter    | Type  | Default  | Range  | Description                    |
+| ------------ | ----- | -------- | ------ | ------------------------------ |
+| `--max_iter` | int   | 100      | 10–500 | Maximum EM iterations          |
+| `--alpha`    | float | 1/K (auto) | >0     | Document-topic Dirichlet prior |
 
 **HDP**
 
-| Parameter      | Type  | Default | Range      | Description                            |
-| -------------- | ----- | ------- | ---------- | -------------------------------------- |
-| `--max_topics` | int   | 150     | 50–300     | Upper bound on topic count             |
-| `--alpha`      | float | 1.0     | >0         | Document-level concentration parameter |
-| `--vocab_size` | int   | 5000    | 1000–20000 | Vocabulary size                        |
+Additional parameters beyond common defaults:
+
+| Parameter      | Type  | Default | Range  | Description                            |
+| -------------- | ----- | ------- | ------ | -------------------------------------- |
+| `--max_topics` | int   | 150     | 50–300 | Upper bound on number of topics (replaces `--num_topics`) |
+| `--alpha`      | float | 1.0     | >0     | Document-level concentration parameter |
 
 **STM**
 
-| Parameter      | Type | Default | Range      | Description           |
-| -------------- | ---- | ------- | ---------- | --------------------- |
-| `--num_topics` | int  | 20      | 5–100      | Number of topics K    |
-| `--max_iter`   | int  | 100     | 10–500     | Maximum EM iterations |
-| `--vocab_size` | int  | 5000    | 1000–20000 | Vocabulary size       |
+Additional parameters beyond common defaults:
+
+| Parameter    | Type | Default | Range  | Description           |
+| ------------ | ---- | ------- | ------ | --------------------- |
+| `--max_iter` | int  | 100     | 10–500 | Maximum EM iterations |
 
 **BTM**
 
-| Parameter      | Type  | Default | Range      | Description                            |
-| -------------- | ----- | ------- | ---------- | -------------------------------------- |
-| `--num_topics` | int   | 20      | 5–100      | Number of topics K                     |
-| `--n_iter`     | int   | 100     | 10–500     | Gibbs sampling iterations              |
-| `--alpha`      | float | 1.0     | >0         | Dirichlet prior for topic distribution |
-| `--beta`       | float | 0.01    | >0         | Dirichlet prior for word distribution  |
-| `--vocab_size` | int   | 5000    | 1000–20000 | Vocabulary size                        |
+Additional parameters beyond common defaults:
+
+| Parameter  | Type  | Default | Range  | Description                            |
+| ---------- | ----- | ------- | ------ | -------------------------------------- |
+| `--n_iter` | int   | 100     | 10–500 | Gibbs sampling iterations (replaces `--epochs`) |
+| `--alpha`  | float | 1.0     | >0     | Topic distribution Dirichlet prior     |
+| `--beta`   | float | 0.01    | >0     | Word distribution Dirichlet prior      |
 
 **ETM**
 
-| Parameter         | Type  | Default | Range      | Description                         |
-| ----------------- | ----- | ------- | ---------- | ----------------------------------- |
-| `--num_topics`    | int   | 20      | 5–100      | Number of topics K                  |
-| `--num_layers`    | int   | 2       | 1–5        | Number of encoder hidden layers     |
-| `--hidden_dim`    | int   | 800     | 128–2048   | Neurons per hidden layer            |
-| `--embedding_dim` | int   | 300     | 50–1024    | Word embedding dimension (Word2Vec) |
-| `--epochs`        | int   | 100     | 10–500     | Training epochs                     |
-| `--batch_size`    | int   | 64      | 8–512      | Batch size                          |
-| `--learning_rate` | float | 0.002   | 1e-5–0.1   | Learning rate                       |
-| `--dropout`       | float | 0.5     | 0–0.9      | Dropout rate                        |
-| `--vocab_size`    | int   | 5000    | 1000–20000 | Vocabulary size                     |
+Additional parameters beyond common defaults:
+
+| Parameter         | Type | Default | Range   | Description                    |
+| ----------------- | ---- | ------- | ------- | ------------------------------ |
+| `--embedding_dim` | int  | 300     | 50–1024 | Word embedding dimension (Word2Vec) |
 
 **CTM**
 
-| Parameter          | Type  | Default    | Range                  | Description                                         |
-| ------------------ | ----- | ---------- | ---------------------- | --------------------------------------------------- |
-| `--num_topics`     | int   | 20         | 5–100                  | Number of topics K                                  |
-| `--inference_type` | str   | `zeroshot` | `zeroshot`, `combined` | `zeroshot` (SBERT only) or `combined` (SBERT + BOW) |
-| `--num_layers`     | int   | 2          | 1–5                    | Number of encoder hidden layers                     |
-| `--hidden_dim`     | int   | 100        | 32–1024                | Neurons per hidden layer                            |
-| `--epochs`         | int   | 100        | 10–500                 | Training epochs                                     |
-| `--batch_size`     | int   | 64         | 8–512                  | Batch size                                          |
-| `--learning_rate`  | float | 0.002      | 1e-5–0.1               | Learning rate                                       |
-| `--dropout`        | float | 0.2        | 0–0.9                  | Dropout rate                                        |
-| `--vocab_size`     | int   | 5000       | 1000–20000             | Vocabulary size                                     |
+Additional parameters beyond common defaults:
+
+| Parameter          | Type | Default    | Range                   | Description                                         |
+| ------------------ | ---- | ---------- | ----------------------- | --------------------------------------------------- |
+| `--inference_type` | str  | `zeroshot` | `zeroshot` / `combined` | Inference mode: SBERT only or SBERT + BOW           |
+| `--hidden_dim`     | int  | 100        | 32–1024                 | Overrides common default (512 → 100)                |
 
 **DTM**
 
-| Parameter         | Type  | Default | Range      | Description                     |
-| ----------------- | ----- | ------- | ---------- | ------------------------------- |
-| `--num_topics`    | int   | 20      | 5–100      | Number of topics K              |
-| `--hidden_dim`    | int   | 512     | 128–2048   | Neurons per hidden layer        |
-| `--embedding_dim` | int   | 300     | 50–1024    | Word embedding dimension        |
-| `--epochs`        | int   | 100     | 10–500     | Training epochs                 |
-| `--batch_size`    | int   | 64      | 8–512      | Batch size                      |
-| `--learning_rate` | float | 0.002   | 1e-5–0.1   | Learning rate                   |
-| `--vocab_size`    | int   | 5000    | 1000–20000 | Vocabulary size                 |
+Additional parameters beyond common defaults:
+
+| Parameter         | Type | Default | Range   | Description          |
+| ----------------- | ---- | ------- | ------- | -------------------- |
+| `--embedding_dim` | int  | 300     | 50–1024 | Word embedding dimension |
+
+> **Note**: DTM does not use `--num_layers`, `--dropout`, or `--patience`.  
+> **Data requirement**: DTM requires a `timestamp` column. Run `python prepare_data.py --dataset your_data --model dtm` before training.
 
 **NVDM / GSM / ProdLDA**
 
-| Parameter         | Type  | Default | Range      | Description                     |
-| ----------------- | ----- | ------- | ---------- | ------------------------------- |
-| `--num_topics`    | int   | 20      | 5–100      | Number of topics K              |
-| `--num_layers`    | int   | 2       | 1–5        | Number of encoder hidden layers |
-| `--hidden_dim`    | int   | 256     | 128–2048   | Neurons per hidden layer        |
-| `--epochs`        | int   | 100     | 10–500     | Training epochs                 |
-| `--batch_size`    | int   | 64      | 8–512      | Batch size                      |
-| `--learning_rate` | float | 0.002   | 1e-5–0.1   | Learning rate                   |
-| `--dropout`       | float | 0.2     | 0–0.9      | Dropout rate                    |
-| `--vocab_size`    | int   | 5000    | 1000–20000 | Vocabulary size                 |
+No additional parameters — all settings covered by common defaults.  
+> **Note**: `--hidden_dim` defaults to 256 for these models.
 
 **BERTopic**
 
-| Parameter            | Type | Default | Range        | Description                                           |
-| -------------------- | ---- | ------- | ------------ | ----------------------------------------------------- |
-| `--num_topics`       | int  | auto    | ≥2 or `None` | Target topic count; `None` = automatic detection      |
-| `--min_cluster_size` | int  | 10      | 2–100        | Minimum cluster size, controls topic granularity      |
-| `--min_samples`      | int  | None    | 1–100        | HDBSCAN min_samples (default: same as min_cluster_size) |
-| `--top_n_words`      | int  | 10      | 1–30         | Number of words per topic                             |
-| `--n_neighbors`      | int  | 15      | 2–100        | UMAP neighbors, controls local vs global structure    |
-| `--n_components`     | int  | 5       | 2–50         | UMAP output dimensionality                            |
-| `--random_state`     | int  | 42      | any int      | Random seed for UMAP reproducibility                  |
+Additional parameters beyond common defaults:
+
+| Parameter            | Type | Default | Range    | Description                                      |
+| -------------------- | ---- | ------- | -------- | ------------------------------------------------ |
+| `--min_cluster_size` | int  | 10      | 2–100    | HDBSCAN minimum cluster size; controls topic granularity |
+| `--min_samples`      | int  | None    | 1–100    | HDBSCAN min_samples (defaults to min_cluster_size) |
+| `--top_n_words`      | int  | 10      | 1–30     | Top words displayed per topic                    |
+| `--n_neighbors`      | int  | 15      | 2–100    | UMAP number of neighbors                         |
+| `--n_components`     | int  | 5       | 2–50     | UMAP reduced dimensions                          |
+| `--random_state`     | int  | 42      | any int  | UMAP random seed for reproducibility             |
+
+> **Note**: BERTopic does not use `--epochs`, `--batch_size`, `--learning_rate`, or other neural training parameters.  
+> `--num_topics` is optional; set to `None` for auto-detection.
 
 ---
 
