@@ -471,12 +471,11 @@ THETA enforces **7 Gold Standard Metrics** to ensure evaluation alignment across
 | Parameter         | Type  | Default | Range      | Description                     |
 | ----------------- | ----- | ------- | ---------- | ------------------------------- |
 | `--num_topics`    | int   | 20      | 5–100      | Number of topics K              |
-| `--num_layers`    | int   | 2       | 1–5        | Number of encoder hidden layers |
 | `--hidden_dim`    | int   | 512     | 128–2048   | Neurons per hidden layer        |
+| `--embedding_dim` | int   | 300     | 50–1024    | Word embedding dimension        |
 | `--epochs`        | int   | 100     | 10–500     | Training epochs                 |
 | `--batch_size`    | int   | 64      | 8–512      | Batch size                      |
 | `--learning_rate` | float | 0.002   | 1e-5–0.1   | Learning rate                   |
-| `--dropout`       | float | 0.2     | 0–0.9      | Dropout rate                    |
 | `--vocab_size`    | int   | 5000    | 1000–20000 | Vocabulary size                 |
 
 **NVDM / GSM / ProdLDA**
@@ -498,9 +497,11 @@ THETA enforces **7 Gold Standard Metrics** to ensure evaluation alignment across
 | -------------------- | ---- | ------- | ------------ | ----------------------------------------------------- |
 | `--num_topics`       | int  | auto    | ≥2 or `None` | Target topic count; `None` = automatic detection      |
 | `--min_cluster_size` | int  | 10      | 2–100        | Minimum cluster size, controls topic granularity      |
+| `--min_samples`      | int  | None    | 1–100        | HDBSCAN min_samples (default: same as min_cluster_size) |
 | `--top_n_words`      | int  | 10      | 1–30         | Number of words per topic                             |
 | `--n_neighbors`      | int  | 15      | 2–100        | UMAP neighbors, controls local vs global structure    |
 | `--n_components`     | int  | 5       | 2–50         | UMAP output dimensionality                            |
+| `--random_state`     | int  | 42      | any int      | Random seed for UMAP reproducibility                  |
 
 ---
 

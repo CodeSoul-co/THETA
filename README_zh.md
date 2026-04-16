@@ -482,12 +482,11 @@ THETA 强制执行 **7 大金标准指标**，确保所有模型（THETA 及 12 
 | 参数              | 类型  | 默认值 | 范围       | 描述           |
 | ----------------- | ----- | ------ | ---------- | -------------- |
 | `--num_topics`    | int   | 20     | 5–100      | 主题数 K       |
-| `--num_layers`    | int   | 2      | 1–5        | 编码器隐藏层数 |
 | `--hidden_dim`    | int   | 512    | 128–2048   | 每层神经元数   |
+| `--embedding_dim` | int   | 300    | 50–1024    | 词向量维度     |
 | `--epochs`        | int   | 100    | 10–500     | 训练轮数       |
 | `--batch_size`    | int   | 64     | 8–512      | 批大小         |
 | `--learning_rate` | float | 0.002  | 1e-5–0.1   | 学习率         |
-| `--dropout`       | float | 0.2    | 0–0.9      | Dropout率      |
 | `--vocab_size`    | int   | 5000   | 1000–20000 | 词表大小       |
 
 **NVDM / GSM / ProdLDA**
@@ -509,9 +508,11 @@ THETA 强制执行 **7 大金标准指标**，确保所有模型（THETA 及 12 
 | -------------------- | ---- | ------ | ------------ | ------------------------------------ |
 | `--num_topics`       | int  | 自动   | ≥2 或 `None` | 目标主题数；`None` 表示自动检测      |
 | `--min_cluster_size` | int  | 10     | 2–100        | 最小簇大小，控制主题粒度             |
+| `--min_samples`      | int  | None   | 1–100        | HDBSCAN min_samples（默认同 min_cluster_size） |
 | `--top_n_words`      | int  | 10     | 1–30         | 每个主题展示的词数                   |
 | `--n_neighbors`      | int  | 15     | 2–100        | UMAP近邻数，控制局部与全局结构的平衡 |
 | `--n_components`     | int  | 5      | 2–50         | UMAP降维后的维度数                   |
+| `--random_state`     | int  | 42     | 任意整数     | UMAP随机种子，控制结果可复现性       |
 
 ---
 

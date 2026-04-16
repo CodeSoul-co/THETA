@@ -162,7 +162,9 @@ models:
       n_neighbors: {type: int, default: 15, help: "UMAP n_neighbors"}
       n_components: {type: int, default: 5, help: "UMAP dimensionality"}
       min_cluster_size: {type: int, default: 10, help: "HDBSCAN min cluster size"}
+      min_samples: {type: int, default: null, help: "HDBSCAN min_samples (default: same as min_cluster_size)"}
       top_n_words: {type: int, default: 10, help: "Words per topic"}
+      random_state: {type: int, default: 42, help: "Random seed for UMAP reproducibility"}
 
   # ============================================
   # Our Method

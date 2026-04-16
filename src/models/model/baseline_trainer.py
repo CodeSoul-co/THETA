@@ -1528,8 +1528,10 @@ class BaselineTrainer:
         n_neighbors: int = 15,
         n_components: int = 5,
         min_cluster_size: int = 10,
+        min_samples: int = None,
         top_n_words: int = 10,
-        language: str = "english"
+        language: str = "english",
+        random_state: int = 42
     ) -> Dict[str, Any]:
         """
         Train BERTopic model
@@ -1538,8 +1540,10 @@ class BaselineTrainer:
             n_neighbors: UMAP n_neighbors
             n_components: UMAP output dimensions
             min_cluster_size: HDBSCAN minimum cluster size
+            min_samples: HDBSCAN min_samples (defaults to min_cluster_size if None)
             top_n_words: Number of top words per topic
             language: Language for stopwords
+            random_state: Random seed for UMAP reproducibility
             
         Returns:
             Training results
@@ -1557,6 +1561,10 @@ class BaselineTrainer:
         if not local_sbert_path or not os.path.exists(local_sbert_path):
             local_sbert_path = 'all-MiniLM-L6-v2'
         
+        # Default min_samples to min_cluster_size if not specified
+        if min_samples is None:
+            min_samples = min_cluster_size
+        
         model = BERTopicModel(
             vocab_size=self.vocab_size,
             num_topics=self.num_topics if self.num_topics > 0 else None,
@@ -1564,10 +1572,12 @@ class BaselineTrainer:
             n_neighbors=n_neighbors,
             n_components=n_components,
             min_cluster_size=min_cluster_size,
+            min_samples=min_samples,
             top_n_words=top_n_words,
             language=language,
             calculate_probabilities=True,
-            verbose=True
+            verbose=True,
+            random_state=random_state
         )
         
         # BERTopic needs texts - try to load from CSV or reconstruct from BOW
@@ -1655,6 +1665,9 @@ class BaselineTrainer:
             'n_neighbors': n_neighbors,
             'n_components': n_components,
             'min_cluster_size': min_cluster_size,
+            'min_samples': min_samples,
+            'top_n_words': top_n_words,
+            'random_state': random_state,
         }
         with open(os.path.join(model_dir, f'info_k{actual_topics}.json'), 'w', encoding='utf-8') as f:
             json.dump(info, f, ensure_ascii=False, indent=2)

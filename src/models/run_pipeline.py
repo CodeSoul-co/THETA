@@ -224,6 +224,15 @@ def parse_args():
     parser.add_argument('--inference_type', type=str, default='zeroshot', 
                         choices=['zeroshot', 'combined'], help='CTM inference type')
     parser.add_argument('--dropout', type=float, default=0.2, help='Dropout rate for neural models')
+    parser.add_argument('--num_layers', type=int, default=2, help='Number of encoder hidden layers (1-5) for CTM/ETM/NVDM/GSM/ProdLDA/DTM')
+    parser.add_argument('--embedding_dim', type=int, default=300, help='Word embedding dimension (50-1024) for ETM/DTM')
+    # BERTopic-specific parameters
+    parser.add_argument('--n_neighbors', type=int, default=15, help='UMAP n_neighbors for BERTopic (2-100)')
+    parser.add_argument('--n_components', type=int, default=5, help='UMAP output dimensionality for BERTopic (2-50)')
+    parser.add_argument('--min_cluster_size', type=int, default=10, help='HDBSCAN min cluster size for BERTopic (2-100)')
+    parser.add_argument('--min_samples', type=int, default=None, help='HDBSCAN min_samples for BERTopic (default: same as min_cluster_size)')
+    parser.add_argument('--top_n_words', type=int, default=10, help='Number of words per topic for BERTopic (1-30)')
+    parser.add_argument('--random_state', type=int, default=42, help='Random seed for BERTopic UMAP reproducibility')
     
     # Experiment management
     parser.add_argument('--data_exp', type=str, default=None,
@@ -611,6 +620,7 @@ def run_baseline(model_name: str, args) -> Dict[str, Any]:
         trainer = BaselineTrainer(
             dataset=args.dataset,
             num_topics=args.num_topics,
+            vocab_size=args.vocab_size,
             user_id=args.user_id,
             workspace_dir=str(workspace_dir),
             output_dir=str(model_dir),
@@ -635,14 +645,20 @@ def run_baseline(model_name: str, args) -> Dict[str, Any]:
                 train_result = trainer.train_btm(n_iter=args.n_iter, alpha=args.alpha, beta=args.beta)
             # Neural models
             elif model_name == 'etm':
-                train_result = trainer.train_etm(epochs=args.epochs, batch_size=args.batch_size, 
-                                                 learning_rate=args.learning_rate, hidden_dim=args.hidden_dim)
+                train_result = trainer.train_etm(epochs=args.epochs, batch_size=args.batch_size,
+                                                 learning_rate=args.learning_rate, hidden_dim=args.hidden_dim,
+                                                 embedding_dim=args.embedding_dim, dropout=args.dropout,
+                                                 early_stopping_patience=args.patience)
             elif model_name == 'ctm':
-                train_result = trainer.train_ctm(inference_type=args.inference_type, epochs=args.epochs, 
-                                                 batch_size=args.batch_size, learning_rate=args.learning_rate)
+                hidden_sizes = tuple([args.hidden_dim] * args.num_layers)
+                train_result = trainer.train_ctm(inference_type=args.inference_type, epochs=args.epochs,
+                                                 batch_size=args.batch_size, learning_rate=args.learning_rate,
+                                                 hidden_sizes=hidden_sizes,
+                                                 early_stopping_patience=args.patience)
             elif model_name == 'dtm':
                 train_result = trainer.train_dtm(epochs=args.epochs, batch_size=args.batch_size,
-                                                 learning_rate=args.learning_rate, hidden_dim=args.hidden_dim)
+                                                 learning_rate=args.learning_rate, hidden_dim=args.hidden_dim,
+                                                 embedding_dim=args.embedding_dim)
             elif model_name == 'nvdm':
                 train_result = trainer.train_nvdm(epochs=args.epochs, batch_size=args.batch_size,
                                                   learning_rate=args.learning_rate, hidden_dim=args.hidden_dim)
@@ -653,7 +669,15 @@ def run_baseline(model_name: str, args) -> Dict[str, Any]:
                 train_result = trainer.train_prodlda(epochs=args.epochs, batch_size=args.batch_size,
                                                      learning_rate=args.learning_rate, hidden_dim=args.hidden_dim)
             elif model_name == 'bertopic':
-                train_result = trainer.train_bertopic()
+                train_result = trainer.train_bertopic(
+                    n_neighbors=args.n_neighbors,
+                    n_components=args.n_components,
+                    min_cluster_size=args.min_cluster_size,
+                    min_samples=args.min_samples,
+                    top_n_words=args.top_n_words,
+                    random_state=args.random_state,
+                    language='multilingual' if args.language in ('zh', 'chinese') else 'english'
+                )
             else:
                 raise ValueError(f"Unknown model: {model_name}")
         except CovariatesRequiredError as e:
