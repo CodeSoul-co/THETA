@@ -1353,17 +1353,50 @@ class BaselineTrainer:
         
         np.save(os.path.join(model_dir, f'theta_k{self.num_topics}.npy'), theta)
         np.save(os.path.join(model_dir, f'beta_k{self.num_topics}.npy'), beta)
-        
+
+        # Save covariate effects for visualization
+        covariate_info = {
+            'covariate_names': covariate_names or [],
+            'num_covariates': covariates.shape[1] if covariates is not None else 0,
+            'num_topics': self.num_topics,
+        }
+        if hasattr(model, '_Gamma') and model._Gamma is not None:
+            np.save(os.path.join(model_dir, f'Gamma_k{self.num_topics}.npy'), model._Gamma)
+            covariate_info['gamma_saved'] = True
+        if hasattr(model, '_Sigma') and model._Sigma is not None:
+            np.save(os.path.join(model_dir, f'Sigma_k{self.num_topics}.npy'), model._Sigma)
+        effects = model.get_covariate_effects()
+        if effects:
+            effects_serializable = {}
+            for k, v in effects.items():
+                if isinstance(v, dict):
+                    topic_effects = {}
+                    for cov_name, effect_data in v.items():
+                        if isinstance(effect_data, dict):
+                            topic_effects[cov_name] = {
+                                'coefficient': float(effect_data.get('coefficient', 0)),
+                                'intercept': float(effect_data.get('intercept', 0)),
+                            }
+                    effects_serializable[str(k)] = topic_effects
+            if effects_serializable:
+                with open(os.path.join(model_dir, f'covariate_effects_k{self.num_topics}.json'), 'w', encoding='utf-8') as f:
+                    json.dump(effects_serializable, f, ensure_ascii=False, indent=2)
+                covariate_info['effects_saved'] = True
+        if covariates is not None:
+            np.save(os.path.join(model_dir, f'covariates_k{self.num_topics}.npy'), covariates)
+        with open(os.path.join(model_dir, f'covariate_info_k{self.num_topics}.json'), 'w', encoding='utf-8') as f:
+            json.dump(covariate_info, f, ensure_ascii=False, indent=2)
+
         print(f"STM training completed in {train_time:.2f}s")
-        
+
         return {
             'model': model,
             'theta': theta,
             'beta': beta,
             'train_time': train_time,
-            'covariate_effects': model.get_covariate_effects()
+            'covariate_effects': effects
         }
-    
+
     def train_btm(
         self,
         n_iter: int = 100,

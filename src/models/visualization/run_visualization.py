@@ -830,9 +830,232 @@ def load_baseline_data(result_dir, dataset, model, num_topics=20):
         with open(training_history_path, 'r', encoding='utf-8') as f:
             data['training_history'] = json.load(f)
         print(f"✓ Loaded training_history")
-    
+
+    # Load STM covariate data
+    if model == 'stm':
+        stm_model_dir = model_dir / 'stm' / 'model'
+        if not stm_model_dir.exists():
+            stm_model_dir = model_dir / 'model'
+
+        covariate_info_path = stm_model_dir / f'covariate_info_k{num_topics}.json'
+        if covariate_info_path.exists():
+            with open(covariate_info_path, 'r', encoding='utf-8') as f:
+                data['covariate_info'] = json.load(f)
+
+        Gamma_path = stm_model_dir / f'Gamma_k{num_topics}.npy'
+        if Gamma_path.exists():
+            data['Gamma'] = np.load(Gamma_path)
+            print(f"✓ Loaded Gamma: {data['Gamma'].shape}")
+
+        cov_effects_path = stm_model_dir / f'covariate_effects_k{num_topics}.json'
+        if cov_effects_path.exists():
+            with open(cov_effects_path, 'r', encoding='utf-8') as f:
+                data['covariate_effects'] = json.load(f)
+            print(f"✓ Loaded covariate_effects")
+
+        cov_saved_path = stm_model_dir / f'covariates_k{num_topics}.npy'
+        if cov_saved_path.exists():
+            data['covariates'] = np.load(cov_saved_path)
+            print(f"✓ Loaded covariates (from model): {data['covariates'].shape}")
+
+        if 'covariates' not in data and data_exp_dir is not None:
+            ws_cov_path = data_exp_dir / 'covariates.npy'
+            if ws_cov_path.exists():
+                data['covariates'] = np.load(ws_cov_path)
+                print(f"✓ Loaded covariates (from workspace): {data['covariates'].shape}")
+            ws_names_path = data_exp_dir / 'covariate_names.json'
+            if ws_names_path.exists():
+                with open(ws_names_path, 'r', encoding='utf-8') as f:
+                    data['covariate_names'] = json.load(f)
+                print(f"✓ Loaded covariate_names: {data['covariate_names']}")
+
+        if 'covariate_names' not in data and 'covariate_info' in data:
+            data['covariate_names'] = data['covariate_info'].get('covariate_names', [])
+
     print(f"{'='*60}\n")
     return data
+
+
+def _run_stm_specific_visualizations(data, output_dir, language='zh', dpi=300):
+    """STM covariate visualizations: platform-topic association charts."""
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    import matplotlib.cm as cm
+    import warnings
+    warnings.filterwarnings('ignore')
+
+    output_dir = Path(output_dir)
+    global_dir = output_dir / 'global'
+    global_dir.mkdir(parents=True, exist_ok=True)
+
+    zh = (language == 'zh')
+    theta = data.get('theta')
+    covariates = data.get('covariates')
+    covariate_names = data.get('covariate_names', [])
+    topic_words = data.get('topic_words', [])
+    K = theta.shape[1] if theta is not None else 0
+
+    if theta is None or covariates is None or covariates.shape[0] != theta.shape[0]:
+        print("  ⚠ STM covariate viz skipped: theta/covariates unavailable or shape mismatch")
+        return
+
+    # Recover original platform labels
+    platform_labels = {}
+    try:
+        import pandas as pd
+        from sklearn.preprocessing import LabelEncoder
+        config_path = output_dir.parent / 'config.json'
+        if config_path.exists():
+            with open(config_path) as f:
+                cfg = json.load(f)
+            dataset = cfg.get('dataset', '')
+            candidate = Path(__file__).parent.parent.parent / 'data' / dataset / f'{dataset}_cleaned.csv'
+            if candidate.exists():
+                df_raw = pd.read_csv(candidate)
+                cov_col = covariate_names[0] if covariate_names else None
+                if cov_col and cov_col in df_raw.columns:
+                    le = LabelEncoder()
+                    le.fit(df_raw[cov_col].fillna('unknown').astype(str))
+                    for i, label in enumerate(le.classes_):
+                        platform_labels[i] = label
+    except Exception:
+        pass
+
+    unique_vals = sorted(set(covariates[:, 0].astype(int).tolist()))
+    cov_labels = [platform_labels.get(v, f'cat_{v}') for v in unique_vals]
+
+    def topic_label(tid):
+        if tid < len(topic_words):
+            words = topic_words[tid][1]
+            if words:
+                return f"T{tid+1}:{words[0][0]}"
+        return f"Topic {tid+1}"
+
+    topic_labels = [topic_label(i) for i in range(K)]
+
+    mean_theta = np.zeros((len(unique_vals), K))
+    for i, val in enumerate(unique_vals):
+        mask = covariates[:, 0].astype(int) == val
+        if mask.sum() > 0:
+            mean_theta[i] = theta[mask].mean(axis=0)
+
+    # Chart 1: 协变量-主题关联热力图
+    try:
+        fig, ax = plt.subplots(figsize=(max(10, K * 0.9), max(4, len(unique_vals) * 0.8)))
+        im = ax.imshow(mean_theta, aspect='auto', cmap='YlOrRd')
+        plt.colorbar(im, ax=ax, label='平均主题占比' if zh else 'Mean Topic Proportion')
+        ax.set_xticks(range(K)); ax.set_xticklabels(topic_labels, rotation=45, ha='right', fontsize=8)
+        ax.set_yticks(range(len(unique_vals))); ax.set_yticklabels(cov_labels, fontsize=9)
+        ax.set_title('协变量-主题关联热力图' if zh else 'Covariate-Topic Heatmap', fontsize=12, fontweight='bold')
+        for i in range(len(unique_vals)):
+            for j in range(K):
+                ax.text(j, i, f'{mean_theta[i,j]:.3f}', ha='center', va='center', fontsize=6,
+                        color='white' if mean_theta[i,j] > 0.15 else 'black')
+        plt.tight_layout()
+        plt.savefig(global_dir / ('协变量主题关联热力图.png' if zh else 'covariate_topic_heatmap.png'), dpi=dpi, bbox_inches='tight', facecolor='white')
+        plt.close(); print(f"  ✓ 协变量主题关联热力图.png")
+    except Exception as e:
+        print(f"  ⚠ heatmap: {e}")
+
+    # Chart 2: 各平台主题分布堆积图
+    try:
+        colors = cm.tab10(np.linspace(0, 1, K))
+        fig, ax = plt.subplots(figsize=(max(8, len(unique_vals) * 1.5), 6))
+        bottom = np.zeros(len(unique_vals))
+        for k in range(K):
+            ax.bar(cov_labels, mean_theta[:, k], bottom=bottom, color=colors[k], label=topic_labels[k], alpha=0.85)
+            bottom += mean_theta[:, k]
+        ax.set_title('各平台主题分布对比（堆积）' if zh else 'Topic Distribution by Platform', fontsize=12, fontweight='bold')
+        ax.legend(loc='upper right', bbox_to_anchor=(1.18, 1), fontsize=7)
+        plt.xticks(rotation=30, ha='right', fontsize=9); plt.tight_layout()
+        plt.savefig(global_dir / ('各平台主题分布堆积图.png' if zh else 'platform_topic_stacked.png'), dpi=dpi, bbox_inches='tight', facecolor='white')
+        plt.close(); print(f"  ✓ 各平台主题分布堆积图.png")
+    except Exception as e:
+        print(f"  ⚠ stacked bar: {e}")
+
+    # Chart 3: 平台主题偏好偏差图
+    try:
+        deviation = mean_theta - theta.mean(axis=0)[np.newaxis, :]
+        vmax = np.abs(deviation).max()
+        fig, ax = plt.subplots(figsize=(max(10, K * 0.9), max(4, len(unique_vals) * 0.8)))
+        im = ax.imshow(deviation, aspect='auto', cmap='RdBu_r', vmin=-vmax, vmax=vmax)
+        plt.colorbar(im, ax=ax, label='偏差（相对全局均值）' if zh else 'Deviation from Global Mean')
+        ax.set_xticks(range(K)); ax.set_xticklabels(topic_labels, rotation=45, ha='right', fontsize=8)
+        ax.set_yticks(range(len(unique_vals))); ax.set_yticklabels(cov_labels, fontsize=9)
+        ax.set_title('平台主题偏好偏差图（红=高于均值，蓝=低于均值）' if zh else 'Platform Topic Deviation', fontsize=11, fontweight='bold')
+        for i in range(len(unique_vals)):
+            for j in range(K):
+                ax.text(j, i, f'{deviation[i,j]:+.3f}', ha='center', va='center', fontsize=6, color='black')
+        plt.tight_layout()
+        plt.savefig(global_dir / ('平台主题偏好偏差图.png' if zh else 'platform_topic_deviation.png'), dpi=dpi, bbox_inches='tight', facecolor='white')
+        plt.close(); print(f"  ✓ 平台主题偏好偏差图.png")
+    except Exception as e:
+        print(f"  ⚠ deviation: {e}")
+
+    # Chart 4: 各平台主导主题 Top-5
+    try:
+        colors_top = cm.tab10(np.linspace(0, 1, K))
+        fig, axes = plt.subplots(1, len(unique_vals), figsize=(len(unique_vals) * 3, 5), sharey=False)
+        if len(unique_vals) == 1: axes = [axes]
+        for ax, i in zip(axes, range(len(unique_vals))):
+            top5 = np.argsort(-mean_theta[i])[:5]
+            ax.barh(range(5), mean_theta[i, top5][::-1], color=[colors_top[j] for j in top5[::-1]], alpha=0.85)
+            ax.set_yticks(range(5)); ax.set_yticklabels([topic_labels[j] for j in top5[::-1]], fontsize=8)
+            ax.set_title(cov_labels[i], fontsize=9, fontweight='bold')
+        fig.suptitle('各平台 Top-5 主导主题' if zh else 'Top-5 Topics per Platform', fontsize=12, fontweight='bold')
+        plt.tight_layout()
+        plt.savefig(global_dir / ('各平台主导主题.png' if zh else 'platform_dominant_topics.png'), dpi=dpi, bbox_inches='tight', facecolor='white')
+        plt.close(); print(f"  ✓ 各平台主导主题.png")
+    except Exception as e:
+        print(f"  ⚠ dominant topics: {e}")
+
+    # Chart 5: Gamma 系数图（若已保存）
+    Gamma = data.get('Gamma')
+    if Gamma is not None:
+        try:
+            n_cov = Gamma.shape[0] - 1
+            fig, axes = plt.subplots(1, max(1, n_cov), figsize=(max(8, K * 0.7) * n_cov, 5))
+            if n_cov == 1: axes = [axes]
+            for c in range(n_cov):
+                ax = axes[c]
+                coefs = Gamma[c + 1, :]
+                cname = covariate_names[c] if c < len(covariate_names) else f'cov_{c}'
+                ax.bar(range(K - 1), coefs, color=['#d62728' if v > 0 else '#1f77b4' for v in coefs], alpha=0.8)
+                ax.axhline(0, color='black', linewidth=0.8)
+                ax.set_xticks(range(K - 1)); ax.set_xticklabels([f'T{i+1}' for i in range(K - 1)], rotation=45, fontsize=8)
+                ax.set_title(f'协变量效应：{cname}' if zh else f'Covariate Effect: {cname}', fontsize=10, fontweight='bold')
+                ax.grid(axis='y', alpha=0.3)
+            plt.tight_layout()
+            plt.savefig(global_dir / ('STM协变量Gamma系数图.png' if zh else 'stm_gamma_coefficients.png'), dpi=dpi, bbox_inches='tight', facecolor='white')
+            plt.close(); print(f"  ✓ STM协变量Gamma系数图.png")
+        except Exception as e:
+            print(f"  ⚠ gamma: {e}")
+
+    # Chart 6: ANOVA F 检验显著性
+    try:
+        from scipy import stats
+        f_stats, p_vals = [], []
+        for k in range(K):
+            groups = [theta[covariates[:, 0].astype(int) == v, k] for v in unique_vals if (covariates[:, 0].astype(int) == v).sum() >= 2]
+            if len(groups) >= 2:
+                f, p = stats.f_oneway(*groups)
+                f_stats.append(f); p_vals.append(p)
+            else:
+                f_stats.append(0); p_vals.append(1.0)
+        f_stats, p_vals = np.array(f_stats), np.array(p_vals)
+        fig, ax = plt.subplots(figsize=(max(8, K * 0.8), 5))
+        ax.bar(range(K), f_stats, color=['#d62728' if p < 0.05 else '#aec7e8' for p in p_vals], alpha=0.85, edgecolor='white')
+        ax.set_xticks(range(K)); ax.set_xticklabels(topic_labels, rotation=45, ha='right', fontsize=8)
+        ax.set_title('平台对各主题的协变量效应（ANOVA F检验，红=p<0.05）' if zh else 'ANOVA F-Statistic: Platform Effect on Topics', fontsize=10, fontweight='bold')
+        ax.grid(axis='y', alpha=0.3)
+        for i, (f, p) in enumerate(zip(f_stats, p_vals)):
+            ax.text(i, f + f_stats.max() * 0.02, f'p={p:.3f}', ha='center', va='bottom', fontsize=6)
+        plt.tight_layout()
+        plt.savefig(global_dir / ('协变量效应显著性检验.png' if zh else 'covariate_effect_anova.png'), dpi=dpi, bbox_inches='tight', facecolor='white')
+        plt.close(); print(f"  ✓ 协变量效应显著性检验.png")
+    except Exception as e:
+        print(f"  ⚠ anova: {e}")
 
 
 def _run_dtm_specific_visualizations(data, output_dir, language='en', dpi=300):
@@ -1170,6 +1393,14 @@ def run_baseline_visualization(
                 _run_dtm_specific_visualizations(data, output_dir, lang, dpi)
             except Exception as e:
                 print(f"  ⚠ DTM-specific visualizations error: {e}")
+
+        if model == 'stm':
+            try:
+                print(f"\n[STM Covariate Visualizations ({lang.upper()})]")
+                _run_stm_specific_visualizations(data, output_dir, lang, dpi)
+            except Exception as e:
+                import traceback; traceback.print_exc()
+                print(f"  ⚠ STM covariate visualizations error: {e}")
     
     generate_summary_report(data, output_dir)
     
