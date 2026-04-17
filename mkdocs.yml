@@ -100,8 +100,8 @@ plugins:
                 - 有监督学习: examples/supervised-learning.md
             - 故障排除: troubleshooting.md
             - 附录:
-                - 常见问题: appendix/faq.md
-            - 附录B：硬件需求与性能基准: appendix/hardware-requirements.md
+                - 附录A：常见问题与补充信息: appendix/faq.md
+                - 附录B：硬件需求与性能基准: appendix/hardware-requirements.md
 
 # Markdown Extensions
 markdown_extensions:
@@ -166,8 +166,8 @@ nav:
       - Supervised Learning: examples/supervised-learning.md
   - Troubleshooting: troubleshooting.md
   - Appendix:
-      - FAQ: appendix/faq.md
-  - Appendix B: Hardware Requirements & Benchmarks: appendix/hardware-requirements.md
+      - "Appendix A: FAQ & Supplementary Information": appendix/faq.md
+      - "Appendix B: Hardware Requirements & Benchmarks": appendix/hardware-requirements.md
 
 # Extra
 extra:

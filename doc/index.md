@@ -40,6 +40,14 @@ THETA is a state-of-the-art topic modeling framework that leverages **Qwen3-Embe
 
     [:octicons-arrow-right-24: API Reference](api/prepare-data.md)
 
+-   :material-book-multiple:{ .lg .middle } **Appendix**
+
+    ---
+
+    FAQ, supplementary references, and hardware benchmarks
+
+    [:octicons-arrow-right-24: Appendix A](appendix/faq.md)
+
 </div>
 
 ---

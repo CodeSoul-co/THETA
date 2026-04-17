@@ -1,4 +1,4 @@
-# Appendix
+# Appendix A: FAQ & Supplementary Information
 
 Reference materials and supplementary information.
 
