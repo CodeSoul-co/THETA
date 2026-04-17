@@ -1170,6 +1170,57 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#parameter-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameter Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#common-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-specific-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model-Specific Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tuning-strategies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tuning Strategies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tuning Strategies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#learning-rate-scheduling" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1177,6 +1228,11 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1834,6 +1890,57 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#parameter-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameter Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#common-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-specific-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model-Specific Parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tuning-strategies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tuning Strategies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tuning Strategies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#learning-rate-scheduling" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1841,6 +1948,11 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1999,7 +2111,398 @@
 <h1 id="hyperparameter-tuning">Hyperparameter Tuning<a class="headerlink" href="#hyperparameter-tuning" title="Permanent link">&para;</a></h1>
 <p>Systematic guide to optimizing THETA hyperparameters.</p>
 <hr />
-<h2 id="learning-rate-scheduling">Learning Rate Scheduling<a class="headerlink" href="#learning-rate-scheduling" title="Permanent link">&para;</a></h2>
+<h2 id="parameter-reference">Parameter Reference<a class="headerlink" href="#parameter-reference" title="Permanent link">&para;</a></h2>
+<h3 id="common-parameters">Common Parameters<a class="headerlink" href="#common-parameters" title="Permanent link">&para;</a></h3>
+<p>Shared across all or most models. Parameters marked <code>*</code> apply to neural network–based models only.</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--num_topics</code></td>
+<td>int</td>
+<td>20</td>
+<td>5–100</td>
+<td>Number of topics K (upper bound for HDP; optional for BERTopic)</td>
+</tr>
+<tr>
+<td><code>--vocab_size</code></td>
+<td>int</td>
+<td>5000</td>
+<td>1000–20000</td>
+<td>Vocabulary size</td>
+</tr>
+<tr>
+<td><code>--epochs</code> *</td>
+<td>int</td>
+<td>100</td>
+<td>10–500</td>
+<td>Training epochs</td>
+</tr>
+<tr>
+<td><code>--batch_size</code> *</td>
+<td>int</td>
+<td>64</td>
+<td>8–512</td>
+<td>Mini-batch size</td>
+</tr>
+<tr>
+<td><code>--learning_rate</code> *</td>
+<td>float</td>
+<td>0.002</td>
+<td>1e-5–0.1</td>
+<td>Learning rate</td>
+</tr>
+<tr>
+<td><code>--dropout</code> *</td>
+<td>float</td>
+<td>0.2</td>
+<td>0–0.9</td>
+<td>Encoder dropout rate</td>
+</tr>
+<tr>
+<td><code>--hidden_dim</code> *</td>
+<td>int</td>
+<td>512</td>
+<td>128–2048</td>
+<td>Hidden units per layer (NVDM/GSM/ProdLDA default: 256)</td>
+</tr>
+<tr>
+<td><code>--num_layers</code> *</td>
+<td>int</td>
+<td>2</td>
+<td>1–5</td>
+<td>Number of encoder hidden layers</td>
+</tr>
+<tr>
+<td><code>--patience</code> *</td>
+<td>int</td>
+<td>10</td>
+<td>1–50</td>
+<td>Early stopping patience</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="model-specific-parameters">Model-Specific Parameters<a class="headerlink" href="#model-specific-parameters" title="Permanent link">&para;</a></h3>
+<h4 id="theta">THETA<a class="headerlink" href="#theta" title="Permanent link">&para;</a></h4>
+<p>Additional parameters beyond common defaults:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--model_size</code></td>
+<td>str</td>
+<td><code>0.6B</code></td>
+<td><code>0.6B</code> / <code>4B</code> / <code>8B</code></td>
+<td>Qwen model size</td>
+</tr>
+<tr>
+<td><code>--mode</code></td>
+<td>str</td>
+<td><code>zero_shot</code></td>
+<td><code>zero_shot</code> / <code>supervised</code> / <code>unsupervised</code></td>
+<td>Embedding mode</td>
+</tr>
+<tr>
+<td><code>--kl_start</code></td>
+<td>float</td>
+<td>0.0</td>
+<td>0–1</td>
+<td>KL annealing start weight</td>
+</tr>
+<tr>
+<td><code>--kl_end</code></td>
+<td>float</td>
+<td>1.0</td>
+<td>0–1</td>
+<td>KL annealing end weight</td>
+</tr>
+<tr>
+<td><code>--kl_warmup</code></td>
+<td>int</td>
+<td>50</td>
+<td>0–epochs</td>
+<td>KL warmup epochs</td>
+</tr>
+<tr>
+<td><code>--language</code></td>
+<td>str</td>
+<td><code>zh</code></td>
+<td><code>en</code> / <code>zh</code></td>
+<td>Visualization language</td>
+</tr>
+</tbody>
+</table>
+<h4 id="lda">LDA<a class="headerlink" href="#lda" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--max_iter</code></td>
+<td>int</td>
+<td>100</td>
+<td>10–500</td>
+<td>Maximum EM iterations</td>
+</tr>
+<tr>
+<td><code>--alpha</code></td>
+<td>float</td>
+<td>1/K (auto)</td>
+<td>&gt;0</td>
+<td>Document-topic Dirichlet prior</td>
+</tr>
+</tbody>
+</table>
+<h4 id="hdp">HDP<a class="headerlink" href="#hdp" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--max_topics</code></td>
+<td>int</td>
+<td>150</td>
+<td>50–300</td>
+<td>Upper bound on number of topics (replaces <code>--num_topics</code>)</td>
+</tr>
+<tr>
+<td><code>--alpha</code></td>
+<td>float</td>
+<td>1.0</td>
+<td>&gt;0</td>
+<td>Document-level concentration parameter</td>
+</tr>
+</tbody>
+</table>
+<h4 id="stm">STM<a class="headerlink" href="#stm" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--max_iter</code></td>
+<td>int</td>
+<td>100</td>
+<td>10–500</td>
+<td>Maximum EM iterations</td>
+</tr>
+</tbody>
+</table>
+<h4 id="btm">BTM<a class="headerlink" href="#btm" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--n_iter</code></td>
+<td>int</td>
+<td>100</td>
+<td>10–500</td>
+<td>Gibbs sampling iterations (replaces <code>--epochs</code>)</td>
+</tr>
+<tr>
+<td><code>--alpha</code></td>
+<td>float</td>
+<td>1.0</td>
+<td>&gt;0</td>
+<td>Topic distribution Dirichlet prior</td>
+</tr>
+<tr>
+<td><code>--beta</code></td>
+<td>float</td>
+<td>0.01</td>
+<td>&gt;0</td>
+<td>Word distribution Dirichlet prior</td>
+</tr>
+</tbody>
+</table>
+<h4 id="etm">ETM<a class="headerlink" href="#etm" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--embedding_dim</code></td>
+<td>int</td>
+<td>300</td>
+<td>50–1024</td>
+<td>Word embedding dimension (Word2Vec)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="ctm">CTM<a class="headerlink" href="#ctm" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--inference_type</code></td>
+<td>str</td>
+<td><code>zeroshot</code></td>
+<td><code>zeroshot</code> / <code>combined</code></td>
+<td>Inference mode: SBERT only or SBERT + BOW</td>
+</tr>
+<tr>
+<td><code>--hidden_dim</code></td>
+<td>int</td>
+<td>100</td>
+<td>32–1024</td>
+<td>Overrides common default (512 → 100)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="dtm">DTM<a class="headerlink" href="#dtm" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--embedding_dim</code></td>
+<td>int</td>
+<td>300</td>
+<td>50–1024</td>
+<td>Word embedding dimension</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note</strong>: DTM does not use <code>--num_layers</code>, <code>--dropout</code>, or <code>--patience</code>.<br />
+<strong>Data requirement</strong>: DTM requires a <code>timestamp</code> column. Run <code>python prepare_data.py --dataset your_data --model dtm</code> before training.</p>
+</blockquote>
+<h4 id="nvdm-gsm-prodlda">NVDM / GSM / ProdLDA<a class="headerlink" href="#nvdm-gsm-prodlda" title="Permanent link">&para;</a></h4>
+<p>No additional parameters — all settings covered by common defaults.  </p>
+<blockquote>
+<p><strong>Note</strong>: <code>--hidden_dim</code> defaults to 256 for these models.</p>
+</blockquote>
+<h4 id="bertopic">BERTopic<a class="headerlink" href="#bertopic" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Default</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--min_cluster_size</code></td>
+<td>int</td>
+<td>10</td>
+<td>2–100</td>
+<td>HDBSCAN minimum cluster size; controls topic granularity</td>
+</tr>
+<tr>
+<td><code>--min_samples</code></td>
+<td>int</td>
+<td>None</td>
+<td>1–100</td>
+<td>HDBSCAN min_samples (defaults to min_cluster_size)</td>
+</tr>
+<tr>
+<td><code>--top_n_words</code></td>
+<td>int</td>
+<td>10</td>
+<td>1–30</td>
+<td>Top words displayed per topic</td>
+</tr>
+<tr>
+<td><code>--n_neighbors</code></td>
+<td>int</td>
+<td>15</td>
+<td>2–100</td>
+<td>UMAP number of neighbors</td>
+</tr>
+<tr>
+<td><code>--n_components</code></td>
+<td>int</td>
+<td>5</td>
+<td>2–50</td>
+<td>UMAP reduced dimensions</td>
+</tr>
+<tr>
+<td><code>--random_state</code></td>
+<td>int</td>
+<td>42</td>
+<td>any int</td>
+<td>UMAP random seed for reproducibility</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note</strong>: BERTopic does not use <code>--epochs</code>, <code>--batch_size</code>, <code>--learning_rate</code>, or other neural training parameters.<br />
+<code>--num_topics</code> is optional; set to <code>None</code> for auto-detection.</p>
+</blockquote>
+<hr />
+<h2 id="tuning-strategies">Tuning Strategies<a class="headerlink" href="#tuning-strategies" title="Permanent link">&para;</a></h2>
+<h3 id="learning-rate-scheduling">Learning Rate Scheduling<a class="headerlink" href="#learning-rate-scheduling" title="Permanent link">&para;</a></h3>
 <p><strong>Conservative approach (unstable training):</strong>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python<span class="w"> </span>run_pipeline.py<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span>--dataset<span class="w"> </span>my_dataset<span class="w"> </span><span class="se">\</span>
