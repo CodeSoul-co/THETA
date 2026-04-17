@@ -6,62 +6,10 @@ Reference materials and supplementary information.
 
 ## Complete Parameter Reference
 
-### prepare_data.py
+To avoid duplicated and drifting parameter definitions, the canonical parameter reference is maintained in:
 
-| Parameter | Type | Default | Range/Options | Required | Description |
-|-----------|------|---------|--------------|----------|-------------|
-| `--dataset` | string | - | - | Yes | Dataset name |
-| `--model` | string | - | theta/baseline/dtm | Yes | Model type |
-| `--model_size` | string | 0.6B | 0.6B/4B/8B | No | Qwen model size |
-| `--mode` | string | zero_shot | zero_shot/supervised/unsupervised | No | Training mode |
-| `--vocab_size` | int | 5000 | 1000-20000 | No | Vocabulary size |
-| `--batch_size` | int | 32 | 8-128 | No | Batch size |
-| `--max_length` | int | 512 | 128-2048 | No | Max sequence length |
-| `--gpu` | int | 0 | 0-7 | No | GPU device ID |
-| `--clean` | flag | False | - | No | Clean data first |
-| `--raw-input` | string | None | filepath | No | Raw CSV path |
-| `--language` | string | english | english/chinese | No | Cleaning language |
-| `--bow-only` | flag | False | - | No | BOW only |
-| `--check-only` | flag | False | - | No | Check files only |
-| `--time_column` | string | year | column name | No | Time column (DTM) |
-
-### run_pipeline.py
-
-| Parameter | Type | Default | Range/Options | Required | Description |
-|-----------|------|---------|--------------|----------|-------------|
-| `--dataset` | string | - | - | Yes | Dataset name |
-| `--models` | string | - | theta,lda,etm,ctm,dtm | Yes | Model list |
-| `--model_size` | string | 0.6B | 0.6B/4B/8B | No | Qwen model size |
-| `--mode` | string | zero_shot | zero_shot/supervised/unsupervised | No | Training mode |
-| `--num_topics` | int | 20 | 5-100 | No | Number of topics |
-| `--epochs` | int | 100 | 10-500 | No | Training epochs |
-| `--batch_size` | int | 64 | 8-512 | No | Batch size |
-| `--hidden_dim` | int | 512 | 128-1024 | No | Hidden dimension |
-| `--learning_rate` | float | 0.002 | 0.00001-0.1 | No | Learning rate |
-| `--kl_start` | float | 0.0 | 0.0-1.0 | No | KL start weight |
-| `--kl_end` | float | 1.0 | 0.0-1.0 | No | KL end weight |
-| `--kl_warmup` | int | 50 | 0-200 | No | KL warmup epochs |
-| `--patience` | int | 10 | 1-50 | No | Early stopping patience |
-| `--no_early_stopping` | flag | False | - | No | Disable early stopping |
-| `--gpu` | int | 0 | 0-7 | No | GPU device ID |
-| `--language` | string | en | en/zh | No | Visualization language |
-| `--skip-train` | flag | False | - | No | Skip training |
-| `--skip-eval` | flag | False | - | No | Skip evaluation |
-| `--skip-viz` | flag | False | - | No | Skip visualization |
-
-### visualization.run_visualization
-
-| Parameter | Type | Default | Range/Options | Required | Description |
-|-----------|------|---------|--------------|----------|-------------|
-| `--result_dir` | string | - | directory | Yes | Results directory |
-| `--dataset` | string | - | - | Yes | Dataset name |
-| `--mode` | string | zero_shot | zero_shot/supervised/unsupervised | No | THETA mode |
-| `--model_size` | string | 0.6B | 0.6B/4B/8B | No | Model size |
-| `--baseline` | flag | False | - | No | Baseline flag |
-| `--model` | string | None | lda/etm/ctm/dtm | No | Baseline model |
-| `--num_topics` | int | 20 | 5-100 | No | Number of topics |
-| `--language` | string | en | en/zh | No | Language |
-| `--dpi` | int | 300 | 72-1200 | No | Image resolution |
+- `advanced/hyperparameters.md` (recommended)
+- `api/run-pipeline.md` (CLI-oriented reference)
 
 ---
 
