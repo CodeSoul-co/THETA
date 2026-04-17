@@ -15,6 +15,8 @@
         <link rel="canonical" href="https://codesoul-co.github.io/THETA/appendix/hardware-requirements/">
       
       
+        <link rel="prev" href="../faq/">
+      
       
       
         
@@ -29,7 +31,7 @@
     
     
       
-        <title>Appendix B: Hardware Requirements & Performance Benchmarks - THETA Topic Model</title>
+        <title>Hardware Requirements & Benchmarks - THETA Topic Model</title>
       
     
     
@@ -116,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Appendix B: Hardware Requirements &amp; Performance Benchmarks
+              Hardware Requirements & Benchmarks
             
           </span>
         </div>
@@ -405,18 +407,21 @@
   
   
   
-  
-    <li class="md-tabs__item">
-      <a href="../faq/" class="md-tabs__link">
-        
+    
   
   
     
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../faq/" class="md-tabs__link">
+          
+  
   
   Appendix
 
-      </a>
-    </li>
+        </a>
+      </li>
+    
   
 
       
@@ -1499,11 +1504,32 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../faq/" class="md-nav__link">
+  
+    
+    
+    
+    
+      
         
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
   
   
   <span class="md-ellipsis">
@@ -1517,7 +1543,393 @@
   
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Appendix
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware Requirements & Benchmarks
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware Requirements & Benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Executive Summary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-findings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Findings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b1-model-memory-usage-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B.1 Model Memory Usage Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="B.1 Model Memory Usage Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#memory-usage-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory Usage Patterns
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b2-oom-boundaries-safe-configurations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B.2 OOM Boundaries &amp; Safe Configurations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="B.2 OOM Boundaries &amp; Safe Configurations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#06b-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.6B Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4b-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4B Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8b-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8B Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#oom-boundary-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OOM Boundary Summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b3-cpu-vs-gpu-decision-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B.3 CPU vs GPU Decision Guide
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="B.3 CPU vs GPU Decision Guide">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#device-selection-guidelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Device Selection Guidelines
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b4-performance-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B.4 Performance Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b5-usage-recommendations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B.5 Usage Recommendations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="B.5 Usage Recommendations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#choosing-model-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing Model Size
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuring-batch_size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuring batch_size
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recommended-configurations-by-gpu-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommended Configurations by GPU Memory
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test Environment
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-methodology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test Methodology
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Methodology">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gpu-memory-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GPU Memory Testing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cpugpu-time-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CPU/GPU Time Testing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-conclusions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Conclusions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
