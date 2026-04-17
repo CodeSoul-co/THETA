@@ -1,7 +1,5 @@
 # Appendix B: Hardware Requirements & Performance Benchmarks
 
-**[English](hardware-requirements.md)** | **[中文](hardware-requirements.zh.md)**
-
 ---
 
 This appendix provides detailed performance benchmarks and hardware requirements for THETA's three Qwen3-Embedding models (0.6B/4B/8B) across different hardware configurations.
