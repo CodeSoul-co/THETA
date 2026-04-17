@@ -2406,7 +2406,7 @@
 </span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a>    <span class="c1"># ... 生成嵌入</span>
 </span></code></pre></div>
 <h3 id="52-ctm-sbert">5.2 CTM 模型 SBERT 使用确认<a class="headerlink" href="#52-ctm-sbert" title="Permanent link">&para;</a></h3>
-<p><strong>结论</strong>: ✅ <strong>CTM 已完全使用 .env 中的 SBERT_MODEL_PATH</strong></p>
+<p><strong>结论</strong>: <strong>CTM 已完全使用 .env 中的 SBERT_MODEL_PATH</strong></p>
 <ol>
 <li><strong>旧逻辑已移除</strong>: CTM 不再从预计算的 <code>sbert_embeddings.npy</code> 文件读取</li>
 <li><strong>自动生成</strong>: 如果 workspace 中没有 SBERT 嵌入，<code>train_ctm()</code> 会自动调用 <code>_generate_sbert_embeddings()</code></li>

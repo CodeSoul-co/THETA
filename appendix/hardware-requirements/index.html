@@ -2279,10 +2279,10 @@
 <li>
 <p><strong>Maximum Configurations on 24GB GPU</strong></p>
 </li>
-<li>0.6B: batch_size=64, seq_len=512 ✅</li>
-<li>4B: batch_size=64, seq_len=512 ✅</li>
+<li>0.6B: batch_size=64, seq_len=512 (supported)</li>
+<li>4B: batch_size=64, seq_len=512 (supported)</li>
 <li>
-<p>8B: batch_size=64, seq_len=256 ✅ (OOM at seq_len=512)</p>
+<p>8B: batch_size=64, seq_len=256 (supported; OOM at seq_len=512)</p>
 </li>
 <li>
 <p><strong>Recommended Production Configurations</strong> (with 20% memory headroom)</p>
@@ -2604,21 +2604,21 @@
 <h3 id="recommended-configurations-by-gpu-memory">Recommended Configurations by GPU Memory<a class="headerlink" href="#recommended-configurations-by-gpu-memory" title="Permanent link">&para;</a></h3>
 <h4 id="8gb-gpu">8GB GPU<a class="headerlink" href="#8gb-gpu" title="Permanent link">&para;</a></h4>
 <ul>
-<li>0.6B: batch_size=64 ✅</li>
-<li>4B: batch_size=4-8 ⚠️</li>
-<li>8B: Not recommended ❌</li>
+<li>0.6B: batch_size=64 (supported)</li>
+<li>4B: batch_size=4-8 (limited)</li>
+<li>8B: Not recommended</li>
 </ul>
 <h4 id="16gb-gpu">16GB GPU<a class="headerlink" href="#16gb-gpu" title="Permanent link">&para;</a></h4>
 <ul>
-<li>0.6B: batch_size=64 ✅</li>
-<li>4B: batch_size=32 ✅</li>
-<li>8B: batch_size=8 ⚠️</li>
+<li>0.6B: batch_size=64 (supported)</li>
+<li>4B: batch_size=32 (supported)</li>
+<li>8B: batch_size=8 (limited)</li>
 </ul>
 <h4 id="24gb-gpu">24GB GPU<a class="headerlink" href="#24gb-gpu" title="Permanent link">&para;</a></h4>
 <ul>
-<li>0.6B: batch_size=64 ✅</li>
-<li>4B: batch_size=64 ✅</li>
-<li>8B: batch_size=32 ✅</li>
+<li>0.6B: batch_size=64 (supported)</li>
+<li>4B: batch_size=64 (supported)</li>
+<li>8B: batch_size=32 (supported)</li>
 </ul>
 <hr />
 <h2 id="test-environment">Test Environment<a class="headerlink" href="#test-environment" title="Permanent link">&para;</a></h2>

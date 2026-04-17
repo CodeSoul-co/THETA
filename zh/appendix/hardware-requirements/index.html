@@ -2280,10 +2280,10 @@
 <li>
 <p><strong>24GB GPU 可运行的最大配置</strong></p>
 </li>
-<li>0.6B: batch_size=64, seq_len=512 ✅</li>
-<li>4B: batch_size=64, seq_len=512 ✅</li>
+<li>0.6B: batch_size=64, seq_len=512（支持）</li>
+<li>4B: batch_size=64, seq_len=512（支持）</li>
 <li>
-<p>8B: batch_size=64, seq_len=256 ✅（seq_len=512 时 OOM）</p>
+<p>8B: batch_size=64, seq_len=256（支持；seq_len=512 时 OOM）</p>
 </li>
 <li>
 <p><strong>推荐生产配置</strong>（留 20% 显存余量）</p>
@@ -2605,21 +2605,21 @@
 <h3 id="_6">不同显存容量的推荐配置<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
 <h4 id="8gb-gpu">8GB GPU<a class="headerlink" href="#8gb-gpu" title="Permanent link">&para;</a></h4>
 <ul>
-<li>0.6B: batch_size=64 ✅</li>
-<li>4B: batch_size=4-8 ⚠️</li>
-<li>8B: 不推荐 ❌</li>
+<li>0.6B: batch_size=64（支持）</li>
+<li>4B: batch_size=4-8（受限）</li>
+<li>8B: 不推荐</li>
 </ul>
 <h4 id="16gb-gpu">16GB GPU<a class="headerlink" href="#16gb-gpu" title="Permanent link">&para;</a></h4>
 <ul>
-<li>0.6B: batch_size=64 ✅</li>
-<li>4B: batch_size=32 ✅</li>
-<li>8B: batch_size=8 ⚠️</li>
+<li>0.6B: batch_size=64（支持）</li>
+<li>4B: batch_size=32（支持）</li>
+<li>8B: batch_size=8（受限）</li>
 </ul>
 <h4 id="24gb-gpu">24GB GPU<a class="headerlink" href="#24gb-gpu" title="Permanent link">&para;</a></h4>
 <ul>
-<li>0.6B: batch_size=64 ✅</li>
-<li>4B: batch_size=64 ✅</li>
-<li>8B: batch_size=32 ✅</li>
+<li>0.6B: batch_size=64（支持）</li>
+<li>4B: batch_size=64（支持）</li>
+<li>8B: batch_size=32（支持）</li>
 </ul>
 <hr />
 <h2 id="_7">测试环境<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h2>
