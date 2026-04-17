@@ -101,7 +101,7 @@ plugins:
             - 故障排除: troubleshooting.md
             - 附录:
                 - 常见问题: appendix/faq.md
-                - 硬件需求与性能基准: appendix/hardware-requirements.md
+            - 附录B：硬件需求与性能基准: appendix/hardware-requirements.md
 
 # Markdown Extensions
 markdown_extensions:
@@ -167,7 +167,7 @@ nav:
   - Troubleshooting: troubleshooting.md
   - Appendix:
       - FAQ: appendix/faq.md
-      - Hardware Requirements & Benchmarks: appendix/hardware-requirements.md
+  - Appendix B: Hardware Requirements & Benchmarks: appendix/hardware-requirements.md
 
 # Extra
 extra:
