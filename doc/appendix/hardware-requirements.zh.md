@@ -23,9 +23,9 @@
      - 8B: 35 docs/s（**117倍于 CPU**）
 
 3. **24GB GPU 可运行的最大配置**
-   - 0.6B: batch_size=64, seq_len=512 ✅
-   - 4B: batch_size=64, seq_len=512 ✅
-   - 8B: batch_size=64, seq_len=256 ✅（seq_len=512 时 OOM）
+   - 0.6B: batch_size=64, seq_len=512（支持）
+   - 4B: batch_size=64, seq_len=512（支持）
+   - 8B: batch_size=64, seq_len=256（支持；seq_len=512 时 OOM）
 
 4. **推荐生产配置**（留 20% 显存余量）
    - 0.6B: batch_size=32, seq_len=256（峰值显存 2.2 GB）
@@ -164,19 +164,19 @@
 ### 不同显存容量的推荐配置
 
 #### 8GB GPU
-- 0.6B: batch_size=64 ✅
-- 4B: batch_size=4-8 ⚠️
-- 8B: 不推荐 ❌
+- 0.6B: batch_size=64（支持）
+- 4B: batch_size=4-8（受限）
+- 8B: 不推荐
 
 #### 16GB GPU
-- 0.6B: batch_size=64 ✅
-- 4B: batch_size=32 ✅
-- 8B: batch_size=8 ⚠️
+- 0.6B: batch_size=64（支持）
+- 4B: batch_size=32（支持）
+- 8B: batch_size=8（受限）
 
 #### 24GB GPU
-- 0.6B: batch_size=64 ✅
-- 4B: batch_size=64 ✅
-- 8B: batch_size=32 ✅
+- 0.6B: batch_size=64（支持）
+- 4B: batch_size=64（支持）
+- 8B: batch_size=32（支持）
 
 ---
 

@@ -352,7 +352,7 @@ def _generate_sbert_embeddings(self):
 
 ### 5.2 CTM 模型 SBERT 使用确认
 
-**结论**: ✅ **CTM 已完全使用 .env 中的 SBERT_MODEL_PATH**
+**结论**: **CTM 已完全使用 .env 中的 SBERT_MODEL_PATH**
 
 1. **旧逻辑已移除**: CTM 不再从预计算的 `sbert_embeddings.npy` 文件读取
 2. **自动生成**: 如果 workspace 中没有 SBERT 嵌入，`train_ctm()` 会自动调用 `_generate_sbert_embeddings()`

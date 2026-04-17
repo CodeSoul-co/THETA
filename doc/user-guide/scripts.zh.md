@@ -61,9 +61,9 @@ bash scripts/02_clean_data.sh \
 
 | 参数 | 必需 | 描述 | 默认值 |
 |-----------|----------|-------------|---------|
-| `--input` | ✓ | 输入的 CSV 文件或目录（docx/txt） | - |
-| `--language` | ✓（预览模式不适用） | 数据语言：english, chinese, german, spanish | - |
-| `--text_column` | ✓（CSV 模式） | 需要清洗的文本列名 | - |
+| `--input` | 是 | 输入的 CSV 文件或目录（docx/txt） | - |
+| `--language` | 是（预览模式不适用） | 数据语言：english, chinese, german, spanish | - |
+| `--text_column` | 是（CSV 模式） | 需要清洗的文本列名 | - |
 | `--label_columns` | | 需要原样保留的标签/元数据列，逗号分隔 | - |
 | `--keep_all` | | 保留所有原始列（仅清洗文本列） | false |
 | `--preview` | | 显示 CSV 列和示例行后退出 | false |
@@ -149,8 +149,8 @@ bash scripts/03_prepare_data.sh --dataset mydata \
 
 | 参数 | 必需 | 描述 | 默认值 |
 |-----------|----------|-------------|---------|
-| `--dataset` | ✓ | 数据集名称 | - |
-| `--model` | ✓ | 目标模型：lda, hdp, stm（需要协变量）, btm, nvdm, gsm, prodlda, ctm, etm, dtm, bertopic, theta | - |
+| `--dataset` | 是 | 数据集名称 | - |
+| `--model` | 是 | 目标模型：lda, hdp, stm（需要协变量）, btm, nvdm, gsm, prodlda, ctm, etm, dtm, bertopic, theta | - |
 | `--model_size` | | 通义千问模型规模（仅 theta）：0.6B, 4B, 8B | 0.6B |
 | `--mode` | | 嵌入模式（仅 theta）：zero_shot, unsupervised, supervised | zero_shot |
 | `--vocab_size` | | 词汇表大小 | 5000 |
@@ -235,7 +235,7 @@ bash scripts/04_train_theta.sh \
 
 | 参数 | 必需 | 描述 | 默认值 |
 |-----------|----------|-------------|---------|
-| `--dataset` | ✓ | 数据集名称 | - |
+| `--dataset` | 是 | 数据集名称 | - |
 | `--model_size` | | 通义千问模型规模：0.6B, 4B, 8B | 0.6B |
 | `--mode` | | 嵌入模式：zero_shot, unsupervised, supervised | zero_shot |
 | `--num_topics` | | 主题数量 K | 20 |
@@ -465,8 +465,8 @@ bash scripts/05_train_baseline.sh \
 
 | 参数 | 必需 | 描述 | 默认值 |
 |-----------|----------|-------------|---------|
-| `--dataset` | ✓ | 数据集名称 | - |
-| `--models` | ✓ | 模型列表（逗号分隔） | - |
+| `--dataset` | 是 | 数据集名称 | - |
+| `--models` | 是 | 模型列表（逗号分隔） | - |
 | `--num_topics` | | 主题数量（hdp/bertopic 忽略此参数） | 20 |
 | `--vocab_size` | | 词汇表大小 | 5000 |
 | `--epochs` | | 训练轮数（神经模型） | 100 |

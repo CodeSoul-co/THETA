@@ -21,9 +21,9 @@ This appendix provides detailed performance benchmarks and hardware requirements
      - 8B: 35 docs/s (**117× faster than CPU**)
 
 3. **Maximum Configurations on 24GB GPU**
-   - 0.6B: batch_size=64, seq_len=512 ✅
-   - 4B: batch_size=64, seq_len=512 ✅
-   - 8B: batch_size=64, seq_len=256 ✅ (OOM at seq_len=512)
+   - 0.6B: batch_size=64, seq_len=512 (supported)
+   - 4B: batch_size=64, seq_len=512 (supported)
+   - 8B: batch_size=64, seq_len=256 (supported; OOM at seq_len=512)
 
 4. **Recommended Production Configurations** (with 20% memory headroom)
    - 0.6B: batch_size=32, seq_len=256 (peak memory 2.2 GB)
@@ -162,19 +162,19 @@ Tight memory (<8GB)     → batch_size=8 or use gradient accumulation
 ### Recommended Configurations by GPU Memory
 
 #### 8GB GPU
-- 0.6B: batch_size=64 ✅
-- 4B: batch_size=4-8 ⚠️
-- 8B: Not recommended ❌
+- 0.6B: batch_size=64 (supported)
+- 4B: batch_size=4-8 (limited)
+- 8B: Not recommended
 
 #### 16GB GPU
-- 0.6B: batch_size=64 ✅
-- 4B: batch_size=32 ✅
-- 8B: batch_size=8 ⚠️
+- 0.6B: batch_size=64 (supported)
+- 4B: batch_size=32 (supported)
+- 8B: batch_size=8 (limited)
 
 #### 24GB GPU
-- 0.6B: batch_size=64 ✅
-- 4B: batch_size=64 ✅
-- 8B: batch_size=32 ✅
+- 0.6B: batch_size=64 (supported)
+- 4B: batch_size=64 (supported)
+- 8B: batch_size=32 (supported)
 
 ---
 

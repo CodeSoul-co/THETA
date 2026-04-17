@@ -61,9 +61,9 @@ bash scripts/02_clean_data.sh \
 
 | Parameter | Required | Description | Default |
 |-----------|----------|-------------|---------|
-| `--input` | ✓ | Input CSV file or directory (docx/txt) | - |
-| `--language` | ✓ (not for preview) | Data language: english, chinese, german, spanish | - |
-| `--text_column` | ✓ (CSV mode) | Name of the text column to clean | - |
+| `--input` | Yes | Input CSV file or directory (docx/txt) | - |
+| `--language` | Yes (not for preview) | Data language: english, chinese, german, spanish | - |
+| `--text_column` | Yes (CSV mode) | Name of the text column to clean | - |
 | `--label_columns` | | Comma-separated label/metadata columns to keep as-is | - |
 | `--keep_all` | | Keep ALL original columns (only text column is cleaned) | false |
 | `--preview` | | Show CSV columns and sample rows, then exit | false |
@@ -149,8 +149,8 @@ bash scripts/03_prepare_data.sh --dataset mydata \
 
 | Parameter | Required | Description | Default |
 |-----------|----------|-------------|---------|
-| `--dataset` | ✓ | Dataset name | - |
-| `--model` | ✓ | Target model: lda, hdp, stm (requires covariates), btm, nvdm, gsm, prodlda, ctm, etm, dtm, bertopic, theta | - |
+| `--dataset` | Yes | Dataset name | - |
+| `--model` | Yes | Target model: lda, hdp, stm (requires covariates), btm, nvdm, gsm, prodlda, ctm, etm, dtm, bertopic, theta | - |
 | `--model_size` | | Qwen model size (theta only): 0.6B, 4B, 8B | 0.6B |
 | `--mode` | | Embedding mode (theta only): zero_shot, unsupervised, supervised | zero_shot |
 | `--vocab_size` | | Vocabulary size | 5000 |
@@ -235,7 +235,7 @@ bash scripts/04_train_theta.sh \
 
 | Parameter | Required | Description | Default |
 |-----------|----------|-------------|---------|
-| `--dataset` | ✓ | Dataset name | - |
+| `--dataset` | Yes | Dataset name | - |
 | `--model_size` | | Qwen model size: 0.6B, 4B, 8B | 0.6B |
 | `--mode` | | Embedding mode: zero_shot, unsupervised, supervised | zero_shot |
 | `--num_topics` | | Number of topics K | 20 |
@@ -467,8 +467,8 @@ bash scripts/05_train_baseline.sh \
 
 | Parameter | Required | Description | Default |
 |-----------|----------|-------------|---------|
-| `--dataset` | ✓ | Dataset name | - |
-| `--models` | ✓ | Model list (comma-separated) | - |
+| `--dataset` | Yes | Dataset name | - |
+| `--models` | Yes | Model list (comma-separated) | - |
 | `--num_topics` | | Number of topics (ignored for hdp/bertopic) | 20 |
 | `--vocab_size` | | Vocabulary size | 5000 |
 | `--epochs` | | Training epochs (neural models) | 100 |

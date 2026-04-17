@@ -208,10 +208,10 @@ python prepare_data.py \
 预期输出：
 ```
 检查数据集预处理文件：my_dataset
-✓ BOW数据：./result/0.6B/my_dataset/bow/
-✓ 嵌入：qwen_embeddings_zeroshot.npy（1024维）
-✓ 词汇表：vocab.pkl（5000词）
-✓ 文档索引：doc_indices.npy
+OK BOW数据：./result/0.6B/my_dataset/bow/
+OK 嵌入：qwen_embeddings_zeroshot.npy（1024维）
+OK 词汇表：vocab.pkl（5000词）
+OK 文档索引：doc_indices.npy
 所有必需文件都存在。
 ```
 

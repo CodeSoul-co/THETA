@@ -4,18 +4,18 @@
 
 ---
 
-## 📋 列名规范总览
+## 列名规范总览
 
 | 用途 | 列名 | 是否必需 | 说明 |
 |------|------|---------|------|
-| **文本** | `text` | ✅ 必需 | 文档文本内容 |
+| **文本** | `text` | 必需 | 文档文本内容 |
 | **时间** | `timestamp` | DTM 必需 | 支持年份/日期/时间戳格式 |
 | **协变量** | `cov_*` | STM 必需 | 必须以 `cov_` 前缀命名 |
 | **标签** | `label` | 有监督必需 | 文档分类标签 |
 
 ---
 
-## 1️⃣ 文本列: `text`
+## 1. 文本列: `text`
 
 **必须命名为 `text`**
 
@@ -27,7 +27,7 @@ text
 
 ---
 
-## 2️⃣ 时间列: `timestamp`
+## 2. 时间列: `timestamp`
 
 **必须命名为 `timestamp`**，用于 DTM (Dynamic Topic Model) 时序分析。
 
@@ -48,7 +48,7 @@ text,timestamp
 "2022年的文档内容...",2022-03-20 10:30:00
 ```
 
-### ⚠️ 重要说明
+### 重要说明
 
 - **DTM 最终只使用年份**，不支持月/日级别的时间切片
 - 无论输入 `2026-10-17` 还是 `2026`，最终都会转换为年份 `2026`
@@ -56,7 +56,7 @@ text,timestamp
 
 ---
 
-## 3️⃣ 协变量列: `cov_*` 前缀
+## 3. 协变量列: `cov_*` 前缀
 
 **必须以 `cov_` 前缀命名**，用于 STM (Structural Topic Model) 分析。
 
@@ -87,7 +87,7 @@ text,timestamp,cov_province,cov_category,cov_source
 
 ---
 
-## 4️⃣ 标签列: `label`
+## 4. 标签列: `label`
 
 **必须命名为 `label`**，用于有监督主题建模。
 
@@ -100,7 +100,7 @@ text,label
 
 ---
 
-## 📝 完整数据模板
+## 完整数据模板
 
 ### 模板 1: 基础主题建模 (LDA/CTM/ETM)
 
@@ -149,7 +149,7 @@ text,timestamp,cov_province,cov_category,cov_source,label
 
 ---
 
-## 🔍 系统检测输出示例
+## 系统检测输出示例
 
 运行 `prepare_data.py` 时会显示：
 
@@ -164,11 +164,11 @@ Column Auto-Detection Results (Strict Mode)
   - Covariate columns: 'cov_<name>' (e.g., cov_province, cov_category)
   - Label column: 'label'
 
-[Time Column] ✓ 'timestamp' (type: year)
+[Time Column] OK 'timestamp' (type: year)
   Sample values: [2020, 2021, 2022, 2023, 2024]
   Note: All formats will be converted to YEAR for DTM analysis
 
-[Covariate Columns] ✓ Detected 3 columns:
+[Covariate Columns] OK Detected 3 columns:
   - cov_province: 34 unique values, e.g., ['北京', '上海', '广东']
   - cov_category: 5 unique values, e.g., ['政策', '新闻', '报告']
   - cov_source: 8 unique values, e.g., ['政府网站', '媒体', '学术期刊']
@@ -177,7 +177,7 @@ Column Auto-Detection Results (Strict Mode)
 
 ---
 
-## ⚠️ 遗留列名兼容
+## 遗留列名兼容
 
 为保持向后兼容，系统仍会识别以下遗留列名，但会显示警告：
 
@@ -195,7 +195,7 @@ Column Auto-Detection Results (Strict Mode)
 
 ---
 
-## 🛠️ 数据准备命令
+## 数据准备命令
 
 ```bash
 cd THETA/src/models
@@ -212,7 +212,7 @@ python prepare_data.py --dataset my_data --model baseline
 
 ---
 
-## ✅ 数据质量检查清单
+## 数据质量检查清单
 
 - [ ] CSV 文件使用 UTF-8 编码
 - [ ] 文本列命名为 `text`

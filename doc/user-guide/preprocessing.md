@@ -204,10 +204,10 @@ python prepare_data.py \
 Expected output:
 ```
 Checking preprocessed files for dataset: my_dataset
-✓ BOW data: ./result/0.6B/my_dataset/bow/
-✓ Embeddings: qwen_embeddings_zeroshot.npy (1024 dims)
-✓ Vocabulary: vocab.pkl (5000 words)
-✓ Document indices: doc_indices.npy
+OK BOW data: ./result/0.6B/my_dataset/bow/
+OK Embeddings: qwen_embeddings_zeroshot.npy (1024 dims)
+OK Vocabulary: vocab.pkl (5000 words)
+OK Document indices: doc_indices.npy
 All required files present.
 ```
 
