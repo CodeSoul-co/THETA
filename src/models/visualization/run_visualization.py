@@ -25,30 +25,58 @@ warnings.filterwarnings('ignore')
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
-def find_latest_file(directory, pattern):
-    """Find the latest file matching pattern in directory."""
+def find_latest_file(directory, pattern, fixed_name=None):
+    """
+    Find the latest file matching pattern in directory.
+    
+    Args:
+        directory: Directory to search in
+        pattern: Glob pattern (e.g., "theta_*.npy")
+        fixed_name: Optional fixed filename to try first (e.g., "theta.npy")
+    
+    Returns:
+        Path to the file, or None if not found
+    """
     from glob import glob
-    files = glob(str(Path(directory) / pattern))
+    directory = Path(directory)
+    
+    # Priority 1: Try fixed filename first (new format without timestamp)
+    if fixed_name:
+        fixed_path = directory / fixed_name
+        if fixed_path.exists():
+            return str(fixed_path)
+    
+    # Priority 2: Try glob pattern (legacy format with timestamp)
+    files = glob(str(directory / pattern))
     if not files:
         return None
     return max(files, key=os.path.getmtime)
 
 
-def load_visualization_data(result_dir, dataset, mode, model_size=None, model_exp=None):
+def load_visualization_data(
+    result_dir, 
+    dataset, 
+    mode, 
+    model_size=None, 
+    model_exp=None,
+    model_type='theta',
+    num_topics=None
+):
     """
     Load all data needed for visualization from result directory.
     
-    Supports flexible directory structures:
-    - New structure: result/{model_size}/{dataset}/models/exp_*/
-    - Legacy structure: result/{dataset}/{mode}/
-    - Mixed structure: model in one location, data in another
+    Directory structures:
+    - THETA:    result/{dataset}/{model_size}/theta/exp_{timestamp}/theta/
+    - Baseline: result/baseline/{dataset}/vocab_{size}/{model_name}/
     
     Args:
         result_dir: Base result directory (e.g., ./result)
         dataset: Dataset name (e.g., socialTwitter)
         mode: Training mode (zero_shot, supervised, unsupervised)
-        model_size: Optional model size subdirectory (e.g., 0.6B)
-        model_exp: Optional specific experiment ID (e.g., exp_20260326_141527)
+        model_size: Model size for THETA (e.g., 0.6B)
+        model_exp: Specific experiment ID (e.g., exp_20260326_141527)
+        model_type: 'theta' | 'lda' | 'etm' | 'ctm_combined' | 'ctm_zeroshot'
+        num_topics: Number of topics (required for baseline models)
     
     Returns:
         dict with all visualization data
@@ -56,135 +84,143 @@ def load_visualization_data(result_dir, dataset, mode, model_size=None, model_ex
     from scipy import sparse
     
     result_dir = Path(result_dir)
-    result_base = result_dir.parent if model_size and model_size in str(result_dir) else result_dir
+    is_theta = model_type == 'theta'
     
-    # Auto-discover directories based on actual structure
+    # Auto-discover directories based on model type
     model_dir = None
     topic_words_dir = None
     bow_dir = None
     evaluation_dir = None
+    exp_dir = None
     
-    # Strategy 1: Find model files (theta_*.npy, beta_*.npy) by searching
-    def find_model_dir():
-        """Search for directory containing theta_*.npy files"""
-        # Unified structure: result/{model_size}/{dataset}/models/exp_*/theta/ or model/
-        search_paths = [
-            result_dir / dataset / 'models' if model_size and model_size in str(result_dir) else None,
-            result_base / model_size / dataset / 'models' if model_size else None,
-            result_base / dataset / 'models',
-            result_dir / dataset,
-        ]
-        search_paths = [p for p in search_paths if p is not None]
-        
-        for search_path in search_paths:
-            if not search_path.exists():
-                continue
-            # Find latest exp_* directory with model files
-            exp_dirs = sorted(search_path.glob('exp_*'), key=os.path.getmtime, reverse=True)
-            for exp_dir in exp_dirs:
-                # Try both theta/ and model/ subdirectories
-                for subdir in ['theta', 'model']:
-                    model_path = exp_dir / subdir
-                    if model_path.exists() and list(model_path.glob('theta_*.npy')):
-                        if model_exp is None or exp_dir.name == model_exp:
-                            return model_path, exp_dir
-        return None, None
+    # ==========================================================================
+    # Directory Discovery - Strict path alignment with main.py / baseline_trainer.py
+    # ==========================================================================
     
-    # Strategy 2: Find topic_words directory
-    def find_topic_words_dir():
-        """Search for directory containing topic_words_*.json files"""
-        search_paths = [
-            result_dir / dataset / 'models' if model_size and model_size in str(result_dir) else result_base / model_size / dataset / 'models' if model_size else None,
-            result_base / model_size / dataset / 'models' if model_size else None,
-            result_dir / 'models',
-        ]
-        search_paths = [p for p in search_paths if p is not None]
-        
-        for search_path in search_paths:
-            if not search_path.exists():
-                continue
-            exp_dirs = sorted(search_path.glob('exp_*'), key=os.path.getmtime, reverse=True)
-            for exp_dir in exp_dirs:
-                tw_path = exp_dir / 'topic_words'
-                if tw_path.exists() and list(tw_path.glob('topic_words_*.json')):
-                    if model_exp is None or exp_dir.name == model_exp:
-                        return tw_path
-        return None
-    
-    # Strategy 3: Find BOW directory
-    def find_bow_dir():
-        """Search for directory containing bow_matrix.npy or vocab.json"""
-        search_paths = [
-            result_dir / dataset / 'data' if model_size and model_size in str(result_dir) else result_base / model_size / dataset / 'data' if model_size else None,
-            result_base / model_size / dataset / 'data' if model_size else None,
-            result_dir / 'data',
-            result_base / dataset / 'bow',
-        ]
-        search_paths = [p for p in search_paths if p is not None]
-        
-        for search_path in search_paths:
-            if not search_path.exists():
-                continue
-            # Check for exp_* subdirectories
-            exp_dirs = sorted(search_path.glob('exp_*'), key=os.path.getmtime, reverse=True)
-            for exp_dir in exp_dirs:
-                bow_path = exp_dir / 'bow'
-                if bow_path.exists() and (list(bow_path.glob('vocab.*')) or list(bow_path.glob('bow_matrix.*'))):
-                    return bow_path
-            # Check direct bow directory
-            if (search_path / 'bow').exists():
-                return search_path / 'bow'
-        return None
-    
-    # Execute discovery
-    model_dir, exp_dir = find_model_dir()
-    topic_words_dir = find_topic_words_dir()
-    bow_dir = find_bow_dir()
-    
-    if exp_dir:
-        evaluation_dir = exp_dir / 'evaluation'
-    
-    # Fallback to legacy structure if discovery failed
-    if model_dir is None:
-        # Try legacy paths
+    if is_theta:
+        # THETA structure: result/{dataset}/{model_size}/theta/exp_{timestamp}/theta/
+        # Matches main.py config.model_dir
         if model_size:
-            base_dir = result_dir / model_size / dataset / mode if model_size not in str(result_dir) else result_dir / dataset / mode
+            theta_base = result_dir / dataset / model_size / 'theta'
         else:
-            base_dir = result_dir / dataset / mode
+            # Fallback: try to find model_size from directory structure
+            theta_base = None
+            for ms in ['0.6B', '1.5B', '3B', '7B', '14B', '32B', '72B']:
+                candidate = result_dir / dataset / ms / 'theta'
+                if candidate.exists():
+                    theta_base = candidate
+                    model_size = ms
+                    break
+            if theta_base is None:
+                theta_base = result_dir / dataset / 'theta'
         
-        if (base_dir / 'model').exists():
-            model_dir = base_dir / 'model'
-            evaluation_dir = base_dir / 'evaluation'
-            topic_words_dir = base_dir / 'topic_words'
-            bow_dir = base_dir / 'bow' if (base_dir / 'bow').exists() else None
+        # Find experiment directory
+        if model_exp:
+            exp_dir = theta_base / model_exp
+        else:
+            # Find latest exp_* directory
+            if theta_base.exists():
+                exp_dirs = sorted(theta_base.glob('exp_*'), key=os.path.getmtime, reverse=True)
+                if exp_dirs:
+                    exp_dir = exp_dirs[0]
+        
+        if exp_dir and exp_dir.exists():
+            model_dir = exp_dir / 'theta'  # result/{dataset}/{model_size}/theta/exp_*/theta/
+            bow_dir = exp_dir / 'data' / 'bow'  # result/{dataset}/{model_size}/theta/exp_*/data/bow/
+            evaluation_dir = exp_dir
+            topic_words_dir = model_dir  # topic_words.json is in model_dir
     
-    if model_dir is None:
-        raise FileNotFoundError(f"Could not find model directory with theta_*.npy files. Searched in: {result_dir}, {result_base}")
+    else:
+        # Baseline structure: result/baseline/{dataset}/vocab_{size}/{model_name}/
+        # Matches baseline_trainer.py self.output_dir
+        baseline_base = result_dir / 'baseline' / dataset
+        
+        # Find vocab_* directory (latest or specified)
+        vocab_dirs = sorted(baseline_base.glob('vocab_*'), key=os.path.getmtime, reverse=True)
+        if vocab_dirs:
+            vocab_dir = vocab_dirs[0]
+            model_dir = vocab_dir / model_type  # e.g., vocab_5000/lda/
+            bow_dir = vocab_dir  # BOW is directly in vocab_* dir
+            topic_words_dir = model_dir
     
-    # Legacy config-based BOW resolution as final fallback
-    if bow_dir is None:
-        config_file = model_dir.parent / 'config.json' if model_dir else None
-        if config_file and config_file.exists():
-            try:
-                with open(config_file, 'r') as f:
-                    train_config = json.load(f)
-                data_exp = train_config.get('data_exp', '')
-                ms = train_config.get('model_size', model_size or '')
-                ds = train_config.get('dataset', dataset)
-                if data_exp and data_exp != 'legacy':
-                    # New exp structure: find bow in data exp dir
-                    candidate = result_dir.parent.parent / 'data' / data_exp / 'bow'
-                    if not candidate.exists() and ms:
-                        result_base_env = Path(os.environ.get('RESULT_DIR', 'result'))
-                        candidate = result_base_env / ms / ds / 'data' / data_exp / 'bow'
-                    if candidate.exists():
-                        bow_dir = candidate
-            except Exception:
-                pass
+    # ==========================================================================
+    # Fallback for legacy structures
+    # ==========================================================================
+    
+    if model_dir is None or not model_dir.exists():
+        # Try legacy THETA paths
+        legacy_paths = [
+            result_dir / dataset / mode / 'model',
+            result_dir / dataset / mode / 'theta',
+            result_dir / model_size / dataset / 'theta' if model_size else None,
+        ]
+        for p in legacy_paths:
+            if p and p.exists():
+                model_dir = p
+                bow_dir = p.parent / 'bow'
+                evaluation_dir = p.parent / 'evaluation'
+                topic_words_dir = p.parent / 'topic_words'
+                break
+    
+    if model_dir is None or not model_dir.exists():
+        raise FileNotFoundError(
+            f"Could not find model directory.\n"
+            f"  Model type: {model_type}\n"
+            f"  Dataset: {dataset}\n"
+            f"  Model size: {model_size}\n"
+            f"  Searched in: {result_dir}"
+        )
+    
+    # ==========================================================================
+    # Generate file names based on model type
+    # ==========================================================================
+    
+    if is_theta:
+        # THETA uses fixed filenames (no K suffix)
+        theta_fixed = "theta.npy"
+        beta_fixed = "beta.npy"
+        topic_emb_fixed = "topic_embeddings.npy"
+        topic_words_fixed = "topic_words.json"
+        history_fixed = "training_history.json"
+        theta_pattern = "theta_*.npy"
+        beta_pattern = "beta_*.npy"
+        topic_emb_pattern = "topic_embeddings_*.npy"
+        topic_words_pattern = "topic_words_*.json"
+        history_pattern = "training_history_*.json"
+    else:
+        # Baseline uses K-suffixed filenames
+        if num_topics is None:
+            # Auto-detect num_topics from existing files
+            theta_files = list(model_dir.glob('theta_k*.npy'))
+            if theta_files:
+                # Extract K from filename like theta_k20.npy
+                import re
+                match = re.search(r'theta_k(\d+)\.npy', theta_files[0].name)
+                if match:
+                    num_topics = int(match.group(1))
+        
+        if num_topics:
+            theta_fixed = f"theta_k{num_topics}.npy"
+            beta_fixed = f"beta_k{num_topics}.npy"
+            topic_words_fixed = f"topic_words_k{num_topics}.json"
+            history_fixed = f"training_history_k{num_topics}.json"
+        else:
+            theta_fixed = None
+            beta_fixed = None
+            topic_words_fixed = None
+            history_fixed = None
+        
+        topic_emb_fixed = None  # Baseline doesn't have topic embeddings
+        theta_pattern = "theta_k*.npy"
+        beta_pattern = "beta_k*.npy"
+        topic_emb_pattern = None
+        topic_words_pattern = "topic_words_k*.json"
+        history_pattern = "training_history_k*.json"
     
     print(f"\n{'='*60}")
     print(f"Loading visualization data")
     print(f"{'='*60}")
+    print(f"Model type: {model_type}")
     print(f"Model directory: {model_dir}")
     if topic_words_dir:
         print(f"Topic words directory: {topic_words_dir}")
@@ -194,33 +230,37 @@ def load_visualization_data(result_dir, dataset, mode, model_size=None, model_ex
         print(f"Evaluation directory: {evaluation_dir}")
     
     data = {}
+    data['model_type'] = model_type
+    data['is_theta'] = is_theta
     
     # Load theta (document-topic distribution)
-    theta_file = find_latest_file(model_dir, "theta_*.npy")
+    # Use dynamically generated filenames based on model type
+    theta_file = find_latest_file(model_dir, theta_pattern, fixed_name=theta_fixed)
     if theta_file:
         data['theta'] = np.load(theta_file)
-        print(f"✓ Loaded theta: {data['theta'].shape}")
+        print(f"✓ Loaded theta: {data['theta'].shape} from {Path(theta_file).name}")
     else:
-        raise FileNotFoundError(f"theta not found in {model_dir}")
+        raise FileNotFoundError(f"theta not found in {model_dir}, expected: {theta_fixed or theta_pattern}")
     
     # Load beta (topic-word distribution)
-    beta_file = find_latest_file(model_dir, "beta_*.npy")
+    beta_file = find_latest_file(model_dir, beta_pattern, fixed_name=beta_fixed)
     if beta_file:
         data['beta'] = np.load(beta_file)
-        print(f"✓ Loaded beta: {data['beta'].shape}")
+        print(f"✓ Loaded beta: {data['beta'].shape} from {Path(beta_file).name}")
     else:
-        raise FileNotFoundError(f"beta not found in {model_dir}")
+        raise FileNotFoundError(f"beta not found in {model_dir}, expected: {beta_fixed or beta_pattern}")
     
-    # Load topic embeddings
-    emb_file = find_latest_file(model_dir, "topic_embeddings_*.npy")
-    if emb_file:
-        data['topic_embeddings'] = np.load(emb_file)
-        print(f"✓ Loaded topic_embeddings: {data['topic_embeddings'].shape}")
+    # Load topic embeddings (THETA only)
+    if topic_emb_pattern:
+        emb_file = find_latest_file(model_dir, topic_emb_pattern, fixed_name=topic_emb_fixed)
+        if emb_file:
+            data['topic_embeddings'] = np.load(emb_file)
+            print(f"✓ Loaded topic_embeddings: {data['topic_embeddings'].shape}")
     
-    # Load topic words - try topic_words_dir first, then model_dir
-    words_file = find_latest_file(topic_words_dir, "topic_words_*.json")
+    # Load topic words - use dynamically generated filenames
+    words_file = find_latest_file(topic_words_dir, topic_words_pattern, fixed_name=topic_words_fixed)
     if not words_file:
-        words_file = find_latest_file(model_dir, "topic_words_*.json")
+        words_file = find_latest_file(model_dir, topic_words_pattern, fixed_name=topic_words_fixed)
     
     if words_file:
         with open(words_file, 'r', encoding='utf-8') as f:
@@ -250,28 +290,46 @@ def load_visualization_data(result_dir, dataset, mode, model_size=None, model_ex
             data['topic_words'].append((i, words))
         print(f"⚠ Generated topic_words from beta: {len(data['topic_words'])} topics")
     
-    # Load training history
-    history_file = find_latest_file(model_dir, "training_history_*.json")
+    # Load training history - use dynamically generated filenames
+    history_file = find_latest_file(model_dir, history_pattern, fixed_name=history_fixed)
     if history_file:
         with open(history_file, 'r', encoding='utf-8') as f:
             data['training_history'] = json.load(f)
         print(f"✓ Loaded training_history: {len(data['training_history'].get('train_loss', []))} epochs")
     
-    # Load evaluation metrics
-    metrics_file = find_latest_file(evaluation_dir, "metrics_*.json")
-    if metrics_file:
-        with open(metrics_file, 'r', encoding='utf-8') as f:
-            data['metrics'] = json.load(f)
-        print(f"✓ Loaded metrics")
+    # Load evaluation metrics (THETA only has metrics.json in exp_dir)
+    if is_theta and evaluation_dir:
+        metrics_file = find_latest_file(evaluation_dir, "metrics_*.json", fixed_name="metrics.json")
+        if metrics_file:
+            with open(metrics_file, 'r', encoding='utf-8') as f:
+                data['metrics'] = json.load(f)
+            print(f"✓ Loaded metrics")
+    elif not is_theta:
+        # Baseline has info_k{K}.json instead of metrics.json
+        info_fixed = f"info_k{num_topics}.json" if num_topics else None
+        info_file = find_latest_file(model_dir, "info_k*.json", fixed_name=info_fixed)
+        if info_file:
+            with open(info_file, 'r', encoding='utf-8') as f:
+                data['metrics'] = json.load(f)
+            print(f"✓ Loaded model info as metrics")
     
     # Load vocab
-    vocab_file = bow_dir / 'vocab.txt'
-    if vocab_file.exists():
-        with open(vocab_file, 'r', encoding='utf-8') as f:
-            data['vocab'] = [line.strip() for line in f.readlines()]
-        print(f"✓ Loaded vocab: {len(data['vocab'])} words")
+    if bow_dir and bow_dir.exists():
+        vocab_file = bow_dir / 'vocab.txt'
+        vocab_json = bow_dir / 'vocab.json'
+        if vocab_file.exists():
+            with open(vocab_file, 'r', encoding='utf-8') as f:
+                data['vocab'] = [line.strip() for line in f.readlines()]
+            print(f"✓ Loaded vocab: {len(data['vocab'])} words")
+        elif vocab_json.exists():
+            with open(vocab_json, 'r', encoding='utf-8') as f:
+                data['vocab'] = json.load(f)
+            print(f"✓ Loaded vocab from JSON: {len(data['vocab'])} words")
+        else:
+            # Generate placeholder vocab
+            data['vocab'] = [f"word_{i}" for i in range(data['beta'].shape[1])]
+            print(f"⚠ Generated placeholder vocab: {len(data['vocab'])} words")
     else:
-        # Generate placeholder vocab
         data['vocab'] = [f"word_{i}" for i in range(data['beta'].shape[1])]
         print(f"⚠ Generated placeholder vocab: {len(data['vocab'])} words")
     
@@ -307,53 +365,53 @@ def run_all_visualizations(
     model_size=None,
     output_dir=None,
     language='en',
-    dpi=300
+    dpi=300,
+    model_type='theta',
+    num_topics=None,
+    model_exp=None
 ):
     """
-    Run all visualizations for ETM results.
+    Run all visualizations for ETM/Baseline results.
     
     Args:
         result_dir: Base result directory
         dataset: Dataset name
         mode: Training mode
-        model_size: Optional model size subdirectory
-        output_dir: Output directory for visualizations (default: result_dir/.../visualization)
+        model_size: Model size for THETA (e.g., 0.6B)
+        output_dir: Output directory for visualizations
         language: Language for labels ('en' or 'zh')
         dpi: DPI for saved figures
+        model_type: 'theta' | 'lda' | 'etm' | 'ctm_combined' | 'ctm_zeroshot'
+        num_topics: Number of topics (required for baseline models)
+        model_exp: Specific experiment ID
     
     Returns:
         Path to output directory
     """
-    # Load data
-    data = load_visualization_data(result_dir, dataset, mode, model_size)
+    # Load data with model type awareness
+    data = load_visualization_data(
+        result_dir, dataset, mode, 
+        model_size=model_size, 
+        model_exp=model_exp,
+        model_type=model_type, 
+        num_topics=num_topics
+    )
     
-    # Determine output directory
-    # New structure: result/{model_size}/{dataset}/{language}/
+    is_theta = model_type == 'theta'
+    
+    # Determine output directory based on model type
     if output_dir is None:
         result_dir = Path(result_dir)
-        result_base = result_dir.parent if model_size and model_size in str(result_dir) else result_dir
         
-        # Find latest experiment directory
-        theta_base = result_base / dataset / 'models' if model_size and model_size in str(result_dir) else result_base / model_size / dataset / 'models' if model_size else result_base / dataset / 'models'
-        if theta_base.exists():
-            exp_dirs = sorted(theta_base.glob('exp_*'), key=lambda p: p.stat().st_mtime, reverse=True)
-            if exp_dirs:
-                # Output to result/{model_size}/{dataset}/{lang}/
-                if model_size and model_size in str(result_dir):
-                    output_dir = result_dir / dataset / language
-                elif model_size:
-                    output_dir = result_base / model_size / dataset / language
-                else:
-                    output_dir = result_base / dataset / language
+        if is_theta:
+            # THETA: result/{dataset}/{model_size}/theta/visualization/
+            if model_size:
+                output_dir = result_dir / dataset / model_size / 'theta' / 'visualization' / language
             else:
-                output_dir = theta_base / language
+                output_dir = result_dir / dataset / 'theta' / 'visualization' / language
         else:
-            if model_size and model_size in str(result_dir):
-                output_dir = result_dir / dataset / language
-            elif model_size:
-                output_dir = result_base / model_size / dataset / language
-            else:
-                output_dir = result_dir / dataset / language
+            # Baseline: result/baseline/{dataset}/visualization/{model_type}/
+            output_dir = result_dir / 'baseline' / dataset / 'visualization' / model_type / language
     
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -1540,7 +1598,9 @@ Examples:
             model_size=args.model_size,
             output_dir=args.output_dir,
             language=args.language,
-            dpi=args.dpi
+            dpi=args.dpi,
+            model_type='theta',
+            num_topics=args.num_topics
         )
 
 
