@@ -84,6 +84,9 @@ def parse_args():
     # STM specific parameters
     parser.add_argument('--covariate_columns', type=str, nargs='+', default=None,
                         help='Covariate column names for STM (e.g., --covariate_columns province year)')
+    # Supervised learning parameters
+    parser.add_argument('--label_col', type=str, default='label',
+                        help='Label column name for supervised learning (default: label)')
     parser.add_argument('--exp_name', type=str, default=None,
                         help='Experiment name tag (appended to exp_id)')
     
@@ -511,12 +514,19 @@ def find_data_file(dataset: str) -> Optional[Path]:
     return None
 
 
-def load_texts(data_path: Path) -> Tuple[List[str], Optional[np.ndarray]]:
+def load_texts(data_path: Path, label_col: str = 'label') -> Tuple[List[str], Optional[np.ndarray]]:
     """Load text data
     
     Column naming convention (strict mode):
     - Text column: must be named 'text'
-    - Label column: must be named 'label'
+    - Label column: specified by label_col parameter (default: 'label')
+    
+    Args:
+        data_path: Path to CSV file
+        label_col: Name of the label column (default: 'label')
+    
+    Returns:
+        Tuple of (texts list, labels array or None)
     """
     print(f"Loading data from {data_path}")
     df = pd.read_csv(data_path)
@@ -544,18 +554,25 @@ def load_texts(data_path: Path) -> Tuple[List[str], Optional[np.ndarray]]:
     
     texts = df[text_col].fillna('').astype(str).tolist()
     
-    # Find label column - strict mode: require 'label' column
+    # Find label column - use specified label_col parameter
     labels = None
-    if 'label' in df.columns:
-        labels = df['label'].values
+    if label_col in df.columns:
+        labels = df[label_col].values
+        print(f"  Label column: '{label_col}' ({len(np.unique(labels))} unique classes)")
     else:
         # Fallback for backward compatibility
-        for col in ['Label', 'labels', 'category', 'subreddit_id']:
-            if col in df.columns:
+        fallback_cols = ['label', 'Label', 'labels', 'category', 'subreddit_id']
+        for col in fallback_cols:
+            if col in df.columns and col != label_col:
                 labels = df[col].values
-                print(f"  [WARNING] Using legacy label column '{col}'. "
-                      f"Please rename to 'label' for strict compliance.")
+                print(f"  [WARNING] Specified label column '{label_col}' not found. "
+                      f"Using fallback column '{col}'. "
+                      f"Available columns: {df.columns.tolist()}")
                 break
+        
+        if labels is None:
+            print(f"  [INFO] No label column found (tried: '{label_col}' and fallbacks {fallback_cols}). "
+                  f"Labels will not be saved. Available columns: {df.columns.tolist()}")
     
     print(f"Loaded {len(texts)} documents, text_col={text_col}")
     return texts, labels
@@ -914,8 +931,8 @@ def prepare_theta_data(args):
         print(f"  Data file not found: {DATA_DIR}/{dataset}/")
         return False
     
-    # Load texts
-    texts, labels = load_texts(data_path)
+    # Load texts (pass label_col for supervised mode)
+    texts, labels = load_texts(data_path, label_col=args.label_col)
     
     # Generate experiment ID with timestamp
     from datetime import datetime
@@ -1006,8 +1023,8 @@ def prepare_baseline_data(args):
         args.covariate_columns = detection_result['covariate_columns']
         print(f"  [Auto] Using detected covariate columns: {args.covariate_columns}")
     
-    # Load texts
-    texts, labels = load_texts(data_path)
+    # Load texts (pass label_col for supervised mode)
+    texts, labels = load_texts(data_path, label_col=args.label_col)
     
     # Generate experiment ID with timestamp
     from datetime import datetime

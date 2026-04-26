@@ -14,10 +14,12 @@ import sys
 import json
 import logging
 import numpy as np
+import pandas as pd
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple, List
 from scipy import sparse
+from sklearn.preprocessing import LabelEncoder
 
 import torch
 import torch.distributed as dist
@@ -262,6 +264,112 @@ def load_doc_embeddings(
     return embeddings, labels
 
 
+def load_labels_for_supervised(
+    config: PipelineConfig,
+    logger: logging.Logger,
+    num_docs: int
+) -> Tuple[Optional[np.ndarray], int, Optional[LabelEncoder]]:
+    """
+    Load labels for supervised learning mode.
+    
+    IMPORTANT: Labels must be aligned with embeddings.npy (same row count).
+    Priority order:
+    1. labels.npy from embeddings directory (saved during preprocessing, guaranteed aligned)
+    2. CSV file (only if row count matches num_docs)
+    
+    Args:
+        config: Pipeline configuration
+        logger: Logger instance
+        num_docs: Number of documents in embeddings.npy (for alignment check)
+        
+    Returns:
+        Tuple of (encoded_labels, num_classes, label_encoder)
+        Returns (None, 0, None) if not in supervised mode or labels not available
+        
+    Note:
+        The label_encoder should be saved to label_mapping.json for inference.
+    """
+    if config.embedding.mode != 'supervised':
+        return None, 0, None
+    
+    # Priority 1: Try to load labels.npy from embeddings directory (aligned with embeddings)
+    embedding_dir = config.embeddings_dir
+    label_npy_candidates = [
+        os.path.join(embedding_dir, "labels.npy"),
+        os.path.join(embedding_dir, f"{config.data.dataset}_{config.embedding.mode}_labels.npy"),
+    ]
+    
+    for label_path in label_npy_candidates:
+        if os.path.exists(label_path):
+            logger.info(f"Loading labels from preprocessed file: {label_path}")
+            raw_labels = np.load(label_path, allow_pickle=True)
+            
+            # Verify alignment
+            if len(raw_labels) != num_docs:
+                logger.warning(
+                    f"Labels count mismatch: labels.npy has {len(raw_labels)} rows, "
+                    f"but embeddings has {num_docs} rows. Skipping this file."
+                )
+                continue
+            
+            # Encode labels
+            label_encoder = LabelEncoder()
+            encoded_labels = label_encoder.fit_transform(raw_labels)
+            num_classes = len(label_encoder.classes_)
+            
+            logger.info(f"Loaded {len(encoded_labels)} labels, {num_classes} classes")
+            logger.info(f"Class mapping: {dict(zip(label_encoder.classes_, range(num_classes)))}")
+            
+            return encoded_labels.astype(np.int64), num_classes, label_encoder
+    
+    # Priority 2: Fallback to CSV (with strict alignment check)
+    csv_path = config.data.raw_data_path
+    if not os.path.exists(csv_path):
+        csv_path = config.data.cleaned_data_path
+    
+    if not os.path.exists(csv_path):
+        raise FileNotFoundError(
+            f"Cannot find labels for supervised learning. "
+            f"No labels.npy in {embedding_dir} and no CSV file found. "
+            f"Tried: {config.data.raw_data_path}, {config.data.cleaned_data_path}"
+        )
+    
+    logger.info(f"Loading labels from CSV: {csv_path}")
+    df = pd.read_csv(csv_path)
+    
+    # CRITICAL: Check alignment with embeddings
+    if len(df) != num_docs:
+        raise ValueError(
+            f"ALIGNMENT ERROR: CSV has {len(df)} rows but embeddings has {num_docs} rows. "
+            f"This can happen if preprocessing dropped some rows (e.g., invalid timestamps in DTM mode). "
+            f"Please ensure labels.npy is saved during preprocessing, or use the same CSV that was preprocessed."
+        )
+    
+    # Get label column name from config
+    label_col = getattr(config, 'label_col', 'label')
+    
+    if label_col not in df.columns:
+        available_cols = ', '.join(df.columns.tolist())
+        raise ValueError(
+            f"Label column '{label_col}' not found in dataset. "
+            f"Available columns: [{available_cols}]. "
+            f"Please specify the correct column name using --label_col argument."
+        )
+    
+    raw_labels = df[label_col].values
+    
+    label_encoder = LabelEncoder()
+    encoded_labels = label_encoder.fit_transform(raw_labels)
+    num_classes = len(label_encoder.classes_)
+    
+    logger.info(f"Label column: '{label_col}'")
+    logger.info(f"Unique classes: {num_classes}")
+    logger.info(f"Class mapping: {dict(zip(label_encoder.classes_, range(num_classes)))}")
+    logger.info(f"Labels shape: {encoded_labels.shape}")
+    
+    return encoded_labels.astype(np.int64), num_classes, label_encoder
+
+
 def train_etm(
     doc_embeddings: np.ndarray,
     bow_matrix: sparse.csr_matrix,
@@ -297,6 +405,20 @@ def train_etm(
         logger.info(f"Device: {device}")
         logger.info(f"DDP enabled: {use_ddp}, world_size: {world_size}")
         logger.info(f"Config: num_topics={config.model.num_topics}, epochs={config.model.epochs}, batch_size={config.model.batch_size}")
+        logger.info(f"Mode: {config.embedding.mode}")
+    
+    # Load labels for supervised mode (pass num_docs for alignment check)
+    num_docs = doc_embeddings.shape[0]
+    labels, num_classes, label_encoder = load_labels_for_supervised(config, logger, num_docs)
+    
+    if config.embedding.mode == 'supervised':
+        if labels is None:
+            raise ValueError(
+                "Supervised mode requires labels. Please ensure labels.npy exists in embeddings directory, "
+                "or your CSV file contains a label column (specify with --label_col if needed)."
+            )
+        if is_main_process(local_rank):
+            logger.info(f"Supervised mode enabled: num_classes={num_classes}")
     
     # Create dataset
     # For large datasets, keep BOW in sparse format to avoid massive memory usage
@@ -306,6 +428,7 @@ def train_etm(
     dataset = ETMDataset(
         doc_embeddings=doc_embeddings,
         bow_matrix=bow_matrix,
+        labels=labels,  # Pass labels for supervised mode
         normalize_bow=True,
         dev_mode=config.dev_mode,
         keep_sparse=use_sparse
@@ -397,6 +520,7 @@ def train_etm(
         encoder_dropout=config.model.encoder_dropout,
         word_embeddings=word_emb_tensor,
         train_word_embeddings=config.model.train_word_embeddings,
+        num_classes=num_classes,  # For supervised mode
         dev_mode=config.dev_mode
     ).to(device)
     
@@ -435,6 +559,23 @@ def train_etm(
         'perplexity': []  # Track perplexity during training
     }
     
+    # Initialize AdaptiveLossWeighter for supervised mode
+    loss_weighter = None
+    if config.embedding.mode == 'supervised':
+        from model.theta.loss_weighter import AdaptiveLossWeighter
+        loss_weighter = AdaptiveLossWeighter(
+            warmup_steps=100,
+            ema_decay=0.99,
+            target_ratio={'ce': 0.7, 'recon': 0.3},  # Prioritize classification
+            warmup_ce_weight=10.0,  # High initial CE weight to prevent classifier drift
+            min_weight=0.1,
+            max_weight=50.0
+        )
+        if is_main_process(local_rank):
+            logger.info("AdaptiveLossWeighter initialized for supervised mode")
+            logger.info(f"  Target ratio: CE=70%, Recon=30%")
+            logger.info(f"  Warmup CE weight: 10.0 (for first 100 steps)")
+    
     best_val_loss = float('inf')
     best_model_state = None
     patience_counter = 0
@@ -456,16 +597,38 @@ def train_etm(
         model.train()
         train_loss = 0.0
         
+        # Get current mode
+        current_mode = config.embedding.mode
+        
         for batch in train_loader:
             doc_emb = batch['doc_embedding'].to(device)
             bow = batch['bow'].to(device)
+            batch_labels = batch.get('label', None)
+            if batch_labels is not None:
+                batch_labels = batch_labels.to(device)
             
             optimizer.zero_grad()
-            output = model(doc_emb, bow, kl_weight=kl_weight)
-            loss = output['total_loss']
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-            optimizer.step()
+            output = model(doc_emb, bow, labels=batch_labels, mode=current_mode, kl_weight=kl_weight)
+            
+            # Compute loss with adaptive weighting for supervised mode
+            if current_mode == 'supervised' and loss_weighter is not None:
+                # Get adaptive weights (only for CE and Recon, NOT KL)
+                weights = loss_weighter.update({
+                    'ce': output['ce_loss'],
+                    'recon': output['recon_loss']
+                })
+                # Compute weighted loss: w_ce * CE + w_recon * Recon + KL (KL uses fixed weight)
+                loss = (weights['ce'] * output['ce_loss'] + 
+                        weights['recon'] * output['recon_loss'] + 
+                        output['kl_loss'])  # kl_loss already includes kl_weight
+            else:
+                loss = output['total_loss']
+            
+            # Only backward if not zero_shot mode
+            if current_mode != 'zero_shot':
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                optimizer.step()
             
             train_loss += loss.item() * doc_emb.size(0)
         
@@ -476,20 +639,43 @@ def train_etm(
         val_loss = 0.0
         val_recon = 0.0
         val_kl = 0.0
+        val_ce = 0.0  # Track CE loss for supervised mode
+        val_contrastive = 0.0  # Track contrastive loss for unsupervised mode
         
         with torch.no_grad():
             for batch in val_loader:
                 doc_emb = batch['doc_embedding'].to(device)
                 bow = batch['bow'].to(device)
+                batch_labels = batch.get('label', None)
+                if batch_labels is not None:
+                    batch_labels = batch_labels.to(device)
                 
-                output = model(doc_emb, bow, kl_weight=kl_weight)
-                val_loss += output['total_loss'].item() * doc_emb.size(0)
+                output = model(doc_emb, bow, labels=batch_labels, mode=current_mode, kl_weight=kl_weight)
+                
+                # Use same weighting logic as training for consistent val_loss
+                if current_mode == 'supervised' and loss_weighter is not None:
+                    weights = loss_weighter.get_weights()  # Use frozen weights, don't update
+                    batch_loss = (weights['ce'] * output['ce_loss'].item() + 
+                                  weights['recon'] * output['recon_loss'].item() + 
+                                  output['kl_loss'].item())
+                    val_ce += output['ce_loss'].item() * doc_emb.size(0)
+                else:
+                    batch_loss = output['total_loss'].item()
+                    # Track contrastive loss for unsupervised mode
+                    if 'contrastive_loss' in output:
+                        val_contrastive += output['contrastive_loss'].item() * doc_emb.size(0)
+                
+                val_loss += batch_loss * doc_emb.size(0)
                 val_recon += output['recon_loss'].item() * doc_emb.size(0)
                 val_kl += output['kl_loss'].item() * doc_emb.size(0)
         
         val_loss /= n_val
         val_recon /= n_val
         val_kl /= n_val
+        if current_mode == 'supervised':
+            val_ce /= n_val
+        if current_mode == 'unsupervised':
+            val_contrastive /= n_val
         
         # Compute perplexity on validation set
         # Perplexity = exp(negative log-likelihood per word)
@@ -545,12 +731,27 @@ def train_etm(
             scheduler.step(val_loss)
         
         if is_main_process(local_rank):
-            logger.info(
-                f"Epoch {epoch+1:3d}/{config.model.epochs} | "
-                f"Train: {train_loss:.4f} | Val: {val_loss:.4f} | "
-                f"Recon: {val_recon:.4f} | KL: {val_kl:.4f} | "
-                f"PPL: {val_perplexity:.1f} | KL_w: {kl_weight:.3f} {marker}"
-            )
+            if current_mode == 'supervised' and loss_weighter is not None:
+                weights = loss_weighter.get_weights()
+                logger.info(
+                    f"Epoch {epoch+1:3d}/{config.model.epochs} | "
+                    f"Train: {train_loss:.4f} | Val: {val_loss:.4f} | "
+                    f"CE: {val_ce:.4f} | Recon: {val_recon:.4f} | KL: {val_kl:.4f} | "
+                    f"w_ce: {weights['ce']:.2f} | PPL: {val_perplexity:.1f} {marker}"
+                )
+            elif current_mode == 'unsupervised':
+                logger.info(
+                    f"Epoch {epoch+1:3d}/{config.model.epochs} | "
+                    f"Train: {train_loss:.4f} | Val: {val_loss:.4f} | "
+                    f"NLL: {val_recon:.4f} | Contr: {val_contrastive:.4f} | KL: {val_kl:.4f} | "
+                    f"PPL: {val_perplexity:.1f} | KL_w: {kl_weight:.3f} {marker}"
+                )
+            else:  # zero_shot
+                logger.info(
+                    f"Epoch {epoch+1:3d}/{config.model.epochs} | "
+                    f"Train: {train_loss:.4f} | Val: {val_loss:.4f} | "
+                    f"PPL: {val_perplexity:.1f} {marker}"
+                )
         
         # Periodic topic quality check (every 10 epochs or at end) - only on main process
         if is_main_process(local_rank) and ((epoch + 1) % 10 == 0 or epoch == config.model.epochs - 1 or improved):
@@ -698,6 +899,18 @@ def save_results(
     
     # Save model weights
     torch.save(model.state_dict(), os.path.join(config.model_dir, "etm_model.pt"))
+    
+    # Save label mapping for supervised mode (for inference)
+    if config.embedding.mode == 'supervised' and label_encoder is not None:
+        label_mapping = {
+            "index_to_label": {int(i): str(label) for i, label in enumerate(label_encoder.classes_)},
+            "label_to_index": {str(label): int(i) for i, label in enumerate(label_encoder.classes_)},
+            "num_classes": int(num_classes)
+        }
+        label_mapping_path = os.path.join(config.model_dir, "label_mapping.json")
+        with open(label_mapping_path, 'w', encoding='utf-8') as f:
+            json.dump(label_mapping, f, indent=2, ensure_ascii=False)
+        logger.info(f"Label mapping saved to {label_mapping_path}")
     
     # Save config to exp_dir (parent of model_dir)
     config.save(os.path.join(config.exp_dir, "config.json"))

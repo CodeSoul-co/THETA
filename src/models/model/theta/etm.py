@@ -49,6 +49,9 @@ class ETM(nn.Module):
         word_embeddings: Optional[torch.Tensor] = None,
         train_word_embeddings: bool = False,
         kl_weight: float = 0.5,            # Weight for KL divergence loss
+        num_classes: int = 0,              # Number of classes for supervised mode (0 = disabled)
+        contrastive_weight: float = 0.1,   # Weight for contrastive loss (unsupervised mode)
+        contrastive_temp: float = 0.07,    # Temperature for contrastive loss
         dev_mode: bool = False
     ):
         """
@@ -64,7 +67,14 @@ class ETM(nn.Module):
             encoder_activation: Activation function for encoder
             word_embeddings: Pre-trained word embeddings (V x E)
             train_word_embeddings: Whether to fine-tune word embeddings
+            num_classes: Number of classes for supervised learning (0 = disabled)
+            contrastive_weight: Weight for contrastive loss in unsupervised mode
+            contrastive_temp: Temperature for contrastive loss (lower = sharper)
             dev_mode: Print debug information
+            
+        Note:
+            - Supervised mode: CE + Recon + KL (with AdaptiveLossWeighter)
+            - Unsupervised mode: NLL + Contrastive + KL
         """
         super(ETM, self).__init__()
         
@@ -74,6 +84,9 @@ class ETM(nn.Module):
         self.word_embedding_dim = word_embedding_dim
         self.hidden_dim = hidden_dim
         self.kl_weight = kl_weight
+        self.num_classes = num_classes
+        self.contrastive_weight = contrastive_weight
+        self.contrastive_temp = contrastive_temp
         self.dev_mode = dev_mode
         
         # Encoder: doc_embedding -> theta
@@ -94,6 +107,14 @@ class ETM(nn.Module):
             train_embeddings=train_word_embeddings
         )
         
+        # Classification head for supervised mode
+        if num_classes > 0:
+            self.classifier = nn.Linear(num_topics, num_classes)
+            self.ce_loss_fn = nn.CrossEntropyLoss()
+        else:
+            self.classifier = None
+            self.ce_loss_fn = None
+        
         if self.dev_mode:
             print(f"[DEV] ETM initialized:")
             print(f"[DEV]   vocab_size={vocab_size}")
@@ -101,11 +122,68 @@ class ETM(nn.Module):
             print(f"[DEV]   doc_embedding_dim={doc_embedding_dim}")
             print(f"[DEV]   word_embedding_dim={word_embedding_dim}")
             print(f"[DEV]   hidden_dim={hidden_dim}")
+            print(f"[DEV]   num_classes={num_classes} (supervised={'enabled' if num_classes > 0 else 'disabled'})")
+            print(f"[DEV]   contrastive_weight={contrastive_weight}, contrastive_temp={contrastive_temp}")
+    
+    def _compute_contrastive_loss(
+        self,
+        theta: torch.Tensor,
+        doc_embeddings: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Compute contrastive loss between topic distributions and document embeddings.
+        
+        This loss encourages documents with similar semantic content (similar Qwen embeddings)
+        to have similar topic distributions, and vice versa.
+        
+        Uses InfoNCE loss:
+            L = -log(exp(sim(z_i, z_i+) / τ) / Σ_j exp(sim(z_i, z_j) / τ))
+        
+        Args:
+            theta: Topic distributions, shape (batch_size, num_topics)
+            doc_embeddings: Document embeddings, shape (batch_size, doc_embedding_dim)
+            
+        Returns:
+            Contrastive loss (scalar)
+        """
+        batch_size = theta.shape[0]
+        
+        if batch_size < 2:
+            return torch.tensor(0.0, device=theta.device)
+        
+        # L2 normalize both representations
+        theta_norm = F.normalize(theta, p=2, dim=1)
+        doc_norm = F.normalize(doc_embeddings, p=2, dim=1)
+        
+        # Compute similarity matrix between theta and doc_embeddings
+        # sim[i, j] = similarity between theta[i] and doc_embedding[j]
+        # We want diagonal elements (positive pairs) to be high
+        
+        # Project doc_embeddings to topic space for fair comparison
+        # Use a simple linear projection (reuse encoder's first layer weights conceptually)
+        # Actually, we compute cross-modal similarity directly
+        
+        # Compute cosine similarity within each modality
+        theta_sim = torch.mm(theta_norm, theta_norm.t()) / self.contrastive_temp  # (B, B)
+        doc_sim = torch.mm(doc_norm, doc_norm.t()) / self.contrastive_temp  # (B, B)
+        
+        # Soft labels: documents with similar embeddings should have similar topics
+        # Use doc_sim as soft targets for theta_sim
+        doc_soft_labels = F.softmax(doc_sim, dim=1)
+        
+        # Cross-entropy between theta similarity and doc similarity (soft labels)
+        # This encourages theta to preserve the similarity structure of doc_embeddings
+        log_theta_sim = F.log_softmax(theta_sim, dim=1)
+        contrastive_loss = -torch.sum(doc_soft_labels * log_theta_sim, dim=1).mean()
+        
+        return contrastive_loss
     
     def forward(
         self,
         doc_embeddings: torch.Tensor,
         bow_targets: torch.Tensor,
+        labels: Optional[torch.Tensor] = None,
+        mode: str = 'unsupervised',
         compute_loss: bool = True,
         kl_weight: float = 1.0
     ) -> Dict[str, torch.Tensor]:
@@ -115,6 +193,8 @@ class ETM(nn.Module):
         Args:
             doc_embeddings: Document embeddings from Qwen, shape (batch, doc_emb_dim)
             bow_targets: BOW target for reconstruction, shape (batch, vocab_size)
+            labels: Optional labels for supervised mode, shape (batch,)
+            mode: Training mode - 'zero_shot', 'supervised', or 'unsupervised'
             compute_loss: Whether to compute loss
             kl_weight: Weight for KL divergence loss
             
@@ -142,24 +222,79 @@ class ETM(nn.Module):
         }
         
         if compute_loss:
-            # BOW is already normalized in ETMDataset, use directly
-            # bow_targets should sum to 1 for each document
-            
-            # 1. Reconstruction loss: negative log likelihood (cross-entropy)
-            # recon_loss = -sum(p_true * log(p_pred)) where p_true is normalized BOW
-            recon_loss = -torch.sum(bow_targets * log_word_dist, dim=-1).mean()
-            
-            # 2. KL divergence for variational inference
-            # Use free bits strategy: ensure minimum KL per dimension to prevent posterior collapse
-            # This encourages the model to use the latent space
-            free_bits = 0.5  # Minimum KL per topic dimension
-            kl_per_dim = kl_theta_loss  # Already averaged over batch
-            kl_loss = kl_weight * torch.clamp(kl_per_dim, min=free_bits)
-            
-            output['recon_loss'] = recon_loss
-            output['kl_theta_loss'] = kl_theta_loss
-            output['kl_loss'] = kl_loss
-            output['total_loss'] = recon_loss + kl_loss
+            # Mode-based loss routing
+            if mode == 'zero_shot':
+                # Zero-shot: no training loss, pure feature extraction
+                output['total_loss'] = torch.tensor(0.0, device=doc_embeddings.device)
+                output['recon_loss'] = torch.tensor(0.0, device=doc_embeddings.device)
+                output['kl_loss'] = torch.tensor(0.0, device=doc_embeddings.device)
+                
+            elif mode == 'supervised':
+                # Supervised: classification loss + reconstruction loss + KL divergence
+                # This joint loss preserves topic model structure while learning classification
+                # 
+                # NOTE: Loss weighting is handled externally by AdaptiveLossWeighter
+                # This method returns raw losses; the training loop computes:
+                #   total_loss = w_ce * ce_loss + w_recon * recon_loss + kl_loss
+                # where w_ce and w_recon are adaptive weights, and kl_loss uses fixed kl_weight
+                # to avoid posterior collapse.
+                if self.classifier is None:
+                    raise ValueError("Supervised mode requires num_classes > 0 during model initialization")
+                if labels is None:
+                    raise ValueError("Supervised mode requires labels")
+                
+                # 1. Classification loss (raw, unweighted)
+                logits = self.classifier(theta)
+                ce_loss = self.ce_loss_fn(logits, labels)
+                
+                # 2. Reconstruction loss (raw, unweighted)
+                recon_loss = -torch.sum(bow_targets * log_word_dist, dim=-1).mean()
+                
+                # 3. KL divergence with free bits (uses fixed kl_weight, NOT adaptive)
+                free_bits = 0.5
+                kl_loss = kl_weight * torch.clamp(kl_theta_loss, min=free_bits)
+                
+                output['logits'] = logits
+                output['ce_loss'] = ce_loss
+                output['recon_loss'] = recon_loss
+                output['kl_theta_loss'] = kl_theta_loss
+                output['kl_loss'] = kl_loss
+                # Note: total_loss is computed by training loop with adaptive weights
+                # Default fallback (if not using adaptive weighting):
+                output['total_loss'] = ce_loss + recon_loss + kl_loss
+                
+            else:  # mode == 'unsupervised' (default, original behavior)
+                # Unsupervised: NLL + Contrastive + KL
+                # Loss = NLL(reconstruction) + λ_c * Contrastive + λ_kl * KL
+                #
+                # Components:
+                # 1. NLL (Negative Log-Likelihood): BOW reconstruction loss
+                # 2. Contrastive: Preserves semantic similarity structure from Qwen embeddings
+                # 3. KL: Regularizes latent space to standard normal
+                
+                # 1. NLL / Reconstruction loss: negative log likelihood
+                # recon_loss = -sum(p_true * log(p_pred)) where p_true is normalized BOW
+                nll_loss = -torch.sum(bow_targets * log_word_dist, dim=-1).mean()
+                
+                # 2. Contrastive loss: preserve similarity structure
+                # Encourages similar documents (by Qwen embedding) to have similar topic distributions
+                contrastive_loss = self._compute_contrastive_loss(theta, doc_embeddings)
+                
+                # 3. KL divergence for variational inference
+                # Use free bits strategy: ensure minimum KL per dimension to prevent posterior collapse
+                free_bits = 0.5  # Minimum KL per topic dimension
+                kl_per_dim = kl_theta_loss  # Already averaged over batch
+                kl_loss = kl_weight * torch.clamp(kl_per_dim, min=free_bits)
+                
+                # Total loss: NLL + weighted contrastive + KL
+                total_loss = nll_loss + self.contrastive_weight * contrastive_loss + kl_loss
+                
+                output['nll_loss'] = nll_loss
+                output['recon_loss'] = nll_loss  # Alias for backward compatibility
+                output['contrastive_loss'] = contrastive_loss
+                output['kl_theta_loss'] = kl_theta_loss
+                output['kl_loss'] = kl_loss
+                output['total_loss'] = total_loss
         
         if self.dev_mode and not hasattr(self, '_forward_logged'):
             print(f"[DEV] Forward pass:")

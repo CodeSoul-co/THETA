@@ -1070,6 +1070,10 @@ def _add_training_args(parser: argparse.ArgumentParser):
                         help="Disable pin_memory for DataLoader")
     parser.add_argument("--no_persistent_workers", action="store_true",
                         help="Disable persistent workers")
+    
+    # Supervised learning
+    parser.add_argument("--label_col", type=str, default="label",
+                        help="Name of the column in the CSV file that contains the target labels for supervised learning.")
 
 
 def config_from_args(args: argparse.Namespace) -> PipelineConfig:
@@ -1184,6 +1188,12 @@ def config_from_args(args: argparse.Namespace) -> PipelineConfig:
         config.train_exp = args.train_exp
     if hasattr(args, "output_base_dir") and args.output_base_dir:
         config.output_base_dir = args.output_base_dir
+    
+    # Supervised learning label column
+    if hasattr(args, "label_col"):
+        config.label_col = args.label_col
+    else:
+        config.label_col = "label"
     
     return config
 

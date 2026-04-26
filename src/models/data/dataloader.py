@@ -16,7 +16,9 @@ class ETMDataset(Dataset):
     Args:
         doc_embeddings: Document embeddings (N x D)
         bow_matrix: Bag-of-words matrix (N x V), can be sparse or dense
+        labels: Optional labels for supervised learning (N,)
         normalize_bow: Whether to normalize BOW to sum to 1
+        keep_sparse: Keep BOW matrix in sparse format
         dev_mode: Enable debug logging
     """
     
@@ -24,6 +26,7 @@ class ETMDataset(Dataset):
         self,
         doc_embeddings: np.ndarray,
         bow_matrix,
+        labels: Optional[np.ndarray] = None,
         normalize_bow: bool = True,
         keep_sparse: bool = False,
         dev_mode: bool = False
@@ -33,6 +36,12 @@ class ETMDataset(Dataset):
         
         # Store document embeddings
         self.doc_embeddings = torch.tensor(doc_embeddings, dtype=torch.float32)
+        
+        # Store labels if provided (for supervised mode)
+        if labels is not None:
+            self.labels = torch.tensor(labels, dtype=torch.long)
+        else:
+            self.labels = None
         
         # Handle sparse or dense BOW matrix
         if sparse.issparse(bow_matrix):
@@ -61,15 +70,20 @@ class ETMDataset(Dataset):
             print(f"[ETMDataset] Loaded {len(self)} samples")
             print(f"[ETMDataset] Doc embedding dim: {self.doc_embeddings.shape[1]}")
             print(f"[ETMDataset] Vocab size: {self.bow_matrix.shape[1]}")
+            if self.labels is not None:
+                print(f"[ETMDataset] Labels: {len(self.labels)} samples, {len(torch.unique(self.labels))} classes")
     
     def __len__(self):
         return len(self.doc_embeddings)
     
     def __getitem__(self, idx):
-        return {
+        item = {
             'doc_embedding': self.doc_embeddings[idx],
             'bow': self.bow_matrix[idx]
         }
+        if self.labels is not None:
+            item['label'] = self.labels[idx]
+        return item
 
 
 def create_dataloader(
