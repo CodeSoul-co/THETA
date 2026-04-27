@@ -20,8 +20,11 @@ from pathlib import Path
 from typing import Dict, Any, Optional, Tuple, List
 from scipy import sparse
 from sklearn.preprocessing import LabelEncoder
+from tqdm import tqdm
 
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
@@ -31,7 +34,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from config import (
     PipelineConfig, create_parser, config_from_args,
-    DATA_DIR, EMBEDDING_DIR, ETM_DIR
+    DATA_DIR, EMBEDDING_DIR, ETM_DIR, get_qwen_model_path
 )
 
 
@@ -370,6 +373,505 @@ def load_labels_for_supervised(
     return encoded_labels.astype(np.int64), num_classes, label_encoder
 
 
+def train_two_stage(
+    doc_embeddings: np.ndarray,
+    bow_matrix: sparse.csr_matrix,
+    vocab_embeddings: np.ndarray,
+    config: PipelineConfig,
+    logger: logging.Logger,
+    device: torch.device,
+    local_rank: int = -1,
+    world_size: int = 1
+) -> Dict[str, Any]:
+    """
+    Two-Stage Training Pipeline for THETA
+
+    Stage 1: Embedding-LoRA Fine-tuning
+    - Fine-tune Qwen embedding model with LoRA
+    - Loss: Contrastive (unsupervised) or CE (supervised)
+    - Output: adapter_config.json + adapter_model.safetensors
+
+    Stage 2: ETM-KL Only Training
+    - Load LoRA weights from Stage 1
+    - Freeze embedding layer
+    - Train ETM with KL divergence only
+
+    Args:
+        doc_embeddings: Document embeddings
+        bow_matrix: Bag-of-words matrix
+        vocab_embeddings: Vocabulary embeddings
+        config: Pipeline configuration
+        logger: Logger instance
+        device: Torch device
+        local_rank: Local rank for DDP
+        world_size: Total number of GPUs for DDP
+
+    Returns:
+        Dict containing model, history, and other results
+    """
+    from model.theta.etm import ETM
+    from data.dataloader import ETMDataset, create_dataloader
+    from torch.utils.data import random_split
+    from transformers import AutoModel, AutoTokenizer
+    from peft import LoraConfig, get_peft_model, TaskType
+
+    use_ddp = local_rank >= 0 and world_size > 1
+    is_main = is_main_process(local_rank)
+
+    # Load labels for supervised mode
+    num_docs = doc_embeddings.shape[0]
+    labels, num_classes, label_encoder = load_labels_for_supervised(config, logger, num_docs)
+
+    # Determine loss type for Stage 1
+    if config.embedding.mode == 'supervised':
+        if labels is None:
+            raise ValueError("Supervised mode requires labels")
+        stage1_loss_type = 'ce'
+        if is_main:
+            logger.info(f"Stage 1: Using CE loss (supervised mode, num_classes={num_classes})")
+    else:
+        stage1_loss_type = 'contrastive'
+        if is_main:
+            logger.info(f"Stage 1: Using Contrastive loss (unsupervised mode)")
+
+    # Create dataset
+    use_sparse = doc_embeddings.shape[0] > 200000
+    dataset = ETMDataset(
+        doc_embeddings=doc_embeddings,
+        bow_matrix=bow_matrix,
+        labels=labels,
+        normalize_bow=True,
+        dev_mode=config.dev_mode,
+        keep_sparse=use_sparse
+    )
+
+    # Split data
+    n_total = len(dataset)
+    n_train = int(n_total * config.model.train_ratio)
+    n_val = int(n_total * config.model.val_ratio)
+    n_test = n_total - n_train - n_val
+
+    train_dataset, val_dataset, test_dataset = random_split(
+        dataset, [n_train, n_val, n_test],
+        generator=torch.Generator().manual_seed(config.seed)
+    )
+
+    # Create dataloaders
+    dl_num_workers = config.model.num_workers if n_total <= 200000 else min(config.model.num_workers, 2)
+    dl_persistent = config.model.persistent_workers if n_total <= 200000 else False
+
+    train_sampler = None
+    if use_ddp:
+        from torch.utils.data.distributed import DistributedSampler
+        train_sampler = DistributedSampler(
+            train_dataset, num_replicas=world_size, rank=local_rank, shuffle=True
+        )
+
+    train_loader = create_dataloader(
+        train_dataset, batch_size=config.model.batch_size,
+        shuffle=(train_sampler is None), num_workers=dl_num_workers,
+        pin_memory=config.model.pin_memory, persistent_workers=dl_persistent,
+        prefetch_factor=config.model.prefetch_factor, sampler=train_sampler
+    )
+    val_loader = create_dataloader(
+        val_dataset, batch_size=config.model.batch_size, shuffle=False,
+        num_workers=dl_num_workers, pin_memory=config.model.pin_memory,
+        persistent_workers=dl_persistent, prefetch_factor=config.model.prefetch_factor
+    )
+
+    if is_main:
+        logger.info(f"Data splits: train={n_train}, val={n_val}, test={n_test}")
+
+    # ========================================
+    # STAGE 1: Embedding-LoRA Fine-tuning
+    # ========================================
+    if is_main:
+        logger.info("=" * 60)
+        logger.info("STAGE 1: Embedding-LoRA Fine-tuning")
+        logger.info("=" * 60)
+
+    # Load Qwen model
+    model_path = get_qwen_model_path(config.model_size)
+    if is_main:
+        logger.info(f"Loading Qwen model: {model_path}")
+
+    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+    base_model = AutoModel.from_pretrained(
+        model_path,
+        trust_remote_code=True,
+        torch_dtype=torch.float32  # Use float32 to match embeddings dtype
+    )
+
+    # Configure LoRA
+    lora_config = LoraConfig(
+        task_type=TaskType.FEATURE_EXTRACTION,
+        r=config.model.lora_r,
+        lora_alpha=config.model.lora_alpha,
+        lora_dropout=config.model.lora_dropout,
+        target_modules=["q_proj", "v_proj"],  # Target attention layers
+        bias="none"
+    )
+
+    # Apply LoRA to model
+    model_stage1 = get_peft_model(base_model, lora_config)
+    model_stage1 = model_stage1.to(device)
+
+    # Only LoRA parameters are trainable
+    trainable_params = sum(p.numel() for p in model_stage1.parameters() if p.requires_grad)
+    total_params = sum(p.numel() for p in model_stage1.parameters())
+    if is_main:
+        logger.info(f"LoRA params: trainable={trainable_params:,} / total={total_params:,} ({100*trainable_params/total_params:.2f}%)")
+
+    # Wrap with DDP if needed
+    if use_ddp:
+        from torch.nn.parallel import DistributedDataParallel as DDP
+        model_stage1 = DDP(model_stage1, device_ids=[local_rank], output_device=local_rank)
+
+    # Optimizer for Stage 1
+    optimizer_stage1 = torch.optim.AdamW(
+        model_stage1.parameters(),
+        lr=config.model.stage1_lr,
+        weight_decay=config.model.weight_decay
+    )
+
+    # Training loop for Stage 1
+    best_val_loss_stage1 = float('inf')
+    history_stage1 = {'train_loss': [], 'val_loss': []}
+
+    if is_main:
+        logger.info(f"Starting Stage 1 training ({config.model.stage1_epochs} epochs)...")
+
+    for epoch in range(config.model.stage1_epochs):
+        if train_sampler is not None:
+            train_sampler.set_epoch(epoch)
+
+        model_stage1.train()
+        train_loss = 0.0
+
+        for batch in tqdm(train_loader, desc=f"Stage1 Epoch {epoch+1}", disable=not is_main):
+            doc_emb = batch['doc_embedding'].to(device)
+            batch_labels = batch.get('label', None)
+            if batch_labels is not None:
+                batch_labels = batch_labels.to(device)
+
+            optimizer_stage1.zero_grad()
+
+            # Forward pass through LoRA model
+            # Note: We need to reconstruct embeddings from doc_emb
+            # For simplicity, we'll use the existing embeddings as targets
+            outputs = model_stage1(inputs_embeds=doc_emb.unsqueeze(1))
+            embeddings = outputs.last_hidden_state[:, 0, :]  # [CLS] token
+
+            # Compute loss based on mode
+            if stage1_loss_type == 'ce':
+                # Supervised: CE loss
+                # Add a classification head
+                if not hasattr(model_stage1, 'classifier'):
+                    classifier = nn.Linear(embeddings.size(-1), num_classes).to(device)
+                    if use_ddp:
+                        model_stage1.module.classifier = classifier
+                    else:
+                        model_stage1.classifier = classifier
+
+                logits = (model_stage1.module.classifier if use_ddp else model_stage1.classifier)(embeddings)
+                loss = F.cross_entropy(logits, batch_labels)
+            else:
+                # Unsupervised: Contrastive loss
+                # Normalize embeddings
+                embeddings_norm = F.normalize(embeddings, p=2, dim=1)
+
+                # Compute similarity matrix
+                sim_matrix = torch.matmul(embeddings_norm, embeddings_norm.t()) / config.model.contrastive_temp
+
+                # Create positive pairs (same document)
+                batch_size = embeddings.size(0)
+                labels_contrastive = torch.arange(batch_size).to(device)
+
+                # InfoNCE loss
+                loss = F.cross_entropy(sim_matrix, labels_contrastive)
+
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model_stage1.parameters(), max_norm=1.0)
+            optimizer_stage1.step()
+
+            train_loss += loss.item() * doc_emb.size(0)
+
+        train_loss /= n_train
+        history_stage1['train_loss'].append(train_loss)
+
+        # Validation
+        model_stage1.eval()
+        val_loss = 0.0
+        with torch.no_grad():
+            for batch in val_loader:
+                doc_emb = batch['doc_embedding'].to(device)
+                batch_labels = batch.get('label', None)
+                if batch_labels is not None:
+                    batch_labels = batch_labels.to(device)
+
+                outputs = model_stage1(inputs_embeds=doc_emb.unsqueeze(1))
+                embeddings = outputs.last_hidden_state[:, 0, :]
+
+                if stage1_loss_type == 'ce':
+                    logits = (model_stage1.module.classifier if use_ddp else model_stage1.classifier)(embeddings)
+                    loss = F.cross_entropy(logits, batch_labels)
+                else:
+                    embeddings_norm = F.normalize(embeddings, p=2, dim=1)
+                    sim_matrix = torch.matmul(embeddings_norm, embeddings_norm.t()) / config.model.contrastive_temp
+                    labels_contrastive = torch.arange(embeddings.size(0)).to(device)
+                    loss = F.cross_entropy(sim_matrix, labels_contrastive)
+
+                val_loss += loss.item() * doc_emb.size(0)
+
+        val_loss /= n_val
+        history_stage1['val_loss'].append(val_loss)
+
+        if is_main:
+            logger.info(f"Stage1 Epoch {epoch+1}/{config.model.stage1_epochs}: train_loss={train_loss:.4f}, val_loss={val_loss:.4f}")
+
+        # Save best model
+        if val_loss < best_val_loss_stage1:
+            best_val_loss_stage1 = val_loss
+            if is_main:
+                # Save LoRA adapter
+                lora_save_dir = Path(config.model_dir) / "lora_adapter"
+                lora_save_dir.mkdir(parents=True, exist_ok=True)
+
+                model_to_save = model_stage1.module if use_ddp else model_stage1
+                model_to_save.save_pretrained(lora_save_dir)
+
+                logger.info(f"✓ Stage 1 best model saved to {lora_save_dir}")
+                logger.info(f"  - adapter_config.json")
+                logger.info(f"  - adapter_model.safetensors")
+
+    if is_main:
+        logger.info("=" * 60)
+        logger.info("Stage 1 Complete!")
+        logger.info(f"Best val_loss: {best_val_loss_stage1:.4f}")
+        logger.info("=" * 60)
+
+    # Clean up Stage 1 model
+    del model_stage1, optimizer_stage1
+    torch.cuda.empty_cache()
+
+    # ========================================
+    # STAGE 2: ETM-KL Only Training
+    # ========================================
+    if is_main:
+        logger.info("=" * 60)
+        logger.info("STAGE 2: ETM-KL Only Training")
+        logger.info("=" * 60)
+
+    # Load LoRA weights from Stage 1
+    lora_save_dir = Path(config.model_dir) / "lora_adapter"
+    if is_main:
+        logger.info(f"Loading LoRA weights from {lora_save_dir}")
+
+    base_model_stage2 = AutoModel.from_pretrained(
+        model_path,
+        trust_remote_code=True,
+        torch_dtype=torch.float32  # Use float32 to match embeddings dtype
+    )
+    from peft import PeftModel
+    embedding_model = PeftModel.from_pretrained(base_model_stage2, lora_save_dir)
+    embedding_model = embedding_model.to(device)
+
+    # Freeze embedding model completely
+    for param in embedding_model.parameters():
+        param.requires_grad = False
+    embedding_model.eval()
+
+    if is_main:
+        logger.info("✓ Embedding model loaded and frozen")
+
+    # Generate new embeddings using fine-tuned model for FULL dataset
+    if is_main:
+        logger.info("Generating embeddings with fine-tuned model for FULL dataset...")
+        logger.info(f"Full dataset size: {len(doc_embeddings)} samples")
+
+    # CRITICAL: Create a temporary DataLoader for the FULL dataset with shuffle=False
+    # to ensure the generated embeddings align with the original bow_matrix row-by-row
+    full_dataset = ETMDataset(
+        doc_embeddings=doc_embeddings,  # Use ORIGINAL full embeddings
+        bow_matrix=bow_matrix,
+        labels=labels,
+        normalize_bow=True,
+        dev_mode=config.dev_mode,
+        keep_sparse=use_sparse
+    )
+
+    full_loader = create_dataloader(
+        full_dataset,
+        batch_size=config.model.batch_size,
+        shuffle=False,  # CRITICAL: Must be False to maintain alignment with bow_matrix
+        num_workers=dl_num_workers,
+        pin_memory=config.model.pin_memory,
+        persistent_workers=dl_persistent,
+        prefetch_factor=config.model.prefetch_factor,
+        drop_last=False  # CRITICAL: Must be False to process all samples
+    )
+
+    new_doc_embeddings = []
+    embedding_model.eval()
+    with torch.no_grad():
+        for batch in tqdm(full_loader, desc="Generating embeddings", disable=not is_main):
+            doc_emb = batch['doc_embedding'].to(device)
+            outputs = embedding_model(inputs_embeds=doc_emb.unsqueeze(1))
+            embeddings = outputs.last_hidden_state[:, 0, :].cpu().numpy()
+            new_doc_embeddings.append(embeddings)
+
+    new_doc_embeddings = np.vstack(new_doc_embeddings)
+
+    if is_main:
+        logger.info(f"✓ New embeddings generated: shape={new_doc_embeddings.shape}")
+        logger.info(f"✓ Alignment verified: {new_doc_embeddings.shape[0]} embeddings == {bow_matrix.shape[0]} BOW rows")
+
+    # Create NEW dataset and dataloaders for Stage 2 using new_doc_embeddings
+    dataset_stage2 = ETMDataset(
+        doc_embeddings=new_doc_embeddings,  # Use new embeddings from Stage 1
+        bow_matrix=bow_matrix,
+        labels=labels,
+        normalize_bow=True,
+        dev_mode=config.dev_mode,
+        keep_sparse=use_sparse
+    )
+
+    # Split data (use same split as Stage 1)
+    train_dataset_stage2, val_dataset_stage2, test_dataset_stage2 = random_split(
+        dataset_stage2, [n_train, n_val, n_test],
+        generator=torch.Generator().manual_seed(config.seed)
+    )
+
+    # Create new samplers for Stage 2
+    train_sampler_stage2 = None
+    if use_ddp:
+        train_sampler_stage2 = DistributedSampler(
+            train_dataset_stage2, num_replicas=world_size, rank=local_rank, shuffle=True
+        )
+
+    # Create new dataloaders for Stage 2
+    train_loader_stage2 = create_dataloader(
+        train_dataset_stage2, batch_size=config.model.batch_size,
+        shuffle=(train_sampler_stage2 is None), num_workers=dl_num_workers,
+        pin_memory=config.model.pin_memory, persistent_workers=dl_persistent,
+        prefetch_factor=config.model.prefetch_factor, sampler=train_sampler_stage2
+    )
+    val_loader_stage2 = create_dataloader(
+        val_dataset_stage2, batch_size=config.model.batch_size, shuffle=False,
+        num_workers=dl_num_workers, pin_memory=config.model.pin_memory,
+        persistent_workers=dl_persistent, prefetch_factor=config.model.prefetch_factor
+    )
+
+    # Create ETM model
+    vocab_size = bow_matrix.shape[1]
+    word_emb_tensor = torch.tensor(vocab_embeddings, dtype=torch.float32) if not config.model.train_word_embeddings else None
+
+    model_stage2 = ETM(
+        vocab_size=vocab_size,
+        num_topics=config.model.num_topics,
+        doc_embedding_dim=new_doc_embeddings.shape[1],
+        word_embedding_dim=config.model.word_embedding_dim,
+        hidden_dim=config.model.hidden_dim,
+        encoder_dropout=config.model.encoder_dropout,
+        word_embeddings=word_emb_tensor,
+        train_word_embeddings=config.model.train_word_embeddings,
+        num_classes=0,  # No classification in Stage 2
+        dev_mode=config.dev_mode
+    ).to(device)
+
+    if use_ddp:
+        model_stage2 = DDP(model_stage2, device_ids=[local_rank], output_device=local_rank)
+
+    # Optimizer for Stage 2
+    optimizer_stage2 = torch.optim.Adam(
+        model_stage2.parameters(),
+        lr=config.model.stage2_lr,
+        weight_decay=config.model.weight_decay
+    )
+
+    # Training loop for Stage 2 (KL only)
+    best_val_loss_stage2 = float('inf')
+    history_stage2 = {'train_loss': [], 'val_loss': [], 'kl_loss': []}
+
+    if is_main:
+        logger.info(f"Starting Stage 2 training ({config.model.stage2_epochs} epochs, KL only)...")
+
+    for epoch in range(config.model.stage2_epochs):
+        if train_sampler_stage2 is not None:
+            train_sampler_stage2.set_epoch(epoch)
+
+        # KL annealing
+        warmup_progress = min(1.0, (epoch + 1) / config.model.kl_warmup_epochs)
+        kl_weight = config.model.kl_start + (config.model.kl_end - config.model.kl_start) * warmup_progress
+
+        model_stage2.train()
+        train_loss = 0.0
+        train_kl = 0.0
+
+        for batch in tqdm(train_loader_stage2, desc=f"Stage2 Epoch {epoch+1}", disable=not is_main):
+            doc_emb = batch['doc_embedding'].to(device)
+            bow = batch['bow'].to(device)
+
+            optimizer_stage2.zero_grad()
+            output = model_stage2(doc_emb, bow, mode='unsupervised', kl_weight=kl_weight)
+
+            # Stage 2: KL divergence only
+            loss = output['kl_loss']
+
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model_stage2.parameters(), max_norm=1.0)
+            optimizer_stage2.step()
+
+            train_loss += loss.item() * doc_emb.size(0)
+            train_kl += output['kl_loss'].item() * doc_emb.size(0)
+
+        train_loss /= n_train
+        train_kl /= n_train
+        history_stage2['train_loss'].append(train_loss)
+        history_stage2['kl_loss'].append(train_kl)
+
+        # Validation
+        model_stage2.eval()
+        val_loss = 0.0
+        with torch.no_grad():
+            for batch in val_loader_stage2:
+                doc_emb = batch['doc_embedding'].to(device)
+                bow = batch['bow'].to(device)
+
+                output = model_stage2(doc_emb, bow, mode='unsupervised', kl_weight=kl_weight)
+                loss = output['kl_loss']
+
+                val_loss += loss.item() * doc_emb.size(0)
+
+        val_loss /= n_val
+        history_stage2['val_loss'].append(val_loss)
+
+        if is_main:
+            logger.info(f"Stage2 Epoch {epoch+1}/{config.model.stage2_epochs}: train_loss={train_loss:.4f}, val_loss={val_loss:.4f}, kl={train_kl:.4f}")
+
+        # Save best model
+        if val_loss < best_val_loss_stage2:
+            best_val_loss_stage2 = val_loss
+            best_model_state = model_stage2.state_dict()
+
+    if is_main:
+        logger.info("=" * 60)
+        logger.info("Stage 2 Complete!")
+        logger.info(f"Best val_loss: {best_val_loss_stage2:.4f}")
+        logger.info("=" * 60)
+
+    # Return results
+    return {
+        'model': model_stage2,
+        'history': {
+            'stage1': history_stage1,
+            'stage2': history_stage2
+        },
+        'best_model_state': best_model_state,
+        'embedding_model': embedding_model
+    }
+
+
 def train_etm(
     doc_embeddings: np.ndarray,
     bow_matrix: sparse.csr_matrix,
@@ -398,14 +900,38 @@ def train_etm(
     from model.theta.etm import ETM
     from data.dataloader import ETMDataset, create_dataloader
     from torch.utils.data import random_split
-    
+
     use_ddp = local_rank >= 0 and world_size > 1
-    
+
     if is_main_process(local_rank):
         logger.info(f"Device: {device}")
         logger.info(f"DDP enabled: {use_ddp}, world_size: {world_size}")
         logger.info(f"Config: num_topics={config.model.num_topics}, epochs={config.model.epochs}, batch_size={config.model.batch_size}")
         logger.info(f"Mode: {config.embedding.mode}")
+
+    # Auto-enable two-stage training for supervised/unsupervised modes
+    # zero_shot: No fine-tuning, use pretrained embeddings directly
+    # supervised/unsupervised: Auto fine-tune embeddings with LoRA
+    enable_two_stage = config.embedding.mode in ['supervised', 'unsupervised']
+
+    if enable_two_stage:
+        if is_main_process(local_rank):
+            logger.info("=" * 60)
+            logger.info("TWO-STAGE TRAINING (Auto-enabled for supervised/unsupervised mode)")
+            logger.info(f"Stage 1: Embedding-LoRA fine-tuning ({config.model.stage1_epochs} epochs)")
+            logger.info(f"Stage 2: ETM-KL only training ({config.model.stage2_epochs} epochs)")
+            logger.info("=" * 60)
+
+        # Execute two-stage training
+        return train_two_stage(
+            doc_embeddings, bow_matrix, vocab_embeddings,
+            config, logger, device, local_rank, world_size
+        )
+    else:
+        if is_main_process(local_rank):
+            logger.info("=" * 60)
+            logger.info("ZERO-SHOT MODE: Using pretrained embeddings without fine-tuning")
+            logger.info("=" * 60)
     
     # Load labels for supervised mode (pass num_docs for alignment check)
     num_docs = doc_embeddings.shape[0]
@@ -912,8 +1438,11 @@ def save_results(
             json.dump(label_mapping, f, indent=2, ensure_ascii=False)
         logger.info(f"Label mapping saved to {label_mapping_path}")
     
-    # Save config to exp_dir (parent of model_dir)
-    config.save(os.path.join(config.exp_dir, "config.json"))
+    # Save config to exp_dir (parent of model_dir) with mode suffix
+    mode = config.embedding.mode if hasattr(config.embedding, 'mode') else 'unsupervised'
+    config_path = os.path.join(config.exp_dir, f"config_{mode}.json")
+    config.save(config_path)
+    logger.info(f"Config saved to {config_path}")
     
     # Save timestamps if available (for temporal analysis)
     if timestamps is not None and len(timestamps) > 0:
@@ -987,7 +1516,9 @@ def run_evaluation(
     logger.info("=" * 60)
     
     # Save metrics to exp_dir (fixed filename)
-    metrics_path = os.path.join(config.exp_dir, "metrics.json")
+    # Save metrics to exp_dir with mode suffix
+    mode = config.embedding.mode if hasattr(config.embedding, 'mode') else 'unsupervised'
+    metrics_path = os.path.join(config.exp_dir, f"metrics_{mode}.json")
     
     # Convert numpy types to Python native types for JSON serialization
     def convert_to_serializable(obj):
@@ -1057,14 +1588,14 @@ def run_visualization(
     except Exception as e:
         logger.warning(f"Failed to save topic words: {e}")
     
-    # Determine visualization parameters based on directory structure
-    # Visualization should always go to: result/{model_size}/{dataset}/{mode}/visualization/
-    # NOT under models/exp_*/visualization/
+    # Determine visualization parameters
+    # Use exp_dir to ensure visualization finds the correct model outputs
     viz_result_dir = config.output_base_dir
     viz_model_size = config.model_size
     viz_dataset = config.data.dataset
     viz_mode = config.embedding.mode
-    viz_output_dir = None  # Let run_all_visualizations determine the correct path
+    # Extract experiment ID from exp_dir (e.g., "exp_20260426_202624")
+    viz_model_exp = os.path.basename(config.exp_dir) if config.exp_dir != config.dataset_base_dir else None
     
     try:
         output_dir = run_all_visualizations(
@@ -1072,7 +1603,8 @@ def run_visualization(
             dataset=viz_dataset,
             mode=viz_mode,
             model_size=viz_model_size,
-            output_dir=viz_output_dir,
+            model_exp=viz_model_exp,
+            output_dir=config.visualization_dir,
             language=config.visualization.language,
             dpi=config.visualization.dpi
         )

@@ -642,33 +642,45 @@ class ModelConfig:
     encoder_dropout: float = 0.2
     encoder_activation: str = "relu"
     train_word_embeddings: bool = True  # Default: train word embeddings from scratch
-    
+
     # Training
     epochs: int = 100
     batch_size: int = 64
     learning_rate: float = 0.002
     weight_decay: float = 1e-4
-    
+
+    # Two-Stage Training (Auto-enabled for supervised/unsupervised modes)
+    # zero_shot: No fine-tuning, use pretrained embeddings directly
+    # supervised/unsupervised: Auto fine-tune embeddings with LoRA
+    stage1_epochs: int = 10  # Stage 1: Embedding-LoRA fine-tuning
+    stage2_epochs: int = 100  # Stage 2: ETM-KL only training
+    stage1_lr: float = 1e-4  # Learning rate for Stage 1
+    stage2_lr: float = 0.002  # Learning rate for Stage 2
+    lora_r: int = 8  # LoRA rank
+    lora_alpha: int = 16  # LoRA alpha
+    lora_dropout: float = 0.1  # LoRA dropout
+    contrastive_temp: float = 0.07  # Temperature for contrastive loss
+
     # KL Annealing - gradual warmup for stable training
     kl_start: float = 0.0
     kl_end: float = 1.0
     kl_warmup_epochs: int = 30
-    
+
     # Early stopping - need enough epochs for KL warmup
     early_stopping: bool = True
     patience: int = 15
     min_delta: float = 0.001
-    
+
     # Learning rate scheduler
     use_scheduler: bool = True
     scheduler_patience: int = 5
     scheduler_factor: float = 0.5
-    
+
     # Data split
     train_ratio: float = 0.8
     val_ratio: float = 0.1
     test_ratio: float = 0.1
-    
+
     num_workers: int = 4
     pin_memory: bool = True
     persistent_workers: bool = True
@@ -822,15 +834,21 @@ class PipelineConfig:
     def result_base_dir(self) -> str:
         """
         Result directory for model outputs.
-        New structure: result/{dataset}/{model_size}/theta/exp_{timestamp}/
+        Uses exp_dir to ensure all outputs are in the same experiment directory.
         """
-        ts = self.timestamp or self.train_exp or ""
-        return str(get_result_path(self.data.dataset, self.model_size, "theta", ts))
+        return self.exp_dir
     
     @property
     def model_dir(self) -> str:
-        """Directory for trained model and matrices (theta, beta): exp_*/theta/"""
-        return os.path.join(self.result_base_dir, "theta")
+        """Directory for trained model and matrices (theta, beta): exp_*/theta/{mode}/
+
+        Models are organized by training mode to avoid overwriting:
+        - unsupervised: exp_*/theta/unsupervised/
+        - supervised: exp_*/theta/supervised/
+        - zero_shot: exp_*/theta/zero_shot/
+        """
+        mode = self.embedding.mode if hasattr(self.embedding, 'mode') else 'unsupervised'
+        return os.path.join(self.exp_dir, "theta", mode)
     
     @property
     def evaluation_dir(self) -> str:
@@ -839,9 +857,10 @@ class PipelineConfig:
     
     @property
     def visualization_dir(self) -> str:
-        """Directory for visualizations: exp_*/{lang}/"""
+        """Directory for visualizations: exp_*/{lang}/{mode}/"""
         lang = self.visualization.language if hasattr(self, 'visualization') else 'zh'
-        return os.path.join(self.result_base_dir, lang)
+        mode = self.embedding.mode if hasattr(self.embedding, 'mode') else 'unsupervised'
+        return os.path.join(self.exp_dir, lang, mode)
     
     @property
     def log_dir(self) -> str:
@@ -866,14 +885,26 @@ class PipelineConfig:
     
     @property
     def exp_dir(self) -> str:
-        """Experiment directory: result/{dataset}/{model_size}/theta/exp_{timestamp}/"""
+        """Experiment directory: result/{dataset}/{model_size}/theta/exp_{timestamp}/
+        
+        Uses train_exp if specified, otherwise falls back to data_exp.
+        This ensures model outputs are saved in the same experiment directory as data.
+        """
         if self.train_exp:
             return os.path.join(self.dataset_base_dir, self.train_exp)
+        if self.data_exp:
+            return os.path.join(self.dataset_base_dir, self.data_exp)
         return self.dataset_base_dir
     
     @property
     def data_exp_dir(self) -> str:
-        """Data directory within experiment: exp_*/data/"""
+        """Data directory within experiment: exp_*/data/
+        
+        Uses data_exp if specified, otherwise falls back to exp_dir.
+        This allows loading data from a different experiment than training.
+        """
+        if self.data_exp:
+            return os.path.join(self.dataset_base_dir, self.data_exp, "data")
         return os.path.join(self.exp_dir, "data")
     
     @property
@@ -1013,7 +1044,19 @@ def _add_training_args(parser: argparse.ArgumentParser):
                         help="Batch size")
     parser.add_argument("--learning_rate", type=float, default=0.002,
                         help="Learning rate")
-    
+
+    # Two-Stage Training (Auto-enabled for supervised/unsupervised modes)
+    parser.add_argument("--stage1_epochs", type=int, default=10,
+                        help="Stage 1 epochs for embedding fine-tuning (supervised/unsupervised)")
+    parser.add_argument("--stage2_epochs", type=int, default=100,
+                        help="Stage 2 epochs for ETM training (supervised/unsupervised)")
+    parser.add_argument("--lora_r", type=int, default=8,
+                        help="LoRA rank")
+    parser.add_argument("--lora_alpha", type=int, default=16,
+                        help="LoRA alpha")
+    parser.add_argument("--lora_dropout", type=float, default=0.1,
+                        help="LoRA dropout")
+
     # KL annealing
     parser.add_argument("--kl_start", type=float, default=0.0,
                         help="KL weight start value")
@@ -1144,6 +1187,13 @@ def config_from_args(args: argparse.Namespace) -> PipelineConfig:
     config.model.kl_warmup_epochs = _resolve("kl_warmup", getattr(args, "kl_warmup", None), param_type=int) or 50
     config.model.patience = _resolve("patience", getattr(args, "patience", None), param_type=int) or 10
     config.bow.min_doc_freq = _resolve("min_df", getattr(args, "min_df", None), "min_doc_freq", param_type=int) or 2
+
+    # Two-Stage Training parameters
+    config.model.stage1_epochs = _resolve("stage1_epochs", getattr(args, "stage1_epochs", None), param_type=int) or 10
+    config.model.stage2_epochs = _resolve("stage2_epochs", getattr(args, "stage2_epochs", None), param_type=int) or 100
+    config.model.lora_r = _resolve("lora_r", getattr(args, "lora_r", None), param_type=int) or 8
+    config.model.lora_alpha = _resolve("lora_alpha", getattr(args, "lora_alpha", None), param_type=int) or 16
+    config.model.lora_dropout = _resolve("lora_dropout", getattr(args, "lora_dropout", None), param_type=float) or 0.1
     
     # Language from dataset config or default
     if "language" in ds_defaults:
