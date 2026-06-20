@@ -210,6 +210,28 @@ def parse_args():
     parser.add_argument('--model_size', type=str, default='0.6B',
                         choices=MODEL_SIZES,
                         help='Qwen model size: 0.6B, 4B, 8B (THETA specific)')
+    parser.add_argument('--embedding-provider', '--embedding_provider', dest='embedding_provider',
+                        type=str, default=None,
+                        choices=['cloud', 'local', 'qwen', 'openai', 'dashscope', 'siliconflow',
+                                 'zhipu', 'volcengine', 'openai_compatible'],
+                        help='Embedding provider (default: cloud for zero_shot; local/qwen is required for supervised/unsupervised)')
+    parser.add_argument('--embedding-cloud-provider', '--embedding_cloud_provider', dest='embedding_cloud_provider',
+                        type=str, default=None,
+                        choices=['openai', 'dashscope', 'siliconflow', 'zhipu', 'volcengine',
+                                 'openai_compatible'],
+                        help='Cloud provider preset when embedding provider is cloud')
+    parser.add_argument('--embedding-model', '--embedding_model', dest='embedding_model',
+                        type=str, default=None,
+                        help='Cloud embedding model name')
+    parser.add_argument('--embedding-api-base', '--embedding_api_base', dest='embedding_api_base',
+                        type=str, default=None,
+                        help='OpenAI-compatible embedding API base URL')
+    parser.add_argument('--embedding-api-key-env', '--embedding_api_key_env', dest='embedding_api_key_env',
+                        type=str, default=None,
+                        help='Environment variable name that stores the embedding API key')
+    parser.add_argument('--embedding-dimensions', '--embedding_dimensions', dest='embedding_dimensions',
+                        type=int, default=None,
+                        help='Optional cloud embedding output dimensions')
     parser.add_argument('--check-only', action='store_true',
                         help='Only check if data files exist, do not run')
     parser.add_argument('--prepare', action='store_true',
@@ -930,6 +952,17 @@ def main():
                     '--batch_size', str(args.batch_size),
                     '--gpu', str(args.gpu)
                 ]
+                for arg_name, cli_name in [
+                    ('embedding_provider', '--embedding-provider'),
+                    ('embedding_cloud_provider', '--embedding-cloud-provider'),
+                    ('embedding_model', '--embedding-model'),
+                    ('embedding_api_base', '--embedding-api-base'),
+                    ('embedding_api_key_env', '--embedding-api-key-env'),
+                    ('embedding_dimensions', '--embedding-dimensions'),
+                ]:
+                    value = getattr(args, arg_name, None)
+                    if value is not None:
+                        cmd.extend([cli_name, str(value)])
             else:
                 cmd = [
                     sys.executable, 'prepare_data.py',

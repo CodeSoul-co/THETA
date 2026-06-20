@@ -142,10 +142,15 @@ THETA uses a **layered configuration** architecture for flexible control from ha
 Create a `.env` file (refer to `.env.example`) with **required** settings:
 
 ```bash
-# Required: Qwen embedding model path
-QWEN_MODEL_0_6B=./models/qwen3_embedding_0.6B
-# QWEN_MODEL_4B=./models/qwen3_embedding_4B
-# QWEN_MODEL_8B=./models/qwen3_embedding_8B
+# Default for zero_shot: cloud embedding service
+EMBEDDING_PROVIDER=cloud
+EMBEDDING_CLOUD_PROVIDER=openai
+OPENAI_API_KEY=your-openai-api-key
+# Optional: EMBEDDING_MODEL=text-embedding-3-small
+
+# Required for supervised/unsupervised modes because fine-tuning needs local weights
+# EMBEDDING_PROVIDER=local
+# QWEN_MODEL_0_6B=./models/qwen3_embedding_0.6B
 
 # Required: SBERT model path (needed for CTM/BERTopic)
 SBERT_MODEL_PATH=./models/sbert/sentence-transformers/all-MiniLM-L6-v2
@@ -409,6 +414,8 @@ Additional parameters beyond common defaults:
 | Parameter      | Type  | Default     | Range                               | Description             |
 | -------------- | ----- | ----------- | ----------------------------------- | ----------------------- |
 | `--model_size` | str   | `0.6B`      | `0.6B` / `4B` / `8B`                | Qwen model size         |
+| `--embedding-provider` | str | `cloud` for `zero_shot` | `cloud` / `local` / provider preset | Embedding provider; supervised/unsupervised require local Qwen |
+| `--embedding-cloud-provider` | str | `openai` | `openai` / `dashscope` / `siliconflow` / `zhipu` / `volcengine` / `openai_compatible` | Cloud embedding preset |
 | `--mode`       | str   | `zero_shot` | `zero_shot` / `supervised` / `unsupervised` | Embedding mode          |
 | `--kl_start`   | float | 0.0         | 0–1                                 | KL annealing start weight |
 | `--kl_end`     | float | 1.0         | 0–1                                 | KL annealing end weight |

@@ -196,6 +196,9 @@ PARAM_ENV_MAPPING = {
     "model_size": "MODEL_SIZE",
     "mode": "MODE",
     "language": "LANGUAGE",
+    "embedding_provider": "EMBEDDING_PROVIDER",
+    "embedding_cloud_provider": "EMBEDDING_CLOUD_PROVIDER",
+    "embedding_model": "EMBEDDING_MODEL",
 }
 
 
@@ -503,6 +506,23 @@ def get_embedding_dim(model_size: str) -> int:
     """Get embedding dimension based on model_size"""
     return EMBEDDING_DIMS.get(model_size, 1024)
 
+
+def _env_int(name: str) -> Optional[int]:
+    value = os.environ.get(name)
+    if value in (None, ""):
+        return None
+    try:
+        return int(value)
+    except ValueError:
+        return None
+
+
+def _env_bool(name: str, default: bool = True) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in ("1", "true", "yes", "on")
+
 # Dataset-specific configurations
 # vocab_size should be proportional to dataset size but not too large
 # Rule of thumb: vocab_size ~ min(sqrt(n_docs) * 50, 10000)
@@ -603,6 +623,13 @@ class EmbeddingConfig:
     output_dir: str = str(EMBEDDING_DIR / "outputs")
     batch_size: int = 64
     max_length: int = 512
+    provider: str = field(default_factory=lambda: os.environ.get("EMBEDDING_PROVIDER", "cloud"))
+    cloud_provider: str = field(default_factory=lambda: os.environ.get("EMBEDDING_CLOUD_PROVIDER", "openai"))
+    model: str = field(default_factory=lambda: os.environ.get("EMBEDDING_MODEL", ""))
+    api_base: str = field(default_factory=lambda: os.environ.get("EMBEDDING_API_BASE", ""))
+    api_key_env: str = field(default_factory=lambda: os.environ.get("EMBEDDING_API_KEY_ENV", ""))
+    dimensions: Optional[int] = field(default_factory=lambda: _env_int("EMBEDDING_DIMENSIONS"))
+    normalize: bool = field(default_factory=lambda: _env_bool("EMBEDDING_NORMALIZE", True))
     
     @property
     def embeddings_path(self) -> str:
@@ -1087,6 +1114,26 @@ def _add_training_args(parser: argparse.ArgumentParser):
     parser.add_argument("--model_size", type=str, default="0.6B",
                         choices=["0.6B", "4B", "8B"],
                         help="Qwen model size (default: 0.6B)")
+    parser.add_argument("--embedding_provider", "--embedding-provider", dest="embedding_provider",
+                        type=str, default=None,
+                        choices=["cloud", "local", "qwen", "openai", "dashscope", "siliconflow", "zhipu", "volcengine", "openai_compatible"],
+                        help="Embedding provider (default: cloud for zero_shot; local/qwen is required for supervised/unsupervised)")
+    parser.add_argument("--embedding_cloud_provider", "--embedding-cloud-provider", dest="embedding_cloud_provider",
+                        type=str, default=None,
+                        choices=["openai", "dashscope", "siliconflow", "zhipu", "volcengine", "openai_compatible"],
+                        help="Cloud embedding provider preset when --embedding_provider=cloud")
+    parser.add_argument("--embedding_model", "--embedding-model", dest="embedding_model",
+                        type=str, default=None,
+                        help="Cloud embedding model name")
+    parser.add_argument("--embedding_api_base", "--embedding-api-base", dest="embedding_api_base",
+                        type=str, default=None,
+                        help="OpenAI-compatible embedding API base URL")
+    parser.add_argument("--embedding_api_key_env", "--embedding-api-key-env", dest="embedding_api_key_env",
+                        type=str, default=None,
+                        help="Environment variable name that stores the embedding API key")
+    parser.add_argument("--embedding_dimensions", "--embedding-dimensions", dest="embedding_dimensions",
+                        type=int, default=None,
+                        help="Optional embedding output dimensions for providers that support it")
     
     # Pipeline control
     parser.add_argument("--skip_viz", action="store_true",
@@ -1206,6 +1253,23 @@ def config_from_args(args: argparse.Namespace) -> PipelineConfig:
     model_size = _resolve("model_size", getattr(args, "model_size", None), param_type=str)
     if model_size:
         config.model_size = model_size
+
+    # Embedding provider settings. Cloud is allowed only for zero_shot usage.
+    provider = _resolve("embedding_provider", getattr(args, "embedding_provider", None), param_type=str)
+    if provider:
+        config.embedding.provider = provider
+    cloud_provider = _resolve("embedding_cloud_provider", getattr(args, "embedding_cloud_provider", None), param_type=str)
+    if cloud_provider:
+        config.embedding.cloud_provider = cloud_provider
+    embedding_model = _resolve("embedding_model", getattr(args, "embedding_model", None), param_type=str)
+    if embedding_model:
+        config.embedding.model = embedding_model
+    if hasattr(args, "embedding_api_base") and args.embedding_api_base:
+        config.embedding.api_base = args.embedding_api_base
+    if hasattr(args, "embedding_api_key_env") and args.embedding_api_key_env:
+        config.embedding.api_key_env = args.embedding_api_key_env
+    if hasattr(args, "embedding_dimensions") and args.embedding_dimensions:
+        config.embedding.dimensions = args.embedding_dimensions
     
     # Word embeddings - default is True (train from scratch)
     if hasattr(args, "no_train_word_embeddings") and args.no_train_word_embeddings:

@@ -208,10 +208,37 @@ def generate_vocab_embeddings(
     config: PipelineConfig,
     logger: logging.Logger
 ) -> np.ndarray:
-    """Generate vocabulary embeddings using Qwen"""
+    """Generate vocabulary embeddings using configured embedding provider."""
+    from model.embedding_providers import create_cloud_embedding_provider, resolve_embedding_settings
+
+    settings = resolve_embedding_settings(config=config)
+    if config.embedding.mode == 'zero_shot' and settings.is_cloud:
+        logger.info(
+            "Generating vocab embeddings with cloud provider=%s model=%s",
+            settings.cloud_provider,
+            settings.model,
+        )
+        provider = create_cloud_embedding_provider(config=config)
+        embeddings = provider.embed(
+            vocab,
+            batch_size=config.embedding.batch_size,
+            show_progress=True,
+            desc="Embedding vocabulary",
+        )
+        logger.info(f"Vocab embeddings shape: {embeddings.shape}")
+        return embeddings
+
+    if config.embedding.mode != 'zero_shot' and settings.is_cloud:
+        logger.warning(
+            "Embedding mode %s requires a local model for fine-tuning; "
+            "ignoring cloud provider %s and using local Qwen.",
+            config.embedding.mode,
+            settings.cloud_provider,
+        )
+
     from model.vocab_embedder import VocabEmbedder
-    
-    logger.info(f"Generating vocab embeddings for {len(vocab)} words")
+
+    logger.info(f"Generating vocab embeddings for {len(vocab)} words with local Qwen")
     
     embedder = VocabEmbedder(
         model_path=config.embedding.model_path,
