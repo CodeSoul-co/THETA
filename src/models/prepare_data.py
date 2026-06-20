@@ -56,6 +56,28 @@ def parse_args():
     parser.add_argument('--model_size', type=str, default='0.6B',
                         choices=['0.6B', '4B', '8B'],
                         help='Qwen model size (THETA specific)')
+    parser.add_argument('--embedding-provider', '--embedding_provider', dest='embedding_provider',
+                        type=str, default=None,
+                        choices=['cloud', 'local', 'qwen', 'openai', 'dashscope', 'siliconflow',
+                                 'zhipu', 'volcengine', 'openai_compatible'],
+                        help='Embedding provider (default: cloud for zero_shot; local/qwen is required for supervised/unsupervised)')
+    parser.add_argument('--embedding-cloud-provider', '--embedding_cloud_provider', dest='embedding_cloud_provider',
+                        type=str, default=None,
+                        choices=['openai', 'dashscope', 'siliconflow', 'zhipu', 'volcengine',
+                                 'openai_compatible'],
+                        help='Cloud provider preset when embedding provider is cloud')
+    parser.add_argument('--embedding-model', '--embedding_model', dest='embedding_model',
+                        type=str, default=None,
+                        help='Cloud embedding model name')
+    parser.add_argument('--embedding-api-base', '--embedding_api_base', dest='embedding_api_base',
+                        type=str, default=None,
+                        help='OpenAI-compatible embedding API base URL')
+    parser.add_argument('--embedding-api-key-env', '--embedding_api_key_env', dest='embedding_api_key_env',
+                        type=str, default=None,
+                        help='Environment variable name that stores the embedding API key')
+    parser.add_argument('--embedding-dimensions', '--embedding_dimensions', dest='embedding_dimensions',
+                        type=int, default=None,
+                        help='Optional cloud embedding output dimensions')
     parser.add_argument('--mode', type=str, default='zero_shot',
                         choices=['zero_shot', 'supervised', 'unsupervised'],
                         help='THETA mode')
@@ -94,6 +116,37 @@ def parse_args():
                         help='Force overwrite existing matrices')
     
     return parser.parse_args()
+
+
+def apply_embedding_cli_overrides(args) -> None:
+    """Expose embedding CLI options through env vars used by provider factory."""
+    mapping = {
+        'embedding_provider': 'EMBEDDING_PROVIDER',
+        'embedding_cloud_provider': 'EMBEDDING_CLOUD_PROVIDER',
+        'embedding_model': 'EMBEDDING_MODEL',
+        'embedding_api_base': 'EMBEDDING_API_BASE',
+        'embedding_api_key_env': 'EMBEDDING_API_KEY_ENV',
+        'embedding_dimensions': 'EMBEDDING_DIMENSIONS',
+    }
+    for attr, env_var in mapping.items():
+        value = getattr(args, attr, None)
+        if value is not None and value != "":
+            os.environ[env_var] = str(value)
+
+
+def enforce_local_embedding_for_finetune(mode: str):
+    """Force local embedding models for modes that may fine-tune embeddings."""
+    from model.embedding_providers import resolve_embedding_settings
+
+    settings = resolve_embedding_settings()
+    if mode != 'zero_shot' and settings.is_cloud:
+        print(
+            f"[Embedding] mode={mode} requires a local model for fine-tuning; "
+            f"ignoring cloud provider '{settings.cloud_provider}' and using local Qwen."
+        )
+        os.environ["EMBEDDING_PROVIDER"] = "local"
+        settings = resolve_embedding_settings(provider="local")
+    return settings
 
 
 def process_docx_directory(input_dir: str, dataset: str, language: str = 'chinese') -> Path:
@@ -608,6 +661,43 @@ def generate_qwen_embeddings(
     max_length: int = 512
 ) -> np.ndarray:
     """Generate Qwen document embeddings with sliding window for long texts"""
+    from model.embedding_providers import create_cloud_embedding_provider, resolve_embedding_settings
+
+    settings = resolve_embedding_settings()
+    if mode == 'zero_shot' and settings.is_cloud:
+        print(f"\n[Generating Cloud Embedding] provider={settings.cloud_provider}, model={settings.model}, mode={mode}")
+        print(f"  API base: {settings.api_base}")
+        provider = create_cloud_embedding_provider()
+        embeddings = provider.embed(
+            texts,
+            batch_size=batch_size,
+            show_progress=True,
+            desc="Generating document embeddings",
+        )
+
+        output_dir.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        np.save(output_dir / 'embeddings.npy', embeddings)
+
+        if labels is not None:
+            np.save(output_dir / 'labels.npy', labels)
+
+        metadata = {
+            'num_documents': len(texts),
+            'embedding_dim': embeddings.shape[1],
+            'provider': settings.provider,
+            'cloud_provider': settings.cloud_provider,
+            'embedding_model': settings.model,
+            'mode': mode,
+            'timestamp': timestamp
+        }
+        with open(output_dir / 'metadata.json', 'w') as f:
+            json.dump(metadata, f, indent=2)
+
+        print(f"  ✓ Embeddings shape: {embeddings.shape}")
+        print(f"  Saved to {output_dir}")
+        return embeddings
+
     import torch
     from transformers import AutoModel, AutoTokenizer
     
@@ -747,6 +837,8 @@ def generate_qwen_embeddings(
     metadata = {
         'num_documents': len(texts),
         'embedding_dim': embeddings.shape[1],
+        'provider': 'local',
+        'embedding_model': 'qwen',
         'model_size': model_size,
         'mode': mode,
         'timestamp': timestamp
@@ -772,6 +864,27 @@ def generate_vocab_embeddings(
     batch_size: int = 64
 ) -> np.ndarray:
     """Generate vocabulary embeddings"""
+    from model.embedding_providers import create_cloud_embedding_provider, resolve_embedding_settings
+
+    settings = resolve_embedding_settings()
+    if settings.is_cloud:
+        print(f"\n[Generating Cloud Vocab Embedding] vocab_size={len(vocab)}")
+        print(f"  Provider: {settings.cloud_provider}, model: {settings.model}")
+        provider = create_cloud_embedding_provider()
+        embeddings = provider.embed(
+            vocab,
+            batch_size=batch_size,
+            show_progress=True,
+            desc="Embedding vocabulary",
+        )
+
+        output_dir.mkdir(parents=True, exist_ok=True)
+        np.save(output_dir / 'vocab_embeddings.npy', embeddings)
+
+        print(f"  ✓ Vocab embeddings shape: {embeddings.shape}")
+        print(f"  ✓ Saved to {output_dir}")
+        return embeddings
+
     from model.vocab_embedder import VocabEmbedder
     
     model_path = get_qwen_model_path(model_size)
@@ -894,9 +1007,15 @@ def prepare_theta_data(args):
     dataset = args.dataset
     model_size = args.model_size
     mode = args.mode
-    
+    apply_embedding_cli_overrides(args)
+    embedding_settings = enforce_local_embedding_for_finetune(mode)
+
     print(f"\n{'='*70}")
     print(f"[THETA] Preparing data: {dataset}, model={model_size}, mode={mode}")
+    if embedding_settings.is_cloud:
+        print(f"[Embedding] provider={embedding_settings.cloud_provider}, model={embedding_settings.model}")
+    else:
+        print("[Embedding] provider=local Qwen")
     print(f"{'='*70}")
     
     # Find data file
@@ -935,6 +1054,9 @@ def prepare_theta_data(args):
         'batch_size': args.batch_size,
         'max_length': args.max_length,
         'bow_only': args.bow_only,
+        'embedding_provider': embedding_settings.provider,
+        'embedding_cloud_provider': embedding_settings.cloud_provider,
+        'embedding_model': embedding_settings.model,
     }
     with open(exp_dir / 'config.json', 'w', encoding='utf-8') as f:
         json.dump(config, f, ensure_ascii=False, indent=2)
