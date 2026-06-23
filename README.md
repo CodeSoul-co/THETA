@@ -10,7 +10,7 @@
 
 **English** | [中文](README_zh.md)
 
-**THETA (θ) is a low-barrier, high-performance LLM-enhanced topic analysis platform for social science research.**
+**THETA (θ) is a low-barrier, high-performance agent-native topic analysis platform for social science research.**
 
 </div>
 
