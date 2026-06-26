@@ -45,6 +45,7 @@ from config import (
     get_qwen_model_path, get_embedding_dim, QWEN_MODEL_PATHS, EMBEDDING_DIMS,
     BASE_WORKSPACE, get_workspace_path, ensure_dir
 )
+from gpu_utils import configure_cuda_visible_devices
 
 
 def parse_args():
@@ -88,7 +89,12 @@ def parse_args():
     parser.add_argument('--skip-sbert', action='store_true', help='Skip SBERT embedding generation')
     parser.add_argument('--with-time', action='store_true', help='Generate time slice information')
     parser.add_argument('--check-only', action='store_true', help='Only check files')
-    parser.add_argument('--gpu', type=int, default=0, help='GPU ID')
+    parser.add_argument(
+        '--gpu',
+        type=int,
+        default=None,
+        help='Physical GPU ID; overrides CUDA_VISIBLE_DEVICES when provided'
+    )
     parser.add_argument('--clean', action='store_true', 
                         help='First perform data cleaning (generate cleaned CSV from raw text)')
     parser.add_argument('--raw-input', type=str, default=None,
@@ -1583,7 +1589,7 @@ def check_files(args):
 
 def main():
     args = parse_args()
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
+    configure_cuda_visible_devices(args.gpu)
     
     # Validate path components
     try:

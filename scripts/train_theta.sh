@@ -44,7 +44,7 @@ KL_START=0.0
 KL_END=1.0
 KL_WARMUP=50
 PATIENCE=10
-GPU=0
+GPU=""
 LANGUAGE="en"
 SKIP_TRAIN=false
 SKIP_VIZ=false
@@ -100,7 +100,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --kl_warmup     KL warmup epochs (default: 50)"
             echo ""
             echo "Other Options:"
-            echo "  --gpu           GPU device ID (default: 0)"
+            echo "  --gpu           GPU device ID (default: inherit environment, otherwise 0)"
             echo "  --language      Visualization language: en, zh (default: en)"
             echo "                  Controls chart titles, axis labels, and legend text."
             echo "  --skip-train    Skip training, only evaluate existing model"
@@ -150,6 +150,16 @@ if [ -z "$DATASET" ]; then
     echo "Error: --dataset is required"
     echo "Run '$0 --help' for usage"
     exit 1
+fi
+
+if [ -n "$GPU" ] && ! [[ "$GPU" =~ ^[0-9]+$ ]]; then
+    echo "Error: --gpu must be a non-negative integer"
+    exit 1
+fi
+
+GPU_ARGS=()
+if [ -n "$GPU" ]; then
+    GPU_ARGS=(--gpu "$GPU")
 fi
 
 # =============================================================================
@@ -246,7 +256,8 @@ if [ "$NEED_PREPARE" = true ]; then
     echo "[Auto] Running data preparation..."
     echo "=========================================="
     cd "$ETM_DIR"
-    python prepare_data.py --model theta --dataset $DATASET --model_size $MODEL_SIZE --mode $MODE
+    python prepare_data.py --model theta --dataset "$DATASET" \
+        --model_size "$MODEL_SIZE" --mode "$MODE" "${GPU_ARGS[@]}"
     
     # Find the newly created data experiment
     DATA_EXP=$(find_latest_data_exp)
@@ -280,7 +291,11 @@ CMD="$CMD --model_size $MODEL_SIZE --mode $MODE"
 CMD="$CMD --num_topics $NUM_TOPICS --epochs $EPOCHS --batch_size $BATCH_SIZE"
 CMD="$CMD --hidden_dim $HIDDEN_DIM --learning_rate $LEARNING_RATE"
 CMD="$CMD --kl_start $KL_START --kl_end $KL_END --kl_warmup $KL_WARMUP"
-CMD="$CMD --patience $PATIENCE --gpu $GPU --language $LANGUAGE"
+CMD="$CMD --patience $PATIENCE --language $LANGUAGE"
+
+if [ -n "$GPU" ]; then
+    CMD="$CMD --gpu $GPU"
+fi
 
 # Pass data_exp if using new exp structure
 if [ -n "$DATA_EXP" ]; then

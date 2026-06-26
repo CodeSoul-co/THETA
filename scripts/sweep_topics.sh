@@ -46,7 +46,7 @@ KL_START=0.0
 KL_END=1.0
 KL_WARMUP=50
 PATIENCE=20
-GPU=0
+GPU=""
 LANGUAGE="zh"
 SKIP_VIZ=false
 LIST_DATASETS=false
@@ -97,7 +97,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --hidden_dim    Hidden dimension (default: 1024)"
             echo "  --learning_rate Learning rate (default: 0.002)"
             echo "  --patience      Early stopping patience (default: 20)"
-            echo "  --gpu           GPU device ID (default: 0)"
+            echo "  --gpu           GPU device ID (default: inherit environment, otherwise 0)"
             echo "  --language      zh | en (default: zh)"
             echo "  --skip-viz      Skip visualization"
             echo ""
@@ -186,6 +186,11 @@ echo ""
 SKIP_VIZ_FLAG=""
 [ "$SKIP_VIZ" = true ] && SKIP_VIZ_FLAG="--skip-viz"
 
+GPU_ARGS=()
+if [ -n "$GPU" ]; then
+    GPU_ARGS=(--gpu "$GPU")
+fi
+
 SUCCESS_LIST=()
 FAIL_LIST=()
 RUN_IDX=0
@@ -261,7 +266,7 @@ except: print('')
                     --vocab_size 5000 \
                     --batch_size 32 \
                     --max_length 512 \
-                    --gpu "$GPU"
+                    "${GPU_ARGS[@]}"
                 cd "$PROJECT_ROOT"
 
                 DATA_EXP=$(basename "$(_check_data_ready)")
@@ -295,7 +300,7 @@ except: print('')
                     --kl_end "$KL_END" \
                     --kl_warmup "$KL_WARMUP" \
                     --patience "$PATIENCE" \
-                    --gpu "$GPU" \
+                    "${GPU_ARGS[@]}" \
                     --language "$LANGUAGE" \
                     --data_exp "$DATA_EXP" \
                     --exp_name "sweep_k${K}" \
@@ -320,7 +325,7 @@ except: print('')
                     --dataset "$DS" \
                     --num_topics "$K" \
                     --epochs "$EPOCHS" \
-                    --gpu "$GPU" \
+                    "${GPU_ARGS[@]}" \
                     --language "$LANGUAGE" \
                     $SKIP_VIZ_FLAG \
                     $EXTRA_ARGS \

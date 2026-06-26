@@ -67,7 +67,7 @@ print(value if value is not None else '')
 # =============================================================================
 DATASET=""
 MODELS=""
-GPU=0
+GPU=""
 SKIP_TRAIN=false
 SKIP_VIZ=false
 DATA_EXP=""
@@ -149,7 +149,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --dropout       Dropout rate"
             echo ""
             echo "Other Options:"
-            echo "  --gpu           GPU device ID (default: 0)"
+            echo "  --gpu           GPU device ID (default: inherit environment, otherwise 0)"
             echo "  --language      Visualization language: chinese, english, zh, en (default: zh)"
             echo "  --skip-train    Skip training"
             echo "  --skip-viz      Skip visualization"
@@ -197,6 +197,16 @@ if [ -z "$MODELS" ]; then
     echo "Error: Model name or --models is required"
     echo "Run '$0 --help' for usage"
     exit 1
+fi
+
+if [ -n "$GPU" ] && ! [[ "$GPU" =~ ^[0-9]+$ ]]; then
+    echo "Error: --gpu must be a non-negative integer"
+    exit 1
+fi
+
+GPU_ENV_ARGS=()
+if [ -n "$GPU" ]; then
+    GPU_ENV_ARGS=("CUDA_VISIBLE_DEVICES=$GPU")
 fi
 
 # =============================================================================
@@ -310,7 +320,7 @@ if [ -z "$WORKSPACE_DIR" ] || [ ! -f "$WORKSPACE_DIR/bow_matrix.npy" ]; then
     ABS_SBERT_MODEL="$(cd "$PROJECT_ROOT" && realpath "${SBERT_MODEL_PATH:-models/sbert/sentence-transformers/all-MiniLM-L6-v2}")"
 
     cd "$ETM_DIR"
-    python -c "
+    env "${GPU_ENV_ARGS[@]}" python -c "
 import sys
 sys.path.insert(0, '.')
 from model.baseline_data import prepare_baseline_data
@@ -359,7 +369,11 @@ CMD="python run_pipeline.py --dataset $DATASET --models $MODELS"
 CMD="$CMD --num_topics $NUM_TOPICS --vocab_size $VOCAB_SIZE"
 CMD="$CMD --epochs $EPOCHS --batch_size $BATCH_SIZE"
 CMD="$CMD --hidden_dim $HIDDEN_DIM --learning_rate $LEARNING_RATE"
-CMD="$CMD --dropout $DROPOUT --language $LANGUAGE --gpu $GPU"
+CMD="$CMD --dropout $DROPOUT --language $LANGUAGE"
+
+if [ -n "$GPU" ]; then
+    CMD="$CMD --gpu $GPU"
+fi
 
 # Add workspace_dir if provided
 if [ -n "$WORKSPACE_DIR" ]; then
