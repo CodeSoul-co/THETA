@@ -69,6 +69,7 @@ from config import (
     get_workspace_path, get_result_path, ensure_dir
 )
 from config_loader import ConfigLoader, YAMLConfig, EnvConfig, get_language
+from gpu_utils import append_gpu_argument, configure_cuda_visible_devices
 from model.baseline.stm import CovariatesRequiredError
 from utils.path_manager import validate_user_id, validate_dataset_name, validate_task_name, PathValidationError
 
@@ -202,7 +203,12 @@ def parse_args():
     parser.add_argument('--skip-train', action='store_true')
     parser.add_argument('--skip-eval', action='store_true')
     parser.add_argument('--skip-viz', action='store_true')
-    parser.add_argument('--gpu', type=int, default=0)
+    parser.add_argument(
+        '--gpu',
+        type=int,
+        default=None,
+        help='Physical GPU ID; overrides CUDA_VISIBLE_DEVICES when provided'
+    )
     # Visualization language (only affects chart titles and labels, NOT text processing)
     parser.add_argument('--language', type=str, default='zh', 
                         choices=['en', 'zh', 'chinese', 'english'],
@@ -496,6 +502,7 @@ def run_theta(args) -> Dict[str, Any]:
         'kl_end': args.kl_end,
         'kl_warmup': args.kl_warmup,
         'patience': args.patience,
+        'cuda_visible_devices': os.environ.get("CUDA_VISIBLE_DEVICES", "0"),
     }
     with open(train_exp_dir / 'config.json', 'w', encoding='utf-8') as f:
         json.dump(train_config, f, ensure_ascii=False, indent=2)
@@ -529,6 +536,7 @@ def run_theta(args) -> Dict[str, Any]:
         cmd.append('--skip_viz')
     if args.skip_eval:
         cmd.append('--skip_eval')
+    append_gpu_argument(cmd, args.gpu)
     
     if args.skip_train:
         print("  [SKIP] Training skipped")
@@ -902,7 +910,7 @@ def print_summary(results: List[Dict]):
 
 def main():
     args = parse_args()
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
+    configure_cuda_visible_devices(args.gpu)
     
     # Validate path components (user_id, dataset, task_name)
     try:
@@ -949,8 +957,7 @@ def main():
                     '--model_size', args.model_size,
                     '--mode', args.mode,
                     '--vocab_size', str(DATASET_CONFIGS.get(args.dataset, {}).get('vocab_size', 5000)),
-                    '--batch_size', str(args.batch_size),
-                    '--gpu', str(args.gpu)
+                    '--batch_size', str(args.batch_size)
                 ]
                 for arg_name, cli_name in [
                     ('embedding_provider', '--embedding-provider'),
@@ -969,9 +976,9 @@ def main():
                     '--dataset', args.dataset,
                     '--model', 'baseline',
                     '--vocab_size', str(DATASET_CONFIGS.get(args.dataset, {}).get('vocab_size', 5000)),
-                    '--batch_size', str(args.batch_size),
-                    '--gpu', str(args.gpu)
+                    '--batch_size', str(args.batch_size)
                 ]
+            append_gpu_argument(cmd, args.gpu)
             subprocess.run(cmd, cwd=str(Path(__file__).parent))
         return
     

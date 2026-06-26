@@ -13,11 +13,13 @@ import os
 import sys
 import json
 import logging
+import tempfile
+import traceback
 import numpy as np
 import pandas as pd
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, Optional, Tuple, List
+from typing import Dict, Any, Optional, Tuple, List, Callable
 from scipy import sparse
 from sklearn.preprocessing import LabelEncoder
 from tqdm import tqdm
@@ -36,52 +38,74 @@ from config import (
     PipelineConfig, create_parser, config_from_args,
     DATA_DIR, EMBEDDING_DIR, ETM_DIR, get_qwen_model_path
 )
+from gpu_utils import configure_cuda_visible_devices
+from artifact_utils import (
+    BOW_MANIFEST_NAME,
+    adapter_signature,
+    commit_bow_artifacts,
+    file_set_signature,
+    has_valid_bow_manifest,
+    validate_bow_manifest,
+)
 
 
-def setup_logging(config: PipelineConfig) -> logging.Logger:
+def setup_logging(
+    config: PipelineConfig,
+    local_rank: int = -1,
+    use_ddp: bool = False
+) -> logging.Logger:
     """Setup logging configuration"""
-    os.makedirs(config.log_dir, exist_ok=True)
-    
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = os.path.join(
-        config.log_dir,
-        f"{config.data.dataset}_{config.embedding.mode}_{timestamp}.log"
-    )
-    
-    # Create logger
     logger = logging.getLogger("ETM")
     logger.setLevel(logging.DEBUG if config.dev_mode else logging.INFO)
-    
-    # File handler
-    fh = logging.FileHandler(log_file)
-    fh.setLevel(logging.DEBUG)
-    
-    # Console handler
+
+    for handler in list(logger.handlers):
+        if getattr(handler, "_theta_owned", False):
+            logger.removeHandler(handler)
+            handler.close()
+
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)
-    
-    # Formatter
+    ch._theta_owned = True
+
     formatter = logging.Formatter(
         "%(asctime)s | %(levelname)s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     )
-    fh.setFormatter(formatter)
     ch.setFormatter(formatter)
-    
-    logger.addHandler(fh)
     logger.addHandler(ch)
-    
-    logger.info(f"Log file: {log_file}")
+
+    def prepare_log_file() -> str:
+        os.makedirs(config.log_dir, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        log_file = os.path.join(
+            config.log_dir,
+            f"{config.data.dataset}_{config.embedding.mode}_{timestamp}.log"
+        )
+        fh = logging.FileHandler(log_file)
+        fh.setLevel(logging.DEBUG)
+        fh.setFormatter(formatter)
+        fh._theta_owned = True
+        logger.addHandler(fh)
+        return log_file
+
+    log_file = run_rank_zero(
+        prepare_log_file,
+        use_ddp,
+        local_rank,
+        "prepare log file",
+    )
+    if is_main_process(local_rank):
+        logger.info(f"Log file: {log_file}")
     return logger
 
 
 def setup_device(config: PipelineConfig, local_rank: int = -1) -> torch.device:
     """Setup compute device with optional DDP support
-    
+
     Args:
         config: Pipeline configuration
         local_rank: Local rank for DDP (-1 for single GPU)
-    
+
     Returns:
         torch.device: The device to use
     """
@@ -92,25 +116,30 @@ def setup_device(config: PipelineConfig, local_rank: int = -1) -> torch.device:
             torch.cuda.set_device(local_rank)
         else:
             # Single GPU mode
-            os.environ["CUDA_VISIBLE_DEVICES"] = str(config.gpu_id)
             device = torch.device("cuda")
     else:
         device = torch.device("cpu")
     return device
 
 
+def get_global_rank(local_rank: int = -1) -> int:
+    """Return the global DDP rank, falling back to the local rank."""
+    return int(os.environ.get("RANK", local_rank))
+
+
 def setup_ddp(local_rank: int, world_size: int):
     """Initialize Distributed Data Parallel
-    
+
     Args:
         local_rank: Local rank of the current process
         world_size: Total number of processes
     """
+    torch.cuda.set_device(local_rank)
     dist.init_process_group(
         backend='nccl',
         init_method='env://',
         world_size=world_size,
-        rank=local_rank
+        rank=get_global_rank(local_rank)
     )
 
 
@@ -120,39 +149,126 @@ def cleanup_ddp():
         dist.destroy_process_group()
 
 
+def run_rank_zero(
+    operation: Callable[[], Any],
+    use_ddp: bool,
+    local_rank: int = -1,
+    operation_name: str = "rank-zero operation",
+) -> Any:
+    """Run an operation on global rank zero and broadcast its small result."""
+    if not (use_ddp and dist.is_initialized()):
+        return operation()
+
+    payload = [True, None, ""]
+    if is_main_process(local_rank):
+        try:
+            payload[1] = operation()
+        except Exception as exc:
+            payload = [
+                False,
+                None,
+                (
+                    f"{type(exc).__name__}: {exc}\n"
+                    f"{traceback.format_exc()}"
+                ),
+            ]
+
+    dist.broadcast_object_list(payload, src=0)
+    if not payload[0]:
+        raise RuntimeError(f"{operation_name} failed on rank 0: {payload[2]}")
+    return payload[1]
+
+
+def run_all_ranks(
+    operation: Callable[[], Any],
+    use_ddp: bool,
+    operation_name: str = "all-ranks operation",
+    signature_getter: Optional[Callable[[Any], Any]] = None,
+    expected_signature: Any = None,
+) -> Any:
+    """Run a local operation on every rank and collectively report failures."""
+    if not (use_ddp and dist.is_initialized()):
+        return operation()
+
+    local_result = None
+    local_status = [get_global_rank(), True, "", None]
+    try:
+        local_result = operation()
+        if signature_getter is not None:
+            local_status[3] = signature_getter(local_result)
+    except Exception as exc:
+        local_status = [
+            get_global_rank(),
+            False,
+            (
+                f"{type(exc).__name__}: {exc}\n"
+                f"{traceback.format_exc()}"
+            ),
+            None,
+        ]
+
+    statuses = [None] * dist.get_world_size()
+    dist.all_gather_object(statuses, local_status)
+    failures = [
+        f"rank {status[0]}: {status[2]}"
+        for status in statuses
+        if not status[1]
+    ]
+    if failures:
+        raise RuntimeError(f"{operation_name} failed: {'; '.join(failures)}")
+    if signature_getter is not None:
+        signatures = [status[3] for status in statuses]
+        reference = (
+            expected_signature
+            if expected_signature is not None
+            else signatures[0]
+        )
+        mismatches = [
+            f"rank {status[0]}"
+            for status in statuses
+            if status[3] != reference
+        ]
+        if mismatches:
+            raise RuntimeError(
+                f"{operation_name} signature mismatch: "
+                f"{', '.join(mismatches)}"
+            )
+    return local_result
+
+
 def is_main_process(local_rank: int = -1) -> bool:
     """Check if current process is the main process"""
-    return local_rank <= 0
+    return local_rank < 0 or get_global_rank(local_rank) == 0
 
 
 def load_texts(config: PipelineConfig, logger: logging.Logger) -> Tuple[List[str], Optional[np.ndarray], Optional[np.ndarray]]:
     """Load texts from dataset, optionally with timestamps"""
     import pandas as pd
-    
+
     csv_path = config.data.raw_data_path
     logger.info(f"Loading texts from {csv_path}")
-    
+
     df = pd.read_csv(csv_path)
-    
+
     # Find text column - support various naming conventions across datasets
     text_col = None
     for col in ['cleaned_content', 'clean_text', 'cleaned_text', 'text', 'content', 'Text', 'Consumer complaint narrative']:
         if col in df.columns:
             text_col = col
             break
-    
+
     if text_col is None:
         raise ValueError(f"No text column found. Columns: {df.columns.tolist()}")
-    
+
     texts = df[text_col].fillna('').astype(str).tolist()
-    
+
     # Find label column
     labels = None
     for col in ['label', 'Label', 'labels', 'category']:
         if col in df.columns:
             labels = df[col].values
             break
-    
+
     # Load timestamps if enabled and column exists
     timestamps = None
     if config.visualization.enable_temporal and config.data.timestamp_column:
@@ -166,7 +282,7 @@ def load_texts(config: PipelineConfig, logger: logging.Logger) -> Tuple[List[str
                 logger.warning(f"Failed to parse timestamps from column '{ts_col}': {e}")
         else:
             logger.warning(f"Timestamp column '{ts_col}' not found in data. Available: {df.columns.tolist()}")
-    
+
     logger.info(f"Loaded {len(texts)} documents, text_col={text_col}, has_labels={labels is not None}")
     return texts, labels, timestamps
 
@@ -179,9 +295,9 @@ def generate_bow(
     """Generate BOW matrix"""
     from bow.vocab_builder import VocabBuilder, VocabConfig
     from bow.bow_generator import BOWGenerator
-    
+
     logger.info(f"Generating BOW: vocab_size={config.bow.vocab_size}")
-    
+
     # Build vocabulary
     vocab_config = VocabConfig(
         max_vocab_size=config.bow.vocab_size,
@@ -189,16 +305,16 @@ def generate_bow(
         max_df_ratio=config.bow.max_doc_freq_ratio
     )
     vocab_builder = VocabBuilder(config=vocab_config, dev_mode=config.dev_mode)
-    
+
     vocab_builder.add_documents(texts, dataset_name=config.data.dataset)
     vocab_builder.build_vocab()
-    
+
     # Generate BOW
     bow_generator = BOWGenerator(vocab_builder, dev_mode=config.dev_mode)
     bow_output = bow_generator.generate_bow(texts, dataset_name=config.data.dataset)
-    
+
     vocab = vocab_builder.get_vocab_list()
-    
+
     logger.info(f"BOW shape: {bow_output.bow_matrix.shape}, vocab_size: {len(vocab)}")
     return bow_output.bow_matrix, vocab
 
@@ -239,17 +355,17 @@ def generate_vocab_embeddings(
     from model.vocab_embedder import VocabEmbedder
 
     logger.info(f"Generating vocab embeddings for {len(vocab)} words with local Qwen")
-    
+
     embedder = VocabEmbedder(
         model_path=config.embedding.model_path,
         device="cuda" if config.device == "cuda" else "cpu",
         batch_size=64,
         dev_mode=config.dev_mode
     )
-    
+
     embeddings = embedder.embed_vocab(vocab)
     logger.info(f"Vocab embeddings shape: {embeddings.shape}")
-    
+
     return embeddings
 
 
@@ -269,7 +385,7 @@ def load_doc_embeddings(
         if os.path.exists(candidate):
             emb_path = candidate
             break
-    
+
     label_candidates = [
         os.path.join(embedding_dir, f"{config.data.dataset}_{config.embedding.mode}_labels.npy"),
         os.path.join(embedding_dir, "labels.npy"),
@@ -279,17 +395,17 @@ def load_doc_embeddings(
         if os.path.exists(candidate):
             label_path = candidate
             break
-    
+
     logger.info(f"Loading doc embeddings from {emb_path}")
     embeddings = np.load(emb_path)
-    
+
     labels = None
     if os.path.exists(label_path):
         try:
             labels = np.load(label_path, allow_pickle=True)
         except Exception as e:
             logger.warning(f"Failed to load labels: {e}")
-    
+
     logger.info(f"Doc embeddings: {embeddings.shape}, labels: {labels.shape if labels is not None else 'None'}")
     return embeddings, labels
 
@@ -301,39 +417,39 @@ def load_labels_for_supervised(
 ) -> Tuple[Optional[np.ndarray], int, Optional[LabelEncoder]]:
     """
     Load labels for supervised learning mode.
-    
+
     IMPORTANT: Labels must be aligned with embeddings.npy (same row count).
     Priority order:
     1. labels.npy from embeddings directory (saved during preprocessing, guaranteed aligned)
     2. CSV file (only if row count matches num_docs)
-    
+
     Args:
         config: Pipeline configuration
         logger: Logger instance
         num_docs: Number of documents in embeddings.npy (for alignment check)
-        
+
     Returns:
         Tuple of (encoded_labels, num_classes, label_encoder)
         Returns (None, 0, None) if not in supervised mode or labels not available
-        
+
     Note:
         The label_encoder should be saved to label_mapping.json for inference.
     """
     if config.embedding.mode != 'supervised':
         return None, 0, None
-    
+
     # Priority 1: Try to load labels.npy from embeddings directory (aligned with embeddings)
     embedding_dir = config.embeddings_dir
     label_npy_candidates = [
         os.path.join(embedding_dir, "labels.npy"),
         os.path.join(embedding_dir, f"{config.data.dataset}_{config.embedding.mode}_labels.npy"),
     ]
-    
+
     for label_path in label_npy_candidates:
         if os.path.exists(label_path):
             logger.info(f"Loading labels from preprocessed file: {label_path}")
             raw_labels = np.load(label_path, allow_pickle=True)
-            
+
             # Verify alignment
             if len(raw_labels) != num_docs:
                 logger.warning(
@@ -341,32 +457,32 @@ def load_labels_for_supervised(
                     f"but embeddings has {num_docs} rows. Skipping this file."
                 )
                 continue
-            
+
             # Encode labels
             label_encoder = LabelEncoder()
             encoded_labels = label_encoder.fit_transform(raw_labels)
             num_classes = len(label_encoder.classes_)
-            
+
             logger.info(f"Loaded {len(encoded_labels)} labels, {num_classes} classes")
             logger.info(f"Class mapping: {dict(zip(label_encoder.classes_, range(num_classes)))}")
-            
+
             return encoded_labels.astype(np.int64), num_classes, label_encoder
-    
+
     # Priority 2: Fallback to CSV (with strict alignment check)
     csv_path = config.data.raw_data_path
     if not os.path.exists(csv_path):
         csv_path = config.data.cleaned_data_path
-    
+
     if not os.path.exists(csv_path):
         raise FileNotFoundError(
             f"Cannot find labels for supervised learning. "
             f"No labels.npy in {embedding_dir} and no CSV file found. "
             f"Tried: {config.data.raw_data_path}, {config.data.cleaned_data_path}"
         )
-    
+
     logger.info(f"Loading labels from CSV: {csv_path}")
     df = pd.read_csv(csv_path)
-    
+
     # CRITICAL: Check alignment with embeddings
     if len(df) != num_docs:
         raise ValueError(
@@ -374,10 +490,10 @@ def load_labels_for_supervised(
             f"This can happen if preprocessing dropped some rows (e.g., invalid timestamps in DTM mode). "
             f"Please ensure labels.npy is saved during preprocessing, or use the same CSV that was preprocessed."
         )
-    
+
     # Get label column name from config
     label_col = getattr(config, 'label_col', 'label')
-    
+
     if label_col not in df.columns:
         available_cols = ', '.join(df.columns.tolist())
         raise ValueError(
@@ -385,18 +501,18 @@ def load_labels_for_supervised(
             f"Available columns: [{available_cols}]. "
             f"Please specify the correct column name using --label_col argument."
         )
-    
+
     raw_labels = df[label_col].values
-    
+
     label_encoder = LabelEncoder()
     encoded_labels = label_encoder.fit_transform(raw_labels)
     num_classes = len(label_encoder.classes_)
-    
+
     logger.info(f"Label column: '{label_col}'")
     logger.info(f"Unique classes: {num_classes}")
     logger.info(f"Class mapping: {dict(zip(label_encoder.classes_, range(num_classes)))}")
     logger.info(f"Labels shape: {encoded_labels.shape}")
-    
+
     return encoded_labels.astype(np.int64), num_classes, label_encoder
 
 
@@ -491,7 +607,8 @@ def train_two_stage(
     if use_ddp:
         from torch.utils.data.distributed import DistributedSampler
         train_sampler = DistributedSampler(
-            train_dataset, num_replicas=world_size, rank=local_rank, shuffle=True
+            train_dataset, num_replicas=world_size,
+            rank=get_global_rank(local_rank), shuffle=True
         )
 
     train_loader = create_dataloader(
@@ -563,6 +680,7 @@ def train_two_stage(
 
     # Training loop for Stage 1
     best_val_loss_stage1 = float('inf')
+    expected_adapter_signature = None
     history_stage1 = {'train_loss': [], 'val_loss': []}
 
     if is_main:
@@ -656,20 +774,31 @@ def train_two_stage(
         if is_main:
             logger.info(f"Stage1 Epoch {epoch+1}/{config.model.stage1_epochs}: train_loss={train_loss:.4f}, val_loss={val_loss:.4f}")
 
-        # Save best model
-        if val_loss < best_val_loss_stage1:
+        improved_stage1 = val_loss < best_val_loss_stage1
+        if improved_stage1:
             best_val_loss_stage1 = val_loss
-            if is_main:
-                # Save LoRA adapter
+
+        def save_lora_adapter():
+            if improved_stage1:
                 lora_save_dir = Path(config.model_dir) / "lora_adapter"
                 lora_save_dir.mkdir(parents=True, exist_ok=True)
-
                 model_to_save = model_stage1.module if use_ddp else model_stage1
                 model_to_save.save_pretrained(lora_save_dir)
 
                 logger.info(f"✓ Stage 1 best model saved to {lora_save_dir}")
                 logger.info(f"  - adapter_config.json")
                 logger.info(f"  - adapter_model.safetensors")
+                return adapter_signature(lora_save_dir)
+            return None
+
+        saved_signature = run_rank_zero(
+            save_lora_adapter,
+            use_ddp,
+            local_rank,
+            "save LoRA adapter",
+        )
+        if saved_signature is not None:
+            expected_adapter_signature = saved_signature
 
     if is_main:
         logger.info("=" * 60)
@@ -694,13 +823,25 @@ def train_two_stage(
     if is_main:
         logger.info(f"Loading LoRA weights from {lora_save_dir}")
 
-    base_model_stage2 = AutoModel.from_pretrained(
-        model_path,
-        trust_remote_code=True,
-        torch_dtype=torch.float32  # Use float32 to match embeddings dtype
-    )
     from peft import PeftModel
-    embedding_model = PeftModel.from_pretrained(base_model_stage2, lora_save_dir)
+
+    def load_lora_adapter():
+        local_signature = adapter_signature(lora_save_dir)
+        base_model_stage2 = AutoModel.from_pretrained(
+            model_path,
+            trust_remote_code=True,
+            torch_dtype=torch.float32
+        )
+        model = PeftModel.from_pretrained(base_model_stage2, lora_save_dir)
+        return model, local_signature
+
+    embedding_model, _ = run_all_ranks(
+        load_lora_adapter,
+        use_ddp,
+        "load LoRA adapter",
+        signature_getter=lambda result: result[1],
+        expected_signature=expected_adapter_signature,
+    )
     embedding_model = embedding_model.to(device)
 
     # Freeze embedding model completely
@@ -773,7 +914,8 @@ def train_two_stage(
     train_sampler_stage2 = None
     if use_ddp:
         train_sampler_stage2 = DistributedSampler(
-            train_dataset_stage2, num_replicas=world_size, rank=local_rank, shuffle=True
+            train_dataset_stage2, num_replicas=world_size,
+            rank=get_global_rank(local_rank), shuffle=True
         )
 
     # Create new dataloaders for Stage 2
@@ -910,7 +1052,7 @@ def train_etm(
     world_size: int = 1
 ) -> Dict[str, Any]:
     """Train ETM model with optional DDP support
-    
+
     Args:
         doc_embeddings: Document embeddings
         bow_matrix: Bag-of-words matrix
@@ -920,7 +1062,7 @@ def train_etm(
         device: Torch device
         local_rank: Local rank for DDP (-1 for single GPU)
         world_size: Total number of GPUs for DDP
-    
+
     Returns:
         Dict containing model, history, and other results
     """
@@ -959,11 +1101,11 @@ def train_etm(
             logger.info("=" * 60)
             logger.info("ZERO-SHOT MODE: Using pretrained embeddings without fine-tuning")
             logger.info("=" * 60)
-    
+
     # Load labels for supervised mode (pass num_docs for alignment check)
     num_docs = doc_embeddings.shape[0]
     labels, num_classes, label_encoder = load_labels_for_supervised(config, logger, num_docs)
-    
+
     if config.embedding.mode == 'supervised':
         if labels is None:
             raise ValueError(
@@ -972,7 +1114,7 @@ def train_etm(
             )
         if is_main_process(local_rank):
             logger.info(f"Supervised mode enabled: num_classes={num_classes}")
-    
+
     # Create dataset
     # For large datasets, keep BOW in sparse format to avoid massive memory usage
     use_sparse = doc_embeddings.shape[0] > 200000
@@ -986,18 +1128,18 @@ def train_etm(
         dev_mode=config.dev_mode,
         keep_sparse=use_sparse
     )
-    
+
     # Split data
     n_total = len(dataset)
     n_train = int(n_total * config.model.train_ratio)
     n_val = int(n_total * config.model.val_ratio)
     n_test = n_total - n_train - n_val
-    
+
     train_dataset, val_dataset, test_dataset = random_split(
         dataset, [n_train, n_val, n_test],
         generator=torch.Generator().manual_seed(config.seed)
     )
-    
+
     # Scale DataLoader workers for large datasets
     # With keep_sparse=True, BOW is CSR (~few hundred MB) so workers are safe.
     # But limit workers to avoid excessive memory from forked doc_embeddings tensor.
@@ -1009,17 +1151,17 @@ def train_etm(
         dl_persistent = False
         if is_main_process(local_rank):
             logger.info(f"Large dataset ({n_total:,} docs): using num_workers={dl_num_workers}, persistent=False")
-    
+
     # Create samplers for DDP
     train_sampler = None
     if use_ddp:
         train_sampler = DistributedSampler(
             train_dataset,
             num_replicas=world_size,
-            rank=local_rank,
+            rank=get_global_rank(local_rank),
             shuffle=True
         )
-    
+
     train_loader = create_dataloader(
         train_dataset, 
         batch_size=config.model.batch_size, 
@@ -1048,13 +1190,13 @@ def train_etm(
         persistent_workers=dl_persistent,
         prefetch_factor=config.model.prefetch_factor
     )
-    
+
     if is_main_process(local_rank):
         logger.info(f"Data splits: train={n_train}, val={n_val}, test={n_test}")
-    
+
     # Create model
     vocab_size = bow_matrix.shape[1]
-    
+
     # Use pretrained embeddings only if train_word_embeddings is False
     # Otherwise use random initialization for better learning
     if config.model.train_word_embeddings:
@@ -1063,7 +1205,7 @@ def train_etm(
     else:
         word_emb_tensor = torch.tensor(vocab_embeddings, dtype=torch.float32)
         logger.info("Using pretrained word embeddings (frozen)")
-    
+
     model = ETM(
         vocab_size=vocab_size,
         num_topics=config.model.num_topics,
@@ -1076,26 +1218,26 @@ def train_etm(
         num_classes=num_classes,  # For supervised mode
         dev_mode=config.dev_mode
     ).to(device)
-    
+
     # Wrap model with DDP if using multi-GPU
     if use_ddp:
         model = DDP(model, device_ids=[local_rank], output_device=local_rank)
         if is_main_process(local_rank):
             logger.info(f"Model wrapped with DistributedDataParallel on {world_size} GPUs")
-    
+
     # Count parameters
     total_params = sum(p.numel() for p in model.parameters())
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     if is_main_process(local_rank):
         logger.info(f"Model params: total={total_params:,}, trainable={trainable_params:,}")
-    
+
     # Optimizer and scheduler
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=config.model.learning_rate,
         weight_decay=config.model.weight_decay
     )
-    
+
     scheduler = None
     if config.model.use_scheduler:
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -1104,14 +1246,14 @@ def train_etm(
             factor=config.model.scheduler_factor,
             patience=config.model.scheduler_patience
         )
-    
+
     # Training history
     history = {
         'train_loss': [], 'val_loss': [],
         'recon_loss': [], 'kl_loss': [],
         'perplexity': []  # Track perplexity during training
     }
-    
+
     # Initialize AdaptiveLossWeighter for supervised mode
     loss_weighter = None
     if config.embedding.mode == 'supervised':
@@ -1128,15 +1270,15 @@ def train_etm(
             logger.info("AdaptiveLossWeighter initialized for supervised mode")
             logger.info(f"  Target ratio: CE=70%, Recon=30%")
             logger.info(f"  Warmup CE weight: 10.0 (for first 100 steps)")
-    
+
     best_val_loss = float('inf')
     best_model_state = None
     patience_counter = 0
-    
+
     if is_main_process(local_rank):
         logger.info("=" * 60)
         logger.info("Starting training...")
-    
+
     for epoch in range(config.model.epochs):
         # Set epoch for distributed sampler
         if train_sampler is not None:
@@ -1145,24 +1287,24 @@ def train_etm(
         # Free bits in loss function handles posterior collapse, so no minimum here
         warmup_progress = min(1.0, (epoch + 1) / config.model.kl_warmup_epochs)
         kl_weight = config.model.kl_start + (config.model.kl_end - config.model.kl_start) * warmup_progress
-        
+
         # Training
         model.train()
         train_loss = 0.0
-        
+
         # Get current mode
         current_mode = config.embedding.mode
-        
+
         for batch in train_loader:
             doc_emb = batch['doc_embedding'].to(device)
             bow = batch['bow'].to(device)
             batch_labels = batch.get('label', None)
             if batch_labels is not None:
                 batch_labels = batch_labels.to(device)
-            
+
             optimizer.zero_grad()
             output = model(doc_emb, bow, labels=batch_labels, mode=current_mode, kl_weight=kl_weight)
-            
+
             # Compute loss with adaptive weighting for supervised mode
             if current_mode == 'supervised' and loss_weighter is not None:
                 # Get adaptive weights (only for CE and Recon, NOT KL)
@@ -1176,17 +1318,17 @@ def train_etm(
                         output['kl_loss'])  # kl_loss already includes kl_weight
             else:
                 loss = output['total_loss']
-            
+
             # Only backward if not zero_shot mode
             if current_mode != 'zero_shot':
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 optimizer.step()
-            
+
             train_loss += loss.item() * doc_emb.size(0)
-        
+
         train_loss /= n_train
-        
+
         # Validation
         model.eval()
         val_loss = 0.0
@@ -1194,7 +1336,7 @@ def train_etm(
         val_kl = 0.0
         val_ce = 0.0  # Track CE loss for supervised mode
         val_contrastive = 0.0  # Track contrastive loss for unsupervised mode
-        
+
         with torch.no_grad():
             for batch in val_loader:
                 doc_emb = batch['doc_embedding'].to(device)
@@ -1202,9 +1344,9 @@ def train_etm(
                 batch_labels = batch.get('label', None)
                 if batch_labels is not None:
                     batch_labels = batch_labels.to(device)
-                
+
                 output = model(doc_emb, bow, labels=batch_labels, mode=current_mode, kl_weight=kl_weight)
-                
+
                 # Use same weighting logic as training for consistent val_loss
                 if current_mode == 'supervised' and loss_weighter is not None:
                     weights = loss_weighter.get_weights()  # Use frozen weights, don't update
@@ -1217,11 +1359,11 @@ def train_etm(
                     # Track contrastive loss for unsupervised mode
                     if 'contrastive_loss' in output:
                         val_contrastive += output['contrastive_loss'].item() * doc_emb.size(0)
-                
+
                 val_loss += batch_loss * doc_emb.size(0)
                 val_recon += output['recon_loss'].item() * doc_emb.size(0)
                 val_kl += output['kl_loss'].item() * doc_emb.size(0)
-        
+
         val_loss /= n_val
         val_recon /= n_val
         val_kl /= n_val
@@ -1229,7 +1371,7 @@ def train_etm(
             val_ce /= n_val
         if current_mode == 'unsupervised':
             val_contrastive /= n_val
-        
+
         # Compute perplexity on validation set
         # Perplexity = exp(negative log-likelihood per word)
         # We compute it properly using the model's reconstruction
@@ -1239,35 +1381,35 @@ def train_etm(
             for batch in val_loader:
                 doc_emb = batch['doc_embedding'].to(device)
                 bow = batch['bow'].to(device)
-                
+
                 # Get topic distribution and word distribution
                 # Handle DDP wrapped model
                 base_model = model.module if use_ddp else model
                 theta_batch, _, _ = base_model.encoder(doc_emb)
                 beta = base_model.decoder.get_beta()
-                
+
                 # Compute word probabilities: p(w|d) = sum_k theta_dk * beta_kw
                 word_probs = torch.matmul(theta_batch, beta)  # (batch, vocab)
                 word_probs = torch.clamp(word_probs, min=1e-10)
-                
+
                 # Negative log-likelihood per document
                 log_probs = torch.log(word_probs)
                 nll = -torch.sum(bow * log_probs, dim=1)  # (batch,)
                 doc_lengths = bow.sum(dim=1)  # (batch,)
-                
+
                 total_nll += nll.sum().item()
                 total_words += doc_lengths.sum().item()
-            
+
             # Perplexity = exp(NLL / total_words)
             val_perplexity = np.exp(total_nll / total_words) if total_words > 0 else float('inf')
-        
+
         # Update history
         history['train_loss'].append(train_loss)
         history['val_loss'].append(val_loss)
         history['recon_loss'].append(val_recon)
         history['kl_loss'].append(val_kl)
         history['perplexity'].append(val_perplexity)
-        
+
         # Check for improvement
         improved = val_loss < best_val_loss - config.model.min_delta
         if improved:
@@ -1278,11 +1420,11 @@ def train_etm(
         else:
             patience_counter += 1
             marker = ""
-        
+
         # Learning rate scheduler
         if scheduler:
             scheduler.step(val_loss)
-        
+
         if is_main_process(local_rank):
             if current_mode == 'supervised' and loss_weighter is not None:
                 weights = loss_weighter.get_weights()
@@ -1305,7 +1447,7 @@ def train_etm(
                     f"Train: {train_loss:.4f} | Val: {val_loss:.4f} | "
                     f"PPL: {val_perplexity:.1f} {marker}"
                 )
-        
+
         # Periodic topic quality check (every 10 epochs or at end) - only on main process
         if is_main_process(local_rank) and ((epoch + 1) % 10 == 0 or epoch == config.model.epochs - 1 or improved):
             with torch.no_grad():
@@ -1317,7 +1459,7 @@ def train_etm(
                 for k in range(beta.shape[0]):
                     top_indices = beta[k].argsort()[-top_k:][::-1]
                     topic_top_words.append(set(top_indices))
-                
+
                 # Compute pairwise Jaccard similarity
                 total_overlap = 0
                 n_pairs = 0
@@ -1329,24 +1471,24 @@ def train_etm(
                         n_pairs += 1
                 avg_overlap = total_overlap / n_pairs if n_pairs > 0 else 0
                 diversity = 1 - avg_overlap
-                
+
                 # Check beta sharpness (how peaked are topic distributions)
                 beta_max = beta.max(axis=1).mean()
                 beta_entropy = -np.sum(beta * np.log(beta + 1e-10), axis=1).mean()
-                
+
                 if (epoch + 1) % 10 == 0:
                     logger.info(f"  Topic Quality: diversity={diversity:.3f}, beta_max={beta_max:.4f}, entropy={beta_entropy:.2f}")
-        
+
         # Early stopping
         if config.model.early_stopping and patience_counter >= config.model.patience:
             if is_main_process(local_rank):
                 logger.info(f"Early stopping at epoch {epoch+1}")
             break
-    
+
     # Load best model
     if best_model_state:
         model.load_state_dict(best_model_state)
-    
+
     # Test evaluation
     model.eval()
     test_loss = 0.0
@@ -1357,23 +1499,132 @@ def train_etm(
             output = model(doc_emb, bow, kl_weight=1.0)
             test_loss += output['total_loss'].item() * doc_emb.size(0)
     test_loss /= n_test
-    
+
     history['test_loss'] = test_loss
     history['best_val_loss'] = best_val_loss
     history['epochs_trained'] = epoch + 1
-    
+
     if is_main_process(local_rank):
         logger.info(f"Training complete! Best val loss: {best_val_loss:.4f}, Test loss: {test_loss:.4f}")
-    
+
     # Return the base model (unwrap DDP if needed)
     base_model = model.module if use_ddp else model
-    
+
     return {
         'model': base_model,
         'history': history,
         'best_val_loss': best_val_loss,
         'test_loss': test_loss
     }
+
+
+def save_bow_artifacts(
+    bow_matrix,
+    vocab: List[str],
+    vocab_embeddings: np.ndarray,
+    bow_dir: str,
+) -> str:
+    """Atomically publish a committed canonical sparse BOW artifact set."""
+    os.makedirs(bow_dir, exist_ok=True)
+    sparse_matrix = (
+        bow_matrix
+        if sparse.issparse(bow_matrix)
+        else sparse.csr_matrix(bow_matrix)
+    )
+    temporary_paths = {}
+    try:
+        descriptor, matrix_path = tempfile.mkstemp(
+            prefix=".bow_matrix.",
+            suffix=".npz",
+            dir=bow_dir,
+        )
+        os.close(descriptor)
+        sparse.save_npz(matrix_path, sparse_matrix)
+        temporary_paths["matrix"] = Path(matrix_path)
+
+        descriptor, embeddings_path = tempfile.mkstemp(
+            prefix=".vocab_embeddings.",
+            suffix=".npy",
+            dir=bow_dir,
+        )
+        os.close(descriptor)
+        np.save(embeddings_path, vocab_embeddings)
+        temporary_paths["vocab_embeddings"] = Path(embeddings_path)
+
+        descriptor, vocab_path = tempfile.mkstemp(
+            prefix=".vocab.",
+            suffix=".txt",
+            dir=bow_dir,
+        )
+        with os.fdopen(descriptor, "w", encoding="utf-8") as file_obj:
+            file_obj.write('\n'.join(vocab))
+            file_obj.flush()
+            os.fsync(file_obj.fileno())
+        temporary_paths["vocab"] = Path(vocab_path)
+
+        manifest = commit_bow_artifacts(
+            bow_dir,
+            temporary_paths,
+            {
+                "matrix": {
+                    "shape": list(sparse_matrix.shape),
+                    "format": "scipy_csr_npz",
+                },
+                "vocab_embeddings": {
+                    "shape": list(vocab_embeddings.shape),
+                    "dtype": str(vocab_embeddings.dtype),
+                },
+                "vocab": {
+                    "count": len(vocab),
+                    "encoding": "utf-8",
+                },
+            },
+        )
+        return manifest["signature"]
+    finally:
+        for path in temporary_paths.values():
+            if path.exists():
+                path.unlink()
+
+
+def load_bow_artifacts(bow_dir: str):
+    """Load canonical sparse BOW artifacts, with dense legacy fallback."""
+    sparse_path = os.path.join(bow_dir, "bow_matrix.npz")
+    dense_path = os.path.join(bow_dir, "bow_matrix.npy")
+    manifest_path = os.path.join(bow_dir, BOW_MANIFEST_NAME)
+    vocab_path = os.path.join(bow_dir, "vocab.txt")
+    vocab_emb_path = os.path.join(bow_dir, "vocab_embeddings.npy")
+
+    manifest = None
+    if os.path.exists(manifest_path):
+        manifest, signature = validate_bow_manifest(bow_dir)
+        bow_matrix = sparse.load_npz(sparse_path)
+    elif os.path.exists(sparse_path):
+        raise ValueError("canonical BOW matrix exists without a valid manifest")
+    elif os.path.exists(dense_path):
+        bow_matrix = np.load(dense_path)
+        signature = file_set_signature(
+            bow_dir,
+            ("bow_matrix.npy", "vocab_embeddings.npy", "vocab.txt"),
+            "theta.bow-artifacts.legacy-dense",
+        )
+    else:
+        raise FileNotFoundError(f"No BOW matrix found in {bow_dir}")
+
+    with open(vocab_path, 'r', encoding='utf-8') as f:
+        vocab = [line.strip() for line in f]
+    vocab_embeddings = np.load(vocab_emb_path)
+    if manifest is not None:
+        artifacts = manifest["artifacts"]
+        if list(bow_matrix.shape) != artifacts["matrix"]["shape"]:
+            raise ValueError("BOW matrix shape mismatch")
+        if list(vocab_embeddings.shape) != artifacts["vocab_embeddings"]["shape"]:
+            raise ValueError("vocab embedding shape mismatch")
+        if str(vocab_embeddings.dtype) != artifacts["vocab_embeddings"]["dtype"]:
+            raise ValueError("vocab embedding dtype mismatch")
+        if len(vocab) != artifacts["vocab"]["count"]:
+            raise ValueError("vocab count mismatch")
+    return bow_matrix, vocab, vocab_embeddings, signature
 
 
 def save_results(
@@ -1394,10 +1645,10 @@ def save_results(
     os.makedirs(config.bow_dir, exist_ok=True)
     os.makedirs(config.evaluation_dir, exist_ok=True)
     os.makedirs(config.visualization_dir, exist_ok=True)
-    
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     logger.info(f"Saving results to {config.result_dir}")
-    
+
     model.eval()
     with torch.no_grad():
         # Get theta for all documents (batch processing for large datasets)
@@ -1417,42 +1668,33 @@ def save_results(
         else:
             doc_emb_tensor = torch.tensor(doc_embeddings, dtype=torch.float32).to(device)
             theta = model.get_theta(doc_emb_tensor).cpu().numpy()
-        
+
         # Get beta
         beta = model.get_beta().cpu().numpy()
-        
+
         # Get topic embeddings
         topic_emb = model.get_topic_embeddings().cpu().numpy()
-        
+
         # Get topic words
         topic_words = model.get_topic_words(top_k=20, vocab=vocab)
-    
-    # Save BOW to bow_dir
-    # Save as dense npy format
-    bow_dense = bow_matrix.toarray() if sparse.issparse(bow_matrix) else bow_matrix
-    np.save(os.path.join(config.bow_dir, "bow_matrix.npy"), bow_dense)
-    np.save(os.path.join(config.bow_dir, "vocab_embeddings.npy"), vocab_embeddings)
-    with open(os.path.join(config.bow_dir, "vocab.txt"), 'w', encoding='utf-8') as f:
-        f.write('\n'.join(vocab))
-    logger.info(f"BOW saved to {config.bow_dir}")
-    
+
     # Save model outputs to model_dir (fixed filenames without timestamp)
     np.save(os.path.join(config.model_dir, "theta.npy"), theta)
     np.save(os.path.join(config.model_dir, "beta.npy"), beta)
     np.save(os.path.join(config.model_dir, "topic_embeddings.npy"), topic_emb)
-    
+
     # Save topic words
     topic_words_dict = {str(k): words for k, words in topic_words}
     with open(os.path.join(config.model_dir, "topic_words.json"), 'w') as f:
         json.dump(topic_words_dict, f, indent=2, ensure_ascii=False)
-    
+
     # Save training history
     with open(os.path.join(config.model_dir, "training_history.json"), 'w') as f:
         json.dump(history, f, indent=2)
-    
+
     # Save model weights
     torch.save(model.state_dict(), os.path.join(config.model_dir, "etm_model.pt"))
-    
+
     # Save label mapping for supervised mode (for inference)
     if config.embedding.mode == 'supervised' and label_encoder is not None:
         label_mapping = {
@@ -1464,26 +1706,26 @@ def save_results(
         with open(label_mapping_path, 'w', encoding='utf-8') as f:
             json.dump(label_mapping, f, indent=2, ensure_ascii=False)
         logger.info(f"Label mapping saved to {label_mapping_path}")
-    
+
     # Save config to exp_dir (parent of model_dir) with mode suffix
     mode = config.embedding.mode if hasattr(config.embedding, 'mode') else 'unsupervised'
     config_path = os.path.join(config.exp_dir, f"config_{mode}.json")
     config.save(config_path)
     logger.info(f"Config saved to {config_path}")
-    
+
     # Save timestamps if available (for temporal analysis)
     if timestamps is not None and len(timestamps) > 0:
         ts_path = os.path.join(config.result_dir, "timestamps.npy")
         np.save(ts_path, timestamps)
         logger.info(f"Timestamps saved to {ts_path}")
-    
+
     # Log top words
     logger.info("=" * 60)
     logger.info("Top 10 words per topic:")
     for topic_idx, words in topic_words[:10]:
         word_str = ", ".join([w for w, _ in words[:10]])
         logger.info(f"  Topic {topic_idx}: {word_str}")
-    
+
     logger.info(f"Results saved with timestamp: {timestamp}")
     return timestamp
 
@@ -1496,30 +1738,29 @@ def run_evaluation(
     """Run evaluation on trained model"""
     from evaluation.topic_metrics import compute_all_metrics
     from evaluation.topic_metrics import TopicMetrics
-    
+
     # Load results from model_dir (fixed filenames)
     theta_path = os.path.join(config.model_dir, "theta.npy")
     if not os.path.exists(theta_path):
         raise FileNotFoundError(f"No results found in {config.model_dir}")
-    
+
     logger.info(f"Evaluating results from: {config.model_dir}")
-    
+
     # Load results from model_dir
     theta = np.load(os.path.join(config.model_dir, "theta.npy"))
     beta = np.load(os.path.join(config.model_dir, "beta.npy"))
-    
+
     with open(os.path.join(config.model_dir, "topic_words.json"), 'r') as f:
         topic_words = json.load(f)
-    
+
     # Load BOW matrix from bow_dir (or regenerate if not exists)
-    bow_path = os.path.join(config.bow_dir, "bow_matrix.npy")
-    if os.path.exists(bow_path):
-        bow_matrix = np.load(bow_path)
-        logger.info(f"Loaded BOW from {bow_path}")
-    else:
+    try:
+        bow_matrix, _, _, _ = load_bow_artifacts(config.bow_dir)
+        logger.info(f"Loaded BOW from {config.bow_dir}")
+    except FileNotFoundError:
         texts, _, _ = load_texts(config, logger)
         bow_matrix, vocab = generate_bow(texts, config, logger)
-    
+
     # Compute metrics
     logger.info("Computing evaluation metrics...")
     metrics = compute_all_metrics(
@@ -1529,7 +1770,7 @@ def run_evaluation(
         top_k_coherence=config.evaluation.top_k_coherence,
         top_k_diversity=config.evaluation.top_k_diversity
     )
-    
+
     # Log metrics (7 Core Metrics Standard)
     logger.info("=" * 60)
     logger.info("7 Core Metrics Results:")
@@ -1541,12 +1782,12 @@ def run_evaluation(
     logger.info(f"  6. Exclusivity: {metrics.get('Exclusivity', 0):.4f}")
     logger.info(f"  7. PPL:         {metrics.get('PPL', 1000):.2f}")
     logger.info("=" * 60)
-    
+
     # Save metrics to exp_dir (fixed filename)
     # Save metrics to exp_dir with mode suffix
     mode = config.embedding.mode if hasattr(config.embedding, 'mode') else 'unsupervised'
     metrics_path = os.path.join(config.exp_dir, f"metrics_{mode}.json")
-    
+
     # Convert numpy types to Python native types for JSON serialization
     def convert_to_serializable(obj):
         if isinstance(obj, np.ndarray):
@@ -1560,13 +1801,13 @@ def run_evaluation(
         elif isinstance(obj, list):
             return [convert_to_serializable(item) for item in obj]
         return obj
-    
+
     serializable_metrics = convert_to_serializable(metrics)
-    
+
     with open(metrics_path, 'w') as f:
         json.dump(serializable_metrics, f, indent=2)
     logger.info(f"Metrics saved to {metrics_path}")
-    
+
     return metrics
 
 
@@ -1585,27 +1826,27 @@ def run_visualization(
     """
     from visualization.topic_visualizer import load_etm_results
     from visualization import run_all_visualizations
-    
+
     # Find latest results if no timestamp
     if timestamp is None:
         result_files = sorted(Path(config.model_dir).glob("theta_*.npy"), reverse=True)
         if not result_files:
             raise FileNotFoundError(f"No results found in {config.model_dir}")
         timestamp = result_files[0].stem.replace("theta_", "")
-    
+
     logger.info(f"Generating visualizations for timestamp: {timestamp}")
-    
+
     # Save topic words to dedicated folder (before visualization)
     try:
         results = load_etm_results(config.model_dir, timestamp)
         topic_words_dir = os.path.join(config.result_dir, "topic_words")
         os.makedirs(topic_words_dir, exist_ok=True)
-        
+
         topic_words_path = os.path.join(topic_words_dir, f"topic_words_{timestamp}.json")
         with open(topic_words_path, 'w', encoding='utf-8') as f:
             json.dump(results['topic_words'], f, ensure_ascii=False, indent=2)
         logger.info(f"Saved topic words to {topic_words_path}")
-        
+
         topic_words_txt_path = os.path.join(topic_words_dir, f"topic_words_{timestamp}.txt")
         with open(topic_words_txt_path, 'w', encoding='utf-8') as f:
             for topic_id, words in results['topic_words']:
@@ -1614,7 +1855,7 @@ def run_visualization(
         logger.info(f"Saved topic words text to {topic_words_txt_path}")
     except Exception as e:
         logger.warning(f"Failed to save topic words: {e}")
-    
+
     # Determine visualization parameters
     # Use exp_dir to ensure visualization finds the correct model outputs
     viz_result_dir = config.output_base_dir
@@ -1623,7 +1864,7 @@ def run_visualization(
     viz_mode = config.embedding.mode
     # Extract experiment ID from exp_dir (e.g., "exp_20260426_202624")
     viz_model_exp = os.path.basename(config.exp_dir) if config.exp_dir != config.dataset_base_dir else None
-    
+
     try:
         output_dir = run_all_visualizations(
             result_dir=viz_result_dir,
@@ -1638,154 +1879,286 @@ def run_visualization(
         logger.info(f"All visualizations saved to {output_dir}")
     except Exception as e:
         logger.error(f"Visualization failed: {e}")
-        import traceback
         logger.error(traceback.format_exc())
 
 
 def run_train(config: PipelineConfig, logger: logging.Logger, local_rank: int = -1, world_size: int = 1):
     """Run training pipeline with optional DDP support
-    
+
     Args:
         config: Pipeline configuration
         logger: Logger instance
         local_rank: Local rank for DDP (-1 for single GPU)
         world_size: Total number of GPUs for DDP
     """
+    use_ddp = local_rank >= 0 and world_size > 1
     device = setup_device(config, local_rank)
-    
+
     # Load data (with optional timestamps for temporal analysis)
     texts, _, timestamps = load_texts(config, logger)
-    
+
     # Check if BOW already exists (shared across modes)
+    bow_sparse_path = os.path.join(config.bow_dir, "bow_matrix.npz")
     bow_path = os.path.join(config.bow_dir, "bow_matrix.npy")
     vocab_path = os.path.join(config.bow_dir, "vocab.txt")
     vocab_emb_path = os.path.join(config.bow_dir, "vocab_embeddings.npy")
-    
-    if os.path.exists(bow_path) and os.path.exists(vocab_path) and os.path.exists(vocab_emb_path):
+
+    def bow_artifact_signature_if_valid():
+        manifest_path = os.path.join(config.bow_dir, BOW_MANIFEST_NAME)
+        if os.path.exists(manifest_path):
+            if not has_valid_bow_manifest(config.bow_dir):
+                return None
+            _, signature = validate_bow_manifest(config.bow_dir)
+            return signature
+        if os.path.exists(bow_sparse_path):
+            return None
+        if (
+            os.path.exists(bow_path)
+            and os.path.exists(vocab_path)
+            and os.path.exists(vocab_emb_path)
+        ):
+            return file_set_signature(
+                config.bow_dir,
+                ("bow_matrix.npy", "vocab_embeddings.npy", "vocab.txt"),
+                "theta.bow-artifacts.legacy-dense",
+            )
+        return None
+
+    if use_ddp:
+        expected_bow_signature = run_rank_zero(
+            bow_artifact_signature_if_valid,
+            use_ddp,
+            local_rank,
+            "check BOW artifacts",
+        )
+    else:
+        expected_bow_signature = bow_artifact_signature_if_valid()
+
+    bow_exists = expected_bow_signature is not None
+    if bow_exists:
         # Load existing BOW (shared across modes for fair comparison)
         logger.info(f"Loading existing BOW from {config.bow_dir}")
-        bow_matrix = np.load(bow_path)
-        with open(vocab_path, 'r', encoding='utf-8') as f:
-            vocab = [line.strip() for line in f]
-        vocab_embeddings = np.load(vocab_emb_path)
+        if use_ddp:
+            bow_matrix, vocab, vocab_embeddings, _ = run_all_ranks(
+                lambda: load_bow_artifacts(config.bow_dir),
+                use_ddp,
+                "load BOW artifacts",
+                signature_getter=lambda result: result[3],
+                expected_signature=expected_bow_signature,
+            )
+        else:
+            bow_matrix, vocab, vocab_embeddings, _ = load_bow_artifacts(
+                config.bow_dir
+            )
         logger.info(f"Loaded BOW: shape={bow_matrix.shape}, vocab_size={len(vocab)}")
         # Convert large dense BOW to sparse to save memory during training
-        if bow_matrix.shape[0] > 200000:
+        if not sparse.issparse(bow_matrix) and bow_matrix.shape[0] > 200000:
             logger.info(f"Converting BOW to sparse format to save memory ({bow_matrix.nbytes / 1e9:.1f} GB dense)")
             bow_matrix = sparse.csr_matrix(bow_matrix)
             logger.info(f"Sparse BOW: nnz={bow_matrix.nnz:,}, density={bow_matrix.nnz / (bow_matrix.shape[0]*bow_matrix.shape[1]):.4f}")
     else:
         # Generate BOW (first time for this dataset)
-        logger.info(f"Generating new BOW for dataset {config.data.dataset}")
-        bow_matrix, vocab = generate_bow(texts, config, logger)
-        vocab_embeddings = generate_vocab_embeddings(vocab, config, logger)
-        
-        # Save BOW immediately so other modes can reuse it
-        os.makedirs(config.bow_dir, exist_ok=True)
-        sparse.save_npz(bow_path, bow_matrix)
-        np.save(vocab_emb_path, vocab_embeddings)
-        with open(vocab_path, 'w', encoding='utf-8') as f:
-            f.write('\n'.join(vocab))
-        logger.info(f"BOW saved to {config.bow_dir} (shared across modes)")
-    
+        def generate_bow_artifacts():
+            logger.info(f"Generating new BOW for dataset {config.data.dataset}")
+            generated_bow, generated_vocab = generate_bow(texts, config, logger)
+            generated_embeddings = generate_vocab_embeddings(
+                generated_vocab,
+                config,
+                logger,
+            )
+            signature = save_bow_artifacts(
+                generated_bow,
+                generated_vocab,
+                generated_embeddings,
+                config.bow_dir,
+            )
+            logger.info(f"BOW saved to {config.bow_dir} (shared across modes)")
+            return signature
+
+        if use_ddp:
+            expected_bow_signature = run_rank_zero(
+                generate_bow_artifacts,
+                use_ddp,
+                local_rank,
+                "generate BOW artifacts",
+            )
+            bow_matrix, vocab, vocab_embeddings, _ = run_all_ranks(
+                lambda: load_bow_artifacts(config.bow_dir),
+                use_ddp,
+                "load BOW artifacts",
+                signature_getter=lambda result: result[3],
+                expected_signature=expected_bow_signature,
+            )
+        else:
+            logger.info(f"Generating new BOW for dataset {config.data.dataset}")
+            bow_matrix, vocab = generate_bow(texts, config, logger)
+            vocab_embeddings = generate_vocab_embeddings(vocab, config, logger)
+            save_bow_artifacts(
+                bow_matrix,
+                vocab,
+                vocab_embeddings,
+                config.bow_dir,
+            )
+            logger.info(f"BOW saved to {config.bow_dir} (shared across modes)")
+
     # Load document embeddings
     doc_embeddings, labels = load_doc_embeddings(config, logger)
-    
+
     # Auto-detect doc_embedding_dim from actual data
     actual_dim = doc_embeddings.shape[1]
     if config.model.doc_embedding_dim != actual_dim:
         logger.info(f"Auto-adjusting doc_embedding_dim: {config.model.doc_embedding_dim} -> {actual_dim}")
         config.model.doc_embedding_dim = actual_dim
-    
+
     # Train model
     results = train_etm(doc_embeddings, bow_matrix, vocab_embeddings, config, logger, device, local_rank, world_size)
-    
+
     # Save results (including timestamps if available)
-    timestamp = save_results(
-        results['model'], results['history'], vocab,
-        doc_embeddings, bow_matrix, vocab_embeddings,
-        config, logger, device,
-        timestamps=timestamps
+    timestamp = run_rank_zero(
+        lambda: save_results(
+            results['model'], results['history'], vocab,
+            doc_embeddings, bow_matrix, vocab_embeddings,
+            config, logger, device,
+            timestamps=timestamps
+        ),
+        use_ddp,
+        local_rank,
+        "save training results",
     )
-    
+
     return timestamp
 
 
 def run_pipeline(config: PipelineConfig, logger: logging.Logger,
-                 skip_viz: bool = False, skip_eval: bool = False):
+                 skip_viz: bool = False, skip_eval: bool = False,
+                 local_rank: int = -1, world_size: int = 1):
     """Run full pipeline: train + evaluate + visualize"""
+    use_ddp = local_rank >= 0 and world_size > 1
     logger.info("=" * 60)
     logger.info("Running full ETM pipeline")
     logger.info(f"Dataset: {config.data.dataset}, Mode: {config.embedding.mode}")
     logger.info("=" * 60)
-    
+
     # Train
-    timestamp = run_train(config, logger)
-    
-    # Evaluate
+    timestamp = run_train(config, logger, local_rank, world_size)
+
     if not skip_eval:
-        run_evaluation(config, logger, timestamp)
-    else:
+        def evaluate_training_results() -> None:
+            run_evaluation(config, logger, timestamp)
+            return None
+
+        run_rank_zero(
+            evaluate_training_results,
+            use_ddp,
+            local_rank,
+            "evaluate training results",
+        )
+    elif is_main_process(local_rank):
         logger.info("[SKIP] Evaluation skipped")
-    
-    # Visualize
+
     if not skip_viz:
-        run_visualization(config, logger, timestamp)
-    else:
+        def visualize_training_results() -> None:
+            run_visualization(config, logger, timestamp)
+            return None
+
+        run_rank_zero(
+            visualize_training_results,
+            use_ddp,
+            local_rank,
+            "visualize training results",
+        )
+    elif is_main_process(local_rank):
         logger.info("[SKIP] Visualization skipped")
-    
-    logger.info("=" * 60)
-    logger.info("Pipeline complete!")
-    logger.info(f"Results: {config.result_dir}")
-    logger.info(f"  - Embeddings: {config.embeddings_dir}")
-    logger.info(f"  - BOW: {config.bow_dir}")
-    logger.info(f"  - Model: {config.model_dir}")
-    logger.info(f"  - Evaluation: {config.evaluation_dir}")
-    logger.info(f"  - Visualization: {config.visualization_dir}")
-    logger.info("=" * 60)
+
+    if is_main_process(local_rank):
+        logger.info("=" * 60)
+        logger.info("Pipeline complete!")
+        logger.info(f"Results: {config.result_dir}")
+        logger.info(f"  - Embeddings: {config.embeddings_dir}")
+        logger.info(f"  - BOW: {config.bow_dir}")
+        logger.info(f"  - Model: {config.model_dir}")
+        logger.info(f"  - Evaluation: {config.evaluation_dir}")
+        logger.info(f"  - Visualization: {config.visualization_dir}")
+        logger.info("=" * 60)
 
 
 def main():
     """Main entry point"""
     parser = create_parser()
-    
+
     # Add DDP arguments
     parser.add_argument('--local_rank', type=int, default=-1,
                         help='Local rank for distributed training (set by torchrun)')
     parser.add_argument('--world_size', type=int, default=1,
                         help='Number of GPUs for distributed training')
-    
+
     args = parser.parse_args()
-    
+
     if args.command is None:
         parser.print_help()
         return
-    
-    # Setup DDP if using multiple GPUs
+
     local_rank = int(os.environ.get('LOCAL_RANK', args.local_rank))
     world_size = int(os.environ.get('WORLD_SIZE', args.world_size))
-    
-    if local_rank >= 0 and world_size > 1:
-        setup_ddp(local_rank, world_size)
-    
-    # Create config from args
     config = config_from_args(args)
-    
+    is_distributed = local_rank >= 0 and world_size > 1
+
+    if is_distributed:
+        setup_ddp(local_rank, world_size)
+    else:
+        configure_cuda_visible_devices(
+            getattr(args, "gpu", None),
+            default_gpu=config.gpu_id,
+        )
+
     # Setup logging (only on main process for DDP)
-    logger = setup_logging(config)
-    
+    logger = setup_logging(config, local_rank, is_distributed)
+
     try:
         if args.command == "train":
             run_train(config, logger, local_rank, world_size)
         elif args.command == "evaluate":
-            run_evaluation(config, logger, getattr(args, 'timestamp', None))
+            def evaluate_existing_results() -> None:
+                run_evaluation(
+                    config,
+                    logger,
+                    getattr(args, 'timestamp', None),
+                )
+                return None
+
+            run_rank_zero(
+                evaluate_existing_results,
+                is_distributed,
+                local_rank,
+                "evaluate existing results",
+            )
         elif args.command == "visualize":
-            use_wordcloud = not getattr(args, 'no_wordcloud', False)
-            run_visualization(config, logger, getattr(args, 'timestamp', None), use_wordcloud)
+            def visualize_existing_results() -> None:
+                use_wordcloud = not getattr(args, 'no_wordcloud', False)
+                run_visualization(
+                    config,
+                    logger,
+                    getattr(args, 'timestamp', None),
+                    use_wordcloud,
+                )
+                return None
+
+            run_rank_zero(
+                visualize_existing_results,
+                is_distributed,
+                local_rank,
+                "visualize existing results",
+            )
         elif args.command == "pipeline":
             skip_viz = getattr(args, 'skip_viz', False)
             skip_eval = getattr(args, 'skip_eval', False)
-            run_pipeline(config, logger, skip_viz=skip_viz, skip_eval=skip_eval)
+            run_pipeline(
+                config, logger,
+                skip_viz=skip_viz,
+                skip_eval=skip_eval,
+                local_rank=local_rank,
+                world_size=world_size,
+            )
         elif args.command == "clean":
             # Data cleaning
             from dataclean.main import main as clean_main

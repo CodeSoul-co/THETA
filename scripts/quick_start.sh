@@ -204,12 +204,12 @@ ensure_models "qwen:0.6B" || {
 }
 
 cd "$ETM_DIR"
-python prepare_data.py --dataset $DATASET --model theta --model_size 0.6B --mode zero_shot --vocab_size 5000 --batch_size 32 --max_length 512 --gpu 0
+python prepare_data.py --dataset $DATASET --model theta --model_size 0.6B --mode zero_shot --vocab_size 5000 --batch_size 32 --max_length 512
 
 # Step 3: Train model
 echo ""
 echo "[3/5] Training THETA model..."
-python run_pipeline.py --dataset $DATASET --models theta --model_size 0.6B --mode zero_shot --num_topics 20 --epochs 100 --batch_size 64 --hidden_dim 512 --learning_rate 0.002 --kl_start 0.0 --kl_end 1.0 --kl_warmup 50 --patience 10 --gpu 0 --language $LANGUAGE
+python run_pipeline.py --dataset $DATASET --models theta --model_size 0.6B --mode zero_shot --num_topics 20 --epochs 100 --batch_size 64 --hidden_dim 512 --learning_rate 0.002 --kl_start 0.0 --kl_end 1.0 --kl_warmup 50 --patience 10 --language $LANGUAGE
 
 # Step 4: Generate visualizations
 echo ""

@@ -769,7 +769,7 @@ class PipelineConfig:
     
     # Global settings
     device: str = "cuda"
-    gpu_id: int = 1  # Use GPU 1, avoid GPU 0
+    gpu_id: int = 0
     seed: int = 42
     dev_mode: bool = False
     
@@ -993,7 +993,7 @@ class PipelineConfig:
         config.evaluation = EvaluationConfig(**data.get("evaluation", {}))
         config.visualization = VisualizationConfig(**data.get("visualization", {}))
         config.device = data.get("device", "cuda")
-        config.gpu_id = data.get("gpu_id", 1)
+        config.gpu_id = data.get("gpu_id", 0)
         config.seed = data.get("seed", 42)
         config.dev_mode = data.get("dev_mode", False)
         config.output_base_dir = data.get("output_base_dir", str(ETM_DIR / "outputs"))
@@ -1050,6 +1050,8 @@ def _add_common_args(parser: argparse.ArgumentParser):
                         help="Embedding mode")
     parser.add_argument("--config", type=str, default=None,
                         help="Path to config file")
+    parser.add_argument("--gpu", type=int, default=None,
+                        help="Physical GPU ID to expose (overrides CUDA_VISIBLE_DEVICES)")
     parser.add_argument("--dev", action="store_true",
                         help="Enable development mode with extra logging")
 
@@ -1221,6 +1223,10 @@ def config_from_args(args: argparse.Namespace) -> PipelineConfig:
         config.embedding.mode = _resolve("mode", args.mode, param_type=str) or "zero_shot"
     if hasattr(args, "dev"):
         config.dev_mode = args.dev
+    if hasattr(args, "gpu") and args.gpu is not None:
+        if args.gpu < 0:
+            raise ValueError(f"GPU ID must be non-negative, got {args.gpu}")
+        config.gpu_id = args.gpu
     
     # Training args with full priority resolution
     config.model.num_topics = _resolve("num_topics", getattr(args, "num_topics", None), param_type=int) or 20
