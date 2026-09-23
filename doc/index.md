@@ -8,9 +8,11 @@ THETA is a local topic-modeling and analysis toolkit for text research, availabl
 
 | Entry point | Guide |
 | --- | --- |
-| Desktop app | [Download Mac / Windows installers](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.0) with bundled Python |
+| Desktop app | [Download Mac / Windows installers](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.1) with bundled Python |
 | Web workbench | [Source setup and launch](https://github.com/CodeSoul-co/THETA/blob/main/frontend/README.md) for your local browser |
 | CLI Agent | [Terminal setup and usage](https://github.com/CodeSoul-co/THETA/blob/main/agent/README.md) for natural-language analysis |
+
+Read [Ways to use THETA](getting-started/interfaces.md) for installation, model configuration, and local data storage.
 
 ## Computation engine guides
 
@@ -30,7 +32,7 @@ If you use THETA in your research, cite this repository and record the version o
   year = {2026},
   howpublished = {GitHub repository},
   url = {https://github.com/CodeSoul-co/THETA},
-  note = {Version 0.3.0}
+  note = {Version 0.3.1}
 }
 ```
 

@@ -2,39 +2,49 @@ name: Deploy Documentation
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - 'doc/**'
       - 'mkdocs.yml'
-      - 'mkdocs.zh.yml'
       - 'docs-requirements.txt'
+      - '.github/workflows/deploy-docs.yml'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          fetch-depth: 0
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('docs-requirements.txt') }}
-
-      - name: Install dependencies
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: docs-requirements.txt
+      - uses: actions/configure-pages@v5
+      - name: Install documentation dependencies
         run: pip install -r docs-requirements.txt
+      - name: Build both languages
+        run: mkdocs build --strict
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
 
-      - name: Deploy to GitHub Pages
-        run: mkdocs gh-deploy --force
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish documentation
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,7 +1,7 @@
 # Site Information
-site_name: THETA Topic Model
+site_name: THETA
 site_url: https://codesoul-co.github.io/THETA/
-site_description: Advanced Topic Modeling with Qwen Embeddings
+site_description: Local text research with Web, CLI Agent, and desktop apps
 site_author: CodeSoul
 docs_dir: doc
 
@@ -70,6 +70,7 @@ plugins:
           build: true
           nav:
             - 首页: index.md
+            - 使用方式: getting-started/interfaces.md
             - 快速入门:
                 - 项目概述: getting-started/overview.md
                 - 安装: getting-started/installation.md
@@ -136,6 +137,7 @@ markdown_extensions:
 # Navigation
 nav:
   - Home: index.md
+  - Ways to Use THETA: getting-started/interfaces.md
   - Getting Started:
       - Overview: getting-started/overview.md
       - Installation: getting-started/installation.md
