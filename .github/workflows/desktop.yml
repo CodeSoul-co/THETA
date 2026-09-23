@@ -1,0 +1,82 @@
+name: Desktop application
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Platform to build
+        type: choice
+        options: [all, windows, macos]
+        default: all
+  push:
+    tags: ['desktop-v*']
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-14, platform: macos, arch: arm64 }
+          - { os: windows-latest, platform: windows, arch: x64 }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      THETA_DESKTOP_TEST_HOME: ${{ github.workspace }}/desktop/.smoke-home
+    steps:
+      - uses: actions/checkout@v4
+        if: ${{ !inputs.target || inputs.target == 'all' || inputs.target == matrix.platform }}
+      - uses: actions/setup-node@v4
+        if: ${{ !inputs.target || inputs.target == 'all' || inputs.target == matrix.platform }}
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup@v4
+        if: ${{ !inputs.target || inputs.target == 'all' || inputs.target == matrix.platform }}
+        with:
+          version: '10.34.1'
+      - uses: astral-sh/setup-uv@v6
+        if: ${{ !inputs.target || inputs.target == 'all' || inputs.target == matrix.platform }}
+      - name: Build and verify bundled runtime
+        if: ${{ !inputs.target || inputs.target == 'all' || inputs.target == matrix.platform }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --dir agent install --frozen-lockfile
+          npm --prefix frontend ci
+          npm --prefix desktop ci
+          npm --prefix desktop run prepare:python
+          npm --prefix desktop run prepare:runtime
+          npm --prefix desktop test
+          npm --prefix desktop run smoke
+          npm --prefix desktop run dist
+      - name: Verify packaged app
+        if: ${{ !inputs.target || inputs.target == 'all' || inputs.target == matrix.platform }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" = 'macOS' ]; then
+            desktop/release/mac-arm64/THETA.app/Contents/MacOS/THETA --smoke-test
+          else
+            desktop/release/win-unpacked/THETA.exe --smoke-test
+          fi
+      - uses: actions/upload-artifact@v4
+        if: ${{ success() && (!inputs.target || inputs.target == 'all' || inputs.target == matrix.platform) }}
+        with:
+          name: THETA-${{ matrix.platform }}-${{ matrix.arch }}
+          compression-level: 0
+          path: |
+            desktop/release/THETA-*.dmg
+            desktop/release/THETA-*.zip
+            desktop/release/THETA-*.exe
+            desktop/requirements-*.txt
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: desktop-logs-${{ matrix.platform }}
+          path: desktop/.smoke-home/logs/

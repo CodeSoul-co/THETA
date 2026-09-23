@@ -44,7 +44,7 @@ export async function OPTIONS() {
 async function proxy(request: NextRequest, context: RouteContext) {
   const { path } = await context.params
   const localBackend = process.env.THETA_MANUAL_LOCAL_API_URL?.trim() || 'http://127.0.0.1:4321'
-  const localDevelopment = allowLocalSession(request.url, localBackend, process.env.NODE_ENV, process.env.THETA_LOCAL_AUTH_ENABLED)
+  const localDevelopment = allowLocalSession(request.url, localBackend, process.env.NODE_ENV, process.env.THETA_LOCAL_AUTH_ENABLED, process.env.THETA_DESKTOP_TOKEN)
   if (OPEN_SOURCE_EDITION && (!localDevelopment || !isManualWorkspacePath(path))) {
     return NextResponse.json({ detail: 'Only local manual-workspace APIs are available in the open-source edition.' }, { status: 404 })
   }
@@ -79,6 +79,7 @@ async function proxy(request: NextRequest, context: RouteContext) {
   target.search = request.nextUrl.search
 
   const headers = new Headers()
+  if (localDevelopment && process.env.THETA_DESKTOP_TOKEN) headers.set('x-theta-desktop-token', process.env.THETA_DESKTOP_TOKEN)
   for (const name of [
     'accept',
     'authorization',

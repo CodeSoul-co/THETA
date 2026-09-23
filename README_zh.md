@@ -14,6 +14,15 @@
 
 </div>
 
+## 四种使用方式
+
+| 入口 | 使用方式 |
+| --- | --- |
+| CLI | `./theta`，见 [Agent 说明](agent/README.md) |
+| Web | `./theta-web start`，见下方启动说明 |
+| Windows / Mac App | 内置 Python，进入应用后在设置中配置模型，见 [桌面版说明](docs/desktop.md) |
+| Skill | 在支持 Skill 的 Agent 中使用 [THETA Workflow](skills/theta-workflow/SKILL.md) |
+
 ## 启动网页工作台（对话 / 手动）
 
 在仓库根目录执行，适用于 macOS / Linux 本机开发：

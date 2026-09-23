@@ -78,3 +78,26 @@ test('public API authenticates, enforces CSRF and isolates users', async t => {
   const unauthorizedReply = await request('/api/v1/agent/advisory', 'bob', { message: 'read', consultation: { scope: 'manual:shared-name', id: 'private-consultation', requestId: 'r1' } });
   assert.equal(unauthorizedReply.status, 404);
 });
+
+test('desktop APIs require the per-launch token even on loopback', async t => {
+  const { createManualServer } = await import('./manual-server.js');
+  const home = mkdtempSync(path.join(tmpdir(), 'theta-desktop-auth-'));
+  const localToken = 'a'.repeat(64);
+  const agent = createAgentServer(path.join(home, 'agent'), () => undefined, { mode: 'local', localToken });
+  const manual = createManualServer(path.join(home, 'manual'), undefined, { localToken });
+  t.after(async () => {
+    for (const server of [agent, manual]) {
+      server.closeAllConnections();
+      await new Promise<void>(resolve => server.close(() => resolve()));
+    }
+    rmSync(home, { recursive: true, force: true });
+  });
+  for (const [server, route] of [[agent, '/api/v3/health'], [manual, '/health']] as const) {
+    server.listen(0, '127.0.0.1'); await once(server, 'listening');
+    const url = `http://127.0.0.1:${(server.address() as { port: number }).port}${route}`;
+    assert.equal((await fetch(url)).status, 403);
+    assert.equal((await fetch(url, { headers: { 'x-theta-desktop-token': 'wrong' } })).status, 403);
+    assert.equal((await fetch(url, { headers: { 'x-theta-desktop-token': localToken } })).status, 200);
+    assert.equal((await fetch(url, { headers: { 'x-theta-desktop-token': localToken, origin: 'https://evil.example' } })).status, 403);
+  }
+});

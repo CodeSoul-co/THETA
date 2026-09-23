@@ -637,3 +637,9 @@
 .paper-card-back {
   transform: rotateY(180deg);
 }
+
+/* Global workbench page surface belongs outside CSS Modules. */
+body[data-ds-dark-theme] {
+  background: #070c16 !important;
+  color: #e8eef8;
+}

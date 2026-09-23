@@ -421,6 +421,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
     setWorkspaceMode(mode)
   }
   const [settingsOpen, setSettingsOpen] = useState(false)
+  useEffect(() => window.thetaDesktop?.onOpenSettings(() => setSettingsOpen(true)), [])
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
   const [accountName, setAccountName] = useState(() => localStorage.getItem(storageKeys.accountName) || 'user')
   const [liveAssistantMessageId, setLiveAssistantMessageId] = useState<string>()

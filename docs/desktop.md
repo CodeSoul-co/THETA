@@ -1,0 +1,54 @@
+# THETA 桌面应用
+
+桌面版复用 CLI Agent、网页工作台与 Python 计算引擎，提供对话和手动两种模式。安装包内置 Python 3.12 与 CPU 计算依赖，用户无需安装 Python、Node.js 或 Conda。模型权重不在安装包内。
+
+## 使用
+
+首版构建目标为 **macOS Apple Silicon（arm64）** 和 **Windows x64**。安装包位于桌面构建工作流的 Artifacts 或后续 GitHub Releases。未配置发行证书时，构建产物为未经过正式签名／公证的测试版；正式分发前需要平台签名和实机验证。暂不提供 Intel Mac 版本。
+
+应用启动后直接进入工作台。打开左下角「设置」：
+
+- **模型 API**：填写对话模型的供应商、Base URL、模型名称和 API Key。
+- **Embedding 模型 → 本地模型**：默认建议 `Qwen/Qwen3-Embedding-0.6B`。用户可填写名称并选择兼容模型的完整本地目录（包含 config.json、分词器和权重）；名称仅用于标识，实际加载所选目录。CTM / BERTopic 可另选 Sentence Transformers 兼容模型。
+- **Embedding 模型 → 云端 Embedding API**：默认 GLM / 智谱，Base URL 为 `https://open.bigmodel.cn/api/paas/v4`，模型为 `embedding-3`。可修改地址、模型和向量维度，并单独保存 Embedding API Key；也可使用 OpenAI 兼容服务。
+
+可以稍后再配置模型。LDA 等传统算法不需要下载神经网络权重；本地 Embedding 权重通过设置中的链接自行下载。云端 Embedding 当前适用于 THETA zero-shot，执行具体任务时仍需确认发送文本及请求预算；THETA 微调和 CTM / BERTopic 使用本地模型。
+
+保存配置后新任务立即生效，不需要重启工作台。正在运行的训练使用启动时的配置。密钥由 Electron safeStorage 使用操作系统能力加密，保存在应用数据目录，页面不回显密钥。
+
+## 数据与日志
+
+应用菜单可打开数据和日志目录，也可重新启动本地服务。
+
+- macOS：`~/Library/Application Support/THETA`
+- Windows：`%APPDATA%/THETA`
+
+配置、项目、上传文件、结果和缓存与安装目录分离。重新打包、升级或卸载不会主动删除这些数据。桌面版使用独立数据目录，不自动迁移源码版的 `.theta_agent` 或 `.local/manual-workbench`。
+
+本地服务只监听 loopback，使用每次启动生成的访问令牌，默认工作台端口 14320（冲突时自动选择空闲端口）。退出应用关闭其自身服务；已提交的训练遵循原有 Worker 生命周期，不会重复提交。
+
+## 从源码构建
+
+构建机需要 Node.js 22.13+、pnpm 和 uv。必须在目标操作系统和架构上准备 Python 依赖，不能把 macOS 的 runtime 复制到 Windows。
+
+```sh
+pnpm --dir agent install --frozen-lockfile
+npm --prefix frontend ci
+npm --prefix desktop ci
+npm --prefix desktop run prepare:python
+npm --prefix desktop run prepare:runtime
+npm --prefix desktop test
+npm --prefix desktop run smoke
+npm --prefix desktop run start
+npm --prefix desktop run dist
+```
+
+`prepare:python` 下载独立 Python，生成／使用平台依赖锁并安装全部 CPU 计算依赖；macOS 会检查和修复原生库路径。不会下载模型权重。安装环境需要数 GB 磁盘空间，构建机还需预留打包临时空间。
+
+`prepare:runtime` 编译 Agent 与 Next.js standalone，并只复制运行需要的引擎、配置模板及技能。不会复制本地私密环境文件、上传数据、训练结果或模型目录。
+
+输出在 `desktop/release`：macOS `.app`、`.dmg` 和 `.zip`，Windows NSIS `.exe` 安装程序。`desktop/runtime` 和 `desktop/release` 不提交到 Git。
+
+`.github/workflows/desktop.yml` 支持手动选择平台构建；`desktop-v*` 标签构建两种平台。工作流验证源码运行和打包后的应用，再上传安装包。当前不自动发布公共 Release，也不自动更新应用。
+
+冒烟验证覆盖生产界面、两套 API、项目写入、访问令牌与来源检查、设置桥接、Embedding 配置即时生效、内置 Python 导入和模型信息读取。它不调用付费云 API；真实云服务需配置用户自己的密钥后验证。

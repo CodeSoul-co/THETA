@@ -251,3 +251,10 @@ node_modules/
 
 # Generated files left by the retired frontend directory.
 /theta.code-soul.com/
+
+# Desktop build products; no private settings or runtimes in source control.
+desktop/node_modules/
+desktop/runtime/
+desktop/release/
+desktop/.python-download/
+desktop/.smoke-home/

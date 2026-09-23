@@ -30,7 +30,7 @@ async function body(req: IncomingMessage, limit = 1024 * 1024) {
 const safeName = (name: string) => { if (typeof name !== 'string' || !name.trim() || name.length > 160 || /[/\\\x00-\x1f]/u.test(name) || name.trim() === '..' || name.trim() === '.') throw new HttpError(400, '名称包含不允许的字符'); return name.trim(); };
 const projectNameKey = (name: string) => name.trim().normalize('NFC').toLowerCase();
 
-export function createManualServer(home: string, worker: CapabilityWorker = new PythonCapabilityWorker()) {
+export function createManualServer(home: string, worker: CapabilityWorker = new PythonCapabilityWorker(), options: { localToken?: string } = {}) {
   mkdirSync(home, { recursive: true });
   const db = new DatabaseSync(path.join(home, 'manual.sqlite'));
   db.exec('PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT NOT NULL, value TEXT NOT NULL)');
@@ -129,7 +129,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
   };
   const server = createServer(async (req, res) => {
     try {
-      assertRequestOrigin(req, { mode: 'local' });
+      assertRequestOrigin(req, { mode: 'local', localToken: options.localToken });
       if (req.headers['sec-fetch-site'] === 'cross-site') throw new HttpError(403, '本地接口不接受跨站请求');
       const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
       const parts = url.pathname.split('/').filter(Boolean).map(decodeURIComponent);

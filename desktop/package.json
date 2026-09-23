@@ -1,0 +1,35 @@
+{
+  "name": "theta-desktop",
+  "version": "0.3.0",
+  "private": true,
+  "description": "THETA local research workbench with bundled Python",
+  "author": "CodeSoul",
+  "license": "MIT",
+  "main": "main.cjs",
+  "scripts": {
+    "prepare:python": "node scripts/prepare-python.mjs",
+    "prepare:runtime": "node scripts/prepare-runtime.mjs",
+    "start": "electron .",
+    "test": "node --test test/*.test.mjs",
+    "smoke": "electron . --smoke-test",
+    "pack": "electron-builder --dir --publish never",
+    "dist": "electron-builder --publish never"
+  },
+  "devDependencies": {
+    "electron": "44.4.5",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.codesoul.theta",
+    "productName": "THETA",
+    "asar": true,
+    "npmRebuild": false,
+    "directories": { "output": "release" },
+    "files": ["main.cjs", "preload.cjs", "services.mjs", "settings.cjs", "ui/**", "package.json"],
+    "extraResources": [{ "from": "runtime", "to": "runtime", "filter": ["**/*", "!**/__pycache__/**", "!**/*.pyc"] }],
+    "artifactName": "THETA-${version}-${os}-${arch}.${ext}",
+    "mac": { "target": ["dmg", "zip"], "category": "public.app-category.education", "icon": "ui/icon.png" },
+    "win": { "target": ["nsis"], "icon": "ui/icon.png" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "deleteAppDataOnUninstall": false }
+  }
+}

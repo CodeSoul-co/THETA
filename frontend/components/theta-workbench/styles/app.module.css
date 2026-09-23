@@ -1190,10 +1190,10 @@
   line-height: 1.5;
 }
 
-button:focus-visible,
-select:focus-visible,
-input:focus-visible,
-textarea:focus-visible {
+.shell button:focus-visible,
+.shell select:focus-visible,
+.shell input:focus-visible,
+.shell textarea:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--dsw-alias-state-business-primary) 70%, white);
   outline-offset: 2px;
 }
@@ -5736,11 +5736,6 @@ textarea:focus-visible {
 }
 
 /* Keep the final dark surface contract after legacy light-theme overrides. */
-:global(body[data-ds-dark-theme]) {
-  background: #070c16 !important;
-  color: #e8eef8;
-}
-
 :global(html[data-theme='dark']) .shell {
   --theta-dark-bg: #070c16;
   --theta-dark-surface: #0d1625;

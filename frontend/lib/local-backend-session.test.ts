@@ -25,6 +25,16 @@ test('本地来源使用浏览器 Host 校验，拒绝跨站和 DNS 重绑定', 
   assert.equal(isLocalRequestOrigin('http:', 'user@localhost:4320', null, null), false)
 })
 
+test('桌面生产入口需要服务端密钥、显式开关以及本机前后端', () => {
+  const local = 'http://127.0.0.1:14320/api/backend/api/projects'
+  const token = 'a'.repeat(64)
+  assert.equal(allowLocalSession(local, 'http://127.0.0.1:45678', 'production', 'true', token), true)
+  assert.equal(allowLocalSession(local, 'http://127.0.0.1:45678', 'production', 'false', token), false)
+  assert.equal(allowLocalSession(local, 'http://127.0.0.1:45678', 'production', 'true', 'short'), false)
+  assert.equal(allowLocalSession('https://example.com', 'http://127.0.0.1:45678', 'production', 'true', token), false)
+  assert.equal(allowLocalSession(local, 'https://example.com', 'production', 'true', token), false)
+})
+
 test('开源手动工作台开放数据接口，账号、管理和路径穿越保持禁用', () => {
   for (const route of ['config', 'health', 'api/projects', 'api/upload', 'api/train/jobs', 'api/results/data/catalog', 'api/runtime/config', 'api/stopwords/default']) {
     assert.equal(isManualWorkspacePath(route.split('/')), true, route)

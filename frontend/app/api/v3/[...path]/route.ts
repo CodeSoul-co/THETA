@@ -1,5 +1,6 @@
 
 import { OPEN_SOURCE_EDITION } from '@/lib/edition'
+import { isLocalRequestOrigin } from '@/lib/local-development'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
@@ -51,6 +52,12 @@ async function proxy(request: NextRequest, context: RouteContext) {
   target.search = request.nextUrl.search
 
   const headers = new Headers()
+  if (process.env.THETA_DESKTOP_TOKEN) {
+    if (!isLocalRequestOrigin(request.nextUrl.protocol, request.headers.get('host'), request.headers.get('origin'), request.headers.get('sec-fetch-site'))) {
+      return new NextResponse('Local application origin required.', { status: 403 })
+    }
+    headers.set('x-theta-desktop-token', process.env.THETA_DESKTOP_TOKEN)
+  }
   for (const name of ['accept', 'authorization', 'content-type', 'last-event-id', 'user-agent', 'x-forwarded-for', 'x-forwarded-proto']) {
     const value = request.headers.get(name)
     if (value && !(OPEN_SOURCE_EDITION && name === 'authorization')) headers.set(name, value)

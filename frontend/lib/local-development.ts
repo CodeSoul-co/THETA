@@ -1,6 +1,7 @@
-/** 免登录路由仅限开发服务器、本机请求和本机后端，生产模式始终禁用。 */
-export function allowLocalSession(requestUrl: string, backendUrl: string, environment: string | undefined, enabled: string | undefined) {
-  if (environment !== 'development' || enabled === 'false') return false
+/** Desktop production builds require a host-provided secret; ordinary deployments stay closed. */
+export function allowLocalSession(requestUrl: string, backendUrl: string, environment: string | undefined, enabled: string | undefined, desktopToken?: string) {
+  const desktop = environment === 'production' && enabled === 'true' && (desktopToken?.length ?? 0) >= 32
+  if ((!desktop && environment !== 'development') || enabled === 'false') return false
   const loopback = new Set(['127.0.0.1', 'localhost', '[::1]'])
   try {
     const request = new URL(requestUrl)

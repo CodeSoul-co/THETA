@@ -15,6 +15,8 @@ export interface AgentAuthentication {
 }
 
 export interface AgentServerOptions {
+  /** Per-launch desktop secret, supplied only by the local application host. */
+  localToken?: string;
   /** Trusted server-side local workspace; never supplied by an HTTP client. */
   manualHome?: string;
   mode?: AgentServiceMode;
@@ -108,6 +110,12 @@ export const assertRequestOrigin = (request: IncomingMessage, options: AgentServ
   const host = normalizedHost(request.headers.host ?? '');
   const origin = request.headers.origin;
   if (mode === 'local') {
+    if (options.localToken) {
+      const supplied = request.headers['x-theta-desktop-token'];
+      if (typeof supplied !== 'string' || !csrfEqual(options.localToken, supplied)) {
+        throw new AgentAccessError(403, 'desktop_token_required', '仅允许当前桌面应用访问。');
+      }
+    }
     if (!/^(127\.0\.0\.1|localhost):\d+$/u.test(host)) {
       throw new AgentAccessError(403, 'host_rejected', '本地 Agent API 仅允许 localhost。');
     }

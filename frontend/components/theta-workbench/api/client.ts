@@ -909,8 +909,10 @@ export const runWorkflowAction = async (
 export const cancelRunTraining = async (runId: string, reason: string): Promise<Record<string, unknown>> =>
   request(v3Path(runId, '/cancel-training'), { method: 'POST', body: JSON.stringify({ content: reason }) });
 
-export const getInferenceCatalog = async (): Promise<WebInferenceCatalog> =>
-  await apiVersion() === 'v2' ? request('/api/v2/inference') : request('/api/v3/inference');
+export const getInferenceCatalog = async (): Promise<WebInferenceCatalog> => {
+  if (typeof window !== 'undefined' && window.thetaDesktop) return window.thetaDesktop.catalog();
+  return await apiVersion() === 'v2' ? request('/api/v2/inference') : request('/api/v3/inference');
+};
 
 export const getInferenceSettings = async (): Promise<WebInferenceSettings> =>
   await apiVersion() === 'v2' ? request('/api/v2/inference/settings') : request('/api/v3/inference/settings');
@@ -918,6 +920,10 @@ export const getInferenceSettings = async (): Promise<WebInferenceSettings> =>
 export const updateInferenceSettings = async (
   input: WebInferenceSettingsUpdate,
 ): Promise<WebInferenceSettings> => {
+  if (typeof window !== 'undefined' && window.thetaDesktop && input.llm) {
+    await window.thetaDesktop.saveInference(input.llm);
+    return getInferenceSettings();
+  }
   if (await apiVersion() === 'v2') return request('/api/v2/inference/settings', { method: 'PATCH', body: JSON.stringify(input) });
   return request('/api/v3/inference/settings', { method: 'PATCH', body: JSON.stringify(input) });
 };

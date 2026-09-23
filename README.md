@@ -14,6 +14,15 @@
 
 </div>
 
+## Four ways to use THETA
+
+| Entry point | Getting started |
+| --- | --- |
+| CLI | `./theta`; see [Agent setup](agent/README.md) |
+| Web | `./theta-web start`; see below |
+| Windows / Mac App | Bundled Python; configure models in the workbench Settings. See [desktop build and usage](docs/desktop.md) |
+| Skill | Use [THETA Workflow](skills/theta-workflow/SKILL.md) with a compatible agent |
+
 ## Start the Web Workbench (Conversation / Manual)
 
 Run from the repository root on macOS / Linux for local development:
