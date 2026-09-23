@@ -1,3 +1,5 @@
+import { SetupError } from './WorkbenchNotice'
+import { openSetup } from '@/lib/workbench-guidance'
 import { useId, useRef, useState } from 'react'
 import { Cloud, Laptop, Loader2 } from 'lucide-react'
 import { postAction, type WebAgentInteraction } from '../api/client.ts'
@@ -38,7 +40,7 @@ export function EmbeddingChoiceCard({ runId, interaction, onApproved, decisionEr
       <div className={css.embeddingOptions}>
         <button type="button" disabled={disabled} onClick={() => void choose('embedding_local')}>
           <Laptop size={18} aria-hidden="true" /><strong>本地嵌入</strong>
-          <span>使用本机 Qwen 模型，不向云端发送嵌入文本。下一步检查本地资源。</span>
+          <span>使用已下载的本地嵌入模型。请先在「设置 → 嵌入模型」选择完整模型目录；下一步会检查资源。</span>
           <small>选择本地 →</small>
         </button>
         <button type="button" disabled={disabled || !card.cloudAvailable} onClick={() => void choose('embedding_cloud')}>
@@ -49,8 +51,9 @@ export function EmbeddingChoiceCard({ runId, interaction, onApproved, decisionEr
       </div>
       <p className={css.scopeNotes}>{card.description.split('\n').filter(line => /^(云端：|云端地址：|本次外部请求上限：)/u.test(line)).join('\n')}</p>
       <p className={css.scopeNotes}>现在不会开始训练，也不会发送嵌入请求。下一张训练卡会列出具体参数和执行范围，仍需你确认。</p>
+      <button type="button" className={css.secondary} onClick={() => openSetup('embedding')}>下载或配置嵌入模型</button>
       <details className={css.details}><summary>查看完整说明</summary><p>{card.description}</p></details>
-      {error && <p className={css.error} role="alert">{error}</p>}
+      {error && <div className={css.error}><SetupError error={error} /></div>}
     </div>
     <footer className={css.footer}><div className={css.actions}><button type="button" className={css.secondary} disabled={disabled} onClick={() => void choose('reject')}>暂不训练</button></div></footer>
   </section>

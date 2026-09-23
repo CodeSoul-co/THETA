@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { openSetup } from '@/lib/workbench-guidance'
 import { useInferenceSettings } from '../inference-settings.tsx'
 import { usePreferences } from '../preferences.tsx'
 import css from '../styles/app.module.css'
@@ -61,9 +62,9 @@ export const InferenceSelector = ({ disabled = false }: { disabled?: boolean }):
         type="button"
         className={`${css.modelPickerLoading} ${css.modelPickerUnavailable}`}
         title={locale === 'zh-CN' ? '当前模型供应商未配置 API Key，请在设置中配置。' : 'Current model provider is missing API key. Configure it in Settings.'}
-        disabled
+        onClick={() => openSetup('inference')}
       >
-        {locale === 'zh-CN' ? '模型供应商未配置' : 'Model provider not configured'}
+        {locale === 'zh-CN' ? '未填写模型 API · 去设置' : 'Model API missing · Set up'}
       </button>
     )
   }

@@ -1,3 +1,4 @@
+import { ComputationNotice } from './WorkbenchNotice'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { listDatasets, uploadDataset, type WebAgentInteraction, type WebDataset } from '../api/client.ts'
 import {
@@ -164,6 +165,7 @@ export const DatasetIntakeCard = ({ interaction, storageScope, legacyStorageScop
 
   return (
     <section className={`${css.datasetIntakePanel} ${processed ? css.datasetIntakePanelCompleted : ''} ${dragging ? css.contextCardDragging : ''}`} aria-label={interaction.card?.title ?? '上传本地数据集'} aria-disabled={processed}>
+      <ComputationNotice sizeBytes={selected?.sizeBytes} locale={locale} />
       {processed ? (
         <div className={css.datasetUploadedSummary} role="status">
           <span><IconCheckOutline16 /></span>

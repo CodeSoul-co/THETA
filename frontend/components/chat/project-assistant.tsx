@@ -1,5 +1,8 @@
 "use client"
 
+import { useInferenceSettings } from '@/components/theta-workbench/inference-settings'
+import { SetupError } from '@/components/theta-workbench/panels/WorkbenchNotice'
+import { openSetup } from '@/lib/workbench-guidance'
 import { useEffect, useRef, useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import { AiSidebar, type ChatMessage, type SendMessagePayload } from './ai-sidebar'
@@ -18,6 +21,8 @@ export function ProjectAssistant({ scopeKey, context, openRequest = 0 }: {
   context: Record<string, unknown>
   openRequest?: number
 }) {
+  const { settings } = useInferenceSettings()
+  const missingApi = !!settings && !settings.llm.apiKeyConfigured
   const historyKey = `${scopeKey}:consultation-threads`
   const [consultations, setConsultations] = useState<ConsultationHistory | null>(null)
   const [ready, setReady] = useState(false)
@@ -82,6 +87,7 @@ export function ProjectAssistant({ scopeKey, context, openRequest = 0 }: {
   useEffect(() => { if (openRequest) setOpen(true) }, [openRequest])
 
   const send = async (payload: string | SendMessagePayload) => {
+    if (missingApi) { openSetup('inference'); return false }
     const content = (typeof payload === 'string' ? payload : payload.content).trim()
     const charts = typeof payload === 'string' ? [] : payload.charts ?? []
     const chartAnalyses = typeof payload === 'string' ? [] : payload.chartAnalyses ?? []
@@ -110,8 +116,9 @@ export function ProjectAssistant({ scopeKey, context, openRequest = 0 }: {
   return <>
     {/* Keep citations and unsent input when collapsed; do not create a second assistant. */}
       <ResizableSidebar hidden={!open} storageKey="theta.workspace.advisory-panel-ratio.v1" label="调整猫咪科学家宽度">
+        {missingApi && <div className="shrink-0 border-b border-amber-200 bg-amber-50 p-3 text-amber-900"><SetupError error="API Key 未配置" /></div>}
         {!ready && <p className="p-4 text-sm text-slate-500">正在读取咨询记录…</p>}
-        {error && <div role="alert" className="shrink-0 border-b border-amber-100 bg-amber-50 p-3 text-xs text-amber-800">{error}<button type="button" className="ml-2 underline" onClick={() => consultations ? void load() : setReloadAttempt(attempt => attempt + 1)}>重新读取</button></div>}
+        {error && <div role="alert" className="shrink-0 border-b border-amber-100 bg-amber-50 p-3 text-xs text-amber-800"><SetupError error={error} /><button type="button" className="ml-2 underline" onClick={() => consultations ? void load() : setReloadAttempt(attempt => attempt + 1)}>重新读取</button></div>}
         {ready && <AiSidebar key={`${scopeKey}:${active?.id ?? 'empty'}`} draftKey={`${scopeKey}:consultation:${active?.id ?? 'empty'}`} mode="advisory" chatHistory={history} onSendMessage={send} onCollapse={() => setOpen(false)}
           onNewConversation={newConsultation} activeConversationId={active?.id} consultationBusy={busy} sending={sending.includes(active?.id ?? '')} inputDisabled={!active || busy}
           historyStoredInDatabase={!!consultations}

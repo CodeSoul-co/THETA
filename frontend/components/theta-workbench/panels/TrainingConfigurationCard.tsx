@@ -35,7 +35,7 @@ export function TrainingConfigurationCard({ runId, interaction, onApproved }: {
     </div>
     <footer className={css.footer}><div className={css.actions}><button type="button" className={css.primary} disabled={interaction.status === 'running'} onClick={() => { changeOpen(true); if (!data) setReload(value => value + 1) }}>{error ? '重新加载配置' : '查看与调整配置'}</button></div></footer>
     {data && initialConfig && <AnalysisConfigPanel key={key} open={open && interaction.status !== 'running'} onOpenChange={changeOpen} projectKey={key}
-      datasetName={data.datasetName} initialConfig={initialConfig} columns={data.columns} service={service}
+      datasetName={data.datasetName} datasetSizeBytes={data.datasetSizeBytes} initialConfig={initialConfig} columns={data.columns} service={service}
       description="Agent 已预填建议模型与各自参数；你可以手动修改，最终确认后按顺序训练。"
       confirmLabel="确认并开始训练" onConfirm={async config => {
         await submitTrainingEditor(runId, { checkpointId: card.actionRef, expectedContentHash: card.contentHash!, plans: plansFromConfig(config, data.plans),

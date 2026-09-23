@@ -420,7 +420,17 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
     if (mode === 'manual') setManualVisited(true)
     setWorkspaceMode(mode)
   }
+  const [datasetSizes, setDatasetSizes] = useState<Record<string, number>>({})
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [settingsTab, setSettingsTab] = useState<'inference' | 'embedding'>()
+  useEffect(() => {
+    const open = (event: Event) => {
+      const tab = (event as CustomEvent).detail
+      setSettingsTab(tab === 'embedding' ? 'embedding' : 'inference'); setSettingsOpen(true)
+    }
+    window.addEventListener('theta:open-settings', open)
+    return () => window.removeEventListener('theta:open-settings', open)
+  }, [])
   useEffect(() => window.thetaDesktop?.onOpenSettings(() => setSettingsOpen(true)), [])
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
   const [accountName, setAccountName] = useState(() => localStorage.getItem(storageKeys.accountName) || 'user')
@@ -510,6 +520,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
     let cancelled = false
     void listDatasets(activeProjectId).then(({ datasets }) => {
       if (cancelled || datasets.length === 0) return
+      setDatasetSizes(current => ({ ...current, [activeProjectId]: datasets.reduce((sum, item) => sum + item.sizeBytes, 0) }))
       const restored = datasets.map((dataset): WebAttachment => ({
         kind: 'dataset',
         id: dataset.datasetRef,
@@ -1766,6 +1777,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
     if (!dataset) return
     const projectId = await ensureProject(dataset.name.replace(/\.[^.]+$/u, '') || '数据分析项目')
 
+    setDatasetSizes(current => ({ ...current, [projectId]: dataset.sizeBytes }))
     const datasetAttachments: WebAttachment[] = [{ kind: 'dataset', id: dataset.datasetRef, label: dataset.name }]
     if (activeProjectIdRef.current === projectId) setAttachments(datasetAttachments)
     setProjectMemories((current) => {
@@ -2049,6 +2061,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
             )
             : (
               <ConversationPane
+                datasetSizeBytes={datasetSizes[activeProjectId] ?? 0}
                   analysisMode={analysisMode}
                   onAnalysisModeChange={changeAnalysisMode}
                   analysisModeDisabled={analysisModeBusy || queued.length > 0}
@@ -2111,7 +2124,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
           </ResizableSidebar>
         )}
       </div>
-      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} onAccountNameChange={setAccountName} />
+      <SettingsDialog initialTab={settingsTab} open={settingsOpen} onClose={() => { setSettingsOpen(false); setSettingsTab(undefined) }} onAccountNameChange={setAccountName} />
       <Modal
         open={projectCreateOpen}
         onClose={() => { if (!projectCreateBusy) setProjectCreateOpen(false) }}

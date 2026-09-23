@@ -1,3 +1,5 @@
+import { ComputationNotice, SetupError } from './WorkbenchNotice'
+import { openSetup, errorGuidance } from '@/lib/workbench-guidance'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Check, ChevronRight, Clock3, Pencil, X, AlertCircle } from 'lucide-react'
@@ -70,6 +72,7 @@ const readLandingPrefill = (): string => {
 export interface QueuedChatMessage { id: string; text: string; attachments: WebAttachment[]; modelPreference?: string }
 
 interface ConversationPaneProps {
+  datasetSizeBytes?: number
   analysisMode?: 'topic' | 'free'
   onAnalysisModeChange?: (mode: 'topic' | 'free') => void | Promise<void>
   analysisModeDisabled?: boolean
@@ -347,6 +350,7 @@ export const ConversationPane = ({
   status,
   resultCatalog,
   onOpenTrainingPanel,
+  datasetSizeBytes = 0,
   onApproved,
   attachments,
   onAttachmentsChange,
@@ -358,6 +362,8 @@ export const ConversationPane = ({
 }: ConversationPaneProps): React.ReactElement => {
   const { locale, t } = usePreferences()
   const { settings } = useInferenceSettings()
+  const missingApi = !!settings && !settings.llm.apiKeyConfigured
+  const [uploadSize, setUploadSize] = useProjectDraft<number>(`upload-size:${projectStorageScope ?? projectName}:${runId ?? workspaceSessionId ?? 'draft'}`, 0)
   const draftScope = `${projectStorageScope ?? projectName}:${runId ?? workspaceSessionId ?? 'draft'}`
   const [initialDraft] = useState(readLandingPrefill)
   const [draft, setDraft] = useProjectDraft(`conversation:${draftScope}:input`, initialDraft)
@@ -499,6 +505,7 @@ export const ConversationPane = ({
 
   const submitText = (value = draft): void => {
     if (controlsDisabled) return
+    if (missingApi) { openSetup('inference'); return }
     const text = value.trim()
     if (!text) return
     // 引用只作为模型可见的上下文；界面不展示这段文字，是否重绘由 Agent 依用户问题决定。
@@ -533,6 +540,7 @@ export const ConversationPane = ({
         : `“${file?.name ?? 'This file'}” is not supported. Upload CSV, TSV, text, Markdown, JSON/JSONL, Excel, Parquet, PDF, or DOCX.`)
       return
     }
+    setUploadSize(file.size)
     setUploading(true)
     setUploadError(undefined)
     try {
@@ -809,7 +817,7 @@ export const ConversationPane = ({
             return null
           }
           const human = message.role === 'user'
-          const displayText = conversationDisplayText(message.content)
+          const displayText = message.messageKind === 'conversation.error' ? errorGuidance(message.content, locale).message : conversationDisplayText(message.content)
           return (
             <Fragment key={message.messageId}>
               {showAgentHeader && <AgentTurnHeader createdAt={message.createdAt} locale={locale} />}
@@ -966,6 +974,8 @@ export const ConversationPane = ({
             </Button>
           </div>
         </div>
+        {missingApi && <SetupError error="API Key 未配置" locale={locale} />}
+        <ComputationNotice sizeBytes={Math.max(uploadSize, datasetSizeBytes)} locale={locale} />
         {uploadError && <div className={css.composerUploadError} role="alert">{uploadError}</div>}
         <div className={css.composerHint}>
           <span>Enter · Shift + Enter</span>

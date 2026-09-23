@@ -18,13 +18,13 @@ import css from './SettingsDialog.module.css'
 import type { WebInferenceSettingsUpdate } from '../api/client.ts'
 import type { DesktopEmbedding } from '@/types/desktop'
 
-interface SettingsDialogProps { open: boolean; onClose: () => void; onAccountNameChange?: (name: string) => void }
+interface SettingsDialogProps { initialTab?: 'inference' | 'embedding'; open: boolean; onClose: () => void; onAccountNameChange?: (name: string) => void }
 
 type SettingsTab = 'account' | 'appearance' | 'language' | 'inference' | 'embedding'
 
 const ACCOUNT_NAME_KEY = 'theta.frontend.account-name.v1'
 
-export const SettingsDialog = ({ open, onClose, onAccountNameChange }: SettingsDialogProps): React.ReactElement => {
+export const SettingsDialog = ({ open, onClose, onAccountNameChange, initialTab }: SettingsDialogProps): React.ReactElement => {
   const { locale, theme, setTheme } = usePreferences()
   const { user } = useAuth()
   const defaultAccountName = user?.username?.trim() || user?.full_name?.trim() || 'user'
@@ -37,6 +37,8 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange }: SettingsD
   const [modelList, setModelList] = useState('')
   const [apiKey, setApiKey] = useState('')
   const [clearApiKey, setClearApiKey] = useState(false)
+  const [inferenceDirty, setInferenceDirty] = useState(false)
+  const [embeddingDirty, setEmbeddingDirty] = useState(false)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string>()
   const [messageType, setMessageType] = useState<'error' | 'success'>('success')
@@ -56,29 +58,33 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange }: SettingsD
   const chooseEmbeddingDirectory = async (field: 'localPath' | 'sbertPath') => {
     try {
       const directory = await window.thetaDesktop?.selectModel()
-      if (directory) setEmbedding(current => current ? { ...current, [field]: directory } : current)
+      if (directory) { setEmbedding(current => current ? { ...current, [field]: directory } : current); setEmbeddingDirty(true) }
     } catch (error) { setMessageType('error'); setMessage(error instanceof Error ? error.message : String(error)) }
   }
-  const saveEmbeddingSettings = async () => {
-    if (!embedding || !window.thetaDesktop) return
+  const saveEmbeddingSettings = async (): Promise<boolean> => {
+    if (!embedding || !window.thetaDesktop) return false
     setSaving(true); setMessage(undefined)
     try {
       await window.thetaDesktop.saveEmbedding({ ...embedding, apiKey: embeddingKey, clearApiKey: clearEmbeddingKey })
       setEmbedding((await window.thetaDesktop.read()).embedding)
       setEmbeddingKey(''); setClearEmbeddingKey(false)
+      setEmbeddingDirty(false)
       setMessageType('success'); setMessage('Embedding 配置已保存。新任务将使用这份配置。')
-    } catch (error) { setMessageType('error'); setMessage(error instanceof Error ? error.message : String(error)) }
+      return true
+    } catch (error) { setMessageType('error'); setMessage(error instanceof Error ? error.message : String(error)); return false }
     finally { setSaving(false) }
   }
 
 
   useEffect(() => {
     if (!open) return
-    setTab(OPEN_SOURCE_EDITION ? 'appearance' : 'account')
+    setTab(initialTab === 'embedding' && !window.thetaDesktop ? 'inference' : initialTab ?? (OPEN_SOURCE_EDITION ? 'appearance' : 'account'))
     setMessage(undefined)
+    setInferenceDirty(false)
+    setEmbeddingDirty(false)
     setMessageType('success')
     setAccountName(localStorage.getItem(accountStorageKey(ACCOUNT_NAME_KEY, user?.id)) || defaultAccountName)
-  }, [defaultAccountName, open, user?.id])
+  }, [defaultAccountName, open, user?.id, initialTab])
 
   useEffect(() => {
     if (!open || !settings || !catalog) return
@@ -100,20 +106,20 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange }: SettingsD
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0))]
 
-  const saveInferenceSettings = async (): Promise<void> => {
-    if (!currentProvider || !settings) return
+  const saveInferenceSettings = async (): Promise<boolean> => {
+    if (!currentProvider || !settings || settings.readOnly) return false
     const nextBaseUrl = baseUrl.trim()
     const nextModel = model.trim()
     const nextModels = normalizedModelList(modelList)
     if (!nextBaseUrl) {
       setMessageType('error')
       setMessage(locale === 'zh-CN' ? 'Base URL 不能为空。' : 'Base URL is required.')
-      return
+      return false
     }
     if (!nextModel) {
       setMessageType('error')
       setMessage(locale === 'zh-CN' ? '模型不能为空。' : 'Model is required.')
-      return
+      return false
     }
     const models = nextModels.length > 0 ? [...nextModels.filter((candidate) => candidate !== nextModel), nextModel] : [nextModel]
     const input: WebInferenceSettingsUpdate = {
@@ -134,12 +140,22 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange }: SettingsD
       setMessage(locale === 'zh-CN' ? '模型配置已保存。' : 'Model configuration saved.')
       setApiKey('')
       setClearApiKey(false)
+      setInferenceDirty(false)
+      return true
     } catch (cause) {
       setMessageType('error')
       setMessage(cause instanceof Error ? cause.message : String(cause))
+      return false
     } finally {
       setSaving(false)
     }
+  }
+
+  const finishSettings = async (): Promise<void> => {
+    if (saving) return
+    if (inferenceDirty && !await saveInferenceSettings()) { setTab('inference'); return }
+    if (embeddingDirty && !await saveEmbeddingSettings()) { setTab('embedding'); return }
+    onClose()
   }
 
   const onSelectProvider = (value: string): void => {
@@ -165,12 +181,12 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange }: SettingsD
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={() => { if (!saving) onClose() }}
       title={zh ? '设置' : 'Settings'}
       description={OPEN_SOURCE_EDITION ? (zh ? '管理界面与模型偏好。' : 'Manage interface and model preferences.') : (zh ? '管理当前浏览器中的账号与界面偏好。' : 'Manage account and interface preferences in this browser.')}
       className={css.dialog}
       contentClassName={css.content}
-      footer={<Button variant="primary" className={css.doneButton} onClick={onClose}>{zh ? '完成' : 'Done'}</Button>}
+      footer={<Button variant="primary" className={css.doneButton} disabled={saving || settingsLoading} onClick={() => void finishSettings()}>{saving ? (zh ? '保存中…' : 'Saving...') : zh ? '完成' : 'Done'}</Button>}
     >
       <div className={css.layout}>
         <nav className={css.nav} aria-label={zh ? '设置分类' : 'Settings sections'}>
@@ -199,7 +215,7 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange }: SettingsD
           </section>
         )}
         {tab === 'inference' && !settings?.readOnly && (
-          <section className={css.section} aria-labelledby="inference-api-title">
+          <section className={css.section} aria-labelledby="inference-api-title" onChange={() => setInferenceDirty(true)}>
             <div className={css.sectionHeader}><h3 id="inference-api-title">{zh ? '模型服务配置' : 'Model Service Settings'}</h3><p>{zh ? '为本地模型切换与 API Key 配置。' : 'Configure your local model provider and API key.'}</p></div>
             {settingsLoading ? (
               <p className={css.fieldDescription}>{zh ? '正在加载推理配置...' : 'Loading inference settings...'}</p>
@@ -256,8 +272,10 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange }: SettingsD
                   className={css.fieldInput}
                   type="password"
                   value={apiKey}
-                  onChange={(event) => setApiKey(event.target.value)}
-                  placeholder={currentProvider?.configured ? (zh ? '留空表示不修改' : 'Leave empty to keep existing') : ''}
+                  onChange={(event) => { setApiKey(event.target.value); setClearApiKey(false) }}
+                  autoComplete="new-password"
+                  aria-label="API Key"
+                  placeholder={currentProvider?.configured && !clearApiKey ? '********' : (zh ? '填写 API Key' : 'Enter API key')}
                 />
                 <label className={css.optionLabel}>
                   <input
@@ -290,16 +308,17 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange }: SettingsD
         )}
 
         {tab === 'embedding' && embedding && (
-          <section className={css.section} aria-labelledby="embedding-settings-title">
+          <section className={css.section} aria-labelledby="embedding-settings-title" onChange={() => setEmbeddingDirty(true)}>
             <div className={css.sectionHeader}><h3 id="embedding-settings-title">Embedding 模型</h3><p>本地计算环境已内置。根据需要选择本地模型或云端向量服务。</p></div>
             <label className={css.field}><span>使用方式</span><select className={css.select} value={embedding.mode} onChange={event => setEmbedding({ ...embedding, mode: event.target.value as 'local' | 'cloud' })}><option value="local">本地模型</option><option value="cloud">云端 Embedding API</option></select></label>
             {embedding.mode === 'local' ? (
               <>
                 <label className={css.field}><span>Embedding 模型名称</span><input value={embedding.localModel} placeholder="Qwen/Qwen3-Embedding-0.6B" onChange={event => setEmbedding({ ...embedding, localModel: event.target.value })} /></label>
                 <p className={css.fieldDescription}>默认建议 Qwen Embedding，也可选择兼容当前引擎的本地模型。名称用于标识，实际加载所选目录中的权重。</p>
+                {!embedding.localPath && <p role="status" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">尚未选择本地嵌入模型。安装包不含模型权重；请点击「模型下载」，下载完成后选择完整模型目录。仅使用传统模型时可稍后配置。</p>}
                 <label className={css.field}><span>模型目录</span><input value={embedding.localPath} readOnly placeholder="按需下载模型后选择目录" /></label>
-                <div className={css.actionRow}><Button variant="outline" onClick={() => void chooseEmbeddingDirectory('localPath')}>选择目录</Button><Button variant="ghost" onClick={() => setEmbedding({ ...embedding, localPath: '' })}>清除</Button><Button variant="ghost" onClick={() => void window.thetaDesktop?.openModels('qwen')}>模型下载 ↗</Button></div>
-                <details><summary>CTM / BERTopic 兼容模型（可选）</summary><label className={css.field}><span>Sentence Transformers 模型目录</span><input value={embedding.sbertPath} readOnly placeholder="使用 CTM / BERTopic 时配置" /></label><div className={css.actionRow}><Button variant="outline" onClick={() => void chooseEmbeddingDirectory('sbertPath')}>选择目录</Button><Button variant="ghost" onClick={() => setEmbedding({ ...embedding, sbertPath: '' })}>清除</Button><Button variant="ghost" onClick={() => void window.thetaDesktop?.openModels('sbert')}>模型下载 ↗</Button></div></details>
+                <div className={css.actionRow}><Button variant="outline" onClick={() => void chooseEmbeddingDirectory('localPath')}>选择目录</Button><Button variant="ghost" onClick={() => { setEmbedding({ ...embedding, localPath: '' }); setEmbeddingDirty(true) }}>清除</Button><Button variant="ghost" onClick={() => void window.thetaDesktop?.openModels('qwen')}>模型下载 ↗</Button></div>
+                <details><summary>CTM / BERTopic 兼容模型（可选）</summary><label className={css.field}><span>Sentence Transformers 模型目录</span><input value={embedding.sbertPath} readOnly placeholder="使用 CTM / BERTopic 时配置" /></label><div className={css.actionRow}><Button variant="outline" onClick={() => void chooseEmbeddingDirectory('sbertPath')}>选择目录</Button><Button variant="ghost" onClick={() => { setEmbedding({ ...embedding, sbertPath: '' }); setEmbeddingDirty(true) }}>清除</Button><Button variant="ghost" onClick={() => void window.thetaDesktop?.openModels('sbert')}>模型下载 ↗</Button></div></details>
                 <p className={css.fieldDescription}>模型目录需包含 config.json、分词器与权重。应用不会自动下载大模型。</p>
               </>
             ) : (
@@ -308,7 +327,7 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange }: SettingsD
                 <label className={css.field}><span>Base URL</span><input value={embedding.baseUrl} onChange={event => setEmbedding({ ...embedding, baseUrl: event.target.value })} placeholder="https://open.bigmodel.cn/api/paas/v4" /></label>
                 <label className={css.field}><span>Embedding 模型</span><input value={embedding.model} onChange={event => setEmbedding({ ...embedding, model: event.target.value })} placeholder="embedding-3" /></label>
                 <label className={css.field}><span>向量维度（可选）</span><input type="number" min="1" max="65536" value={embedding.dimensions ?? ''} onChange={event => setEmbedding({ ...embedding, dimensions: event.target.value === '' ? null : Number(event.target.value) })} placeholder="留空使用服务默认值" /></label>
-                <label className={css.field}><span>Embedding API Key</span><input type="password" autoComplete="off" value={embeddingKey} onChange={event => setEmbeddingKey(event.target.value)} placeholder={embedding.apiKeyConfigured ? '已保存，留空保留' : '填写 Embedding 服务密钥'} /></label>
+                <label className={css.field}><span>Embedding API Key</span><input type="password" autoComplete="off" value={embeddingKey} onChange={event => { setEmbeddingKey(event.target.value); setClearEmbeddingKey(false) }} placeholder={embedding.apiKeyConfigured && !clearEmbeddingKey ? '********' : '填写 Embedding 服务密钥'} /></label>
                 <label className={css.optionLabel}><input type="checkbox" checked={clearEmbeddingKey} onChange={event => setClearEmbeddingKey(event.target.checked)} /><span>清除已保存的 Embedding API Key</span></label>
                 <p className={css.fieldDescription}>云端 Embedding 当前用于 THETA zero-shot。执行时会发送文本到所选服务，仍需确认具体任务与请求预算；微调和其他模型使用本地权重。密钥加密保存在本机。</p>
               </>

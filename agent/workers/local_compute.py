@@ -76,7 +76,7 @@ def submit(payload: dict) -> dict:
                                'embeddingProvider': payload['execution']['embedding']['mode'], 'mode': payload['plan']['params'].get('mode'),
                                'device': payload['plan'].get('device'), 'modelAssets': payload['execution'].get('modelAssets', {})})
         if not ready["ready"]:
-            raise ValueError("训练依赖或本地模型资产未就绪：" + json.dumps(ready, ensure_ascii=False))
+            raise ValueError(" ".join(ready.get("issues", [])) or "训练依赖或本地模型资源未就绪，请检查模型设置和计算环境。")
         value = {"id": job_id, "status": "queued", "phase": "queued", "percent": 0, "createdAt": time.time(), "runtime": payload["execution"]["runtime"]}
         try:
             db.execute("INSERT INTO jobs (id,request,state,value,updated) VALUES (?,?,?,?,?)", (job_id, request, "queued", json.dumps(value), time.time()))

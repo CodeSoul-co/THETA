@@ -92,7 +92,17 @@ def runtime_check(payload: dict) -> dict:
             import torch
             gpu_ready = torch.cuda.is_available() and int(payload['device'].split(':')[1]) < torch.cuda.device_count()
         except (ImportError, ValueError): gpu_ready = False
-    return {"ready": not missing and assets_ready and gpu_ready and mode_supported, "embeddingModeSupported": mode_supported, "deviceReady": gpu_ready, "modelId": model, "missingDependencies": missing,
+    issues = []
+    if not assets_ready:
+        kind = "CTM / BERTopic 兼容模型" if model in {"ctm", "bertopic"} else "本地嵌入模型"
+        issues.append(f"{kind}尚未准备好。请在设置的嵌入模型页面下载兼容模型，并选择包含 config.json、分词器与权重的完整目录；安装包不包含模型权重。")
+    if missing:
+        issues.append("计算依赖缺失：" + ", ".join(missing) + "。桌面用户请重新安装完整安装包；源码用户请检查计算环境依赖。")
+    if not gpu_ready:
+        issues.append("所选 GPU 不可用。请选择 CPU，或检查 GPU 与驱动配置后重试。")
+    if not mode_supported:
+        issues.append("当前模型或训练模式不支持云端嵌入。请选择兼容的本地模型；云端嵌入适用于 THETA 零样本分析。")
+    return {"ready": not missing and assets_ready and gpu_ready and mode_supported, "issues": issues, "embeddingModeSupported": mode_supported, "deviceReady": gpu_ready, "modelId": model, "missingDependencies": missing,
             "modelAssetsReady": assets_ready, "requiredAssetVariable": asset_key if needs else None,
             "modelAsset": {"name": Path(asset).name, "path": str(Path(asset).resolve())} if needs and asset else None,
             "python": sys.executable, "enginePresent": True,

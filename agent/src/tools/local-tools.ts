@@ -238,12 +238,12 @@ export class LocalProductTools implements ProductToolExecutor {
     if (!id || !session.datasetRefs.includes(id)) throw new Error('请先在本会话中提供数据文件。');
     return this.records.get('dataset', id);
   }
-  private async preview(run: ResearchRun, session: ProductSession): Promise<{ request: ComputeRequest; summary: string; ready: boolean; readiness: unknown }> {
+  private async preview(run: ResearchRun, session: ProductSession): Promise<{ request: ComputeRequest; summary: string; ready: boolean; readiness: { ready: boolean; issues?: string[] } }> {
     this.requireBackend(run);
     if (!run.plan || !run.planHash) throw new Error('请先提出具体模型、数据列和参数方案。');
     const dataset = this.dataset(session);
     if (this.needsEmbeddingChoice(session, run, run.plan)) throw new Error('请先选择本地或云端嵌入，再生成新的训练确认卡。');
-    const preview = await this.worker.call<{ execution: Record<string, unknown>; readiness: { ready: boolean }; rowCount: number }>('compute.preview', { plan: run.plan, dataset });
+    const preview = await this.worker.call<{ execution: Record<string, unknown>; readiness: { ready: boolean; issues?: string[] }; rowCount: number }>('compute.preview', { plan: run.plan, dataset });
     const remote = this.backend !== 'local' && this.backend !== 'custom';
     const request = { jobId: `job-${run.planHash}`, runId: run.id, dataset, plan: run.plan, execution: { ...preview.execution, ...(remote ? { computeConfigurationFingerprint: this.configurationFingerprint() } : {}) } };
     const embedding = preview.execution.embedding as { mode: string; endpoint?: string; model?: string };
@@ -286,7 +286,7 @@ export class LocalProductTools implements ProductToolExecutor {
       stopwords = { id, name: 'Agent 预填停用词表', count: words.length };
       this.records.put('training-stopwords', id, { sessionId: session.id, words, name: stopwords.name });
     }
-    return { ...configuration, columns: profile.columns, runtime, stopwords };
+    return { ...configuration, datasetSizeBytes: this.dataset(session).sizeBytes, columns: profile.columns, runtime, stopwords };
   }
   private async proposeTrainingConfiguration(context: ProductToolContext, plans: TrainingPlan[]): Promise<unknown> {
     if (new Set(plans.map(plan => plan.modelId)).size !== plans.length) throw new Error('每个模型只需配置一次。');
@@ -328,14 +328,14 @@ export class LocalProductTools implements ProductToolExecutor {
       if (input.stopwords) plan.params['text.stopwords'] = input.stopwords.join('\n');
       const cloud = plan.modelId === 'theta' && plan.params.embedding_provider === 'cloud';
       if (cloud && (input.cloudConfirmed !== true || (plan.params.mode ?? 'zero_shot') !== 'zero_shot' || !input.cloudSelection)) throw new Error('云端嵌入仅支持 THETA 零样本，请明确勾选发送文本与费用确认。');
-      const preview = await this.worker.call<{ execution: Record<string, unknown>; readiness: { ready: boolean } }>('compute.preview', { plan, dataset }, signal);
+      const preview = await this.worker.call<{ execution: Record<string, unknown>; readiness: { ready: boolean; issues?: string[] } }>('compute.preview', { plan, dataset }, signal);
       const actual = preview.execution.embedding as { mode: string; provider?: string; endpoint?: string; model?: string };
       if (actual.mode !== (cloud ? 'cloud' : 'local')) throw new Error(`${plan.modelId} 的实际嵌入方式与选择不一致。`);
       if (cloud) {
         const shown = input.cloudSelection!;
         if (shown.provider !== actual.provider || shown.model !== actual.model || shown.endpoint.replace(/\/$/u, '').replace(/\/embeddings$/u, '') + '/embeddings' !== actual.endpoint) throw new Error('云端服务已变化，请重新打开配置并确认。');
       }
-      if (['local', 'custom'].includes(this.backend) && !preview.readiness.ready) throw new Error(`${plan.modelId.toUpperCase()} 的运行环境或模型资源未就绪；未启动任何模型，请调整配置后重试。`);
+      if (['local', 'custom'].includes(this.backend) && !preview.readiness.ready) throw new Error(preview.readiness.issues?.join(" ") || `${plan.modelId.toUpperCase()} 的运行环境或模型资源未就绪；未启动任何模型，请调整配置后重试。`);
       // The execution contract uses runId as dataset.project_id (at most 36 chars).
       const runId = `run-${contentHash({ batchId, model: plan.modelId }).slice(0, 32)}`;
       requests.push({ runId, jobId: `job-${contentHash({ batchId, dataset, plan })}`, dataset, plan,
@@ -616,7 +616,7 @@ export class LocalProductTools implements ProductToolExecutor {
       if (session.pendingConfirmation?.kind === 'embedding_choice') return { needsUser: true, summary: session.pendingConfirmation.summary };
       if (run.plan && this.needsEmbeddingChoice(session, run, run.plan)) return this.requestEmbeddingChoice(context, run, run.plan);
       const preview = await this.preview(run, session);
-      if (!preview.ready) return { ready: false, readiness: preview.readiness, instruction: '计算环境尚未就绪，不得声称已训练或静默下载模型。' };
+      if (!preview.ready) return { ready: false, readiness: preview.readiness, instruction: preview.readiness.issues?.join(' ') || '计算环境尚未就绪，不得声称已训练或静默下载模型。' };
       const result = this.requestEffect(session, run, 'compute.submit', preview.request, preview.summary); context.save(); return result;
     }
     if (name === 'training_cancel') {

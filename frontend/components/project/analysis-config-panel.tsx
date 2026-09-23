@@ -29,6 +29,7 @@ import type { ModelContract } from "@/lib/model-parameters"
 import { DEFAULT_ANALYSIS_CONFIG, type AnalysisConfig } from "@/lib/analysis-config"
 export type { AnalysisConfig } from "@/lib/analysis-config"
 import { useProjectDraft } from "@/lib/use-project-draft"
+import { ComputationNotice, SetupError } from '@/components/theta-workbench/panels/WorkbenchNotice'
 import styles from './analysis-config-panel.module.css'
 
 // ==================== 模型配置 ====================
@@ -98,6 +99,7 @@ interface AnalysisConfigPanelProps {
   onOpenChange: (open: boolean) => void
   onConfirm: (config: AnalysisConfig) => void | boolean | Promise<void | boolean>
   datasetName: string
+  datasetSizeBytes?: number
   error?: string | null
   projectKey: string
   initialConfig?: AnalysisConfig
@@ -117,6 +119,7 @@ export function AnalysisConfigPanel({
   onOpenChange,
   onConfirm,
   datasetName,
+  datasetSizeBytes,
   error,
   projectKey,
   initialConfig = DEFAULT_ANALYSIS_CONFIG,
@@ -196,6 +199,7 @@ export function AnalysisConfigPanel({
             <DialogDescription>
               数据集：{datasetName} · {description ?? '选择模型后，可分别调整每个模型的参数。'}
             </DialogDescription>
+            <ComputationNotice sizeBytes={datasetSizeBytes} models={config.models} />
           </DialogHeader>
 
           {/* Fieldset has an anonymous internal box in browsers; keep scrolling on a normal block. */}
@@ -348,7 +352,7 @@ export function AnalysisConfigPanel({
                           <div className="flex items-center gap-2"><RadioGroupItem id="embedding-cloud" value="cloud" /><Label htmlFor="embedding-cloud">云端嵌入 · 已配置服务</Label></div>
                         </RadioGroup>
                         {config.embeddingProvider === "cloud" && <div className="space-y-3 text-xs leading-5 text-slate-600">
-                          {embedding?.configured ? <p className="break-all">服务：{embedding.provider} · {embedding.model}<br />接收地址：{embedding.endpoint}</p> : <p role="alert" className="text-red-600">云端服务尚未配置或暂不可用，不能开始云端训练。</p>}
+                          {embedding?.configured ? <p className="break-all">服务：{embedding.provider} · {embedding.model}<br />接收地址：{embedding.endpoint}</p> : <p role="alert" className="text-red-600">云端嵌入 API 未配置完整。请在「设置 → 嵌入模型」填写地址、模型与密钥后重试。</p>}
                           <Label htmlFor="cloud-limit">本轮最多外部请求次数</Label>
                           <Input id="cloud-limit" type="number" min={1} max={1000} value={config.externalRequestLimit} onChange={e => setConfig(prev => ({ ...prev, externalRequestLimit: Math.max(1, Math.min(1000, Number(e.target.value) || 1)) }))} />
                           <Label htmlFor="embedding-batch">每次请求的文本块数</Label>
@@ -422,7 +426,7 @@ export function AnalysisConfigPanel({
           </div>
 
           <DialogFooter className={styles.footer}>
-            {(error || submitError) && <p role="alert" className={styles.error}>{submitError || error}</p>}
+            {(error || submitError) && <div className={styles.error}><SetupError error={submitError || error || ''} /></div>}
             <Button variant="outline" disabled={submitting} onClick={() => onOpenChange(false)}>
               取消
             </Button>
