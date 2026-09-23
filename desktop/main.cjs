@@ -266,6 +266,7 @@ if (single) app.whenReady().then(async () => {
   const services = await startService();
   window = new BrowserWindow({ show: !smoke, width: 1440, height: 960, minWidth: 1024, minHeight: 680, title: 'THETA', backgroundColor: '#faf9f6',
     icon: path.join(__dirname, 'ui/icon.png'), webPreferences: { preload: path.join(__dirname, 'preload.cjs'), session: desktopSession, sandbox: true, contextIsolation: true, nodeIntegration: false } });
+  window.on('page-title-updated', event => event.preventDefault());
   window.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https:\/\//.test(url)) void shell.openExternal(url);
     return { action: 'deny' };

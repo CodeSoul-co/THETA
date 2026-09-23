@@ -1,5 +1,6 @@
 {
   "name": "theta-desktop",
+  "productName": "THETA",
   "version": "0.3.0",
   "private": true,
   "description": "THETA local research workbench with bundled Python",
@@ -25,6 +26,7 @@
   "build": {
     "appId": "com.codesoul.theta",
     "productName": "THETA",
+    "executableName": "THETA",
     "asar": true,
     "npmRebuild": false,
     "directories": { "output": "release" },
@@ -33,6 +35,6 @@
     "artifactName": "THETA-${version}-${os}-${arch}.${ext}",
     "mac": { "target": ["dmg", "zip"], "category": "public.app-category.education", "icon": "ui/icon.png" },
     "win": { "target": ["nsis"], "icon": "ui/icon.png" },
-    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "deleteAppDataOnUninstall": false }
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "deleteAppDataOnUninstall": false, "shortcutName": "THETA", "uninstallDisplayName": "THETA" }
   }
 }
