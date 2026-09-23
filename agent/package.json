@@ -1,0 +1,42 @@
+{
+  "name": "theta-agent",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "Conversational THETA agent with independent CLI and compute adapters",
+  "bin": {
+    "theta": "cli/bin/theta.mjs",
+    "theta-agent": "cli/bin/theta.mjs"
+  },
+  "exports": {
+    ".": "./dist/src/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node --disable-warning=ExperimentalWarning cli/bin/theta.mjs",
+    "web:api": "npm run build && node --disable-warning=ExperimentalWarning dist/web/server.js",
+    "web:manual": "npm run build && node --disable-warning=ExperimentalWarning dist/web/manual-server.js",
+    "service:start": "node --disable-warning=ExperimentalWarning dist/web/server.js",
+    "test": "npm run build && node scripts/check-boundaries.mjs && node --disable-warning=ExperimentalWarning --test dist/src/*.test.js dist/src/**/*.test.js dist/cli/**/*.test.js dist/web/*.test.js",
+    "test:workers": "npm run build && node scripts/test-workers.mjs",
+    "smoke:training": "npm run build && node --disable-warning=ExperimentalWarning scripts/smoke-training.mjs",
+    "check:worker": "npm run build && node scripts/check-worker-contract.mjs",
+    "probe:business": "node scripts/probe-business-api.mjs",
+    "acceptance:business": "node scripts/acceptance-business-api.mjs",
+    "acceptance:conversion": "node scripts/acceptance-conversion.mjs",
+    "test:statistics": "node scripts/test-statistics.mjs"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "tar": "^7.5.22",
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.25.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "typescript": "^5.9.3"
+  }
+}

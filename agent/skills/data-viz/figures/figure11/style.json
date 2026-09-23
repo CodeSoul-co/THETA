@@ -1,0 +1,77 @@
+{
+  "id": 11,
+  "title": "环形系统发育树与热图",
+  "width": 1094,
+  "height": 854,
+  "dpi": 100,
+  "font": "Arial",
+  "font_size": 17,
+  "line_width": 1.3,
+  "seed": 190913,
+  "provenance": "模拟树拓扑 分支长度及叶节点注释；仅复现图式，不能用于系统发育推断",
+  "data_file": "figure11.csv",
+  "annotation_policy": "reference_only",
+  "annotations": [],
+  "colors": [
+    "#be694b",
+    "#87c4d5",
+    "#6ab8a7",
+    "#5c588e",
+    "#ddb097",
+    "#9a9aaf",
+    "#a7ccc6",
+    "#bc332e"
+  ],
+  "phyla": [
+    "Actinobacteria",
+    "Bacteroidetes",
+    "Firmicutes",
+    "Fusobacteria",
+    "Lentisphaerae",
+    "Proteobacteria",
+    "Spirochaetes",
+    "Verrucomicrobia"
+  ],
+  "start_angle": 55,
+  "gap_angle": 8,
+  "tree_mode": "circular",
+  "leaf_file": "figure11_leaves.csv",
+  "ring_colors": [
+    "#161814",
+    "#eba729",
+    "#83a7d2"
+  ],
+  "genus_labels": [
+    [
+      "Fusobacterium",
+      55,
+      85
+    ],
+    [
+      "Bifidobacterium",
+      12,
+      50
+    ],
+    [
+      "Collinsella",
+      -4,
+      12
+    ],
+    [
+      "Clostridium",
+      -78,
+      -6
+    ],
+    [
+      "Enterococcus",
+      -108,
+      -80
+    ],
+    [
+      "Bacteroides",
+      145,
+      215
+    ]
+  ],
+  "title_en": "Circular phylogeny with heatmap rings"
+}

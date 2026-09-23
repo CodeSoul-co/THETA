@@ -1,0 +1,36 @@
+{
+  "id": 20,
+  "title": "词语空间与分区网格",
+  "title_en": "Word map with partition mesh",
+  "width": 467,
+  "height": 375,
+  "dpi": 100,
+  "font": "Arial",
+  "font_size": 2.5,
+  "line_width": 0.4,
+  "seed": 190913,
+  "axes": [
+    0,
+    0,
+    467,
+    375
+  ],
+  "data_file": "figure20.csv",
+  "provenance": "Readable terms manually transcribed with approximate positions; mesh traced from screenshot color. No original semantic coordinates or similarity model recovered.",
+  "xlim": [
+    0,
+    467
+  ],
+  "show_mesh": true,
+  "mesh_file": "figure20_mesh.csv",
+  "mesh_color": "#67919b",
+  "mesh_width": 0.48,
+  "mesh_alpha": 0.65,
+  "word_color": "#3c3c3c",
+  "highlight_color": "#c47b83",
+  "text_alpha": 0.9,
+  "ylim": [
+    0,
+    375
+  ]
+}

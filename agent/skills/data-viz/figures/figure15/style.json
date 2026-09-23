@@ -1,0 +1,44 @@
+{
+  "id": 15,
+  "title": "流式细胞术山脊矩阵",
+  "width": 1098,
+  "height": 658,
+  "dpi": 100,
+  "font": "Arial",
+  "font_size": 20,
+  "line_width": 1.3,
+  "seed": 190913,
+  "provenance": "按截图峰位与多峰形态估计的混合高斯示例轮廓；不是原始流式数据",
+  "data_file": "figure15.csv",
+  "annotation_policy": "reference_only",
+  "annotations": [],
+  "markers": [
+    "IFN-γ",
+    "IL2",
+    "TNF-α",
+    "GM-CSF"
+  ],
+  "groups": [
+    "ILC3",
+    "ILC2",
+    "cILC1",
+    "cNK",
+    "CD49a-trNK",
+    "CD49a+trNK",
+    "LT-ILC1"
+  ],
+  "colors": [
+    "#439600",
+    "#68b9ea",
+    "#565c58",
+    "#79efed",
+    "#c62d1b",
+    "#7900b4",
+    "#e13df4"
+  ],
+  "xlim": [
+    -0.8,
+    6
+  ],
+  "title_en": "Flow-cytometry ridgeline matrix"
+}

@@ -1,0 +1,35 @@
+{
+  "id": 17,
+  "title": "区域年代分布 雨云图",
+  "width": 1066,
+  "height": 880,
+  "dpi": 100,
+  "font": "Arial",
+  "font_size": 23,
+  "line_width": 1.3,
+  "seed": 190913,
+  "provenance": "截图分布轮廓和箱线图估读；rug 为模拟示例",
+  "data_file": "figure17.csv",
+  "annotation_policy": "reference_only",
+  "annotations": [],
+  "groups": [
+    "Western Europe",
+    "Central/Eastern Europe",
+    "Southern Europe",
+    "Northern Europe",
+    "Central/Western Asia"
+  ],
+  "colors": [
+    "#b7d3e3",
+    "#c7c9a1",
+    "#64bda2",
+    "#cd422f",
+    "#000000"
+  ],
+  "xlim": [
+    15,
+    0
+  ],
+  "xlabel": "kyr BP",
+  "title_en": "Regional age-distribution rainclouds"
+}

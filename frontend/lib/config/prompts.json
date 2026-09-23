@@ -1,0 +1,63 @@
+{
+  "sidebar": {
+    "thinking": "思考中...",
+    "suggestions": [
+      {
+        "id": "start_analysis",
+        "title": "开始分析",
+        "description": "了解如何上传和分析数据",
+        "prompt": "如何开始数据分析？"
+      },
+      {
+        "id": "help",
+        "title": "查看帮助",
+        "description": "了解如何使用 THETA 系统",
+        "prompt": "查看帮助文档"
+      }
+    ]
+  },
+  "chat": {
+    "default_message_with_attachments": "请分析我上传的附件",
+    "default_message_with_images": "请分析我上传的图片",
+    "default_message_with_files": "请分析我上传的文档"
+  },
+  "dashboard": {
+    "dynamic_suggestions": [
+      {
+        "id": "metrics",
+        "title": "指标解读",
+        "description": "分析当前评估指标质量",
+        "prompt": "请解读评估指标。"
+      },
+      {
+        "id": "topics",
+        "title": "主题解读",
+        "description": "各主题语义描述",
+        "prompt": "请解读各主题含义。"
+      },
+      {
+        "id": "summary",
+        "title": "分析报告",
+        "description": "整体分析摘要",
+        "prompt": "请生成分析报告。"
+      }
+    ],
+    "chart_analysis_prefix": "请分析我拖拽的"
+  },
+  "visualization": {
+    "chart_analysis_prompt": "请分析我拖拽的{count}张图表，并给出结构化结论："
+  },
+  "auto_pipeline": {
+    "configure_after_upload": "上传完成，请配置分析参数后点击「开始分析」。数据集：{dataset_name}",
+    "waiting_for_config": "请配置分析参数后点击「开始分析」（上传继续在后台进行）",
+    "config_saved_waiting_upload": "配置已暂存，等待上传完成后开始分析...",
+    "configure_in_panel": "请在下方的配置面板中选择模型和参数，点击「开始分析」",
+    "configure_detail": "请在上方弹出的配置面板中选择数据语言、模型和超参数，然后点击「开始分析」。",
+    "supported_formats": "支持 CSV、TXT、PDF、DOCX、Excel 等。上传后将以「{dataset_name}」作为数据集名称自动开始分析。"
+  },
+  "buttons": {
+    "start_analysis": "开始分析",
+    "upload_and_start": "上传并开始分析",
+    "begin_analysis": "立即开始分析"
+  }
+}

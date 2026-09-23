@@ -1,0 +1,289 @@
+cell_type,gene,expression,percent
+Enterocyte 2,Tgfb1,0.03,3.1
+Enterocyte 2,Tgfb2,0.03,3.1
+Enterocyte 2,Tgfb3,0.03,1.75
+Enterocyte 2,Itgb6,0.03,4.85
+Enterocyte 2,Itgb8,0.03,1.0
+Enterocyte 2,Itgav,0.03,15.71
+Enterocyte 2,Ltbp1,0.03,1.75
+Enterocyte 2,Ltbp3,0.03,9.5
+Enterocyte 3,Tgfb1,0.03,1.75
+Enterocyte 3,Tgfb2,0.03,1.75
+Enterocyte 3,Tgfb3,0.03,1.75
+Enterocyte 3,Itgb6,0.03,3.1
+Enterocyte 3,Itgb8,0.03,1.0
+Enterocyte 3,Itgav,0.03,6.98
+Enterocyte 3,Ltbp1,0.03,1.75
+Enterocyte 3,Ltbp3,0.03,4.85
+CD8 T Cell αα⁺,Tgfb1,0.84,27.92
+CD8 T Cell αα⁺,Tgfb2,0.03,4.85
+CD8 T Cell αα⁺,Tgfb3,0.03,15.71
+CD8 T Cell αα⁺,Itgb6,0.03,1.75
+CD8 T Cell αα⁺,Itgb8,0.03,1.0
+CD8 T Cell αα⁺,Itgav,0.03,19.39
+CD8 T Cell αα⁺,Ltbp1,0.03,1.75
+CD8 T Cell αα⁺,Ltbp3,0.03,1.75
+Goblet,Tgfb1,0.03,4.85
+Goblet,Tgfb2,0.03,1.75
+Goblet,Tgfb3,0.03,1.75
+Goblet,Itgb6,0.03,9.5
+Goblet,Itgb8,0.03,1.0
+Goblet,Itgav,0.03,9.5
+Goblet,Ltbp1,0.03,3.1
+Goblet,Ltbp3,0.03,3.1
+MAIT,Tgfb1,1.104,32.77
+MAIT,Tgfb2,0.03,12.41
+MAIT,Tgfb3,1.008,27.92
+MAIT,Itgb6,0.03,1.0
+MAIT,Itgb8,0.03,3.1
+MAIT,Itgav,0.888,32.77
+MAIT,Ltbp1,1.944,56.04
+MAIT,Ltbp3,0.03,27.92
+Enterocyte 1,Tgfb1,0.03,1.75
+Enterocyte 1,Tgfb2,0.03,3.1
+Enterocyte 1,Tgfb3,0.03,1.0
+Enterocyte 1,Itgb6,1.08,38.01
+Enterocyte 1,Itgb8,0.03,1.0
+Enterocyte 1,Itgav,0.03,27.92
+Enterocyte 1,Ltbp1,0.03,1.75
+Enterocyte 1,Ltbp3,0.03,19.39
+T Cell γδ,Tgfb1,0.03,19.39
+T Cell γδ,Tgfb2,0.03,4.85
+T Cell γδ,Tgfb3,0.03,9.5
+T Cell γδ,Itgb6,0.03,6.98
+T Cell γδ,Itgb8,0.03,1.0
+T Cell γδ,Itgav,0.03,15.71
+T Cell γδ,Ltbp1,0.03,1.75
+T Cell γδ,Ltbp3,0.03,6.98
+NK Cell,Tgfb1,0.984,27.92
+NK Cell,Tgfb2,0.03,9.5
+NK Cell,Tgfb3,0.03,6.98
+NK Cell,Itgb6,0.03,1.0
+NK Cell,Itgb8,0.03,3.1
+NK Cell,Itgav,0.03,27.92
+NK Cell,Ltbp1,2.208,62.83
+NK Cell,Ltbp3,0.03,12.41
+T Cell,Tgfb1,0.792,27.92
+T Cell,Tgfb2,0.03,4.85
+T Cell,Tgfb3,0.03,9.5
+T Cell,Itgb6,0.03,4.85
+T Cell,Itgb8,0.03,1.0
+T Cell,Itgav,0.03,15.71
+T Cell,Ltbp1,0.03,3.1
+T Cell,Ltbp3,0.03,3.1
+ILC,Tgfb1,1.272,32.77
+ILC,Tgfb2,0.03,9.5
+ILC,Tgfb3,0.03,12.41
+ILC,Itgb6,0.03,1.0
+ILC,Itgb8,0.03,1.0
+ILC,Itgav,0.03,9.5
+ILC,Ltbp1,0.03,19.39
+ILC,Ltbp3,0.03,4.85
+CD8 T Cell αβ⁺,Tgfb1,0.03,12.41
+CD8 T Cell αβ⁺,Tgfb2,0.03,1.75
+CD8 T Cell αβ⁺,Tgfb3,0.03,1.75
+CD8 T Cell αβ⁺,Itgb6,0.03,1.0
+CD8 T Cell αβ⁺,Itgb8,0.03,1.0
+CD8 T Cell αβ⁺,Itgav,0.03,4.85
+CD8 T Cell αβ⁺,Ltbp1,0.03,1.75
+CD8 T Cell αβ⁺,Ltbp3,0.03,1.0
+B Cell,Tgfb1,1.464,49.64
+B Cell,Tgfb2,0.03,3.1
+B Cell,Tgfb3,0.03,3.1
+B Cell,Itgb6,0.03,1.75
+B Cell,Itgb8,0.03,1.0
+B Cell,Itgav,0.03,15.71
+B Cell,Ltbp1,0.03,15.71
+B Cell,Ltbp3,0.03,4.85
+Eosinophil,Tgfb1,2.976,62.83
+Eosinophil,Tgfb2,0.03,1.75
+Eosinophil,Tgfb3,0.03,6.98
+Eosinophil,Itgb6,0.03,1.0
+Eosinophil,Itgb8,0.03,1.0
+Eosinophil,Itgav,0.03,15.71
+Eosinophil,Ltbp1,0.03,12.41
+Eosinophil,Ltbp3,0.03,6.98
+Vascular Endothelial,Tgfb1,1.296,43.63
+Vascular Endothelial,Tgfb2,0.03,6.98
+Vascular Endothelial,Tgfb3,0.03,15.71
+Vascular Endothelial,Itgb6,0.03,1.0
+Vascular Endothelial,Itgb8,0.03,1.0
+Vascular Endothelial,Itgav,0.03,6.98
+Vascular Endothelial,Ltbp1,0.03,19.39
+Vascular Endothelial,Ltbp3,0.03,6.98
+Fibroblast Apoe⁺,Tgfb1,0.03,1.0
+Fibroblast Apoe⁺,Tgfb2,0.03,1.0
+Fibroblast Apoe⁺,Tgfb3,1.344,27.92
+Fibroblast Apoe⁺,Itgb6,1.416,27.92
+Fibroblast Apoe⁺,Itgb8,0.03,1.0
+Fibroblast Apoe⁺,Itgav,0.03,1.0
+Fibroblast Apoe⁺,Ltbp1,0.03,1.0
+Fibroblast Apoe⁺,Ltbp3,0.03,1.0
+cDC1,Tgfb1,1.872,56.04
+cDC1,Tgfb2,0.03,1.75
+cDC1,Tgfb3,0.03,4.85
+cDC1,Itgb6,0.03,1.75
+cDC1,Itgb8,0.03,1.75
+cDC1,Itgav,0.03,15.71
+cDC1,Ltbp1,0.03,9.5
+cDC1,Ltbp3,0.03,4.85
+DC2,Tgfb1,2.352,62.83
+DC2,Tgfb2,0.03,3.1
+DC2,Tgfb3,0.03,6.98
+DC2,Itgb6,0.03,4.85
+DC2,Itgb8,0.03,3.1
+DC2,Itgav,0.03,15.71
+DC2,Ltbp1,0.03,19.39
+DC2,Ltbp3,0.03,6.98
+Monocyte,Tgfb1,0.03,1.75
+Monocyte,Tgfb2,0.03,3.1
+Monocyte,Tgfb3,0.03,3.1
+Monocyte,Itgb6,0.03,12.41
+Monocyte,Itgb8,0.03,1.0
+Monocyte,Itgav,0.03,6.98
+Monocyte,Ltbp1,0.03,1.75
+Monocyte,Ltbp3,0.03,4.85
+Macrophage,Tgfb1,1.464,43.63
+Macrophage,Tgfb2,0.03,1.75
+Macrophage,Tgfb3,0.03,4.85
+Macrophage,Itgb6,0.03,3.1
+Macrophage,Itgb8,0.03,1.75
+Macrophage,Itgav,0.03,15.71
+Macrophage,Ltbp1,0.03,6.98
+Macrophage,Ltbp3,0.03,4.85
+Tuft,Tgfb1,0.03,1.75
+Tuft,Tgfb2,0.03,3.1
+Tuft,Tgfb3,0.03,1.75
+Tuft,Itgb6,0.03,4.85
+Tuft,Itgb8,0.03,1.0
+Tuft,Itgav,0.03,15.71
+Tuft,Ltbp1,0.03,3.1
+Tuft,Ltbp3,0.03,3.1
+CD4 T Cell,Tgfb1,1.92,56.04
+CD4 T Cell,Tgfb2,0.03,4.85
+CD4 T Cell,Tgfb3,0.03,6.98
+CD4 T Cell,Itgb6,0.03,1.75
+CD4 T Cell,Itgb8,0.03,3.1
+CD4 T Cell,Itgav,0.03,27.92
+CD4 T Cell,Ltbp1,0.03,15.71
+CD4 T Cell,Ltbp3,0.03,6.98
+Early Enterocyte,Tgfb1,0.03,1.75
+Early Enterocyte,Tgfb2,0.03,4.85
+Early Enterocyte,Tgfb3,0.03,3.1
+Early Enterocyte,Itgb6,0.03,4.85
+Early Enterocyte,Itgb8,0.03,1.0
+Early Enterocyte,Itgav,0.03,12.41
+Early Enterocyte,Ltbp1,0.03,1.75
+Early Enterocyte,Ltbp3,0.03,4.85
+Complement Fibroblast,Tgfb1,0.03,6.98
+Complement Fibroblast,Tgfb2,0.03,9.5
+Complement Fibroblast,Tgfb3,1.944,56.04
+Complement Fibroblast,Itgb6,0.03,1.0
+Complement Fibroblast,Itgb8,0.03,1.0
+Complement Fibroblast,Itgav,0.888,32.77
+Complement Fibroblast,Ltbp1,0.03,19.39
+Complement Fibroblast,Ltbp3,1.008,38.01
+Enteroendocrine,Tgfb1,0.03,3.1
+Enteroendocrine,Tgfb2,0.03,1.75
+Enteroendocrine,Tgfb3,0.03,3.1
+Enteroendocrine,Itgb6,0.03,1.75
+Enteroendocrine,Itgb8,0.03,1.0
+Enteroendocrine,Itgav,0.03,6.98
+Enteroendocrine,Ltbp1,0.03,1.0
+Enteroendocrine,Ltbp3,0.03,3.1
+Megakaryocyte/Platelet,Tgfb1,0.96,27.92
+Megakaryocyte/Platelet,Tgfb2,0.03,3.1
+Megakaryocyte/Platelet,Tgfb3,0.03,1.0
+Megakaryocyte/Platelet,Itgb6,0.03,15.71
+Megakaryocyte/Platelet,Itgb8,0.03,1.0
+Megakaryocyte/Platelet,Itgav,0.03,15.71
+Megakaryocyte/Platelet,Ltbp1,0.03,1.75
+Megakaryocyte/Platelet,Ltbp3,0.03,9.5
+Fibroblast,Tgfb1,0.03,6.98
+Fibroblast,Tgfb2,0.03,12.41
+Fibroblast,Tgfb3,0.03,12.41
+Fibroblast,Itgb6,0.03,1.0
+Fibroblast,Itgb8,0.03,3.1
+Fibroblast,Itgav,0.03,15.71
+Fibroblast,Ltbp1,1.056,27.92
+Fibroblast,Ltbp3,0.03,12.41
+Fibroblast Pdgfrb⁺,Tgfb1,0.912,27.92
+Fibroblast Pdgfrb⁺,Tgfb2,0.03,23.46
+Fibroblast Pdgfrb⁺,Tgfb3,1.296,43.63
+Fibroblast Pdgfrb⁺,Itgb6,0.03,1.0
+Fibroblast Pdgfrb⁺,Itgb8,0.03,1.75
+Fibroblast Pdgfrb⁺,Itgav,0.792,23.46
+Fibroblast Pdgfrb⁺,Ltbp1,0.792,27.92
+Fibroblast Pdgfrb⁺,Ltbp3,0.03,12.41
+Lymphatic,Tgfb1,1.464,43.63
+Lymphatic,Tgfb2,0.03,23.46
+Lymphatic,Tgfb3,2.64,62.83
+Lymphatic,Itgb6,0.03,1.0
+Lymphatic,Itgb8,0.03,1.0
+Lymphatic,Itgav,1.056,32.77
+Lymphatic,Ltbp1,1.344,38.01
+Lymphatic,Ltbp3,0.03,15.71
+Fibroblast Pdgfra⁺,Tgfb1,0.744,19.39
+Fibroblast Pdgfra⁺,Tgfb2,0.84,27.92
+Fibroblast Pdgfra⁺,Tgfb3,1.344,49.64
+Fibroblast Pdgfra⁺,Itgb6,0.03,1.0
+Fibroblast Pdgfra⁺,Itgb8,0.03,3.1
+Fibroblast Pdgfra⁺,Itgav,1.2,38.01
+Fibroblast Pdgfra⁺,Ltbp1,1.104,32.77
+Fibroblast Pdgfra⁺,Ltbp3,1.224,38.01
+Fibroblast NCam1⁺,Tgfb1,0.03,9.5
+Fibroblast NCam1⁺,Tgfb2,0.03,4.85
+Fibroblast NCam1⁺,Tgfb3,1.344,38.01
+Fibroblast NCam1⁺,Itgb6,0.03,1.0
+Fibroblast NCam1⁺,Itgb8,0.03,1.75
+Fibroblast NCam1⁺,Itgav,1.632,49.64
+Fibroblast NCam1⁺,Ltbp1,1.008,27.92
+Fibroblast NCam1⁺,Ltbp3,0.84,32.77
+Myofibroblast,Tgfb1,0.03,6.98
+Myofibroblast,Tgfb2,0.03,6.98
+Myofibroblast,Tgfb3,0.03,12.41
+Myofibroblast,Itgb6,0.03,1.0
+Myofibroblast,Itgb8,0.03,1.75
+Myofibroblast,Itgav,0.03,19.39
+Myofibroblast,Ltbp1,1.416,38.01
+Myofibroblast,Ltbp3,0.792,23.46
+Neuron,Tgfb1,0.03,19.39
+Neuron,Tgfb2,0.792,27.92
+Neuron,Tgfb3,0.03,19.39
+Neuron,Itgb6,0.03,3.1
+Neuron,Itgb8,0.03,6.98
+Neuron,Itgav,0.03,15.71
+Neuron,Ltbp1,1.2,32.77
+Neuron,Ltbp3,0.768,38.01
+TA,Tgfb1,0.03,1.75
+TA,Tgfb2,0.03,4.85
+TA,Tgfb3,0.03,3.1
+TA,Itgb6,0.03,4.85
+TA,Itgb8,0.03,1.0
+TA,Itgav,0.03,9.5
+TA,Ltbp1,0.03,1.75
+TA,Ltbp3,0.03,4.85
+ISC,Tgfb1,0.03,3.1
+ISC,Tgfb2,0.03,1.75
+ISC,Tgfb3,0.03,1.0
+ISC,Itgb6,0.03,1.0
+ISC,Itgb8,0.03,1.0
+ISC,Itgav,0.03,1.75
+ISC,Ltbp1,0.03,1.0
+ISC,Ltbp3,0.03,1.0
+Resting Fibroblast,Tgfb1,0.03,19.39
+Resting Fibroblast,Tgfb2,0.03,23.46
+Resting Fibroblast,Tgfb3,1.056,32.77
+Resting Fibroblast,Itgb6,0.03,1.0
+Resting Fibroblast,Itgb8,0.03,6.98
+Resting Fibroblast,Itgav,0.03,27.92
+Resting Fibroblast,Ltbp1,2.952,62.83
+Resting Fibroblast,Ltbp3,1.608,56.04
+Paneth,Tgfb1,0.03,6.98
+Paneth,Tgfb2,0.03,1.75
+Paneth,Tgfb3,0.03,4.85
+Paneth,Itgb6,0.03,1.0
+Paneth,Itgb8,0.03,1.0
+Paneth,Itgav,0.03,6.98
+Paneth,Ltbp1,0.03,3.1
+Paneth,Ltbp3,0.03,3.1

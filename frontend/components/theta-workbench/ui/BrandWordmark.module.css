@@ -1,0 +1,25 @@
+.mark {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  color: #0767ee;
+}
+
+.name {
+  font-family: Inter, "Microsoft YaHei", sans-serif;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.badge {
+  padding: 2px 5px;
+  border: 1px solid var(--dsw-alias-border-l3);
+  border-radius: 3px;
+  color: var(--dsw-alias-label-tertiary);
+  font-family: var(--ds-font-family-code);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}

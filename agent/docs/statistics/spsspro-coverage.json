@@ -1,0 +1,1211 @@
+{
+  "snapshotDate": "2026-09-14",
+  "source": "https://www.spsspro.com/help/",
+  "scope": "172 observed public directory entries, including aliases/navigation; not a claim of an exhaustive commercial feature list. Mapped means a documented bounded method equivalent, not complete option parity.",
+  "entries": [
+    {
+      "source": "https://www.spsspro.com/help/",
+      "name": "帮助中心",
+      "method": null,
+      "status": "navigation",
+      "scope": "Directory/navigation entry"
+    },
+    {
+      "source": "https://www.spsspro.com/help/correlation/",
+      "name": "相关性分析",
+      "method": "correlation",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/cochran-q-test/",
+      "name": "Cochran's Q检验",
+      "method": "cochran_q",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/kappa/",
+      "name": "Kappa一致性检验",
+      "method": "kappa",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/kendall/",
+      "name": "Kendall一致性检验",
+      "method": "kendall_w",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/icc/",
+      "name": "组内相关系数",
+      "method": "icc",
+      "status": "mapped_limited",
+      "scope": "仅登记规格；中介/匹配不证明可忽略性；SEM 须论证识别与测量模型；功效不能用观察到的 p 值倒推研究质量。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/correlation_auto/",
+      "name": "相关性分析自动求解器",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/frequency/",
+      "name": "频数分析",
+      "method": "frequency",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/crosstabs/",
+      "name": "列联（交叉）分析",
+      "method": "chi_square",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/descriptive/",
+      "name": "描述性统计",
+      "method": "describe",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/group-by/",
+      "name": "分类汇总",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/normal/",
+      "name": "正态性分析",
+      "method": "normality",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/data-overview/",
+      "name": "数据概览",
+      "method": "describe",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/linear-regression/",
+      "name": "线性回归（最小二乘法）",
+      "method": "ols",
+      "status": "mapped_limited",
+      "scope": "分类自变量须显式哑变量编码；默认含截距。仅支持登记的协方差选项；不是 Stata 命令解析器。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/Ridge-Regression/",
+      "name": "岭回归(Ridge)",
+      "method": "ridge_regressor",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/hierarchical-regression/",
+      "name": "分层回归",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/gray-prediction/",
+      "name": "灰色预测模型GM(1,1)",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/k-means/",
+      "name": "聚类分析(K-Means)",
+      "method": "kmeans",
+      "status": "mapped_limited",
+      "scope": "数值列完整案例；默认标准化（对应分析除外）；聚类标签并非真实类别。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/logit-regression/",
+      "name": "逻辑回归",
+      "method": "logit",
+      "status": "mapped_limited",
+      "scope": "分类自变量须显式哑变量编码；默认含截距。仅支持登记的协方差选项；不是 Stata 命令解析器。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/lasso/",
+      "name": "Lasso回归",
+      "method": "lasso_regressor",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/hierarchical-cluster/",
+      "name": "分层聚类",
+      "method": "hierarchical",
+      "status": "mapped_limited",
+      "scope": "数值列完整案例；默认标准化（对应分析除外）；聚类标签并非真实类别。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/ordinal-regression/",
+      "name": "有序逻辑回归",
+      "method": "ordinal_logit",
+      "status": "mapped_limited",
+      "scope": "分类自变量须显式哑变量编码；默认含截距。仅支持登记的协方差选项；不是 Stata 命令解析器。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/PLS_Regression/",
+      "name": "偏最小二乘回归(PLSR)",
+      "method": "pls_regressor",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/rfm/",
+      "name": "客户价值划分(RFM)",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/probit-regression/",
+      "name": "二分类概率单位回归(Probit)",
+      "method": "probit",
+      "status": "mapped_limited",
+      "scope": "分类自变量须显式哑变量编码；默认含截距。仅支持登记的协方差选项；不是 Stata 命令解析器。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/deming/",
+      "name": "Deming's 回归",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/dbscan/",
+      "name": "密度聚类",
+      "method": "dbscan",
+      "status": "mapped_limited",
+      "scope": "数值列完整案例；默认标准化（对应分析除外）；聚类标签并非真实类别。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/reliability/",
+      "name": "信度分析",
+      "method": "cronbach_alpha",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/multiple-choice-analysis/",
+      "name": "多选分析",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/multiple-multiple/",
+      "name": "选择题【多选&多选】",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/multiple-single/",
+      "name": "选择题【多选&单选】",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/single-multiple/",
+      "name": "选择题【单选&多选】",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/nps/",
+      "name": "NPS净推荐值分析",
+      "method": "nps",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/r-q/",
+      "name": "对应分析",
+      "method": "correspondence",
+      "status": "mapped_limited",
+      "scope": "数值列完整案例；默认标准化（对应分析除外）；聚类标签并非真实类别。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/discrimination-analysis/",
+      "name": "区分度分析",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/validity-analysis/",
+      "name": "效度分析",
+      "method": "kmo_bartlett",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/conjoint-analysis/",
+      "name": "联合分析",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/path-analysis/",
+      "name": "路径分析",
+      "method": "sem",
+      "status": "mapped_limited",
+      "scope": "仅登记规格；中介/匹配不证明可忽略性；SEM 须论证识别与测量模型；功效不能用观察到的 p 值倒推研究质量。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/sem/",
+      "name": "结构方程模型(SEM)",
+      "method": "sem",
+      "status": "mapped_limited",
+      "scope": "仅登记规格；中介/匹配不证明可忽略性；SEM 须论证识别与测量模型；功效不能用观察到的 p 值倒推研究质量。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/moderating-effect/",
+      "name": "调节作用",
+      "method": "moderation",
+      "status": "mapped_limited",
+      "scope": "仅登记规格；中介/匹配不证明可忽略性；SEM 须论证识别与测量模型；功效不能用观察到的 p 值倒推研究质量。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/cfa/",
+      "name": "验证性因子分析",
+      "method": "sem",
+      "status": "mapped_limited",
+      "scope": "仅登记规格；中介/匹配不证明可忽略性；SEM 须论证识别与测量模型；功效不能用观察到的 p 值倒推研究质量。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/ewm/",
+      "name": "权重分析(熵权法)",
+      "method": "entropy_weight",
+      "status": "mapped_limited",
+      "scope": "输入及指标方向须预先确定；结果是给定权重下的排序，不是统计显著性证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/MaxDiff/",
+      "name": "MaxDiff模型",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/gabor-granger/",
+      "name": "价格断裂点模型",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/kano/",
+      "name": "Kano模型",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/parallel-mediator-effect/",
+      "name": "平行中介效应",
+      "method": "parallel_mediation",
+      "status": "mapped_limited",
+      "scope": "仅登记规格；中介/匹配不证明可忽略性；SEM 须论证识别与测量模型；功效不能用观察到的 p 值倒推研究质量。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/chain-mediator-effect/",
+      "name": "链式中介效应",
+      "method": "chain_mediation",
+      "status": "mapped_limited",
+      "scope": "仅登记规格；中介/匹配不证明可忽略性；SEM 须论证识别与测量模型；功效不能用观察到的 p 值倒推研究质量。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/TURF/",
+      "name": "TURF分析",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/Penalty-analysis/",
+      "name": "惩罚分析",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/DP/",
+      "name": "交叉表（调研专项）",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/mds/",
+      "name": "多维尺度分析",
+      "method": "mds",
+      "status": "mapped_limited",
+      "scope": "数值列完整案例；默认标准化（对应分析除外）；聚类标签并非真实类别。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/bpto/",
+      "name": "品牌价格抵补模型BPTO",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/cbc/",
+      "name": "联合分析CBC",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/maxdiff_pro/",
+      "name": "MaxDiff Pro",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/overview/",
+      "name": "产品概述",
+      "method": null,
+      "status": "navigation",
+      "scope": "Directory/navigation entry"
+    },
+    {
+      "source": "https://www.spsspro.com/help/tutorial/",
+      "name": "快速上手",
+      "method": null,
+      "status": "navigation",
+      "scope": "Directory/navigation entry"
+    },
+    {
+      "source": "https://www.spsspro.com/help/company/",
+      "name": "企业版操作指南",
+      "method": null,
+      "status": "navigation",
+      "scope": "Directory/navigation entry"
+    },
+    {
+      "source": "https://www.spsspro.com/help/special-analysis/",
+      "name": "专项分析",
+      "method": null,
+      "status": "navigation",
+      "scope": "Directory/navigation entry"
+    },
+    {
+      "source": "https://www.spsspro.com/help/text-analysis/",
+      "name": "文本分析",
+      "method": null,
+      "status": "navigation",
+      "scope": "Directory/navigation entry"
+    },
+    {
+      "source": "https://www.spsspro.com/help/data-label/",
+      "name": "数据标签",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/data-code/",
+      "name": "数据编码",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/outlier/",
+      "name": "异常值处理",
+      "method": "outliers_iqr",
+      "status": "mapped_limited",
+      "scope": "输出派生数据，不修改源文件；预测建模的预处理必须只在训练集内拟合。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/case/",
+      "name": "无效样本处理",
+      "method": null,
+      "status": "navigation",
+      "scope": "Directory/navigation entry"
+    },
+    {
+      "source": "https://www.spsspro.com/help/generate-var/",
+      "name": "生成变量",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/variance/",
+      "name": "单因素方差分析",
+      "method": "anova_one",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/independent-sample-ttest/",
+      "name": "独立样本T检验",
+      "method": "ttest_ind",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/chi-squared/",
+      "name": "卡方检验",
+      "method": "chi_square",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/Variable-calculation/",
+      "name": "生成变量",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/balance-sample/",
+      "name": "样本均衡",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/Tail-reduction-truncation/",
+      "name": "缩尾截尾处理",
+      "method": "winsorize",
+      "status": "mapped_limited",
+      "scope": "输出派生数据，不修改源文件；预测建模的预处理必须只在训练集内拟合。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/Sequential-sliding/",
+      "name": "时序数据滑窗转换",
+      "method": "rolling_mean",
+      "status": "mapped_limited",
+      "scope": "输出派生数据，不修改源文件；预测建模的预处理必须只在训练集内拟合。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/Dummy-variable/",
+      "name": "虚拟变量转换",
+      "method": "dummy",
+      "status": "mapped_limited",
+      "scope": "输出派生数据，不修改源文件；预测建模的预处理必须只在训练集内拟合。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/Feature-filtering/",
+      "name": "特征筛选",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/Data-standardization/",
+      "name": "数据标准化",
+      "method": "standardize",
+      "status": "mapped_limited",
+      "scope": "输出派生数据，不修改源文件；预测建模的预处理必须只在训练集内拟合。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/Missing-value/",
+      "name": "缺失值处理",
+      "method": "impute_median",
+      "status": "mapped_limited",
+      "scope": "输出派生数据，不修改源文件；预测建模的预处理必须只在训练集内拟合。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/Dimension-reduction/",
+      "name": "数据降维",
+      "method": "pca",
+      "status": "mapped_limited",
+      "scope": "数值列完整案例；默认标准化（对应分析除外）；聚类标签并非真实类别。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/transform/",
+      "name": "数据变换",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/downsampling/",
+      "name": "数据降采样",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/ahp-pro/",
+      "name": "层次分析法（AHP专业版）",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/factor-analysis/",
+      "name": "因子分析（探索性）",
+      "method": "factor",
+      "status": "mapped_limited",
+      "scope": "数值列完整案例；默认标准化（对应分析除外）；聚类标签并非真实类别。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/dea/",
+      "name": "数据包络分析",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/fuzzy-comprehensive-evaluation/",
+      "name": "模糊综合评价",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/TOPSIS/",
+      "name": "优劣解距离法(TOPSIS)",
+      "method": "topsis",
+      "status": "mapped_limited",
+      "scope": "输入及指标方向须预先确定；结果是给定权重下的排序，不是统计显著性证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/RSR/",
+      "name": "秩和比综合评价法(RSR)",
+      "method": "rsr",
+      "status": "mapped_limited",
+      "scope": "输入及指标方向须预先确定；结果是给定权重下的排序，不是统计显著性证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/coupling-coordination-degree/",
+      "name": "耦合协调度",
+      "method": "coupling",
+      "status": "mapped_limited",
+      "scope": "输入及指标方向须预先确定；结果是给定权重下的排序，不是统计显著性证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/ahp/",
+      "name": "层次分析法（AHP简化版）",
+      "method": "ahp",
+      "status": "mapped_limited",
+      "scope": "输入及指标方向须预先确定；结果是给定权重下的排序，不是统计显著性证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/entropy-method/",
+      "name": "熵值法",
+      "method": "entropy_weight",
+      "status": "mapped_limited",
+      "scope": "输入及指标方向须预先确定；结果是给定权重下的排序，不是统计显著性证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/critic/",
+      "name": "CRITIC权重法",
+      "method": "critic",
+      "status": "mapped_limited",
+      "scope": "输入及指标方向须预先确定；结果是给定权重下的排序，不是统计显著性证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/independence-weight/",
+      "name": "独立性权系数法",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/c-v/",
+      "name": "变异系数法",
+      "method": "cv_weight",
+      "status": "mapped_limited",
+      "scope": "输入及指标方向须预先确定；结果是给定权重下的排序，不是统计显著性证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/Grey-correlation-analysis/",
+      "name": "灰色关联分析",
+      "method": "grey_relation",
+      "status": "mapped_limited",
+      "scope": "输入及指标方向须预先确定；结果是给定权重下的排序，不是统计显著性证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/vikor/",
+      "name": "多准则妥协解排序法（VIKOR）",
+      "method": "vikor",
+      "status": "mapped_limited",
+      "scope": "输入及指标方向须预先确定；结果是给定权重下的排序，不是统计显著性证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/ism/",
+      "name": "解释结构模型（ISM）",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/difference_analysis_automatic_solver/",
+      "name": "差异性分析自动求解器",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/single-sample-ttest/",
+      "name": "单样本T检验",
+      "method": "ttest_one",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/pair-sample-ttest/",
+      "name": "配对样本T检验",
+      "method": "ttest_paired",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/multiple-comparisons/",
+      "name": "事后多重比较",
+      "method": "tukey",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/two-way-anova/",
+      "name": "双因素方差分析",
+      "method": "anova_factorial",
+      "status": "mapped_limited",
+      "scope": "仅登记规格；中介/匹配不证明可忽略性；SEM 须论证识别与测量模型；功效不能用观察到的 p 值倒推研究质量。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/three-way-anova/",
+      "name": "三因素方差分析",
+      "method": "anova_factorial",
+      "status": "mapped_limited",
+      "scope": "仅登记规格；中介/匹配不证明可忽略性；SEM 须论证识别与测量模型；功效不能用观察到的 p 值倒推研究质量。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/multi-way-anova/",
+      "name": "多因素方差分析",
+      "method": "anova_factorial",
+      "status": "mapped_limited",
+      "scope": "仅登记规格；中介/匹配不证明可忽略性；SEM 须论证识别与测量模型；功效不能用观察到的 p 值倒推研究质量。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/abstract-anova/",
+      "name": "摘要单因素方差分析",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/abstract-t-test/",
+      "name": "摘要T检验",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/ancova/",
+      "name": "协方差分析",
+      "method": "ancova",
+      "status": "mapped_limited",
+      "scope": "仅登记规格；中介/匹配不证明可忽略性；SEM 须论证识别与测量模型；功效不能用观察到的 p 值倒推研究质量。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/MANOVA/",
+      "name": "多变量方差分析",
+      "method": "manova",
+      "status": "mapped_limited",
+      "scope": "仅登记规格；中介/匹配不证明可忽略性；SEM 须论证识别与测量模型；功效不能用观察到的 p 值倒推研究质量。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/single-sample-equivalence-test/",
+      "name": "单样本等价检验",
+      "method": "tost_one",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/two-sample-equivalence-test/",
+      "name": "双样本等价检验",
+      "method": "tost_ind",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/paired-sample-equivalence-test/",
+      "name": "配对样本等价检验",
+      "method": "tost_paired",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/pca/",
+      "name": "主成分分析(PCA)",
+      "method": "pca",
+      "status": "mapped_limited",
+      "scope": "数值列完整案例；默认标准化（对应分析除外）；聚类标签并非真实类别。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/canonical-correlation-analysis/",
+      "name": "典型相关分析",
+      "method": "cca",
+      "status": "mapped_limited",
+      "scope": "数值列完整案例；默认标准化（对应分析除外）；聚类标签并非真实类别。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/poisson-test/",
+      "name": "泊松分布检验",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/the-run-test/",
+      "name": "游程检验",
+      "method": "runs",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/stepwise-regression/",
+      "name": "逐步回归",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/discriminant-analysis/",
+      "name": "线性判别",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/apriori/",
+      "name": "关联分析",
+      "method": "apriori",
+      "status": "mapped_limited",
+      "scope": "仅登记规格；中介/匹配不证明可忽略性；SEM 须论证识别与测量模型；功效不能用观察到的 p 值倒推研究质量。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/nonlinear/",
+      "name": "拟合工具箱",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/Range_analysis/",
+      "name": "极差分析",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/two-step/",
+      "name": "二阶聚类",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/mix-model/",
+      "name": "混合模型",
+      "method": "mixed_linear",
+      "status": "mapped_limited",
+      "scope": "分类自变量须显式哑变量编码；默认含截距。仅支持登记的协方差选项；不是 Stata 命令解析器。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/log-linear/",
+      "name": "对数线性模型",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/generalized-linear/",
+      "name": "广义线性模型",
+      "method": "glm_gamma",
+      "status": "mapped_limited",
+      "scope": "分类自变量须显式哑变量编码；默认含截距。仅支持登记的协方差选项；不是 Stata 命令解析器。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/generalized-estimation/",
+      "name": "广义估计方程",
+      "method": "gee",
+      "status": "mapped_limited",
+      "scope": "分类自变量须显式哑变量编码；默认含截距。仅支持登记的协方差选项；不是 Stata 命令解析器。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/robust/",
+      "name": "稳健回归(RANSAC)",
+      "method": "ransac_regressor",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/quantile-regression/",
+      "name": "分位数回归",
+      "method": "quantile",
+      "status": "mapped_limited",
+      "scope": "分类自变量须显式哑变量编码；默认含截距。仅支持登记的协方差选项；不是 Stata 命令解析器。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/panel/",
+      "name": "面板模型",
+      "method": "panel_fe",
+      "status": "mapped_limited",
+      "scope": "DID 仅两组两期、无错位处理；RDD 需预先指定带宽，不自动证明识别假设；GMM 为线性 IV GMM，不是任意矩条件。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/two_sls/",
+      "name": "两阶段回归",
+      "method": "iv_2sls",
+      "status": "mapped_limited",
+      "scope": "DID 仅两组两期、无错位处理；RDD 需预先指定带宽，不自动证明识别假设；GMM 为线性 IV GMM，不是任意矩条件。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/gmm/",
+      "name": "GMM估计",
+      "method": "iv_gmm",
+      "status": "mapped_limited",
+      "scope": "DID 仅两组两期、无错位处理；RDD 需预先指定带宽，不自动证明识别假设；GMM 为线性 IV GMM，不是任意矩条件。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/did/",
+      "name": "双重差分DID(倍差法)",
+      "method": "did",
+      "status": "mapped_limited",
+      "scope": "DID 仅两组两期、无错位处理；RDD 需预先指定带宽，不自动证明识别假设；GMM 为线性 IV GMM，不是任意矩条件。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/tobit/",
+      "name": "Tobit回归",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/countreg/",
+      "name": "计数数据回归",
+      "method": "poisson",
+      "status": "mapped_limited",
+      "scope": "分类自变量须显式哑变量编码；默认含截距。仅支持登记的协方差选项；不是 Stata 命令解析器。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/psm/",
+      "name": "倾向得分匹配",
+      "method": "psm",
+      "status": "mapped_limited",
+      "scope": "仅登记规格；中介/匹配不证明可忽略性；SEM 须论证识别与测量模型；功效不能用观察到的 p 值倒推研究质量。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/Breakpoint/",
+      "name": "断点回归",
+      "method": "rdd",
+      "status": "mapped_limited",
+      "scope": "DID 仅两组两期、无错位处理；RDD 需预先指定带宽，不自动证明识别假设；GMM 为线性 IV GMM，不是任意矩条件。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/cox/",
+      "name": "比例风险回归(COX回归)",
+      "method": "cox",
+      "status": "mapped_limited",
+      "scope": "仅右删失；event=1 为事件、0 为删失，时间必须为正。无左截断、竞争风险或时变协变量。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/kaplan-meier/",
+      "name": "Kaplan-Meier生存曲线",
+      "method": "kaplan_meier",
+      "status": "mapped_limited",
+      "scope": "仅右删失；event=1 为事件、0 为删失，时间必须为正。无左截断、竞争风险或时变协变量。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/ridit/",
+      "name": "Ridit分析",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/chi_auto/",
+      "name": "卡方检验（自动选取最优求解器）",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/pearson_chi/",
+      "name": "Pearson卡方检验",
+      "method": "chi_square",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/yates_chi/",
+      "name": "Yates校正卡方检验",
+      "method": "chi_square_yates",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/fisher_test/",
+      "name": "Fisher精确检验",
+      "method": "fisher",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/layered-chi-square/",
+      "name": "分层卡方分析",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/pair-McNemars/",
+      "name": "配对卡方检验",
+      "method": "mcnemar",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/repeated-measures-anova/",
+      "name": "重复测量方差",
+      "method": "repeated_anova",
+      "status": "mapped_limited",
+      "scope": "仅登记规格；中介/匹配不证明可忽略性；SEM 须论证识别与测量模型；功效不能用观察到的 p 值倒推研究质量。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/clf/",
+      "name": "条件逻辑回归",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/b-a/",
+      "name": "Bland-Altman法",
+      "method": "bland_altman",
+      "status": "mapped_limited",
+      "scope": "Method equivalent under the registered parameters; not all source-software options."
+    },
+    {
+      "source": "https://www.spsspro.com/help/fine-gray/",
+      "name": "竞争风险模型",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/Dose/",
+      "name": "概率单位回归(剂量分析)",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/life/",
+      "name": "寿命表",
+      "method": null,
+      "status": "not_implemented",
+      "scope": "Not executable; do not substitute another estimator silently."
+    },
+    {
+      "source": "https://www.spsspro.com/help/tree-classifier/",
+      "name": "决策树分类",
+      "method": "tree_classifier",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/random-forest-classifier/",
+      "name": "随机森林分类",
+      "method": "random_forest_classifier",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/adaboost-classifier/",
+      "name": "adaboost分类",
+      "method": "adaboost_classifier",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/gbdt-classifier/",
+      "name": "梯度提升树(GBDT)分类",
+      "method": "gradient_boosting_classifier",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/catboost-classifier/",
+      "name": "CatBoost分类",
+      "method": "catboost_classifier",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/extra-trees-classifier/",
+      "name": "ExtraTrees分类",
+      "method": "extra_trees_classifier",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/knn-classifier/",
+      "name": "K近邻(KNN)分类",
+      "method": "knn_classifier",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/bp-classifier/",
+      "name": "bp神经网络分类",
+      "method": "mlp_classifier",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/svm-classifier/",
+      "name": "支持向量机(SVM)分类",
+      "method": "svm_classifier",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/xgboost-classifier/",
+      "name": "XGBoost分类",
+      "method": "xgboost_classifier",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/lgbm-classifier/",
+      "name": "LightGBM分类",
+      "method": "lightgbm_classifier",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/bayes-classifier/",
+      "name": "朴素贝叶斯分类",
+      "method": "naive_bayes_classifier",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/logit-regression-gd/",
+      "name": "逻辑回归(梯度下降法)",
+      "method": "logistic_classifier",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/trees-regressor/",
+      "name": "决策树回归",
+      "method": "tree_regressor",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/random-forest-regressor/",
+      "name": "随机森林回归",
+      "method": "random_forest_regressor",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/adaboost-regressor/",
+      "name": "adaboost回归",
+      "method": "adaboost_regressor",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/gbdt-regressor/",
+      "name": "梯度提升树(GBDT)回归",
+      "method": "gradient_boosting_regressor",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/extra-trees-regressor/",
+      "name": "ExtraTrees回归",
+      "method": "extra_trees_regressor",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/catboost-regressor/",
+      "name": "CatBoost回归",
+      "method": "catboost_regressor",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/knn-regressor/",
+      "name": "K近邻(KNN)回归",
+      "method": "knn_regressor",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/bp-regressor/",
+      "name": "bp神经网络回归",
+      "method": "mlp_regressor",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/svm-regressor/",
+      "name": "支持向量机(SVR)回归",
+      "method": "svm_regressor",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/xgboost-regressor/",
+      "name": "XGBoost回归",
+      "method": "xgboost_regressor",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/lgbm-regressor/",
+      "name": "LightGBM回归",
+      "method": "lightgbm_regressor",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/line-regressor_gd/",
+      "name": "线性回归(梯度下降法)",
+      "method": "linear_regressor",
+      "status": "mapped_limited",
+      "scope": "训练集内预处理与调参；独立测试集只评分。随机拆分只适合独立观测；分组或时间数据须指定 split。超参数网格有预算上限。预测效果不构成因果证据。"
+    },
+    {
+      "source": "https://www.spsspro.com/help/programming-solution/",
+      "name": "规划求解",
+      "method": "linear_program",
+      "status": "mapped_limited",
+      "scope": "最小化；最多 100 个变量。二次规划仅接受半正定 Q；无任意 Python 或符号表达式执行。"
+    }
+  ]
+}

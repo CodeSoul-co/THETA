@@ -1,0 +1,189 @@
+﻿id,group,title,source
+001,full-lda8,7 Core Metrics,OPC-refined-20260908/en/global/7 Core Metrics.png
+002,full-lda8,Dimension-Topic Heatmap,OPC-refined-20260908/en/global/Dimension-Topic Heatmap.png
+003,full-lda8,Document Clustering by Dominant Topic,OPC-refined-20260908/en/global/Document Clustering by Dominant Topic.png
+004,full-lda8,Document Clusters with Outlier Detection,OPC-refined-20260908/en/global/Document Clusters with Outlier Detection.png
+005,full-lda8,Document Volume Over Time,OPC-refined-20260908/en/global/Document Volume Over Time.png
+006,full-lda8,Domain Topic Distribution Over Time,OPC-refined-20260908/en/global/Domain Topic Distribution Over Time.png
+007,full-lda8,High-Frequency Word Evolution,OPC-refined-20260908/en/global/High-Frequency Word Evolution.png
+008,full-lda8,Intertopic Distance Map,OPC-refined-20260908/en/global/Intertopic Distance Map.png
+009,full-lda8,Representative Topic Evolution,OPC-refined-20260908/en/global/Representative Topic Evolution.png
+010,full-lda8,Top Salient Terms,OPC-refined-20260908/en/global/Top Salient Terms.png
+011,full-lda8,Topic Clustering Heatmap with Dendrogram,OPC-refined-20260908/en/global/Topic Clustering Heatmap with Dendrogram.png
+012,full-lda8,Topic Coherence,OPC-refined-20260908/en/global/Topic Coherence.png
+013,full-lda8,Topic Correlation Network,OPC-refined-20260908/en/global/Topic Correlation Network.png
+014,full-lda8,Topic Distribution Similarity Evolution,OPC-refined-20260908/en/global/Topic Distribution Similarity Evolution.png
+015,full-lda8,Topic Exclusivity,OPC-refined-20260908/en/global/Topic Exclusivity.png
+016,full-lda8,Topic Proportion Distribution,OPC-refined-20260908/en/global/Topic Proportion Distribution.png
+017,full-lda8,Topic Strength by Year,OPC-refined-20260908/en/global/Topic Strength by Year.png
+018,full-lda8,doc_topic_umap,OPC-refined-20260908/en/global/doc_topic_umap.png
+019,full-lda8,Source-to-topic Sankey,OPC-refined-20260908/en/global/source_topic_sankey.png
+020,full-lda8,Circular correlation network,OPC-refined-20260908/en/global/topic_network_circular.png
+021,full-lda8,topic_similarity,OPC-refined-20260908/en/global/topic_similarity.png
+022,full-lda8,topic_table_1,OPC-refined-20260908/en/global/topic_table_1.png
+023,full-lda8,Word-cloud grid 1,OPC-refined-20260908/en/global/topic_wordcloud_grid_1.png
+024,full-lda8,Word-cloud grid 2,OPC-refined-20260908/en/global/topic_wordcloud_grid_2.png
+025,full-lda8,Year-to-topic Sankey,OPC-refined-20260908/en/global/year_topic_sankey.png
+026,full-lda8,T1 · Topic 1 Word Cloud,OPC-refined-20260908/en/topic/topic_1/Topic 1 Word Cloud.png
+027,full-lda8,T1 · Topic 1 Word Distribution,OPC-refined-20260908/en/topic/topic_1/Topic 1 Word Distribution.png
+028,full-lda8,T1 · Topic Evolution,OPC-refined-20260908/en/topic/topic_1/Topic Evolution.png
+029,full-lda8,T2 · Topic 2 Word Cloud,OPC-refined-20260908/en/topic/topic_2/Topic 2 Word Cloud.png
+030,full-lda8,T2 · Topic 2 Word Distribution,OPC-refined-20260908/en/topic/topic_2/Topic 2 Word Distribution.png
+031,full-lda8,T2 · Topic Evolution,OPC-refined-20260908/en/topic/topic_2/Topic Evolution.png
+032,full-lda8,T3 · Topic 3 Word Cloud,OPC-refined-20260908/en/topic/topic_3/Topic 3 Word Cloud.png
+033,full-lda8,T3 · Topic 3 Word Distribution,OPC-refined-20260908/en/topic/topic_3/Topic 3 Word Distribution.png
+034,full-lda8,T3 · Topic Evolution,OPC-refined-20260908/en/topic/topic_3/Topic Evolution.png
+035,full-lda8,T4 · Topic 4 Word Cloud,OPC-refined-20260908/en/topic/topic_4/Topic 4 Word Cloud.png
+036,full-lda8,T4 · Topic 4 Word Distribution,OPC-refined-20260908/en/topic/topic_4/Topic 4 Word Distribution.png
+037,full-lda8,T4 · Topic Evolution,OPC-refined-20260908/en/topic/topic_4/Topic Evolution.png
+038,full-lda8,T5 · Topic 5 Word Cloud,OPC-refined-20260908/en/topic/topic_5/Topic 5 Word Cloud.png
+039,full-lda8,T5 · Topic 5 Word Distribution,OPC-refined-20260908/en/topic/topic_5/Topic 5 Word Distribution.png
+040,full-lda8,T5 · Topic Evolution,OPC-refined-20260908/en/topic/topic_5/Topic Evolution.png
+041,full-lda8,T6 · Topic 6 Word Cloud,OPC-refined-20260908/en/topic/topic_6/Topic 6 Word Cloud.png
+042,full-lda8,T6 · Topic 6 Word Distribution,OPC-refined-20260908/en/topic/topic_6/Topic 6 Word Distribution.png
+043,full-lda8,T6 · Topic Evolution,OPC-refined-20260908/en/topic/topic_6/Topic Evolution.png
+044,full-lda8,T7 · Topic 7 Word Cloud,OPC-refined-20260908/en/topic/topic_7/Topic 7 Word Cloud.png
+045,full-lda8,T7 · Topic 7 Word Distribution,OPC-refined-20260908/en/topic/topic_7/Topic 7 Word Distribution.png
+046,full-lda8,T7 · Topic Evolution,OPC-refined-20260908/en/topic/topic_7/Topic Evolution.png
+047,full-lda8,T8 · Topic 8 Word Cloud,OPC-refined-20260908/en/topic/topic_8/Topic 8 Word Cloud.png
+048,full-lda8,T8 · Topic 8 Word Distribution,OPC-refined-20260908/en/topic/topic_8/Topic 8 Word Distribution.png
+049,full-lda8,T8 · Topic Evolution,OPC-refined-20260908/en/topic/topic_8/Topic Evolution.png
+050,sample-lda6,7 Core Metrics,OPC-coverage-figures-20260908/lda6/en/global/7 Core Metrics.png
+051,sample-lda6,Dimension-Topic Heatmap,OPC-coverage-figures-20260908/lda6/en/global/Dimension-Topic Heatmap.png
+052,sample-lda6,Document Clustering by Dominant Topic,OPC-coverage-figures-20260908/lda6/en/global/Document Clustering by Dominant Topic.png
+053,sample-lda6,Document Clusters with Outlier Detection,OPC-coverage-figures-20260908/lda6/en/global/Document Clusters with Outlier Detection.png
+054,sample-lda6,Document Volume Over Time,OPC-coverage-figures-20260908/lda6/en/global/Document Volume Over Time.png
+055,sample-lda6,Domain Topic Distribution Over Time,OPC-coverage-figures-20260908/lda6/en/global/Domain Topic Distribution Over Time.png
+056,sample-lda6,High-Frequency Word Evolution,OPC-coverage-figures-20260908/lda6/en/global/High-Frequency Word Evolution.png
+057,sample-lda6,Intertopic Distance Map,OPC-coverage-figures-20260908/lda6/en/global/Intertopic Distance Map.png
+058,sample-lda6,Representative Topic Evolution,OPC-coverage-figures-20260908/lda6/en/global/Representative Topic Evolution.png
+059,sample-lda6,Top Salient Terms,OPC-coverage-figures-20260908/lda6/en/global/Top Salient Terms.png
+060,sample-lda6,Topic Clustering Heatmap with Dendrogram,OPC-coverage-figures-20260908/lda6/en/global/Topic Clustering Heatmap with Dendrogram.png
+061,sample-lda6,Topic Correlation Network,OPC-coverage-figures-20260908/lda6/en/global/Topic Correlation Network.png
+062,sample-lda6,Topic Distribution Similarity Evolution,OPC-coverage-figures-20260908/lda6/en/global/Topic Distribution Similarity Evolution.png
+063,sample-lda6,Topic Number Evaluation,OPC-coverage-figures-20260908/lda6/en/global/Topic Number Evaluation.png
+064,sample-lda6,Topic Proportion Distribution,OPC-coverage-figures-20260908/lda6/en/global/Topic Proportion Distribution.png
+065,sample-lda6,Topic Strength by Year,OPC-coverage-figures-20260908/lda6/en/global/Topic Strength by Year.png
+066,sample-lda6,doc_topic_umap,OPC-coverage-figures-20260908/lda6/en/global/doc_topic_umap.png
+067,sample-lda6,Source-to-topic Sankey,OPC-coverage-figures-20260908/lda6/en/global/source_topic_sankey.png
+068,sample-lda6,Circular correlation network,OPC-coverage-figures-20260908/lda6/en/global/topic_network_circular.png
+069,sample-lda6,topic_similarity,OPC-coverage-figures-20260908/lda6/en/global/topic_similarity.png
+070,sample-lda6,topic_table_1,OPC-coverage-figures-20260908/lda6/en/global/topic_table_1.png
+071,sample-lda6,Word-cloud grid 1,OPC-coverage-figures-20260908/lda6/en/global/topic_wordcloud_grid_1.png
+072,sample-lda6,Year-to-topic Sankey,OPC-coverage-figures-20260908/lda6/en/global/year_topic_sankey.png
+073,sample-lda6,T1 · Topic 1 Word Cloud,OPC-coverage-figures-20260908/lda6/en/topic/topic_1/Topic 1 Word Cloud.png
+074,sample-lda6,T1 · Topic 1 Word Distribution,OPC-coverage-figures-20260908/lda6/en/topic/topic_1/Topic 1 Word Distribution.png
+075,sample-lda6,T1 · Topic Evolution,OPC-coverage-figures-20260908/lda6/en/topic/topic_1/Topic Evolution.png
+076,sample-lda6,T2 · Topic 2 Word Cloud,OPC-coverage-figures-20260908/lda6/en/topic/topic_2/Topic 2 Word Cloud.png
+077,sample-lda6,T2 · Topic 2 Word Distribution,OPC-coverage-figures-20260908/lda6/en/topic/topic_2/Topic 2 Word Distribution.png
+078,sample-lda6,T2 · Topic Evolution,OPC-coverage-figures-20260908/lda6/en/topic/topic_2/Topic Evolution.png
+079,sample-lda6,T3 · Topic 3 Word Cloud,OPC-coverage-figures-20260908/lda6/en/topic/topic_3/Topic 3 Word Cloud.png
+080,sample-lda6,T3 · Topic 3 Word Distribution,OPC-coverage-figures-20260908/lda6/en/topic/topic_3/Topic 3 Word Distribution.png
+081,sample-lda6,T3 · Topic Evolution,OPC-coverage-figures-20260908/lda6/en/topic/topic_3/Topic Evolution.png
+082,sample-lda6,T4 · Topic 4 Word Cloud,OPC-coverage-figures-20260908/lda6/en/topic/topic_4/Topic 4 Word Cloud.png
+083,sample-lda6,T4 · Topic 4 Word Distribution,OPC-coverage-figures-20260908/lda6/en/topic/topic_4/Topic 4 Word Distribution.png
+084,sample-lda6,T4 · Topic Evolution,OPC-coverage-figures-20260908/lda6/en/topic/topic_4/Topic Evolution.png
+085,sample-lda6,T5 · Topic 5 Word Cloud,OPC-coverage-figures-20260908/lda6/en/topic/topic_5/Topic 5 Word Cloud.png
+086,sample-lda6,T5 · Topic 5 Word Distribution,OPC-coverage-figures-20260908/lda6/en/topic/topic_5/Topic 5 Word Distribution.png
+087,sample-lda6,T5 · Topic Evolution,OPC-coverage-figures-20260908/lda6/en/topic/topic_5/Topic Evolution.png
+088,sample-lda6,T6 · Topic 6 Word Cloud,OPC-coverage-figures-20260908/lda6/en/topic/topic_6/Topic 6 Word Cloud.png
+089,sample-lda6,T6 · Topic 6 Word Distribution,OPC-coverage-figures-20260908/lda6/en/topic/topic_6/Topic 6 Word Distribution.png
+090,sample-lda6,T6 · Topic Evolution,OPC-coverage-figures-20260908/lda6/en/topic/topic_6/Topic Evolution.png
+091,sample-dtm6,7 Core Metrics,OPC-coverage-figures-20260908/dtm/en/global/7 Core Metrics.png
+092,sample-dtm6,Dimension-Topic Heatmap,OPC-coverage-figures-20260908/dtm/en/global/Dimension-Topic Heatmap.png
+093,sample-dtm6,Document Clustering by Dominant Topic,OPC-coverage-figures-20260908/dtm/en/global/Document Clustering by Dominant Topic.png
+094,sample-dtm6,Document Clusters with Outlier Detection,OPC-coverage-figures-20260908/dtm/en/global/Document Clusters with Outlier Detection.png
+095,sample-dtm6,Document Volume Over Time,OPC-coverage-figures-20260908/dtm/en/global/Document Volume Over Time.png
+096,sample-dtm6,Domain Topic Distribution Over Time,OPC-coverage-figures-20260908/dtm/en/global/Domain Topic Distribution Over Time.png
+097,sample-dtm6,High-Frequency Word Evolution,OPC-coverage-figures-20260908/dtm/en/global/High-Frequency Word Evolution.png
+098,sample-dtm6,Reconstruction and KL Loss,OPC-coverage-figures-20260908/dtm/en/global/Reconstruction and KL Loss.png
+099,sample-dtm6,Representative Topic Evolution,OPC-coverage-figures-20260908/dtm/en/global/Representative Topic Evolution.png
+100,sample-dtm6,Topic Clustering Heatmap with Dendrogram,OPC-coverage-figures-20260908/dtm/en/global/Topic Clustering Heatmap with Dendrogram.png
+101,sample-dtm6,Topic Correlation Network,OPC-coverage-figures-20260908/dtm/en/global/Topic Correlation Network.png
+102,sample-dtm6,Topic Distribution KL Divergence Over Time,OPC-coverage-figures-20260908/dtm/en/global/Topic Distribution KL Divergence Over Time.png
+103,sample-dtm6,Topic Distribution Similarity Evolution,OPC-coverage-figures-20260908/dtm/en/global/Topic Distribution Similarity Evolution.png
+104,sample-dtm6,Topic Proportion Distribution,OPC-coverage-figures-20260908/dtm/en/global/Topic Proportion Distribution.png
+105,sample-dtm6,Topic Strength by Year,OPC-coverage-figures-20260908/dtm/en/global/Topic Strength by Year.png
+106,sample-dtm6,Training Loss,OPC-coverage-figures-20260908/dtm/en/global/Training Loss.png
+107,sample-dtm6,Training Perplexity,OPC-coverage-figures-20260908/dtm/en/global/Training Perplexity.png
+108,sample-dtm6,doc_topic_umap,OPC-coverage-figures-20260908/dtm/en/global/doc_topic_umap.png
+109,sample-dtm6,Source-to-topic Sankey,OPC-coverage-figures-20260908/dtm/en/global/source_topic_sankey.png
+110,sample-dtm6,Circular correlation network,OPC-coverage-figures-20260908/dtm/en/global/topic_network_circular.png
+111,sample-dtm6,topic_similarity,OPC-coverage-figures-20260908/dtm/en/global/topic_similarity.png
+112,sample-dtm6,topic_table_1,OPC-coverage-figures-20260908/dtm/en/global/topic_table_1.png
+113,sample-dtm6,Temporal word-weight trajectories,OPC-coverage-figures-20260908/dtm/en/global/topic_word_evolution.png
+114,sample-dtm6,Word-cloud grid 1,OPC-coverage-figures-20260908/dtm/en/global/topic_wordcloud_grid_1.png
+115,sample-dtm6,Year-to-topic Sankey,OPC-coverage-figures-20260908/dtm/en/global/year_topic_sankey.png
+116,sample-dtm6,T1 · Topic 1 Word Cloud,OPC-coverage-figures-20260908/dtm/en/topic/topic_1/Topic 1 Word Cloud.png
+117,sample-dtm6,T1 · Topic 1 Word Distribution,OPC-coverage-figures-20260908/dtm/en/topic/topic_1/Topic 1 Word Distribution.png
+118,sample-dtm6,T1 · Topic Evolution,OPC-coverage-figures-20260908/dtm/en/topic/topic_1/Topic Evolution.png
+119,sample-dtm6,T1 · Time-specific word probabilities,OPC-coverage-figures-20260908/dtm/en/topic/topic_1/word_distribution_by_time.png
+120,sample-dtm6,T2 · Topic 2 Word Cloud,OPC-coverage-figures-20260908/dtm/en/topic/topic_2/Topic 2 Word Cloud.png
+121,sample-dtm6,T2 · Topic 2 Word Distribution,OPC-coverage-figures-20260908/dtm/en/topic/topic_2/Topic 2 Word Distribution.png
+122,sample-dtm6,T2 · Topic Evolution,OPC-coverage-figures-20260908/dtm/en/topic/topic_2/Topic Evolution.png
+123,sample-dtm6,T2 · Time-specific word probabilities,OPC-coverage-figures-20260908/dtm/en/topic/topic_2/word_distribution_by_time.png
+124,sample-dtm6,T3 · Topic 3 Word Cloud,OPC-coverage-figures-20260908/dtm/en/topic/topic_3/Topic 3 Word Cloud.png
+125,sample-dtm6,T3 · Topic 3 Word Distribution,OPC-coverage-figures-20260908/dtm/en/topic/topic_3/Topic 3 Word Distribution.png
+126,sample-dtm6,T3 · Topic Evolution,OPC-coverage-figures-20260908/dtm/en/topic/topic_3/Topic Evolution.png
+127,sample-dtm6,T3 · Time-specific word probabilities,OPC-coverage-figures-20260908/dtm/en/topic/topic_3/word_distribution_by_time.png
+128,sample-dtm6,T4 · Topic 4 Word Cloud,OPC-coverage-figures-20260908/dtm/en/topic/topic_4/Topic 4 Word Cloud.png
+129,sample-dtm6,T4 · Topic 4 Word Distribution,OPC-coverage-figures-20260908/dtm/en/topic/topic_4/Topic 4 Word Distribution.png
+130,sample-dtm6,T4 · Topic Evolution,OPC-coverage-figures-20260908/dtm/en/topic/topic_4/Topic Evolution.png
+131,sample-dtm6,T4 · Time-specific word probabilities,OPC-coverage-figures-20260908/dtm/en/topic/topic_4/word_distribution_by_time.png
+132,sample-dtm6,T5 · Topic 5 Word Cloud,OPC-coverage-figures-20260908/dtm/en/topic/topic_5/Topic 5 Word Cloud.png
+133,sample-dtm6,T5 · Topic 5 Word Distribution,OPC-coverage-figures-20260908/dtm/en/topic/topic_5/Topic 5 Word Distribution.png
+134,sample-dtm6,T5 · Topic Evolution,OPC-coverage-figures-20260908/dtm/en/topic/topic_5/Topic Evolution.png
+135,sample-dtm6,T5 · Time-specific word probabilities,OPC-coverage-figures-20260908/dtm/en/topic/topic_5/word_distribution_by_time.png
+136,sample-dtm6,T6 · Topic 6 Word Cloud,OPC-coverage-figures-20260908/dtm/en/topic/topic_6/Topic 6 Word Cloud.png
+137,sample-dtm6,T6 · Topic 6 Word Distribution,OPC-coverage-figures-20260908/dtm/en/topic/topic_6/Topic 6 Word Distribution.png
+138,sample-dtm6,T6 · Topic Evolution,OPC-coverage-figures-20260908/dtm/en/topic/topic_6/Topic Evolution.png
+139,sample-dtm6,T6 · Time-specific word probabilities,OPC-coverage-figures-20260908/dtm/en/topic/topic_6/word_distribution_by_time.png
+140,sample-stm6,7 Core Metrics,OPC-coverage-figures-20260908/stm/en/global/7 Core Metrics.png
+141,sample-stm6,Dimension-Topic Heatmap,OPC-coverage-figures-20260908/stm/en/global/Dimension-Topic Heatmap.png
+142,sample-stm6,Document Clustering by Dominant Topic,OPC-coverage-figures-20260908/stm/en/global/Document Clustering by Dominant Topic.png
+143,sample-stm6,Document Clusters with Outlier Detection,OPC-coverage-figures-20260908/stm/en/global/Document Clusters with Outlier Detection.png
+144,sample-stm6,Document Volume Over Time,OPC-coverage-figures-20260908/stm/en/global/Document Volume Over Time.png
+145,sample-stm6,Domain Topic Distribution Over Time,OPC-coverage-figures-20260908/stm/en/global/Domain Topic Distribution Over Time.png
+146,sample-stm6,High-Frequency Word Evolution,OPC-coverage-figures-20260908/stm/en/global/High-Frequency Word Evolution.png
+147,sample-stm6,Intertopic Distance Map,OPC-coverage-figures-20260908/stm/en/global/Intertopic Distance Map.png
+148,sample-stm6,Representative Topic Evolution,OPC-coverage-figures-20260908/stm/en/global/Representative Topic Evolution.png
+149,sample-stm6,Top Salient Terms,OPC-coverage-figures-20260908/stm/en/global/Top Salient Terms.png
+150,sample-stm6,Topic Clustering Heatmap with Dendrogram,OPC-coverage-figures-20260908/stm/en/global/Topic Clustering Heatmap with Dendrogram.png
+151,sample-stm6,Topic Correlation Network,OPC-coverage-figures-20260908/stm/en/global/Topic Correlation Network.png
+152,sample-stm6,Topic Distribution Similarity Evolution,OPC-coverage-figures-20260908/stm/en/global/Topic Distribution Similarity Evolution.png
+153,sample-stm6,Topic Proportion Distribution,OPC-coverage-figures-20260908/stm/en/global/Topic Proportion Distribution.png
+154,sample-stm6,Topic Strength by Year,OPC-coverage-figures-20260908/stm/en/global/Topic Strength by Year.png
+155,sample-stm6,covariate_effect_anova,OPC-coverage-figures-20260908/stm/en/global/covariate_effect_anova.png
+156,sample-stm6,covariate_topic_heatmap,OPC-coverage-figures-20260908/stm/en/global/covariate_topic_heatmap.png
+157,sample-stm6,doc_topic_umap,OPC-coverage-figures-20260908/stm/en/global/doc_topic_umap.png
+158,sample-stm6,platform_dominant_topics,OPC-coverage-figures-20260908/stm/en/global/platform_dominant_topics.png
+159,sample-stm6,platform_dominant_topics_2,OPC-coverage-figures-20260908/stm/en/global/platform_dominant_topics_2.png
+160,sample-stm6,platform_dominant_topics_3,OPC-coverage-figures-20260908/stm/en/global/platform_dominant_topics_3.png
+161,sample-stm6,platform_topic_deviation,OPC-coverage-figures-20260908/stm/en/global/platform_topic_deviation.png
+162,sample-stm6,platform_topic_stacked,OPC-coverage-figures-20260908/stm/en/global/platform_topic_stacked.png
+163,sample-stm6,Source-to-topic Sankey,OPC-coverage-figures-20260908/stm/en/global/source_topic_sankey.png
+164,sample-stm6,stm_gamma_coefficients,OPC-coverage-figures-20260908/stm/en/global/stm_gamma_coefficients.png
+165,sample-stm6,Circular correlation network,OPC-coverage-figures-20260908/stm/en/global/topic_network_circular.png
+166,sample-stm6,topic_similarity,OPC-coverage-figures-20260908/stm/en/global/topic_similarity.png
+167,sample-stm6,topic_table_1,OPC-coverage-figures-20260908/stm/en/global/topic_table_1.png
+168,sample-stm6,Word-cloud grid 1,OPC-coverage-figures-20260908/stm/en/global/topic_wordcloud_grid_1.png
+169,sample-stm6,Year-to-topic Sankey,OPC-coverage-figures-20260908/stm/en/global/year_topic_sankey.png
+170,sample-stm6,T1 · Topic 1 Word Cloud,OPC-coverage-figures-20260908/stm/en/topic/topic_1/Topic 1 Word Cloud.png
+171,sample-stm6,T1 · Topic 1 Word Distribution,OPC-coverage-figures-20260908/stm/en/topic/topic_1/Topic 1 Word Distribution.png
+172,sample-stm6,T1 · Topic Evolution,OPC-coverage-figures-20260908/stm/en/topic/topic_1/Topic Evolution.png
+173,sample-stm6,T2 · Topic 2 Word Cloud,OPC-coverage-figures-20260908/stm/en/topic/topic_2/Topic 2 Word Cloud.png
+174,sample-stm6,T2 · Topic 2 Word Distribution,OPC-coverage-figures-20260908/stm/en/topic/topic_2/Topic 2 Word Distribution.png
+175,sample-stm6,T2 · Topic Evolution,OPC-coverage-figures-20260908/stm/en/topic/topic_2/Topic Evolution.png
+176,sample-stm6,T3 · Topic 3 Word Cloud,OPC-coverage-figures-20260908/stm/en/topic/topic_3/Topic 3 Word Cloud.png
+177,sample-stm6,T3 · Topic 3 Word Distribution,OPC-coverage-figures-20260908/stm/en/topic/topic_3/Topic 3 Word Distribution.png
+178,sample-stm6,T3 · Topic Evolution,OPC-coverage-figures-20260908/stm/en/topic/topic_3/Topic Evolution.png
+179,sample-stm6,T4 · Topic 4 Word Cloud,OPC-coverage-figures-20260908/stm/en/topic/topic_4/Topic 4 Word Cloud.png
+180,sample-stm6,T4 · Topic 4 Word Distribution,OPC-coverage-figures-20260908/stm/en/topic/topic_4/Topic 4 Word Distribution.png
+181,sample-stm6,T4 · Topic Evolution,OPC-coverage-figures-20260908/stm/en/topic/topic_4/Topic Evolution.png
+182,sample-stm6,T5 · Topic 5 Word Cloud,OPC-coverage-figures-20260908/stm/en/topic/topic_5/Topic 5 Word Cloud.png
+183,sample-stm6,T5 · Topic 5 Word Distribution,OPC-coverage-figures-20260908/stm/en/topic/topic_5/Topic 5 Word Distribution.png
+184,sample-stm6,T5 · Topic Evolution,OPC-coverage-figures-20260908/stm/en/topic/topic_5/Topic Evolution.png
+185,sample-stm6,T6 · Topic 6 Word Cloud,OPC-coverage-figures-20260908/stm/en/topic/topic_6/Topic 6 Word Cloud.png
+186,sample-stm6,T6 · Topic 6 Word Distribution,OPC-coverage-figures-20260908/stm/en/topic/topic_6/Topic 6 Word Distribution.png
+187,sample-stm6,T6 · Topic Evolution,OPC-coverage-figures-20260908/stm/en/topic/topic_6/Topic Evolution.png
+188,threshold015,Circular correlation network,reference-style-20260908/threshold-015/en/global/topic_network_circular.png

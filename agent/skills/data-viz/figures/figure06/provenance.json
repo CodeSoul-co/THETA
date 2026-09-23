@@ -1,0 +1,96 @@
+{
+  "figure": 6,
+  "title": {
+    "zh": "断轴分组柱状图",
+    "en": "Broken-axis grouped bars"
+  },
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "source_publication_note": "The supplied screenshot collection did not identify a verified paper/DOI for each image.",
+  "classification": "screenshot_estimate",
+  "provenance": {
+    "zh": "柱高 误差 散点人工估读",
+    "en": "Manual estimates of visible values, means and errors, including the discontinuous y-axis."
+  },
+  "seed_note": "Original example-generation session used NumPy seed 190913 across all figures; the seed alone does not reconstruct digitized/manual values. The committed CSVs and SHA-256 hashes define this snapshot.",
+  "raw_data_required": {
+    "zh": [
+      "Control/SA 条件下，各基因型的独立样本编号和 PR1a 表达测量。",
+      "表达归一化公式与参考基因；若使用 qPCR，保留目标/参考 Ct 和校准样本。",
+      "原始误差类型、统计检验，以及新数据应采用的断轴上下范围。"
+    ],
+    "en": [
+      "Independent sample IDs and PR1a expression measurements for each genotype under Control/SA.",
+      "Expression normalization and reference gene; for qPCR, preserve target/reference Ct and calibrator samples.",
+      "Original error definition, statistical test and appropriate lower/upper broken-axis ranges."
+    ]
+  },
+  "preprocessing": {
+    "zh": "先按原实验方法归一化表达，再填长表；修改 value 时默认重算均值和 SEM。检查上下 y 轴范围是否覆盖新数值。",
+    "en": "Normalize expression upstream and fill the long table. Changing value triggers mean/SEM recalculation by default. Check both y-axis ranges for new values."
+  },
+  "files": [
+    {
+      "path": "data/figure06.csv",
+      "classification": "screenshot_estimate",
+      "row_count": 47,
+      "sha256": "3e2b43790ffbfdc8ebf8cd1ba9e612d6d8f854d429dd8c192213ae36f3e7274f",
+      "fields": [
+        {
+          "name": "category",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "分类/条件；与样式顺序一致",
+            "en": "Category/condition; match style ordering"
+          }
+        },
+        {
+          "name": "group",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "实验组或细胞群；与样式一致",
+            "en": "Experimental group or cell population; match style"
+          }
+        },
+        {
+          "name": "sample",
+          "type": "string",
+          "unit": "identifier",
+          "description": {
+            "zh": "示例重复编号，真实数据应保留真实样本 ID",
+            "en": "Example replicate ID; preserve real sample IDs when available"
+          }
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "unit": "normalized expression / fold change",
+          "description": {
+            "zh": "单个观测值；单位及归一化见本图原始数据要求",
+            "en": "One observation; units/normalization are specified in this figure’s raw-data requirements"
+          }
+        },
+        {
+          "name": "mean",
+          "type": "number",
+          "unit": "normalized expression / fold change",
+          "description": {
+            "zh": "组均值；相同组每行重复同一数值",
+            "en": "Group mean; repeat the same summary within each group"
+          }
+        },
+        {
+          "name": "error",
+          "type": "number ≥ 0",
+          "unit": "normalized expression / fold change",
+          "description": {
+            "zh": "指定的误差幅度；需注明 SD/SEM/CI",
+            "en": "Error magnitude; explicitly specify SD/SEM/CI"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+# Preserve CSV bytes across platforms: SHA-256 identifies published examples.
+*.csv -text whitespace=cr-at-eol
+*.png binary

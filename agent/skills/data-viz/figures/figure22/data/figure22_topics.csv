@@ -1,0 +1,11 @@
+topic_id,label,y0,y1,color
+t0,"linear, beam, models,|air, center",16,53,#8fb1ca
+t1,"formula, electric, spin,|frequency, wave",53,83,#adc36b
+t2,"field, physics, quantum,|uncertainty, theory",83,113,#c8b7cf
+t3,"source, point, x, will,|surface",113,142,#b9c6c8
+t4,"energy, electron, mass,|law, momentum",142,171,#dfb8ad
+t5,"he, assembly, de,|biouml, core",171,201,#a8c7bd
+t6,"s, folding, was, home,|its",201,231,#d69386
+t7,"and, for, which, has,|these",231,270,#b5c1cd
+t8,"protein, data,|computational,|bioinformatics,|research",270,327,#ad8dbc
+t9,"the, of, a, to, in",327,406,#bec35d

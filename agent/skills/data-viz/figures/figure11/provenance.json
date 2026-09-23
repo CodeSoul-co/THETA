@@ -1,0 +1,149 @@
+{
+  "figure": 11,
+  "title": {
+    "zh": "环形系统发育树与热图",
+    "en": "Circular phylogeny with heatmap rings"
+  },
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "source_publication_note": "The supplied screenshot collection did not identify a verified paper/DOI for each image.",
+  "classification": "synthetic",
+  "provenance": {
+    "zh": "模拟树拓扑 分支长度及叶节点注释；仅复现图式，不能用于系统发育推断",
+    "en": "Synthetic topology, branch lengths and heatmap annotations. No original phylogenetic relationships are available."
+  },
+  "seed_note": "Original example-generation session used NumPy seed 190913 across all figures; the seed alone does not reconstruct digitized/manual values. The committed CSVs and SHA-256 hashes define this snapshot.",
+  "raw_data_required": {
+    "zh": [
+      "原始带枝长的系统发育树、根、叶节点 ID 与属/门分类。",
+      "每个叶节点的 BBAA 检出分子/分母及对应比例，bsh 存在/缺失信息。",
+      "BBAA、bsh 的检测方法与阈值，属区块边界和颜色刻度范围。"
+    ],
+    "en": [
+      "Original phylogeny with branch lengths, rooting, tip IDs and genus/phylum classifications.",
+      "Numerator/denominator and resulting BBAA detection fraction per tip, plus bsh presence/absence.",
+      "BBAA/bsh assay methods and thresholds, genus-sector boundaries and color-scale limits."
+    ]
+  },
+  "preprocessing": {
+    "zh": "将真实树转为边表并合并 tip 注释。此圆形布局把终端节点对齐到固定半径，不能从图上读出真实末端枝长；genus_labels 需按新树重新设置。",
+    "en": "Convert the tree to edges and join annotations. This circular layout aligns terminal nodes to a fixed radius, so displayed terminal lengths are not original branch lengths. Update genus_labels for a replacement tree."
+  },
+  "files": [
+    {
+      "path": "data/figure11.csv",
+      "classification": "synthetic",
+      "row_count": 258,
+      "sha256": "0c04c6c9a1bf51a1a12ebf4a1a0c5536d55bbce8417e9d3dc914d601c80897c3",
+      "fields": [
+        {
+          "name": "node",
+          "type": "string",
+          "unit": "identifier",
+          "description": {
+            "zh": "唯一节点 ID；不能命名为 root",
+            "en": "Unique node ID; root is reserved"
+          }
+        },
+        {
+          "name": "parent",
+          "type": "string",
+          "unit": "identifier",
+          "description": {
+            "zh": "父节点 ID 或隐含根 root",
+            "en": "Parent ID or implicit root named root"
+          }
+        },
+        {
+          "name": "length",
+          "type": "number ≥ 0",
+          "unit": "tree-specific",
+          "description": {
+            "zh": "从父节点到该节点的枝长；必须指定单位",
+            "en": "Branch length from parent; state its unit"
+          }
+        },
+        {
+          "name": "phylum",
+          "type": "string",
+          "unit": "taxonomy",
+          "description": {
+            "zh": "门分类；与 style.phyla 中名称一致",
+            "en": "Phylum label matching style.phyla"
+          }
+        }
+      ]
+    },
+    {
+      "path": "data/figure11_leaves.csv",
+      "classification": "synthetic",
+      "row_count": 133,
+      "sha256": "068b67e80086cd786fa07d9bec6ef83c207ec39bbafccfcc3243b88173e2e2f2",
+      "fields": [
+        {
+          "name": "node",
+          "type": "string",
+          "unit": "identifier",
+          "description": {
+            "zh": "唯一节点 ID；不能命名为 root",
+            "en": "Unique node ID; root is reserved"
+          }
+        },
+        {
+          "name": "order",
+          "type": "unique number",
+          "unit": "ordering",
+          "description": {
+            "zh": "圆周上叶节点顺序，不可重复",
+            "en": "Unique tip order around the circle"
+          }
+        },
+        {
+          "name": "phylum",
+          "type": "string",
+          "unit": "taxonomy",
+          "description": {
+            "zh": "门分类；与 style.phyla 中名称一致",
+            "en": "Phylum label matching style.phyla"
+          }
+        },
+        {
+          "name": "type",
+          "type": "WGS | MAG | SAG",
+          "unit": "category",
+          "description": {
+            "zh": "基因组类型；图 10 使用",
+            "en": "Genome category; used by figure 10"
+          }
+        },
+        {
+          "name": "presence",
+          "type": "0 | 1 | 2",
+          "unit": "category",
+          "description": {
+            "zh": "图10的缺失/至少1/至少10样本检出类别",
+            "en": "Figure 10 occurrence: absent / at least 1 / at least 10 samples"
+          }
+        },
+        {
+          "name": "fraction",
+          "type": "number [0, 1]",
+          "unit": "fraction",
+          "description": {
+            "zh": "图11检出比例；颜色范围默认 0–0.6",
+            "en": "Figure 11 detected fraction; default displayed range 0–0.6"
+          }
+        },
+        {
+          "name": "bsh",
+          "type": "0 | 1",
+          "unit": "boolean",
+          "description": {
+            "zh": "图11的 bsh 缺失/存在",
+            "en": "Figure 11 bsh absence/presence"
+          }
+        }
+      ]
+    }
+  ]
+}

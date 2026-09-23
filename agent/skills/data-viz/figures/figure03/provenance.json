@@ -1,0 +1,78 @@
+{
+  "figure": 3,
+  "title": {
+    "zh": "多队列 PCoA 组合图",
+    "en": "Multi-cohort PCoA composite"
+  },
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "source_publication_note": "The supplied screenshot collection did not identify a verified paper/DOI for each image.",
+  "classification": "digitized",
+  "provenance": {
+    "zh": "截图颜色连通区域提取的近似点；重叠点和组别形状无法完全识别",
+    "en": "Approximate coordinates extracted from screenshot colors. Some study assignments and control/IBD marker assignments are heuristic."
+  },
+  "seed_note": "Original example-generation session used NumPy seed 190913 across all figures; the seed alone does not reconstruct digitized/manual values. The committed CSVs and SHA-256 hashes define this snapshot.",
+  "raw_data_required": {
+    "zh": [
+      "各队列的特征表或统一距离矩阵；每个样本的 study、control/IBD 组别和 ID。",
+      "跨队列归一化/批次处理方法、PCoA 坐标及轴解释比例。",
+      "原始 PERMANOVA 设计，包括队列效应、协变量和置换约束。"
+    ],
+    "en": [
+      "Feature tables or a harmonized distance matrix; study, control/IBD group and ID per sample.",
+      "Cross-cohort normalization/batch handling, PCoA coordinates and explained variation.",
+      "Original PERMANOVA design including study effects, covariates and permutation restrictions."
+    ]
+  },
+  "preprocessing": {
+    "zh": "先完成跨队列统一和 PCoA；把坐标与 study/group 合并。本项目只绘图和汇总边缘分布，不做批次校正或 PERMANOVA。",
+    "en": "Harmonize cohorts and compute PCoA upstream, then join coordinates to study/group. Rendering summarizes marginal distributions but does not perform batch correction or PERMANOVA."
+  },
+  "files": [
+    {
+      "path": "data/figure03.csv",
+      "classification": "digitized",
+      "row_count": 1180,
+      "sha256": "4f7b3df1c4ac1170da496f7fffbe7a7f4ef9a40be46744b2cd95609f9f05a6cf",
+      "fields": [
+        {
+          "name": "study",
+          "type": "string",
+          "unit": "identifier",
+          "description": {
+            "zh": "队列标识，与 styles 中 study 顺序一致",
+            "en": "Cohort identifier matching the study order in style"
+          }
+        },
+        {
+          "name": "group",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "实验组或细胞群；与样式一致",
+            "en": "Experimental group or cell population; match style"
+          }
+        },
+        {
+          "name": "x",
+          "type": "number",
+          "unit": "ordination coordinate",
+          "description": {
+            "zh": "已转换的横轴坐标；不是原始特征矩阵",
+            "en": "Transformed x coordinate, not a raw feature matrix"
+          }
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "unit": "ordination coordinate",
+          "description": {
+            "zh": "已转换的纵轴坐标",
+            "en": "Transformed y coordinate"
+          }
+        }
+      ]
+    }
+  ]
+}

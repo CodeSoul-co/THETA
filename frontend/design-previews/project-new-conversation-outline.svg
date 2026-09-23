@@ -1,0 +1,25 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="96"
+  height="96"
+  viewBox="0 0 16 16"
+  fill="none"
+  role="img"
+  aria-labelledby="title desc"
+>
+  <title id="title">新建对话</title>
+  <desc id="desc">与项目菜单省略号一致的深蓝色细描边对话气泡加号图标</desc>
+  <path
+    d="M3.15 2.65h7.1c1.58 0 2.6 1.02 2.6 2.6v3.2c0 1.58-1.02 2.6-2.6 2.6H6.1L3.25 13.2v-2.15h-.1c-1.58 0-2.6-1.02-2.6-2.6v-3.2c0-1.58 1.02-2.6 2.6-2.6Z"
+    stroke="#244370"
+    stroke-width="1.25"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M8.15 6.85h3.2M9.75 5.25v3.2"
+    stroke="#244370"
+    stroke-width="1.25"
+    stroke-linecap="round"
+  />
+</svg>

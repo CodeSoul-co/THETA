@@ -1,0 +1,26 @@
+<svg width="320" height="200" viewBox="0 0 320 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="panel" x1="90" y1="46" x2="266" y2="184" gradientUnits="userSpaceOnUse"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#F7FAFF"/></linearGradient>
+    <linearGradient id="blue" x1="96" y1="93" x2="119" y2="115" gradientUnits="userSpaceOnUse"><stop stop-color="#78A7FF"/><stop offset="1" stop-color="#4D70E8"/></linearGradient>
+    <linearGradient id="blueSoft" x1="74" y1="35" x2="260" y2="151" gradientUnits="userSpaceOnUse"><stop stop-color="#EDF4FF"/><stop offset="1" stop-color="#DCE8FC"/></linearGradient>
+    <filter id="shadowBack" x="7" y="-8" width="286" height="199" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#45618D" flood-opacity="0.12"/></filter>
+    <filter id="shadowFront" x="48" y="25" width="272" height="174" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feDropShadow dx="0" dy="13" stdDeviation="11" flood-color="#36527E" flood-opacity="0.18"/></filter>
+    <filter id="nodeGlow" x="83" y="83" width="42" height="42" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#547BEA" flood-opacity="0.28"/></filter>
+  </defs>
+  <g filter="url(#shadowBack)" transform="rotate(-5 145 88)">
+    <rect x="31" y="17" width="230" height="142" rx="20" fill="url(#blueSoft)" stroke="#C8D7EE"/>
+    <path d="M31 37C31 25.954 39.954 17 51 17H241C252.046 17 261 25.954 261 37V51H31V37Z" fill="#F8FBFF" fill-opacity="0.84"/>
+    <circle cx="49" cy="34" r="3" fill="#B5C7E4"/><circle cx="59" cy="34" r="3" fill="#CDDAEC"/><circle cx="69" cy="34" r="3" fill="#DDE6F2"/>
+    <rect x="49" y="70" width="63" height="7" rx="3.5" fill="#C9D8EE"/><rect x="49" y="88" width="147" height="6" rx="3" fill="#D7E2F1"/><rect x="49" y="103" width="121" height="6" rx="3" fill="#D7E2F1"/><rect x="49" y="118" width="137" height="6" rx="3" fill="#D7E2F1"/>
+  </g>
+  <g filter="url(#shadowFront)" transform="rotate(1.6 190 119)">
+    <rect x="68" y="47" width="232" height="136" rx="20" fill="url(#panel)" stroke="#C9D7EA"/>
+    <path d="M68 67C68 55.954 76.954 47 88 47H280C291.046 47 300 55.954 300 67V77H68V67Z" fill="#FBFCFF"/>
+    <circle cx="88" cy="62" r="3" fill="#9FB8E7"/><circle cx="98" cy="62" r="3" fill="#D2DDED"/><rect x="113" y="58" width="66" height="8" rx="4" fill="#DDE6F2"/><rect x="263" y="57" width="20" height="10" rx="5" fill="#E8F0FF"/>
+    <path d="M103 99V158" stroke="#C9D8EF" stroke-width="2" stroke-linecap="round"/>
+    <g filter="url(#nodeGlow)"><circle cx="103" cy="98" r="10" fill="url(#blue)"/><path d="M103 92.8L107.5 95.4V100.6L103 103.2L98.5 100.6V95.4L103 92.8Z" stroke="white" stroke-width="1.4" stroke-linejoin="round"/><path d="M100.5 98.1L102.2 99.8L105.6 96.4" stroke="white" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <circle cx="103" cy="128" r="7" fill="#FFFFFF" stroke="#78A0EF" stroke-width="2.5"/><circle cx="103" cy="158" r="7" fill="#FFFFFF" stroke="#A7BDE7" stroke-width="2.5"/>
+    <rect x="123" y="92" width="112" height="8" rx="4" fill="#6F96EA"/><rect x="123" y="106" width="78" height="6" rx="3" fill="#DCE5F2"/><rect x="123" y="122" width="92" height="7" rx="3.5" fill="#CBD8EA"/><rect x="123" y="135" width="124" height="6" rx="3" fill="#E3E9F2"/><rect x="123" y="152" width="104" height="7" rx="3.5" fill="#D4DFEE"/><rect x="123" y="165" width="68" height="6" rx="3" fill="#E5EAF2"/>
+    <rect x="252" y="91" width="28" height="13" rx="6.5" fill="#EDF3FF"/><circle cx="260" cy="97.5" r="2.5" fill="#5D86E9"/><rect x="266" y="95.5" width="8" height="4" rx="2" fill="#AFC3EB"/>
+  </g>
+</svg>

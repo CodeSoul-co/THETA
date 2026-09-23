@@ -1,0 +1,111 @@
+{
+  "figure": 21,
+  "title": {
+    "zh": "词组层次聚类树",
+    "en": "Word-group dendrogram"
+  },
+  "classification": "transcribed_and_screenshot_estimate",
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "provenance": {
+    "zh": "9 组共 36 个可见英文词已转录；8 次合并关系与高度按图估读。这里的高度只是展示估计，不是从原神经元响应或词向量计算出的距离。",
+    "en": "Nine visible stacks containing 36 words were transcribed; eight merges and their heights were estimated from the image. Heights are display estimates, not distances computed from original neural responses or word vectors."
+  },
+  "raw_data_required": {
+    "zh": [
+      "每个叶节点的 ID、显示词组和左右顺序。",
+      "一棵完整二叉层次树：每次合并的节点 ID、左右子节点 ID 和合并高度。可来自文本聚类、主题层次或其他领域的层次关系。",
+      "若要解释为真实文本聚类，需记录文本表示、距离函数、聚类方法；树必须由该分析实际生成。"
+    ],
+    "en": [
+      "Leaf IDs, displayed word stacks and left-to-right order.",
+      "A complete binary hierarchy: merge node ID, child IDs and height for each merge. Inputs may come from text clustering, topic hierarchies or other domains.",
+      "For substantive clustering interpretation, record text representation, distance and clustering method; derive the hierarchy from that actual analysis."
+    ]
+  },
+  "preprocessing": {
+    "zh": "代码从明确的合并表绘制树，不执行神经数据分析或文本聚类。叶节点在原绘图区等距排列，内部横坐标取两个子节点的中点。高度需单调且在 height_limit 内。",
+    "en": "The code draws an explicit merge table; it does not analyze neural data or cluster text. Leaves are evenly spaced inside the original axes; each parent x position is the midpoint of its children. Heights must be monotone and within height_limit."
+  },
+  "files": [
+    {
+      "path": "data/figure21.csv",
+      "classification": "transcribed_and_screenshot_estimate",
+      "row_count": 8,
+      "sha256": "de1a63af2276957763168a35c08e16e16ea96cabf775e7d4700d8a89c30bc608",
+      "fields": [
+        {
+          "name": "node",
+          "type": "string",
+          "unit": "ID",
+          "description": {
+            "zh": "节点唯一标识",
+            "en": "Unique node ID"
+          }
+        },
+        {
+          "name": "left",
+          "type": "string",
+          "unit": "ID",
+          "description": {
+            "zh": "左子节点 ID",
+            "en": "Left-child node ID"
+          }
+        },
+        {
+          "name": "right",
+          "type": "string",
+          "unit": "ID",
+          "description": {
+            "zh": "右子节点 ID",
+            "en": "Right-child node ID"
+          }
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "unit": "merge-height units",
+          "description": {
+            "zh": "非负合并高度，不能低于子节点",
+            "en": "Nonnegative merge height, not below either child"
+          }
+        }
+      ]
+    },
+    {
+      "path": "data/figure21_labels.csv",
+      "classification": "transcribed_and_screenshot_estimate",
+      "row_count": 9,
+      "sha256": "49585c664f9e44cf356cc500719870540a500df6040da3602410dc8306ffa378",
+      "fields": [
+        {
+          "name": "node",
+          "type": "string",
+          "unit": "ID",
+          "description": {
+            "zh": "节点唯一标识",
+            "en": "Unique node ID"
+          }
+        },
+        {
+          "name": "order",
+          "type": "number",
+          "unit": "ordinal",
+          "description": {
+            "zh": "同一折线的点序，或叶节点左右顺序；须唯一",
+            "en": "Vertex order within a path or left-to-right leaf order; must be unique"
+          }
+        },
+        {
+          "name": "words",
+          "type": "string",
+          "unit": "text",
+          "description": {
+            "zh": "以 | 分隔的堆叠词语；每个叶节点一组",
+            "en": "Stacked words separated by |; one stack per terminal node"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+interface:
+  display_name: "THETA Workflow"
+  short_description: "Safe THETA workflow guidance"
+  default_prompt: "Use $theta-workflow to run a safe THETA topic-modeling workflow; 先检查 THETA 仓库是否存在，再确认数据、模式、资源和输出。"
+policy:
+  allow_implicit_invocation: true

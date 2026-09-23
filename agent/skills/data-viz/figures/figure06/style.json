@@ -1,0 +1,65 @@
+{
+  "id": 6,
+  "title": "断轴分组柱状图",
+  "width": 1094,
+  "height": 816,
+  "dpi": 100,
+  "font": "Arial",
+  "font_size": 31,
+  "line_width": 1.7,
+  "seed": 190913,
+  "provenance": "柱高 误差 散点人工估读",
+  "data_file": "figure06.csv",
+  "annotation_policy": "reference_only",
+  "annotations": [
+    [
+      "*",
+      0,
+      1,
+      2.15
+    ],
+    [
+      "n. s.",
+      0,
+      2,
+      2.45
+    ],
+    [
+      "*",
+      3.7,
+      4.7,
+      42000
+    ],
+    [
+      "*",
+      3.7,
+      5.7,
+      48000
+    ]
+  ],
+  "groups": [
+    "Wild type",
+    "TbCSB $\\beta C1$-line1",
+    "TbCSB $\\beta C1$-line3"
+  ],
+  "categories": [
+    "Control",
+    "1.0 mM SA"
+  ],
+  "colors": [
+    "#a8a9a7",
+    "#edc991",
+    "#b4a4d8"
+  ],
+  "summary": "provided",
+  "ylabel": "Relative expression of $\\mathit{PR1a}$",
+  "bottom_ylim": [
+    0,
+    2
+  ],
+  "top_ylim": [
+    0,
+    40000
+  ],
+  "title_en": "Broken-axis grouped bars"
+}

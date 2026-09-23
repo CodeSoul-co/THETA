@@ -1,0 +1,49 @@
+{
+  "id": 3,
+  "title": "多队列 PCoA 组合图",
+  "width": 1026,
+  "height": 1050,
+  "dpi": 100,
+  "font": "Arial",
+  "font_size": 30,
+  "line_width": 1.3,
+  "seed": 190913,
+  "provenance": "截图颜色连通区域提取的近似点；重叠点和组别形状无法完全识别",
+  "data_file": "figure03.csv",
+  "annotation_policy": "reference_only",
+  "annotations": [],
+  "axes": [
+    73,
+    78,
+    611,
+    614
+  ],
+  "colors": [
+    "#d9996a",
+    "#96a7d9",
+    "#e3b94f",
+    "#6aa16e",
+    "#aaa0cb",
+    "#9eafb6"
+  ],
+  "studies": [
+    "Puxi_cohort",
+    "HMP_2019_ibdmdb",
+    "LifeLD_VilaAV_2018",
+    "NielsenHB_2014",
+    "FranzosaEA_2019A",
+    "HeQ_2017"
+  ],
+  "xlim": [
+    -0.445,
+    0.55
+  ],
+  "ylim": [
+    -0.412,
+    0.588
+  ],
+  "xlabel": "PCo1 [15.9%]",
+  "ylabel": "PCo2 [10.2%]",
+  "annotation": "PERMANOVA\np=0.001",
+  "title_en": "Multi-cohort PCoA composite"
+}

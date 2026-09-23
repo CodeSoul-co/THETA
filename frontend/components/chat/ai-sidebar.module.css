@@ -1,0 +1,29 @@
+.sidebar { min-height: 0; flex: 1; }
+.toolbar { display: flex; flex: none; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #edf1f6; background: #fbfcfe; }
+.toolbar button { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 5px 8px; border: 0; border-radius: 8px; font-size: 12px; cursor: pointer; }
+.newConversation { color: #147f66; background: #eafaF3; }
+.historyButton { color: #526782; background: transparent; }
+.historyButton:hover, .historyButton[aria-expanded='true'] { background: #edf3fb; }
+.historyButton span { font-size: 10px; color: #8291a5; }
+.history { flex: 0 1 auto; min-height: 0; max-height: 35%; overflow-y: auto; padding: 10px; border-bottom: 1px solid #e5edf6; background: #f7faff; }
+.history p { margin: 0 4px 8px; font-size: 10px; color: #8191a8; }
+.historySelect { display: grid; min-width: 0; flex: 1; gap: 4px; padding: 9px 8px; border: 1px solid transparent; border-radius: 10px; text-align: left; background: transparent; cursor: pointer; }
+.historySelect:hover, .historySelect[aria-current='true'] { border-color: #ceddf3; background: white; }
+.history strong { overflow-wrap: anywhere; font-size: 12px; color: #34465e; font-weight: 500; }
+.history strong svg { display: inline-block; margin-right: 4px; color: #2878bd; }
+.historyRow { display: flex; align-items: center; gap: 2px; margin-bottom: 4px; }
+.historyActions { display: flex; flex: none; align-items: center; }
+.historyActions button { display: grid; place-items: center; width: 28px; height: 30px; border: 0; border-radius: 7px; background: transparent; color: #77899f; cursor: pointer; }
+.historyActions button:hover { background: #e9f0fa; color: #245f9e; }
+.historyHeading { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 4px; margin-bottom: 5px; }
+.historyHeading p { margin: 0; }
+.historyHeading button { padding: 4px; border: 0; background: transparent; color: #5e789a; font-size: 10px; cursor: pointer; }
+.history button:disabled, .toolbar button:disabled { cursor: default; opacity: .55; }
+.history span { font-size: 10px; color: #8493a7; }
+.footer { flex: none; width: 100%; min-width: 0; padding: 12px; border-top: 1px solid #edf1f6; background: #fff; }
+.composer { width: 100%; min-width: 0; border: 1px solid #d9e3f0; border-radius: 16px; background: white; transition: border-color .15s, box-shadow .15s; }
+.composer:focus-within { border-color: #80aefb; box-shadow: 0 0 0 3px #eaf2ff; }
+.inputBody { min-width: 0; padding: 8px 10px 0; }
+.attachments { max-height: min(140px, 18dvh); overflow-y: auto; overflow-x: hidden; }
+.textarea, .textarea:focus, .textarea:focus-visible { display: block; box-sizing: border-box; width: 100%; min-width: 0; height: 76px; min-height: 60px; max-height: min(120px, 22dvh); field-sizing: fixed; overflow-y: auto; resize: none; padding: 8px 2px; border: 0; border-radius: 0; outline: none; box-shadow: none; background: transparent; font-size: 13px; line-height: 1.6; }
+.textarea::placeholder { color: #8b9bb0; }

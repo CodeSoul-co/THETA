@@ -1,0 +1,1377 @@
+{
+  "describe": {
+    "method": "describe",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "frequency": {
+    "method": "frequency",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "correlation": {
+    "method": "correlation",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "normality": {
+    "method": "normality",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "cronbach_alpha": {
+    "method": "cronbach_alpha",
+    "x": [
+      "a",
+      "b",
+      "c"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "kmo_bartlett": {
+    "method": "kmo_bartlett",
+    "x": [
+      "a",
+      "b",
+      "c"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "nps": {
+    "method": "nps",
+    "x": [
+      "score"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "ttest_one": {
+    "method": "ttest_one",
+    "x": [
+      "x"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "wilcoxon": {
+    "method": "wilcoxon",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "ttest_paired": {
+    "method": "ttest_paired",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "friedman": {
+    "method": "friedman",
+    "x": [
+      "a",
+      "b",
+      "c"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "cochran_q": {
+    "method": "cochran_q",
+    "x": [
+      "binary",
+      "binary2",
+      "binary3"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "kendall_w": {
+    "method": "kendall_w",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "kappa": {
+    "method": "kappa",
+    "x": [
+      "binary",
+      "binary2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "bland_altman": {
+    "method": "bland_altman",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "runs": {
+    "method": "runs",
+    "x": [
+      "x"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "binomial": {
+    "method": "binomial",
+    "x": [
+      "binary"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "tost_one": {
+    "method": "tost_one",
+    "x": [
+      "x"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "tost_paired": {
+    "method": "tost_paired",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "ttest_ind": {
+    "method": "ttest_ind",
+    "y": "y",
+    "group": "group"
+  },
+  "mann_whitney": {
+    "method": "mann_whitney",
+    "y": "y",
+    "group": "group"
+  },
+  "anova_one": {
+    "method": "anova_one",
+    "y": "y",
+    "group": "group"
+  },
+  "kruskal": {
+    "method": "kruskal",
+    "y": "y",
+    "group": "group"
+  },
+  "levene": {
+    "method": "levene",
+    "y": "y",
+    "group": "group"
+  },
+  "tukey": {
+    "method": "tukey",
+    "y": "y",
+    "group": "group"
+  },
+  "dunn": {
+    "method": "dunn",
+    "y": "y",
+    "group": "group"
+  },
+  "tost_ind": {
+    "method": "tost_ind",
+    "y": "y",
+    "group": "group"
+  },
+  "chi_square": {
+    "method": "chi_square",
+    "x": [
+      "binary"
+    ],
+    "group": "binary2"
+  },
+  "chi_square_yates": {
+    "method": "chi_square_yates",
+    "x": [
+      "binary"
+    ],
+    "group": "binary2"
+  },
+  "fisher": {
+    "method": "fisher",
+    "x": [
+      "binary"
+    ],
+    "group": "binary2"
+  },
+  "mcnemar": {
+    "method": "mcnemar",
+    "x": [
+      "binary"
+    ],
+    "group": "binary2"
+  },
+  "ols": {
+    "method": "ols",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "wls": {
+    "method": "wls",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y",
+    "weight": "weight"
+  },
+  "logit": {
+    "method": "logit",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "binary"
+  },
+  "probit": {
+    "method": "probit",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "binary"
+  },
+  "poisson": {
+    "method": "poisson",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "count"
+  },
+  "negative_binomial": {
+    "method": "negative_binomial",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "positive_count"
+  },
+  "ordinal_logit": {
+    "method": "ordinal_logit",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "ordinal"
+  },
+  "multinomial_logit": {
+    "method": "multinomial_logit",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "ordinal"
+  },
+  "quantile": {
+    "method": "quantile",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "robust_linear": {
+    "method": "robust_linear",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "glm_gamma": {
+    "method": "glm_gamma",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "positive"
+  },
+  "glm_binomial": {
+    "method": "glm_binomial",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "binary"
+  },
+  "gee": {
+    "method": "gee",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y",
+    "group": "entity"
+  },
+  "mixed_linear": {
+    "method": "mixed_linear",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y",
+    "group": "entity"
+  },
+  "panel_fe": {
+    "method": "panel_fe",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y",
+    "entity": "entity",
+    "time": "wave"
+  },
+  "panel_twfe": {
+    "method": "panel_twfe",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y",
+    "entity": "entity",
+    "time": "wave"
+  },
+  "panel_re": {
+    "method": "panel_re",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y",
+    "entity": "entity",
+    "time": "wave"
+  },
+  "iv_2sls": {
+    "method": "iv_2sls",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y",
+    "endogenous": [
+      "endog"
+    ],
+    "instruments": [
+      "z"
+    ]
+  },
+  "iv_gmm": {
+    "method": "iv_gmm",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y",
+    "endogenous": [
+      "endog"
+    ],
+    "instruments": [
+      "z"
+    ]
+  },
+  "did": {
+    "method": "did",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "ydid",
+    "group": "group",
+    "time": "post"
+  },
+  "rdd": {
+    "method": "rdd",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {
+      "cutoff": 0,
+      "bandwidth": 2
+    },
+    "y": "y"
+  },
+  "kaplan_meier": {
+    "method": "kaplan_meier",
+    "seed": 42,
+    "params": {},
+    "time": "duration",
+    "event": "event",
+    "group": "group"
+  },
+  "nelson_aalen": {
+    "method": "nelson_aalen",
+    "seed": 42,
+    "params": {},
+    "time": "duration",
+    "event": "event",
+    "group": "group"
+  },
+  "logrank": {
+    "method": "logrank",
+    "seed": 42,
+    "params": {},
+    "time": "duration",
+    "event": "event",
+    "group": "group"
+  },
+  "cox": {
+    "method": "cox",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "time": "duration",
+    "event": "event"
+  },
+  "weibull_aft": {
+    "method": "weibull_aft",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "time": "duration",
+    "event": "event"
+  },
+  "lognormal_aft": {
+    "method": "lognormal_aft",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "time": "duration",
+    "event": "event"
+  },
+  "loglogistic_aft": {
+    "method": "loglogistic_aft",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "time": "duration",
+    "event": "event"
+  },
+  "kmeans": {
+    "method": "kmeans",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "hierarchical": {
+    "method": "hierarchical",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "dbscan": {
+    "method": "dbscan",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "gmm_cluster": {
+    "method": "gmm_cluster",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "pca": {
+    "method": "pca",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "factor": {
+    "method": "factor",
+    "x": [
+      "a",
+      "b",
+      "c",
+      "x"
+    ],
+    "seed": 42,
+    "params": {
+      "components": 1
+    }
+  },
+  "mds": {
+    "method": "mds",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "cca": {
+    "method": "cca",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "endogenous": [
+      "a",
+      "b"
+    ]
+  },
+  "correspondence": {
+    "method": "correspondence",
+    "x": [
+      "a",
+      "b",
+      "c"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "adf": {
+    "method": "adf",
+    "x": [
+      "x"
+    ],
+    "seed": 42,
+    "params": {
+      "lags": 2
+    },
+    "time": "time"
+  },
+  "kpss": {
+    "method": "kpss",
+    "x": [
+      "x"
+    ],
+    "seed": 42,
+    "params": {
+      "lags": 2
+    },
+    "time": "time"
+  },
+  "ljung_box": {
+    "method": "ljung_box",
+    "x": [
+      "x"
+    ],
+    "seed": 42,
+    "params": {
+      "lags": 2
+    },
+    "time": "time"
+  },
+  "arima": {
+    "method": "arima",
+    "x": [
+      "x"
+    ],
+    "seed": 42,
+    "params": {
+      "horizon": 3
+    },
+    "time": "time"
+  },
+  "exponential_smoothing": {
+    "method": "exponential_smoothing",
+    "x": [
+      "x"
+    ],
+    "seed": 42,
+    "params": {
+      "horizon": 3
+    },
+    "time": "time"
+  },
+  "var": {
+    "method": "var",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {
+      "lags": 2,
+      "horizon": 3
+    },
+    "time": "time"
+  },
+  "granger": {
+    "method": "granger",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {
+      "lags": 2
+    },
+    "time": "time"
+  },
+  "garch": {
+    "method": "garch",
+    "x": [
+      "x"
+    ],
+    "seed": 42,
+    "params": {
+      "horizon": 3
+    },
+    "time": "time"
+  },
+  "entropy_weight": {
+    "method": "entropy_weight",
+    "x": [
+      "a",
+      "b",
+      "c"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "critic": {
+    "method": "critic",
+    "x": [
+      "a",
+      "b",
+      "c"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "cv_weight": {
+    "method": "cv_weight",
+    "x": [
+      "a",
+      "b",
+      "c"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "topsis": {
+    "method": "topsis",
+    "x": [
+      "a",
+      "b",
+      "c"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "rsr": {
+    "method": "rsr",
+    "x": [
+      "a",
+      "b",
+      "c"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "vikor": {
+    "method": "vikor",
+    "x": [
+      "a",
+      "b",
+      "c"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "grey_relation": {
+    "method": "grey_relation",
+    "x": [
+      "a",
+      "b",
+      "c"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "ahp": {
+    "method": "ahp",
+    "x": [
+      "a",
+      "b",
+      "c"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "coupling": {
+    "method": "coupling",
+    "x": [
+      "a",
+      "b",
+      "c"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "linear_program": {
+    "method": "linear_program",
+    "params": {
+      "c": [
+        -1,
+        -2
+      ],
+      "a_ub": [
+        [
+          1,
+          1
+        ]
+      ],
+      "b_ub": [
+        5
+      ]
+    }
+  },
+  "mixed_integer_program": {
+    "method": "mixed_integer_program",
+    "params": {
+      "c": [
+        -1,
+        -2
+      ],
+      "a_ub": [
+        [
+          1,
+          1
+        ]
+      ],
+      "b_ub": [
+        5
+      ]
+    }
+  },
+  "quadratic_program": {
+    "method": "quadratic_program",
+    "params": {
+      "c": [
+        -1,
+        -2
+      ],
+      "a_ub": [
+        [
+          1,
+          1
+        ]
+      ],
+      "b_ub": [
+        5
+      ],
+      "q": [
+        [
+          2,
+          0
+        ],
+        [
+          0,
+          2
+        ]
+      ]
+    }
+  },
+  "standardize": {
+    "method": "standardize",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "minmax": {
+    "method": "minmax",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "winsorize": {
+    "method": "winsorize",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "impute_median": {
+    "method": "impute_median",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "dummy": {
+    "method": "dummy",
+    "x": [
+      "text"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "outliers_iqr": {
+    "method": "outliers_iqr",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "rolling_mean": {
+    "method": "rolling_mean",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {}
+  },
+  "logistic_classifier": {
+    "method": "logistic_classifier",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "binary"
+  },
+  "svm_classifier": {
+    "method": "svm_classifier",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "binary"
+  },
+  "knn_classifier": {
+    "method": "knn_classifier",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "binary"
+  },
+  "tree_classifier": {
+    "method": "tree_classifier",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "binary"
+  },
+  "random_forest_classifier": {
+    "method": "random_forest_classifier",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "binary"
+  },
+  "extra_trees_classifier": {
+    "method": "extra_trees_classifier",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "binary"
+  },
+  "adaboost_classifier": {
+    "method": "adaboost_classifier",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "binary"
+  },
+  "gradient_boosting_classifier": {
+    "method": "gradient_boosting_classifier",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "binary"
+  },
+  "xgboost_classifier": {
+    "method": "xgboost_classifier",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "binary"
+  },
+  "lightgbm_classifier": {
+    "method": "lightgbm_classifier",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "binary"
+  },
+  "catboost_classifier": {
+    "method": "catboost_classifier",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "binary"
+  },
+  "mlp_classifier": {
+    "method": "mlp_classifier",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "binary"
+  },
+  "naive_bayes_classifier": {
+    "method": "naive_bayes_classifier",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "binary"
+  },
+  "svm_regressor": {
+    "method": "svm_regressor",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "knn_regressor": {
+    "method": "knn_regressor",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "tree_regressor": {
+    "method": "tree_regressor",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "random_forest_regressor": {
+    "method": "random_forest_regressor",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "extra_trees_regressor": {
+    "method": "extra_trees_regressor",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "adaboost_regressor": {
+    "method": "adaboost_regressor",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "gradient_boosting_regressor": {
+    "method": "gradient_boosting_regressor",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "xgboost_regressor": {
+    "method": "xgboost_regressor",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "lightgbm_regressor": {
+    "method": "lightgbm_regressor",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "catboost_regressor": {
+    "method": "catboost_regressor",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "mlp_regressor": {
+    "method": "mlp_regressor",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "linear_regressor": {
+    "method": "linear_regressor",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "ridge_regressor": {
+    "method": "ridge_regressor",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "lasso_regressor": {
+    "method": "lasso_regressor",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "elastic_net_regressor": {
+    "method": "elastic_net_regressor",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "pls_regressor": {
+    "method": "pls_regressor",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "ransac_regressor": {
+    "method": "ransac_regressor",
+    "x": [
+      "x",
+      "x2"
+    ],
+    "seed": 42,
+    "params": {},
+    "y": "y"
+  },
+  "anova_factorial": {
+    "method": "anova_factorial",
+    "params": {},
+    "factors": [
+      "group",
+      "post"
+    ],
+    "y": "y"
+  },
+  "ancova": {
+    "method": "ancova",
+    "params": {},
+    "factors": [
+      "group",
+      "post"
+    ],
+    "y": "y",
+    "x": [
+      "x"
+    ]
+  },
+  "repeated_anova": {
+    "method": "repeated_anova",
+    "params": {},
+    "factors": [
+      "wave"
+    ],
+    "entity": "entity",
+    "y": "y"
+  },
+  "manova": {
+    "method": "manova",
+    "params": {},
+    "factors": [
+      "group"
+    ],
+    "endogenous": [
+      "y",
+      "positive"
+    ]
+  },
+  "icc": {
+    "method": "icc",
+    "params": {},
+    "x": [
+      "a",
+      "b",
+      "c"
+    ]
+  },
+  "moderation": {
+    "method": "moderation",
+    "params": {},
+    "x": [
+      "x",
+      "x2"
+    ],
+    "y": "y"
+  },
+  "mediation": {
+    "method": "mediation",
+    "params": {
+      "bootstrap": 100
+    },
+    "x": [
+      "x"
+    ],
+    "y": "y",
+    "endogenous": [
+      "endog"
+    ]
+  },
+  "parallel_mediation": {
+    "method": "parallel_mediation",
+    "params": {
+      "bootstrap": 100
+    },
+    "x": [
+      "x"
+    ],
+    "y": "y",
+    "endogenous": [
+      "endog",
+      "positive"
+    ]
+  },
+  "chain_mediation": {
+    "method": "chain_mediation",
+    "params": {
+      "bootstrap": 100
+    },
+    "x": [
+      "x"
+    ],
+    "y": "y",
+    "endogenous": [
+      "endog",
+      "positive"
+    ]
+  },
+  "psm": {
+    "method": "psm",
+    "params": {},
+    "x": [
+      "x",
+      "x2"
+    ],
+    "y": "y",
+    "group": "binary"
+  },
+  "sem": {
+    "method": "sem",
+    "params": {
+      "model": "F =~ item0 + item1 + item2 + item3 + item4"
+    },
+    "x": [
+      "item0",
+      "item1",
+      "item2",
+      "item3",
+      "item4"
+    ]
+  },
+  "apriori": {
+    "method": "apriori",
+    "params": {},
+    "x": [
+      "binary",
+      "binary2",
+      "binary3"
+    ]
+  },
+  "power_ttest": {
+    "method": "power_ttest",
+    "params": {}
+  }
+}

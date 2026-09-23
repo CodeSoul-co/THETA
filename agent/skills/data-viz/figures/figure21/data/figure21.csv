@@ -1,0 +1,9 @@
+node,left,right,height
+m0,w4,w5,48
+m1,w3,m0,61
+m2,w2,m1,77
+m3,w7,w8,66
+m4,w6,m3,90
+m5,m2,m4,109
+m6,w0,w1,70
+m7,m6,m5,125

@@ -1,0 +1,80 @@
+{
+  "id": 8,
+  "title": "PARP1 变体柱状图",
+  "width": 1110,
+  "height": 668,
+  "dpi": 100,
+  "font": "Arial",
+  "font_size": 23,
+  "line_width": 2,
+  "seed": 190913,
+  "provenance": "柱高和误差人工估读；示例散点由均值及误差构造，不是真实重复",
+  "data_file": "figure08.csv",
+  "annotation_policy": "reference_only",
+  "annotations": [],
+  "groups": [
+    "−DOX",
+    "DMSO",
+    "10 nM veliparib",
+    "1 μM veliparib"
+  ],
+  "categories": [
+    "WT",
+    "L713F",
+    "L698A",
+    "L701A",
+    "L765A",
+    "L768A",
+    "L698A/\nL701A"
+  ],
+  "colors": [
+    "#a0a0a0",
+    "#e5e5e5",
+    "#a99ccc",
+    "#e3a041"
+  ],
+  "summary": "provided",
+  "axes": [
+    149,
+    120,
+    909,
+    414
+  ],
+  "ylim": [
+    -0.5,
+    10
+  ],
+  "xlabel": "PARP1 variant",
+  "ylabel": "PARP1-GFP FC",
+  "pvalues": [
+    [
+      "P=0.7718",
+      "P=0.6848"
+    ],
+    [
+      "P=0.4231",
+      "P<0.0001"
+    ],
+    [
+      "P=0.6782",
+      "P=0.3609"
+    ],
+    [
+      "P=0.6916",
+      "P=0.6481"
+    ],
+    [
+      "P=0.0423",
+      "P<0.0001"
+    ],
+    [
+      "P=0.0048",
+      "P<0.0001"
+    ],
+    [
+      "P=0.0716",
+      "P<0.0001"
+    ]
+  ],
+  "title_en": "PARP1 variant grouped bars"
+}

@@ -1,0 +1,147 @@
+{
+  "figure": 20,
+  "title": {
+    "zh": "词语空间与分区网格",
+    "en": "Word map with partition mesh"
+  },
+  "classification": "transcribed_estimated_and_digitized",
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "provenance": {
+    "zh": "427 个词语/短语根据低分辨率图片中可辨认内容整理，词语与位置的对应为近似估计，不能保证逐字恢复；网格由颜色线条检测并合并为矢量线段。没有恢复原始语义向量、距离或真实分区。",
+    "en": "427 word/phrase labels were compiled from readable portions of the low-resolution image; wording and placement are approximate, not a verbatim recovery. Colored boundaries were detected and consolidated into vector segments. Original semantic vectors, distances and true partitions were not recovered."
+  },
+  "raw_data_required": {
+    "zh": [
+      "需要显示的词语或短语、唯一 ID、二维位置、分组与高亮方式。",
+      "如果位置具有语义含义，需由自己的词/句向量及降维流程生成并记录方法；若只是复用排版，可直接替换标签、保留展示坐标。",
+      "可选分区网格需与同一坐标系匹配；本例网格不能当作新语料的语义边界。"
+    ],
+    "en": [
+      "Words or phrases, unique IDs, 2D positions, categories and emphasis.",
+      "For semantic interpretation, generate coordinates with your own embeddings/projection and record the method. For layout reuse alone, replace labels while retaining display positions.",
+      "Optional partition mesh must use the same coordinate system; example boundaries are not semantic partitions for a new corpus."
+    ]
+  },
+  "preprocessing": {
+    "zh": "代码直接绘制文字与折线，不计算词向量、UMAP、t-SNE、聚类或相似度。坐标可先归一化到样式的 xlim/ylim，注意当前 y 轴向下。",
+    "en": "The module draws text and polylines; it does not compute embeddings, UMAP, t-SNE, clustering or similarity. Normalize coordinates to style xlim/ylim if needed; the default y direction is downward."
+  },
+  "files": [
+    {
+      "path": "data/figure20.csv",
+      "classification": "transcribed_estimated_and_digitized",
+      "row_count": 427,
+      "sha256": "8119942b766821c168cfadef5715405bef31abfeff8e7869bf5d33a3d25d6572",
+      "fields": [
+        {
+          "name": "word_id",
+          "type": "string",
+          "unit": "ID",
+          "description": {
+            "zh": "词语的唯一标识",
+            "en": "Unique label ID"
+          }
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "unit": "text",
+          "description": {
+            "zh": "显示文字，可为词语或短语",
+            "en": "Displayed word or phrase"
+          }
+        },
+        {
+          "name": "x",
+          "type": "number",
+          "unit": "canvas pixels",
+          "description": {
+            "zh": "横坐标；本例从左向右",
+            "en": "Horizontal position; left to right in this example"
+          }
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "unit": "canvas pixels",
+          "description": {
+            "zh": "纵坐标；本例从上向下",
+            "en": "Vertical position; top to bottom in this example"
+          }
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "unit": "enum",
+          "description": {
+            "zh": "word 或 highlight，决定文字颜色",
+            "en": "word or highlight, selecting text color"
+          }
+        },
+        {
+          "name": "font_size",
+          "type": "number",
+          "unit": "points",
+          "description": {
+            "zh": "正值文字字号",
+            "en": "Positive text size"
+          }
+        },
+        {
+          "name": "group",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "文字所属类别；元数据，不自动生成聚类",
+            "en": "Label category; metadata, not an inferred cluster"
+          }
+        }
+      ]
+    },
+    {
+      "path": "data/figure20_mesh.csv",
+      "classification": "transcribed_estimated_and_digitized",
+      "row_count": 496,
+      "sha256": "c8f1fc4356c8bfdd6d67785bb63b66296e699aab5e32a3b02065bfadf580ce1c",
+      "fields": [
+        {
+          "name": "path_id",
+          "type": "string",
+          "unit": "ID",
+          "description": {
+            "zh": "一条网格折线的标识",
+            "en": "Polyline identifier"
+          }
+        },
+        {
+          "name": "order",
+          "type": "number",
+          "unit": "ordinal",
+          "description": {
+            "zh": "同一折线的点序，或叶节点左右顺序；须唯一",
+            "en": "Vertex order within a path or left-to-right leaf order; must be unique"
+          }
+        },
+        {
+          "name": "x",
+          "type": "number",
+          "unit": "canvas pixels",
+          "description": {
+            "zh": "横坐标；本例从左向右",
+            "en": "Horizontal position; left to right in this example"
+          }
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "unit": "canvas pixels",
+          "description": {
+            "zh": "纵坐标；本例从上向下",
+            "en": "Vertical position; top to bottom in this example"
+          }
+        }
+      ]
+    }
+  ]
+}

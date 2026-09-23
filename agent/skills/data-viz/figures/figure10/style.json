@@ -1,0 +1,52 @@
+{
+  "id": 10,
+  "title": "环形系统发育树与分类注释",
+  "width": 1124,
+  "height": 788,
+  "dpi": 100,
+  "font": "Arial",
+  "font_size": 12,
+  "line_width": 1.3,
+  "seed": 190913,
+  "provenance": "模拟树拓扑 分支长度及叶节点注释；仅复现图式，不能用于系统发育推断",
+  "data_file": "figure10.csv",
+  "annotation_policy": "reference_only",
+  "annotations": [],
+  "colors": [
+    "#c9771c",
+    "#dca34e",
+    "#e5c389",
+    "#e8dcaa",
+    "#59a364",
+    "#91c475",
+    "#bcdb9e",
+    "#d5e8c0",
+    "#8475ad",
+    "#b5aacb",
+    "#acc8e4"
+  ],
+  "phyla": [
+    "Proteobacteria (N=2474)",
+    "Bacteroidota (N=822)",
+    "Actinobacteriota (N=383)",
+    "Cyanobacteria (N=281)",
+    "Firmicutes (N=187)",
+    "Planctomycetota (N=123)",
+    "Chloroflexota (N=117)",
+    "Verrucomicrobiota (N=107)",
+    "Desulfobacterota (N=78)",
+    "Marinisomatota (N=76)",
+    "Other"
+  ],
+  "start_angle": 0,
+  "gap_angle": 8,
+  "tree_mode": "radial",
+  "leaf_file": "figure10_leaves.csv",
+  "ring_colors": [
+    "#161814",
+    "#eba729",
+    "#83a7d2"
+  ],
+  "genus_labels": [],
+  "title_en": "Radial phylogeny with annotation rings"
+}

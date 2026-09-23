@@ -1,0 +1,21 @@
+panel,group,low,q1,median,q3,high
+"Genome-Wide
+(all ages)",Reference,0,0.097,0.169,0.274,0.5
+"Genome-Wide
+(all ages)","Specialized
+for diapause",0,0.09,0.157,0.243,0.5
+"Very ancient
+(> 473 mya)",Reference,0,0.09,0.159,0.251,0.395
+"Very ancient
+(> 473 mya)","Specialized
+for diapause",0,0.085,0.152,0.238,0.395
+"Ancient
+(111-473 mya)",Reference,0,0.106,0.183,0.306,0.4
+"Ancient
+(111-473 mya)","Specialized
+for diapause",0,0.087,0.16,0.242,0.4
+"Recent/Very recent
+(0-111 mya)",Reference,0.03,0.32,0.51,0.85,1.4
+"Recent/Very recent
+(0-111 mya)","Specialized
+for diapause",0.06,0.3,0.46,0.7,1.4

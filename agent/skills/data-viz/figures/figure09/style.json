@@ -1,0 +1,42 @@
+{
+  "id": 9,
+  "title": "双轴嵌套柱状图",
+  "width": 1126,
+  "height": 622,
+  "dpi": 100,
+  "font": "Arial",
+  "font_size": 20,
+  "line_width": 1.4,
+  "seed": 190913,
+  "provenance": "双轴柱高 误差人工估读；三重复为示例",
+  "data_file": "figure09.csv",
+  "annotation_policy": "reference_only",
+  "annotations": [],
+  "axes": [
+    84,
+    53,
+    926,
+    413
+  ],
+  "colors": [
+    "#cbd8ed",
+    "#e8edcd"
+  ],
+  "left_ylim": [
+    0,
+    3
+  ],
+  "right_ylim": [
+    0,
+    180
+  ],
+  "xlabel": "",
+  "ylabel": "Indigoidine (OD₆₀₀)",
+  "right_ylabel": "Daptomycin (μg/ml)",
+  "reference_lines": [
+    0.72,
+    115
+  ],
+  "annotation": "p<0.05",
+  "title_en": "Dual-axis nested bars"
+}

@@ -1,0 +1,92 @@
+/* Visual baseline: deepsuite `@deepseek/md` code-block.css. Highlight colors
+   stay on the existing shiki `--shiki-*` sheet (not Prism highlight.css). */
+
+.block {
+  --dsl-code-block-banner-background-color: var(--dsw-alias-markdown-code-block-banner);
+  --dsl-code-block-border-radius: 12px;
+  --dsl-code-block-banner-font: var(--dsw-font-xs-13);
+  --dsl-code-block-content-font: var(--dsw-font-markdown-code-block);
+
+  position: relative;
+  margin: 16px 0;
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-markdown-code-block);
+  border-radius: var(--dsl-code-block-border-radius);
+}
+
+.block:not(:last-child) {
+  margin-bottom: 11px;
+}
+
+.bannerWrap {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 6;
+  background: transparent;
+}
+
+.banner {
+  padding: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  background: transparent;
+  font: var(--dsl-code-block-banner-font);
+}
+
+.infostring {
+  display: none;
+}
+
+.action {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.copyButton {
+  min-width: 42px;
+  height: 28px;
+  padding: 0 10px;
+  margin: 0;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: 6px;
+  color: inherit;
+  background: var(--dsl-code-block-banner-background-color);
+  cursor: pointer;
+  font: inherit;
+}
+
+.copyButton:hover {
+  background: color-mix(in srgb, var(--dsl-code-block-banner-background-color) 84%, currentColor 8%);
+}
+
+.block :where(pre) {
+  font: var(--dsl-code-block-content-font);
+  padding: 44px 16px 16px;
+  margin: 0 !important;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  background: var(--dsw-alias-markdown-code-block);
+  /* Bottom radii live on <pre>: overflow:hidden on .block would kill the
+     sticky banner, and this opaque fill otherwise squares off the wrapper. */
+  border-bottom-left-radius: var(--dsl-code-block-border-radius);
+  border-bottom-right-radius: var(--dsl-code-block-border-radius);
+}
+
+/* Shiki inlines its theme background var; route it to the repo token. */
+.block :where(pre.shiki) {
+  background: var(--dsw-alias-markdown-code-block) !important;
+}
+
+.block :where(pre) code {
+  font: inherit;
+  background: none;
+  padding: 0;
+}
+
+.plain {
+  color: var(--dsw-alias-label-primary);
+}

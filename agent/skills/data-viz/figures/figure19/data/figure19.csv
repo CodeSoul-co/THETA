@@ -1,0 +1,37 @@
+cell_type,wt,ko,ks,relation
+Enterocyte 2,0.347,0.151,0.17,Further
+Enterocyte 3,0.317,0.098,0.08,Further
+CD8 T Cell αα⁺,0.287,0.204,0.15,Further
+Goblet,0.213,0.068,0.13,Further
+MAIT,0.206,0.16,0.1,Further
+Enterocyte 1,0.2,0.104,0.08,Further
+T Cell γδ,0.198,0.132,0.04,Further
+NK Cell,0.106,0.156,0.06,Further
+T Cell,0.093,0.118,0.08,Closer
+ILC,0.06,0.04,0.05,Similar
+CD8 T Cell αβ⁺,0.044,0.02,0.07,Closer
+B Cell,0.038,0.135,0.09,Closer
+Eosinophil,0.027,0.03,0.09,Closer
+Vascular Endothelial,0.02,0,0.06,Further
+Fibroblast Apoe⁺,0.015,0.013,0.43,Closer
+cDC1,-0.007,0.036,0.09,Closer
+DC2,-0.02,0.01,0.06,Similar
+Monocyte,-0.029,-0.015,0.12,Further
+Macrophage,-0.041,0.08,0.05,Similar
+Tuft,-0.042,-0.05,0.05,Similar
+CD4 T Cell,-0.047,0.01,0.09,Closer
+Early Enterocyte,-0.06,-0.06,0.1,Closer
+Complement Fibroblast,-0.07,-0.08,0.35,Closer
+Enteroendocrine,-0.073,-0.065,0.04,Similar
+Megakaryocyte/Platelet,-0.081,0.012,0.12,Closer
+Fibroblast,-0.09,-0.02,0.05,Similar
+Fibroblast Pdgfrb⁺,-0.097,-0.064,0.09,Closer
+Lymphatic,-0.136,-0.077,0.06,Similar
+Fibroblast Pdgfra⁺,-0.18,-0.17,0.33,Closer
+Fibroblast NCam1⁺,-0.183,-0.167,0.36,Closer
+Myofibroblast,-0.193,-0.032,0.06,Similar
+Neuron,-0.196,-0.148,0.08,Closer
+TA,-0.235,-0.178,0.12,Closer
+ISC,-0.243,-0.097,0.17,Similar
+Resting Fibroblast,-0.255,-0.185,0.07,Closer
+Paneth,-0.271,-0.198,0.12,Closer

@@ -1,0 +1,12 @@
+.panel { position: relative; display: flex; flex: 0 0 auto; min-width: 0; min-height: 0; flex-direction: column; background: var(--dsw-alias-bg-layer-1, #fff); }
+.handle { position: absolute; z-index: 50; top: 0; bottom: 0; left: -5px; display: flex; width: 10px; align-items: center; justify-content: center; cursor: col-resize; touch-action: none; }
+.handle::before { position: absolute; inset: 0 4px; background: transparent; content: ''; transition: background 150ms; }
+.handle span { z-index: 1; width: 3px; height: 32px; border-radius: 4px; background: #c2cede; transition: background 150ms, height 150ms; }
+.handle:hover::before, .handle:focus-visible::before, .panel[data-resizing] .handle::before { background: #568ded; }
+.handle:hover span, .handle:focus-visible span, .panel[data-resizing] .handle span { height: 48px; background: #3973d9; }
+.handle:focus-visible { outline: 2px solid #3973d9; outline-offset: 2px; }
+.panel[data-resizing]::after { position: absolute; z-index: 49; inset: 0; content: ''; }
+@media (max-width: 900px) {
+  .panel { position: fixed; z-index: 40; top: 0; right: 0; bottom: 0; width: min(92vw, 440px) !important; box-shadow: -16px 0 48px #1b335b22; }
+  .handle { display: none; }
+}

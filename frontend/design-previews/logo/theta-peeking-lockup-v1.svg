@@ -1,0 +1,32 @@
+<svg width="1000" height="390" viewBox="0 0 1000 390" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="lockup-ink" x1="55" y1="52" x2="585" y2="180" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4075CF"/>
+      <stop offset="0.6" stop-color="#5A86DD"/>
+      <stop offset="1" stop-color="#7298E7"/>
+    </linearGradient>
+    <linearGradient id="lockup-tail" x1="566" y1="181" x2="675" y2="94" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6A91E6"/>
+      <stop offset="0.52" stop-color="#7EA0EC"/>
+      <stop offset="1" stop-color="#9AB5F1"/>
+    </linearGradient>
+    <filter id="lockup-soft" x="20" y="27" width="668" height="180" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#4168AA" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Deterministic vector wordmark behind the mascot paws. -->
+  <g transform="translate(245 174) skewX(-8)">
+    <g filter="url(#lockup-soft)" stroke="url(#lockup-ink)" stroke-width="23" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M48 58H132"/><path d="M90 59V181"/>
+      <path d="M168 58V181"/><path d="M238 58V181"/><path d="M170 118H236"/>
+      <path d="M280 58V181"/><path d="M282 58H354"/><path d="M282 118H340"/><path d="M282 181H354"/>
+      <path d="M388 58H472"/><path d="M430 59V181"/>
+      <path d="M494 181L542 58L590 181"/><path d="M514 132H570"/>
+    </g>
+    <path d="M590 181C625 188 659 173 663 145C667 120 651 103 631 106C615 108 609 122 616 133" stroke="url(#lockup-tail)" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Approved peeking-cat mascot, placed above the first T. -->
+  <image href="assets/theta-peeking-cat-v1.png" x="0" y="4" width="360" height="322" preserveAspectRatio="xMidYMid meet"/>
+</svg>

@@ -1,0 +1,69 @@
+{
+  "figure": 5,
+  "title": {
+    "zh": "半小提琴 雨云图",
+    "en": "Half-violin raincloud plot"
+  },
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "source_publication_note": "The supplied screenshot collection did not identify a verified paper/DOI for each image.",
+  "classification": "synthetic_from_estimated_distribution",
+  "provenance": {
+    "zh": "截图散点区域颜色占比估计分布，并生成示例点；不能恢复重叠样本",
+    "en": "Synthetic observations sampled from a distribution estimated from screenshot color occupancy. Counts and boxplot statistics are not original."
+  },
+  "seed_note": "Original example-generation session used NumPy seed 190913 across all figures; the seed alone does not reconstruct digitized/manual values. The committed CSVs and SHA-256 hashes define this snapshot.",
+  "raw_data_required": {
+    "zh": [
+      "每个 genome 的唯一编号、物种/类别和 BGC 数量。",
+      "基因组筛选规则、BGC 检测方法/版本，以及一条记录代表的独立观测单位。",
+      "KDE 带宽、箱线图 whisker 规则，以及是否包含异常值。"
+    ],
+    "en": [
+      "Unique genome ID, species/group and BGC count per genome.",
+      "Genome inclusion criteria, BGC-calling method/version and the independent observation unit.",
+      "KDE bandwidth, boxplot whisker convention and outlier policy."
+    ]
+  },
+  "preprocessing": {
+    "zh": "每行对应一个 genome 的 BGC 计数，代码从 value 计算 KDE 与箱线统计；jitter 只是水平排点偏移。",
+    "en": "Each row is a genome BGC count. KDE and box statistics are computed from value; jitter is only a horizontal display offset."
+  },
+  "files": [
+    {
+      "path": "data/figure05.csv",
+      "classification": "synthetic_from_estimated_distribution",
+      "row_count": 2920,
+      "sha256": "4d56f51d9f44cbe56222a277e7ed6b716acb53dd7ba0dab52b998f0bc3f14ca7",
+      "fields": [
+        {
+          "name": "group",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "实验组或细胞群；与样式一致",
+            "en": "Experimental group or cell population; match style"
+          }
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "unit": "BGC count / genome",
+          "description": {
+            "zh": "单个观测值；单位及归一化见本图原始数据要求",
+            "en": "One observation; units/normalization are specified in this figure’s raw-data requirements"
+          }
+        },
+        {
+          "name": "jitter",
+          "type": "number, optional",
+          "unit": "display offset",
+          "description": {
+            "zh": "只控制散点水平偏移；可省略",
+            "en": "Horizontal display jitter only; optional"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,379 @@
+section,gene,cell_type,expression,percent
+Early,CRISPLD2,Activated fibroblast,0.0,30.25
+Early,CRISPLD2,Fibroblast,0.67,56.25
+Early,CRISPLD2,Cardiomyocyte,0.0,6.25
+Early,CRISPLD2,Endothelial,0.0,2.25
+Early,CRISPLD2,Pericyte,0.486,49.0
+Early,CRISPLD2,Macrophage,0.0,12.25
+Early,CRISPLD2,VSMC,0.486,49.0
+Early,CRISPLD2,Lymphocyte,0.0,4.0
+Early,CRISPLD2,Endocardial,0.0,12.25
+Early,CRISPLD2,Adipocyte,0.0,20.25
+Early,CRISPLD2,Neuronal,0.0,20.25
+Early,CRISPLD2,Lymphatic endothelial,0.0,12.25
+Early,CRISPLD2,Mast cell,0.0,12.25
+Early,CRISPLD2,Epicardial,0.0,36.0
+Early,COL4A4,Activated fibroblast,0.0,25.0
+Early,COL4A4,Fibroblast,1.256,81.0
+Early,COL4A4,Cardiomyocyte,0.0,9.0
+Early,COL4A4,Endothelial,0.0,12.25
+Early,COL4A4,Pericyte,0.0,16.0
+Early,COL4A4,Macrophage,0.0,4.0
+Early,COL4A4,VSMC,0.0,9.0
+Early,COL4A4,Lymphocyte,0.0,4.0
+Early,COL4A4,Endocardial,0.0,30.25
+Early,COL4A4,Adipocyte,0.0,30.25
+Early,COL4A4,Neuronal,0.0,12.25
+Early,COL4A4,Lymphatic endothelial,0.0,12.25
+Early,COL4A4,Mast cell,0.0,6.25
+Early,COL4A4,Epicardial,0.0,20.25
+Early,FBLN5,Activated fibroblast,0.0,25.0
+Early,FBLN5,Fibroblast,0.62,56.25
+Early,FBLN5,Cardiomyocyte,0.0,6.25
+Early,FBLN5,Endothelial,0.0,12.25
+Early,FBLN5,Pericyte,0.0,4.0
+Early,FBLN5,Macrophage,0.0,4.0
+Early,FBLN5,VSMC,0.0,9.0
+Early,FBLN5,Lymphocyte,0.0,4.0
+Early,FBLN5,Endocardial,0.0,12.25
+Early,FBLN5,Adipocyte,0.0,30.25
+Early,FBLN5,Neuronal,0.0,30.25
+Early,FBLN5,Lymphatic endothelial,0.0,12.25
+Early,FBLN5,Mast cell,0.0,6.25
+Early,FBLN5,Epicardial,0.0,20.25
+Early,C7,Activated fibroblast,0.0,25.0
+Early,C7,Fibroblast,1.675,90.25
+Early,C7,Cardiomyocyte,0.0,9.0
+Early,C7,Endothelial,0.0,6.25
+Early,C7,Pericyte,0.0,20.25
+Early,C7,Macrophage,0.0,4.0
+Early,C7,VSMC,0.0,12.25
+Early,C7,Lymphocyte,0.0,4.0
+Early,C7,Endocardial,0.0,42.25
+Early,C7,Adipocyte,0.787,72.25
+Early,C7,Neuronal,0.77,30.25
+Early,C7,Lymphatic endothelial,0.0,20.25
+Early,C7,Mast cell,0.0,9.0
+Early,C7,Epicardial,0.0,30.25
+Early,NEGR1,Activated fibroblast,1.189,90.25
+Early,NEGR1,Fibroblast,2.864,100.0
+Early,NEGR1,Cardiomyocyte,0.0,12.25
+Early,NEGR1,Endothelial,0.0,6.25
+Early,NEGR1,Pericyte,0.0,4.0
+Early,NEGR1,Macrophage,0.0,6.25
+Early,NEGR1,VSMC,0.0,12.25
+Early,NEGR1,Lymphocyte,0.0,4.0
+Early,NEGR1,Endocardial,0.0,20.25
+Early,NEGR1,Adipocyte,0.687,56.25
+Early,NEGR1,Neuronal,3.048,100.0
+Early,NEGR1,Lymphatic endothelial,0.0,20.25
+Early,NEGR1,Mast cell,0.0,12.25
+Early,NEGR1,Epicardial,0.0,42.25
+Intermediate,PBX1,Activated fibroblast,1.758,100.0
+Intermediate,PBX1,Fibroblast,1.909,100.0
+Intermediate,PBX1,Cardiomyocyte,1.608,100.0
+Intermediate,PBX1,Endothelial,0.0,30.25
+Intermediate,PBX1,Pericyte,1.641,90.25
+Intermediate,PBX1,Macrophage,0.0,4.0
+Intermediate,PBX1,VSMC,1.239,72.25
+Intermediate,PBX1,Lymphocyte,0.0,4.0
+Intermediate,PBX1,Endocardial,1.876,100.0
+Intermediate,PBX1,Adipocyte,2.043,100.0
+Intermediate,PBX1,Neuronal,0.871,56.25
+Intermediate,PBX1,Lymphatic endothelial,0.201,42.25
+Intermediate,PBX1,Mast cell,0.0,30.25
+Intermediate,PBX1,Epicardial,1.876,100.0
+Intermediate,CLSTN2,Activated fibroblast,0.0,25.0
+Intermediate,CLSTN2,Fibroblast,0.0,42.25
+Intermediate,CLSTN2,Cardiomyocyte,0.0,30.25
+Intermediate,CLSTN2,Endothelial,0.0,4.0
+Intermediate,CLSTN2,Pericyte,0.0,16.0
+Intermediate,CLSTN2,Macrophage,0.0,4.0
+Intermediate,CLSTN2,VSMC,0.0,16.0
+Intermediate,CLSTN2,Lymphocyte,0.0,4.0
+Intermediate,CLSTN2,Endocardial,0.0,16.0
+Intermediate,CLSTN2,Adipocyte,1.289,81.0
+Intermediate,CLSTN2,Neuronal,0.0,20.25
+Intermediate,CLSTN2,Lymphatic endothelial,0.0,12.25
+Intermediate,CLSTN2,Mast cell,0.0,4.0
+Intermediate,CLSTN2,Epicardial,0.0,16.0
+Intermediate,RIMS1,Activated fibroblast,0.0,56.25
+Intermediate,RIMS1,Fibroblast,0.0,12.25
+Intermediate,RIMS1,Cardiomyocyte,0.0,6.25
+Intermediate,RIMS1,Endothelial,0.0,6.25
+Intermediate,RIMS1,Pericyte,0.469,42.25
+Intermediate,RIMS1,Macrophage,0.0,2.25
+Intermediate,RIMS1,VSMC,0.0,25.0
+Intermediate,RIMS1,Lymphocyte,0.0,2.25
+Intermediate,RIMS1,Endocardial,0.0,20.25
+Intermediate,RIMS1,Adipocyte,0.0,16.0
+Intermediate,RIMS1,Neuronal,0.0,9.0
+Intermediate,RIMS1,Lymphatic endothelial,0.0,9.0
+Intermediate,RIMS1,Mast cell,0.0,6.25
+Intermediate,RIMS1,Epicardial,0.0,30.25
+Intermediate,KCNMA1,Activated fibroblast,0.653,56.25
+Intermediate,KCNMA1,Fibroblast,0.0,16.0
+Intermediate,KCNMA1,Cardiomyocyte,0.0,16.0
+Intermediate,KCNMA1,Endothelial,0.0,6.25
+Intermediate,KCNMA1,Pericyte,0.0,6.25
+Intermediate,KCNMA1,Macrophage,0.821,56.25
+Intermediate,KCNMA1,VSMC,0.77,49.0
+Intermediate,KCNMA1,Lymphocyte,0.0,6.25
+Intermediate,KCNMA1,Endocardial,0.0,12.25
+Intermediate,KCNMA1,Adipocyte,0.0,16.0
+Intermediate,KCNMA1,Neuronal,0.352,49.0
+Intermediate,KCNMA1,Lymphatic endothelial,0.0,16.0
+Intermediate,KCNMA1,Mast cell,1.49,81.0
+Intermediate,KCNMA1,Epicardial,0.0,16.0
+Intermediate,PRRX1,Activated fibroblast,1.457,100.0
+Intermediate,PRRX1,Fibroblast,0.318,49.0
+Intermediate,PRRX1,Cardiomyocyte,0.318,56.25
+Intermediate,PRRX1,Endothelial,0.0,4.0
+Intermediate,PRRX1,Pericyte,0.0,36.0
+Intermediate,PRRX1,Macrophage,0.0,4.0
+Intermediate,PRRX1,VSMC,0.0,20.25
+Intermediate,PRRX1,Lymphocyte,0.0,4.0
+Intermediate,PRRX1,Endocardial,0.0,9.0
+Intermediate,PRRX1,Adipocyte,0.0,20.25
+Intermediate,PRRX1,Neuronal,0.0,25.0
+Intermediate,PRRX1,Lymphatic endothelial,0.0,9.0
+Intermediate,PRRX1,Mast cell,0.0,6.25
+Intermediate,PRRX1,Epicardial,0.0,30.25
+Intermediate,PRELP,Activated fibroblast,0.0,56.25
+Intermediate,PRELP,Fibroblast,0.251,49.0
+Intermediate,PRELP,Cardiomyocyte,0.0,4.0
+Intermediate,PRELP,Endothelial,0.0,2.25
+Intermediate,PRELP,Pericyte,0.0,2.25
+Intermediate,PRELP,Macrophage,0.0,2.25
+Intermediate,PRELP,VSMC,0.0,6.25
+Intermediate,PRELP,Lymphocyte,0.0,2.25
+Intermediate,PRELP,Endocardial,0.0,6.25
+Intermediate,PRELP,Adipocyte,0.0,20.25
+Intermediate,PRELP,Neuronal,0.0,16.0
+Intermediate,PRELP,Lymphatic endothelial,0.0,6.25
+Intermediate,PRELP,Mast cell,0.0,6.25
+Intermediate,PRELP,Epicardial,0.0,9.0
+Late,JAZF1,Activated fibroblast,2.127,100.0
+Late,JAZF1,Fibroblast,0.368,49.0
+Late,JAZF1,Cardiomyocyte,1.457,100.0
+Late,JAZF1,Endothelial,0.0,30.25
+Late,JAZF1,Pericyte,0.0,30.25
+Late,JAZF1,Macrophage,0.05,42.25
+Late,JAZF1,VSMC,0.0,36.0
+Late,JAZF1,Lymphocyte,0.787,56.25
+Late,JAZF1,Endocardial,0.151,49.0
+Late,JAZF1,Adipocyte,0.318,56.25
+Late,JAZF1,Neuronal,0.201,36.0
+Late,JAZF1,Lymphatic endothelial,0.033,42.25
+Late,JAZF1,Mast cell,0.435,42.25
+Late,JAZF1,Epicardial,0.77,72.25
+Late,FAT1,Activated fibroblast,0.017,56.25
+Late,FAT1,Fibroblast,0.0,25.0
+Late,FAT1,Cardiomyocyte,0.0,49.0
+Late,FAT1,Endothelial,0.0,2.25
+Late,FAT1,Pericyte,0.0,30.25
+Late,FAT1,Macrophage,0.0,1.0
+Late,FAT1,VSMC,0.0,36.0
+Late,FAT1,Lymphocyte,0.0,1.0
+Late,FAT1,Endocardial,0.0,9.0
+Late,FAT1,Adipocyte,0.0,49.0
+Late,FAT1,Neuronal,0.0,16.0
+Late,FAT1,Lymphatic endothelial,0.0,9.0
+Late,FAT1,Mast cell,0.0,12.25
+Late,FAT1,Epicardial,0.017,49.0
+Late,ITGA10,Activated fibroblast,0.737,64.0
+Late,ITGA10,Fibroblast,0.0,12.25
+Late,ITGA10,Cardiomyocyte,0.0,6.25
+Late,ITGA10,Endothelial,0.0,12.25
+Late,ITGA10,Pericyte,0.0,6.25
+Late,ITGA10,Macrophage,0.0,2.25
+Late,ITGA10,VSMC,0.0,12.25
+Late,ITGA10,Lymphocyte,0.0,4.0
+Late,ITGA10,Endocardial,0.318,49.0
+Late,ITGA10,Adipocyte,0.0,12.25
+Late,ITGA10,Neuronal,0.0,16.0
+Late,ITGA10,Lymphatic endothelial,0.0,9.0
+Late,ITGA10,Mast cell,0.0,4.0
+Late,ITGA10,Epicardial,0.0,4.0
+Late,ENPP1,Activated fibroblast,0.0,56.25
+Late,ENPP1,Fibroblast,0.0,16.0
+Late,ENPP1,Cardiomyocyte,0.0,9.0
+Late,ENPP1,Endothelial,0.0,2.25
+Late,ENPP1,Pericyte,0.0,30.25
+Late,ENPP1,Macrophage,0.0,2.25
+Late,ENPP1,VSMC,0.0,9.0
+Late,ENPP1,Lymphocyte,0.0,2.25
+Late,ENPP1,Endocardial,0.0,20.25
+Late,ENPP1,Adipocyte,0.0,42.25
+Late,ENPP1,Neuronal,0.0,12.25
+Late,ENPP1,Lymphatic endothelial,0.0,6.25
+Late,ENPP1,Mast cell,0.0,6.25
+Late,ENPP1,Epicardial,0.0,9.0
+Late,FN1,Activated fibroblast,1.574,90.25
+Late,FN1,Fibroblast,1.306,81.0
+Late,FN1,Cardiomyocyte,0.0,6.25
+Late,FN1,Endothelial,0.0,12.25
+Late,FN1,Pericyte,0.0,36.0
+Late,FN1,Macrophage,0.0,6.25
+Late,FN1,VSMC,0.0,36.0
+Late,FN1,Lymphocyte,0.0,4.0
+Late,FN1,Endocardial,0.888,81.0
+Late,FN1,Adipocyte,0.0,30.25
+Late,FN1,Neuronal,0.0,30.25
+Late,FN1,Lymphatic endothelial,0.0,49.0
+Late,FN1,Mast cell,0.0,12.25
+Late,FN1,Epicardial,0.0,30.25
+Late,CADM1,Activated fibroblast,0.77,72.25
+Late,CADM1,Fibroblast,0.0,30.25
+Late,CADM1,Cardiomyocyte,0.971,90.25
+Late,CADM1,Endothelial,0.0,4.0
+Late,CADM1,Pericyte,0.0,4.0
+Late,CADM1,Macrophage,0.0,6.25
+Late,CADM1,VSMC,0.0,6.25
+Late,CADM1,Lymphocyte,0.0,6.25
+Late,CADM1,Endocardial,0.0,12.25
+Late,CADM1,Adipocyte,0.0,42.25
+Late,CADM1,Neuronal,1.574,90.25
+Late,CADM1,Lymphatic endothelial,0.0,9.0
+Late,CADM1,Mast cell,0.0,12.25
+Late,CADM1,Epicardial,0.0,20.25
+Late,PALLD,Activated fibroblast,2.244,100.0
+Late,PALLD,Fibroblast,0.0,42.25
+Late,PALLD,Cardiomyocyte,3.45,100.0
+Late,PALLD,Endothelial,0.0,6.25
+Late,PALLD,Pericyte,0.0,4.0
+Late,PALLD,Macrophage,0.0,4.0
+Late,PALLD,VSMC,0.0,30.25
+Late,PALLD,Lymphocyte,0.0,2.25
+Late,PALLD,Endocardial,0.0,12.25
+Late,PALLD,Adipocyte,0.0,30.25
+Late,PALLD,Neuronal,0.0,42.25
+Late,PALLD,Lymphatic endothelial,0.0,16.0
+Late,PALLD,Mast cell,0.0,16.0
+Late,PALLD,Epicardial,0.0,36.0
+Late,TENM3,Activated fibroblast,1.457,90.25
+Late,TENM3,Fibroblast,0.0,25.0
+Late,TENM3,Cardiomyocyte,0.151,56.25
+Late,TENM3,Endothelial,0.0,4.0
+Late,TENM3,Pericyte,0.0,2.25
+Late,TENM3,Macrophage,0.0,2.25
+Late,TENM3,VSMC,0.0,6.25
+Late,TENM3,Lymphocyte,0.0,2.25
+Late,TENM3,Endocardial,0.0,9.0
+Late,TENM3,Adipocyte,1.641,100.0
+Late,TENM3,Neuronal,1.792,90.25
+Late,TENM3,Lymphatic endothelial,0.0,16.0
+Late,TENM3,Mast cell,0.0,6.25
+Late,TENM3,Epicardial,0.0,42.25
+Late,SLC44A5,Activated fibroblast,1.306,90.25
+Late,SLC44A5,Fibroblast,0.0,16.0
+Late,SLC44A5,Cardiomyocyte,0.0,36.0
+Late,SLC44A5,Endothelial,0.0,6.25
+Late,SLC44A5,Pericyte,0.0,2.25
+Late,SLC44A5,Macrophage,0.0,2.25
+Late,SLC44A5,VSMC,0.0,4.0
+Late,SLC44A5,Lymphocyte,0.0,2.25
+Late,SLC44A5,Endocardial,0.0,36.0
+Late,SLC44A5,Adipocyte,0.0,12.25
+Late,SLC44A5,Neuronal,0.0,9.0
+Late,SLC44A5,Lymphatic endothelial,0.0,12.25
+Late,SLC44A5,Mast cell,0.0,4.0
+Late,SLC44A5,Epicardial,0.0,20.25
+Late,FAP,Activated fibroblast,1.34,90.25
+Late,FAP,Fibroblast,0.0,30.25
+Late,FAP,Cardiomyocyte,0.0,6.25
+Late,FAP,Endothelial,0.0,9.0
+Late,FAP,Pericyte,0.0,2.25
+Late,FAP,Macrophage,0.0,2.25
+Late,FAP,VSMC,0.0,4.0
+Late,FAP,Lymphocyte,0.0,4.0
+Late,FAP,Endocardial,0.0,6.25
+Late,FAP,Adipocyte,0.0,12.25
+Late,FAP,Neuronal,0.0,6.25
+Late,FAP,Lymphatic endothelial,0.0,6.25
+Late,FAP,Mast cell,0.0,6.25
+Late,FAP,Epicardial,0.0,12.25
+Late,FAM155A,Activated fibroblast,2.763,100.0
+Late,FAM155A,Fibroblast,0.0,25.0
+Late,FAM155A,Cardiomyocyte,0.0,12.25
+Late,FAM155A,Endothelial,0.0,30.25
+Late,FAM155A,Pericyte,0.0,4.0
+Late,FAM155A,Macrophage,0.0,2.25
+Late,FAM155A,VSMC,0.0,9.0
+Late,FAM155A,Lymphocyte,0.0,6.25
+Late,FAM155A,Endocardial,0.0,49.0
+Late,FAM155A,Adipocyte,0.0,20.25
+Late,FAM155A,Neuronal,0.0,12.25
+Late,FAM155A,Lymphatic endothelial,0.787,56.25
+Late,FAM155A,Mast cell,0.0,6.25
+Late,FAM155A,Epicardial,1.675,100.0
+Late,AEBP1,Activated fibroblast,1.022,81.0
+Late,AEBP1,Fibroblast,0.0,25.0
+Late,AEBP1,Cardiomyocyte,0.0,2.25
+Late,AEBP1,Endothelial,0.0,2.25
+Late,AEBP1,Pericyte,0.0,2.25
+Late,AEBP1,Macrophage,0.0,2.25
+Late,AEBP1,VSMC,0.0,9.0
+Late,AEBP1,Lymphocyte,0.0,2.25
+Late,AEBP1,Endocardial,0.0,6.25
+Late,AEBP1,Adipocyte,0.0,12.25
+Late,AEBP1,Neuronal,0.0,12.25
+Late,AEBP1,Lymphatic endothelial,0.0,6.25
+Late,AEBP1,Mast cell,0.0,4.0
+Late,AEBP1,Epicardial,0.0,20.25
+Late,THBS4,Activated fibroblast,2.998,100.0
+Late,THBS4,Fibroblast,0.419,49.0
+Late,THBS4,Cardiomyocyte,0.0,36.0
+Late,THBS4,Endothelial,0.0,4.0
+Late,THBS4,Pericyte,0.737,49.0
+Late,THBS4,Macrophage,0.0,4.0
+Late,THBS4,VSMC,0.0,20.25
+Late,THBS4,Lymphocyte,0.0,4.0
+Late,THBS4,Endocardial,0.0,16.0
+Late,THBS4,Adipocyte,0.0,20.25
+Late,THBS4,Neuronal,0.0,16.0
+Late,THBS4,Lymphatic endothelial,0.0,12.25
+Late,THBS4,Mast cell,0.0,9.0
+Late,THBS4,Epicardial,0.0,16.0
+Late,FGF14,Activated fibroblast,3.5,100.0
+Late,FGF14,Fibroblast,1.256,81.0
+Late,FGF14,Cardiomyocyte,0.486,72.25
+Late,FGF14,Endothelial,0.0,6.25
+Late,FGF14,Pericyte,0.0,6.25
+Late,FGF14,Macrophage,0.0,2.25
+Late,FGF14,VSMC,0.0,12.25
+Late,FGF14,Lymphocyte,0.0,2.25
+Late,FGF14,Endocardial,0.0,36.0
+Late,FGF14,Adipocyte,0.0,30.25
+Late,FGF14,Neuronal,0.0,20.25
+Late,FGF14,Lymphatic endothelial,0.0,16.0
+Late,FGF14,Mast cell,0.0,9.0
+Late,FGF14,Epicardial,0.0,30.25
+Late,POSTN,Activated fibroblast,3.232,100.0
+Late,POSTN,Fibroblast,0.0,30.25
+Late,POSTN,Cardiomyocyte,0.0,12.25
+Late,POSTN,Endothelial,0.0,9.0
+Late,POSTN,Pericyte,0.0,4.0
+Late,POSTN,Macrophage,0.0,4.0
+Late,POSTN,VSMC,0.0,6.25
+Late,POSTN,Lymphocyte,0.0,4.0
+Late,POSTN,Endocardial,2.311,100.0
+Late,POSTN,Adipocyte,0.0,16.0
+Late,POSTN,Neuronal,0.0,16.0
+Late,POSTN,Lymphatic endothelial,0.0,16.0
+Late,POSTN,Mast cell,0.0,6.25
+Late,POSTN,Epicardial,0.0,16.0
+Late,COL22A1,Activated fibroblast,1.959,90.25
+Late,COL22A1,Fibroblast,0.0,9.0
+Late,COL22A1,Cardiomyocyte,0.0,6.25
+Late,COL22A1,Endothelial,0.0,4.0
+Late,COL22A1,Pericyte,0.0,2.25
+Late,COL22A1,Macrophage,0.0,2.25
+Late,COL22A1,VSMC,0.0,4.0
+Late,COL22A1,Lymphocyte,0.0,2.25
+Late,COL22A1,Endocardial,0.0,4.0
+Late,COL22A1,Adipocyte,0.0,6.25
+Late,COL22A1,Neuronal,0.0,4.0
+Late,COL22A1,Lymphatic endothelial,0.0,4.0
+Late,COL22A1,Mast cell,0.0,2.25
+Late,COL22A1,Epicardial,0.0,6.25

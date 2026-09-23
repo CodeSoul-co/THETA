@@ -1,0 +1,87 @@
+{
+  "figure": 12,
+  "title": {
+    "zh": "分组基因气泡矩阵",
+    "en": "Grouped gene-expression dot plot"
+  },
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "source_publication_note": "The supplied screenshot collection did not identify a verified paper/DOI for each image.",
+  "classification": "digitized",
+  "provenance": {
+    "zh": "按截图网格估读气泡大小和颜色，非原始表达矩阵",
+    "en": "Bubble radii and colors were estimated on the screenshot grid, not recovered from an expression matrix."
+  },
+  "seed_note": "Original example-generation session used NumPy seed 190913 across all figures; the seed alone does not reconstruct digitized/manual values. The committed CSVs and SHA-256 hashes define this snapshot.",
+  "raw_data_required": {
+    "zh": [
+      "基因 × 细胞/细胞核表达矩阵，细胞类型标注，以及基因所属 Early/Intermediate/Late 分组。",
+      "归一化/对数/缩放方法，表达大于 0 的阈值、每组分母和缺失值处理。",
+      "对每个 gene × cell_type 计算平均表达及阳性百分比；当前脚本接收这两项汇总。"
+    ],
+    "en": [
+      "Gene-by-cell/nucleus expression matrix, cell-type annotations and Early/Intermediate/Late gene groups.",
+      "Normalization/log/scaling method, expression-positive threshold, per-group denominator and missing-value handling.",
+      "Compute mean expression and percent positive for each gene × cell_type; the renderer accepts these summaries."
+    ]
+  },
+  "preprocessing": {
+    "zh": "先从表达矩阵计算 gene × cell_type 汇总，expression 为指定归一化后的均值，percent 为 0–100 的阳性百分比。代码不负责单细胞归一化。",
+    "en": "Aggregate gene × cell_type upstream. expression is the mean under the chosen normalization; percent is 0–100 percent positive. The code does not perform single-cell normalization."
+  },
+  "files": [
+    {
+      "path": "data/figure12.csv",
+      "classification": "digitized",
+      "row_count": 378,
+      "sha256": "9a59ffc5f2fdbc968f4e512c802aa6441b2ab2996cc67a4f2b236f321f1823b1",
+      "fields": [
+        {
+          "name": "section",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "Early/Intermediate/Late 分区",
+            "en": "Early/Intermediate/Late section"
+          }
+        },
+        {
+          "name": "gene",
+          "type": "string",
+          "unit": "identifier",
+          "description": {
+            "zh": "基因名称；与样式中的基因顺序一致",
+            "en": "Gene name matching style ordering"
+          }
+        },
+        {
+          "name": "cell_type",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "细胞类型；与样式顺序一致",
+            "en": "Cell type matching style ordering"
+          }
+        },
+        {
+          "name": "expression",
+          "type": "number",
+          "unit": "normalized expression",
+          "description": {
+            "zh": "指定归一化方式下的平均表达；非原始计数",
+            "en": "Mean expression under stated normalization, not raw counts"
+          }
+        },
+        {
+          "name": "percent",
+          "type": "number [0, 100]",
+          "unit": "percent",
+          "description": {
+            "zh": "阳性细胞百分比；控制气泡面积",
+            "en": "Percent positive cells; controls bubble area"
+          }
+        }
+      ]
+    }
+  ]
+}

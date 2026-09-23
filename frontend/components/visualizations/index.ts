@@ -1,0 +1,6 @@
+export { WordCloud } from './word-cloud'
+export { TopicDistributionChart } from './topic-distribution-chart'
+export { TopicHeatmap } from './topic-heatmap'
+export { DocTopicChart } from './doc-topic-chart'
+export { TopicBubbleChart } from './topic-bubble-chart'
+export { TopicEvolution } from './topic-evolution'

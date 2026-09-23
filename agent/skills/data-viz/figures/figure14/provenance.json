@@ -1,0 +1,78 @@
+{
+  "figure": 14,
+  "title": {
+    "zh": "三组分子动力学山脊图",
+    "en": "Molecular-dynamics ridgelines"
+  },
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "source_publication_note": "The supplied screenshot collection did not identify a verified paper/DOI for each image.",
+  "classification": "synthetic_fitted_curve",
+  "provenance": {
+    "zh": "按截图峰位 宽度 高度近似拟合的混合高斯轮廓；高度为绘图单位，非概率密度原值",
+    "en": "Gaussian mixtures fitted approximately by eye to screenshot peak positions, widths and heights; not trajectory samples."
+  },
+  "seed_note": "Original example-generation session used NumPy seed 190913 across all figures; the seed alone does not reconstruct digitized/manual values. The committed CSVs and SHA-256 hashes define this snapshot.",
+  "raw_data_required": {
+    "zh": [
+      "分子动力学轨迹的 frame/time/replicate ID，以及每个帧的 Core RMSD、A-loop RMSD 和 Distance 1 Δ。",
+      "参考结构、原子选择、结构对齐方法、距离定义与 Å 单位。",
+      "0/8/12/16/20/24 ns 分组对应的时间窗与采样策略；不要把自相关帧当独立重复。"
+    ],
+    "en": [
+      "Frame/time/replicate IDs and per-frame Core RMSD, A-loop RMSD and Distance 1 Δ values.",
+      "Reference structure, atom selection, alignment procedure, distance definition and Å units.",
+      "Time windows and sampling scheme for the 0/8/12/16/20/24 ns groups; correlated frames are not independent replicates."
+    ]
+  },
+  "preprocessing": {
+    "zh": "可直接提供 panel/group/value 样本长表，由程序估计 KDE；也可提供 x/density 曲线。峰高按展示高度归一化，不表示样本量。",
+    "en": "Provide panel/group/value observations for automatic KDE, or x/density curves. Peak height is normalized for display and does not encode sample count."
+  },
+  "files": [
+    {
+      "path": "data/figure14.csv",
+      "classification": "synthetic_fitted_curve",
+      "row_count": 16290,
+      "sha256": "ebd6677bf0c3e7e128329784a8f8c99dddfde536000f5dcd5b92a6cdd3b3c72d",
+      "fields": [
+        {
+          "name": "panel",
+          "type": "string or integer",
+          "unit": "label",
+          "description": {
+            "zh": "分面编号或名称；与样式定义一致",
+            "en": "Panel index/name matching style"
+          }
+        },
+        {
+          "name": "group",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "实验组或细胞群；与样式一致",
+            "en": "Experimental group or cell population; match style"
+          }
+        },
+        {
+          "name": "x",
+          "type": "number",
+          "unit": "Å",
+          "description": {
+            "zh": "已转换的横轴坐标；不是原始特征矩阵",
+            "en": "Transformed x coordinate, not a raw feature matrix"
+          }
+        },
+        {
+          "name": "density",
+          "type": "number ≥ 0",
+          "unit": "row spacing",
+          "description": {
+            "zh": "分布的展示高度，不是样本量",
+            "en": "Display height of a distribution, not sample count"
+          }
+        }
+      ]
+    }
+  ]
+}

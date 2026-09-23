@@ -1,0 +1,33 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    THETA_PROJECT_ROOT=/opt/theta \
+    WORKER_RESOURCE_CLASS=cpu \
+    WORKER_JOB_ROOT=/var/lib/theta-worker/jobs
+
+RUN apt-get update \
+    && attempt=1; until apt-get install -y --no-install-recommends build-essential autoconf automake libtool libgomp1 fonts-noto-cjk; do \
+         if [ "$attempt" -ge 5 ]; then exit 1; fi; attempt=$((attempt + 1)); sleep 2; \
+       done \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY src/models/requirements.txt /tmp/model-requirements.txt
+COPY trainning/worker/requirements.txt /tmp/worker-requirements.txt
+# Install the CPU wheel explicitly.  The default PyPI resolver can otherwise
+# select a CUDA-enabled wheel (and several gigabytes of unused CUDA runtime)
+# even though this image can only execute CPU jobs.
+RUN attempt=1; until pip install --no-cache-dir --retries 10 --timeout 120 \
+      --index-url https://download.pytorch.org/whl/cpu torch==2.4.1; do \
+      if [ "$attempt" -ge 5 ]; then exit 1; fi; attempt=$((attempt + 1)); sleep 2; \
+    done
+RUN attempt=1; until pip install --no-cache-dir --retries 10 --timeout 120 -r /tmp/model-requirements.txt -r /tmp/worker-requirements.txt; do \
+      if [ "$attempt" -ge 5 ]; then exit 1; fi; attempt=$((attempt + 1)); sleep 2; \
+    done
+
+COPY src /opt/theta/src
+COPY agent/workers/__init__.py agent/workers/model_contract.py agent/workers/pipeline_adapter.py agent/workers/api_overrides.py agent/workers/engine_entry.py /opt/theta/agent/workers/
+COPY trainning/worker/*.py /opt/theta/trainning/worker/
+WORKDIR /opt/theta/trainning
+
+CMD ["python", "-m", "worker"]

@@ -1,0 +1,210 @@
+"""
+Neural Variational Document Model (NVDM)
+
+The first VAE-based topic model. Uses standard normal prior.
+Topic representation is unconstrained (can be positive or negative).
+
+Reference:
+- Miao et al., "Neural Variational Inference for Text Processing", ICML 2016
+"""
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.nn import init
+from typing import Dict, Optional, List, Any, Tuple
+import numpy as np
+
+from ..base import NeuralTopicModel
+
+
+def kld_normal(mu: torch.Tensor, log_sigma: torch.Tensor) -> torch.Tensor:
+    """KL divergence to standard normal distribution.
+    
+    KL(N(mu, sigma^2) || N(0, 1)) = 0.5 * (mu^2 + sigma^2 - 1 - log(sigma^2))
+    
+    Args:
+        mu: Mean, shape (batch_size, dim)
+        log_sigma: Log standard deviation, shape (batch_size, dim)
+    
+    Returns:
+        KL divergence, shape (batch_size,)
+    """
+    return -0.5 * (1 + 2 * log_sigma - mu ** 2 - torch.exp(2 * log_sigma)).sum(dim=-1)
+
+
+class NormalParameter(nn.Module):
+    """Parameterizes a normal distribution with mean and log_sigma."""
+    
+    def __init__(self, in_features: int, out_features: int):
+        super().__init__()
+        self.mu = nn.Linear(in_features, out_features)
+        self.log_sigma = nn.Linear(in_features, out_features)
+        self._reset_parameters()
+    
+    def forward(self, h: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        return self.mu(h), self.log_sigma(h)
+    
+    def _reset_parameters(self):
+        init.zeros_(self.log_sigma.weight)
+        init.zeros_(self.log_sigma.bias)
+
+
+class TopicDecoder(nn.Module):
+    """Decodes topic distribution to word distribution."""
+    
+    def __init__(self, num_topics: int, vocab_size: int, bias: bool = True):
+        super().__init__()
+        self.num_topics = num_topics
+        self.vocab_size = vocab_size
+        self.topic_word = nn.Linear(num_topics, vocab_size, bias=bias)
+    
+    def forward(self, theta: torch.Tensor) -> torch.Tensor:
+        """
+        Args:
+            theta: Topic distribution, shape (batch_size, num_topics)
+        
+        Returns:
+            Log probability over vocabulary, shape (batch_size, vocab_size)
+        """
+        return F.log_softmax(self.topic_word(theta), dim=-1)
+    
+    def get_beta(self) -> torch.Tensor:
+        """Get topic-word distribution (beta matrix)."""
+        return F.softmax(self.topic_word.weight.data.T, dim=-1)
+
+
+class NVDM(NeuralTopicModel):
+    """
+    Neural Variational Document Model (NVDM)
+    
+    The first VAE-based topic model. Uses standard normal prior.
+    Topic representation is unconstrained (can be positive or negative).
+    
+    Architecture:
+        BOW -> Encoder -> (mu, log_sigma) -> z -> Decoder -> word_dist
+    """
+    
+    def __init__(
+        self,
+        vocab_size: int,
+        num_topics: int = 20,
+        hidden_dim: int = 256,
+        dropout: float = 0.2,
+        hidden_sizes: Optional[List[int]] = None,
+        **kwargs
+    ):
+        super().__init__(vocab_size=vocab_size, num_topics=num_topics)
+        
+        self.hidden_sizes = list(hidden_sizes or [hidden_dim, hidden_dim])
+        if not self.hidden_sizes or any(not isinstance(width, int) or isinstance(width, bool) or width <= 0 for width in self.hidden_sizes):
+            raise ValueError("hidden_sizes must contain positive integers")
+        self.hidden_dim = self.hidden_sizes[-1]
+        self.dropout_rate = dropout
+        
+        # Encoder: BOW -> hidden -> (mu, log_sigma)
+        encoder_layers = []
+        input_width = vocab_size
+        for width in self.hidden_sizes:
+            encoder_layers.extend([nn.Linear(input_width, width), nn.Softplus(), nn.Dropout(dropout)])
+            input_width = width
+        self.encoder = nn.Sequential(*encoder_layers)
+        
+        # Normal parameters
+        self.normal = NormalParameter(self.hidden_sizes[-1], num_topics)
+        
+        # Decoder: z -> word_dist
+        self.decoder = TopicDecoder(num_topics, vocab_size)
+        
+        self.dropout = nn.Dropout(dropout)
+    
+    def encode(self, bow: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Encode BOW to latent distribution parameters."""
+        h = self.encoder(bow)
+        mu, log_sigma = self.normal(h)
+        return mu, log_sigma
+    
+    def reparameterize(self, mu: torch.Tensor, log_sigma: torch.Tensor) -> torch.Tensor:
+        """Reparameterization trick."""
+        std = torch.exp(log_sigma)
+        eps = torch.randn_like(std)
+        return mu + eps * std
+    
+    def decode(self, z: torch.Tensor) -> torch.Tensor:
+        """Decode latent to word distribution."""
+        z = self.dropout(z)
+        return self.decoder(z)
+    
+    def forward(
+        self,
+        bow: torch.Tensor,
+        doc_emb: Optional[torch.Tensor] = None,
+        **kwargs
+    ) -> Dict[str, torch.Tensor]:
+        """
+        Forward pass.
+        
+        Args:
+            bow: Bag-of-words, shape (batch_size, vocab_size)
+            doc_emb: Not used in NVDM
+        
+        Returns:
+            Dict with theta, recon_loss, kl_loss
+        """
+        # Normalize BOW
+        bow_norm = bow / (bow.sum(dim=1, keepdim=True) + 1e-10)
+        
+        # Encode
+        mu, log_sigma = self.encode(bow_norm)
+        
+        # Sample z
+        z = self.reparameterize(mu, log_sigma)
+        
+        # Decode
+        log_prob = self.decode(z)
+        
+        # Losses
+        recon_loss = -(bow_norm * log_prob).sum(dim=-1)
+        kl_loss = kld_normal(mu, log_sigma)
+        
+        return {
+            'theta': z,  # Note: z is not a probability distribution in NVDM
+            'recon_loss': recon_loss,
+            'kl_loss': kl_loss,
+            'mu': mu,
+            'log_sigma': log_sigma
+        }
+    
+    def get_theta(self, bow: torch.Tensor, **kwargs) -> torch.Tensor:
+        """Get topic distribution for documents."""
+        bow_norm = bow / (bow.sum(dim=1, keepdim=True) + 1e-10)
+        mu, _ = self.encode(bow_norm)
+        return mu  # Use mean as point estimate
+    
+    def get_beta(self) -> torch.Tensor:
+        """Get topic-word distribution."""
+        return self.decoder.get_beta()
+    
+    def get_config(self) -> Dict[str, Any]:
+        """Get model configuration."""
+        return {
+            'vocab_size': self._vocab_size,
+            'num_topics': self._num_topics,
+            'hidden_dim': self.hidden_dim,
+            'hidden_sizes': self.hidden_sizes,
+            'dropout': self.dropout_rate
+        }
+    
+    def get_topic_words(self, vocab: List[str], top_k: int = 10) -> Dict[str, List[str]]:
+        """Get top words for each topic."""
+        beta = self.get_beta().cpu().numpy()
+        topic_words = {}
+        for k in range(self._num_topics):
+            top_indices = np.argsort(-beta[k])[:top_k]
+            topic_words[f"topic_{k}"] = [vocab[i] for i in top_indices]
+        return topic_words
+
+
+def create_nvdm(vocab_size: int, num_topics: int = 20, **kwargs) -> NVDM:
+    """Create NVDM model."""
+    return NVDM(vocab_size=vocab_size, num_topics=num_topics, **kwargs)

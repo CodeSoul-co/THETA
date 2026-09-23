@@ -1,0 +1,85 @@
+{
+  "id": 12,
+  "title": "分组基因气泡矩阵",
+  "width": 822,
+  "height": 1204,
+  "dpi": 100,
+  "font": "Arial",
+  "font_size": 17,
+  "line_width": 1.2,
+  "seed": 190913,
+  "provenance": "按截图网格估读气泡大小和颜色，非原始表达矩阵",
+  "data_file": "figure12.csv",
+  "annotation_policy": "reference_only",
+  "annotations": [],
+  "cell_types": [
+    "Activated fibroblast",
+    "Fibroblast",
+    "Cardiomyocyte",
+    "Endothelial",
+    "Pericyte",
+    "Macrophage",
+    "VSMC",
+    "Lymphocyte",
+    "Endocardial",
+    "Adipocyte",
+    "Neuronal",
+    "Lymphatic endothelial",
+    "Mast cell",
+    "Epicardial"
+  ],
+  "sections": [
+    {
+      "name": "Early",
+      "genes": [
+        "CRISPLD2",
+        "COL4A4",
+        "FBLN5",
+        "C7",
+        "NEGR1"
+      ]
+    },
+    {
+      "name": "Intermediate",
+      "genes": [
+        "PBX1",
+        "CLSTN2",
+        "RIMS1",
+        "KCNMA1",
+        "PRRX1",
+        "PRELP"
+      ]
+    },
+    {
+      "name": "Late",
+      "genes": [
+        "JAZF1",
+        "FAT1",
+        "ITGA10",
+        "ENPP1",
+        "FN1",
+        "CADM1",
+        "PALLD",
+        "TENM3",
+        "SLC44A5",
+        "FAP",
+        "FAM155A",
+        "AEBP1",
+        "THBS4",
+        "FGF14",
+        "POSTN",
+        "COL22A1"
+      ]
+    }
+  ],
+  "vmin": 0,
+  "vmax": 3.5,
+  "max_dot_area": 210,
+  "colors": [
+    "#edf4e7",
+    "#9ac87d",
+    "#4c9a48",
+    "#276335"
+  ],
+  "title_en": "Grouped gene-expression dot plot"
+}

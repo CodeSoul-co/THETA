@@ -1,0 +1,45 @@
+<svg width="720" height="240" viewBox="0 0 720 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="wordmark-ink" x1="55" y1="52" x2="575" y2="180" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#172A4A"/>
+      <stop offset="0.62" stop-color="#214785"/>
+      <stop offset="1" stop-color="#315FBA"/>
+    </linearGradient>
+    <linearGradient id="tail-accent" x1="548" y1="176" x2="660" y2="91" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#315FBA"/>
+      <stop offset="0.52" stop-color="#4D7BE0"/>
+      <stop offset="1" stop-color="#7299F2"/>
+    </linearGradient>
+    <filter id="wordmark-soft" x="23" y="29" width="654" height="174" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#18335E" flood-opacity="0.09"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#wordmark-soft)" stroke="url(#wordmark-ink)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round">
+    <!-- T -->
+    <path d="M48 58H132"/>
+    <path d="M90 59V181"/>
+
+    <!-- H -->
+    <path d="M168 58V181"/>
+    <path d="M238 58V181"/>
+    <path d="M170 118H236"/>
+
+    <!-- E, with shortened middle arm for a softer editorial rhythm -->
+    <path d="M280 58V181"/>
+    <path d="M282 58H354"/>
+    <path d="M282 118H340"/>
+    <path d="M282 181H354"/>
+
+    <!-- T -->
+    <path d="M388 58H472"/>
+    <path d="M430 59V181"/>
+
+    <!-- A -->
+    <path d="M494 181L542 58L590 181"/>
+    <path d="M514 132H570"/>
+  </g>
+
+  <!-- The final A continues into a restrained cat-tail flourish. -->
+  <path d="M590 181C625 188 659 173 663 145C667 120 651 103 631 106C615 108 609 122 616 133" stroke="url(#tail-accent)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

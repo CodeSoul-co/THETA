@@ -1,0 +1,166 @@
+{
+  "figure": 17,
+  "title": {
+    "zh": "区域年代分布 雨云图",
+    "en": "Regional age-distribution rainclouds"
+  },
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "source_publication_note": "The supplied screenshot collection did not identify a verified paper/DOI for each image.",
+  "classification": "mixed",
+  "provenance": {
+    "zh": "截图分布轮廓和箱线图估读；rug 为模拟示例",
+    "en": "Distribution outlines and box summaries were estimated from the screenshot; rug marks are seeded synthetic examples."
+  },
+  "seed_note": "Original example-generation session used NumPy seed 190913 across all figures; the seed alone does not reconstruct digitized/manual values. The committed CSVs and SHA-256 hashes define this snapshot.",
+  "raw_data_required": {
+    "zh": [
+      "每个 dated sample 的 ID、地区和 kyr BP 年代；保留年代不确定性或校准后概率分布。",
+      "BP 参考年份、年代校准、样本权重、分布汇总方式和 KDE 带宽。",
+      "同一批数据的五数概括和 rug 标记/权重；三份绘图输入必须同步。"
+    ],
+    "en": [
+      "Dated sample ID, region and age in kyr BP; retain age uncertainty or calibrated probability distributions.",
+      "BP reference year, calibration, weights, distribution-aggregation method and KDE bandwidth.",
+      "Five-number summaries and rug locations/weights from the same observations; update all three plotting tables together."
+    ]
+  },
+  "preprocessing": {
+    "zh": "密度表、五数表和 rug 表必须基于同一数据集更新。density 与 weight 是行距单位的展示高度；它们不是年代误差。",
+    "en": "Update density, five-number and rug tables from the same dataset. density and weight are display heights in row-spacing units, not age uncertainty."
+  },
+  "files": [
+    {
+      "path": "data/figure17.csv",
+      "classification": "mixed",
+      "row_count": 5010,
+      "sha256": "418463c51218a8dae1bb96f4d6718ab16ef9543a5d7e170b67235109a82e36e4",
+      "fields": [
+        {
+          "name": "region",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "地区名称；与样式中的分组匹配",
+            "en": "Region matching style groups"
+          }
+        },
+        {
+          "name": "age",
+          "type": "number",
+          "unit": "kyr BP",
+          "description": {
+            "zh": "距今千年；需要说明 BP 参考年份",
+            "en": "Thousands of years before present; state BP reference epoch"
+          }
+        },
+        {
+          "name": "density",
+          "type": "number ≥ 0",
+          "unit": "row spacing",
+          "description": {
+            "zh": "分布的展示高度，不是样本量",
+            "en": "Display height of a distribution, not sample count"
+          }
+        }
+      ]
+    },
+    {
+      "path": "data/figure17_boxes.csv",
+      "classification": "mixed",
+      "row_count": 5,
+      "sha256": "bf8dfa9dc6b6c6b9b3ef8e186513cb367582bef96ccda5f6f52c5e59013c1ed5",
+      "fields": [
+        {
+          "name": "region",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "地区名称；与样式中的分组匹配",
+            "en": "Region matching style groups"
+          }
+        },
+        {
+          "name": "low",
+          "type": "number",
+          "unit": "same as observations",
+          "description": {
+            "zh": "下 whisker 或最小值，需明确约定",
+            "en": "Lower whisker or minimum; state the convention"
+          }
+        },
+        {
+          "name": "q1",
+          "type": "number",
+          "unit": "same as observations",
+          "description": {
+            "zh": "第25百分位",
+            "en": "25th percentile"
+          }
+        },
+        {
+          "name": "median",
+          "type": "number",
+          "unit": "same as observations",
+          "description": {
+            "zh": "第50百分位",
+            "en": "50th percentile"
+          }
+        },
+        {
+          "name": "q3",
+          "type": "number",
+          "unit": "same as observations",
+          "description": {
+            "zh": "第75百分位",
+            "en": "75th percentile"
+          }
+        },
+        {
+          "name": "high",
+          "type": "number",
+          "unit": "same as observations",
+          "description": {
+            "zh": "上 whisker 或最大值，需明确约定",
+            "en": "Upper whisker or maximum; state the convention"
+          }
+        }
+      ]
+    },
+    {
+      "path": "data/figure17_rug.csv",
+      "classification": "synthetic",
+      "row_count": 650,
+      "sha256": "0ac5bbb539ba1b08052a221ab9643661a6d071c711f671d30b42d385cbba1a16",
+      "fields": [
+        {
+          "name": "region",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "地区名称；与样式中的分组匹配",
+            "en": "Region matching style groups"
+          }
+        },
+        {
+          "name": "age",
+          "type": "number",
+          "unit": "kyr BP",
+          "description": {
+            "zh": "距今千年；需要说明 BP 参考年份",
+            "en": "Thousands of years before present; state BP reference epoch"
+          }
+        },
+        {
+          "name": "weight",
+          "type": "number ≥ 0",
+          "unit": "row spacing",
+          "description": {
+            "zh": "rug 竖线展示高度；不等同于年代误差",
+            "en": "Rug-line display height; not age uncertainty"
+          }
+        }
+      ]
+    }
+  ]
+}

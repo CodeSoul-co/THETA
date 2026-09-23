@@ -1,0 +1,96 @@
+{
+  "figure": 1,
+  "title": {
+    "zh": "空心柱状图与散点",
+    "en": "Outlined bars with sample points"
+  },
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "source_publication_note": "The supplied screenshot collection did not identify a verified paper/DOI for each image.",
+  "classification": "screenshot_estimate",
+  "provenance": {
+    "zh": "截图人工估读；柱高及误差按图估计；散点数量可能有遮挡",
+    "en": "Manual estimates of visible counts, bar heights and error bars. Occluded samples are not recoverable."
+  },
+  "seed_note": "Original example-generation session used NumPy seed 190913 across all figures; the seed alone does not reconstruct digitized/manual values. The committed CSVs and SHA-256 hashes define this snapshot.",
+  "raw_data_required": {
+    "zh": [
+      "样本/动物编号、处理组及每个重复的 PCNA+ 细胞计数。",
+      "计数区域与长度、300 μm 归一化方法、重复单位及排除规则。",
+      "原始组间比较方法、误差类型和多重检验设置。"
+    ],
+    "en": [
+      "Sample/animal ID, treatment group and PCNA+ cell count for each replicate.",
+      "Counting region/length, normalization to 300 μm, replicate unit and exclusion rules.",
+      "Original comparison method, error-bar definition and multiple-testing settings."
+    ]
+  },
+  "preprocessing": {
+    "zh": "输入长表的 value 为样本计数；新 CSV 默认重算均值和 SEM。",
+    "en": "Supply replicate counts as value; changed CSVs default to recomputing mean and SEM."
+  },
+  "files": [
+    {
+      "path": "data/figure01.csv",
+      "classification": "screenshot_estimate",
+      "row_count": 40,
+      "sha256": "81492c555d3a7041883b1722f6642de19b2ae21ab887118f523540fd396714a0",
+      "fields": [
+        {
+          "name": "category",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "分类/条件；与样式顺序一致",
+            "en": "Category/condition; match style ordering"
+          }
+        },
+        {
+          "name": "group",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "实验组或细胞群；与样式一致",
+            "en": "Experimental group or cell population; match style"
+          }
+        },
+        {
+          "name": "sample",
+          "type": "string",
+          "unit": "identifier",
+          "description": {
+            "zh": "示例重复编号，真实数据应保留真实样本 ID",
+            "en": "Example replicate ID; preserve real sample IDs when available"
+          }
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "unit": "cells / 300 μm",
+          "description": {
+            "zh": "单个观测值；单位及归一化见本图原始数据要求",
+            "en": "One observation; units/normalization are specified in this figure’s raw-data requirements"
+          }
+        },
+        {
+          "name": "mean",
+          "type": "number",
+          "unit": "cells / 300 μm",
+          "description": {
+            "zh": "组均值；相同组每行重复同一数值",
+            "en": "Group mean; repeat the same summary within each group"
+          }
+        },
+        {
+          "name": "error",
+          "type": "number ≥ 0",
+          "unit": "cells / 300 μm",
+          "description": {
+            "zh": "指定的误差幅度；需注明 SD/SEM/CI",
+            "en": "Error magnitude; explicitly specify SD/SEM/CI"
+          }
+        }
+      ]
+    }
+  ]
+}

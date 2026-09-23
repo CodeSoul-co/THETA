@@ -1,0 +1,67 @@
+{
+  "id": 1,
+  "title": "空心柱状图与散点",
+  "width": 796,
+  "height": 900,
+  "dpi": 100,
+  "font": "Arial",
+  "font_size": 36,
+  "line_width": 3,
+  "seed": 190913,
+  "provenance": "截图人工估读；柱高及误差按图估计；散点数量可能有遮挡",
+  "data_file": "figure01.csv",
+  "annotation_policy": "reference_only",
+  "annotations": [
+    [
+      "***",
+      0,
+      1,
+      353
+    ],
+    [
+      "***",
+      0,
+      2,
+      387
+    ],
+    [
+      "ns",
+      1,
+      2,
+      239
+    ]
+  ],
+  "groups": [
+    "Cont",
+    "pcna",
+    "foxj1a"
+  ],
+  "categories": [
+    ""
+  ],
+  "colors": [
+    "#000000",
+    "#388b4c",
+    "#388b4c"
+  ],
+  "summary": "provided",
+  "axes": [
+    251,
+    86,
+    469,
+    654
+  ],
+  "ylim": [
+    0,
+    400
+  ],
+  "yticks": [
+    0,
+    100,
+    200,
+    300,
+    400
+  ],
+  "ylabel": "# INL PCNA+ cells / 300 μm",
+  "title_en": "Outlined bars with sample points"
+}

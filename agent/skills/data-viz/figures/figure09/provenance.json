@@ -1,0 +1,87 @@
+{
+  "figure": 9,
+  "title": {
+    "zh": "双轴嵌套柱状图",
+    "en": "Dual-axis nested bars"
+  },
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "source_publication_note": "The supplied screenshot collection did not identify a verified paper/DOI for each image.",
+  "classification": "mixed",
+  "provenance": {
+    "zh": "双轴柱高 误差人工估读；三重复为示例",
+    "en": "Manual estimates of two sets of summaries. The three reference-view points are mean ± error and mean, not observed replicates."
+  },
+  "seed_note": "Original example-generation session used NumPy seed 190913 across all figures; the seed alone does not reconstruct digitized/manual values. The committed CSVs and SHA-256 hashes define this snapshot.",
+  "raw_data_required": {
+    "zh": [
+      "每个菌株/构建体和独立重复的 Indigoidine OD600 与 Daptomycin 浓度（μg/ml）。",
+      "检测、标准曲线、稀释系数及两项测量的配对关系。",
+      "两套组均值和误差类型，以及 0.72/115 基准线的实际来源。"
+    ],
+    "en": [
+      "Indigoidine OD600 and Daptomycin concentration (μg/ml) for each strain/construct and independent replicate.",
+      "Assay, calibration curve, dilution factors and pairing between the two measurements.",
+      "Both sets of group means and error definitions, and the actual source of the 0.72/115 reference levels."
+    ]
+  },
+  "preprocessing": {
+    "zh": "提供两套真实汇总值及指定误差。参考视图中的三个点是构造的外观标记，不是原始重复；新数据默认不绘制它们。",
+    "en": "Supply both actual summaries and the intended errors. The reference view has three constructed display points, not original replicates; replacement data hide those points by default."
+  },
+  "files": [
+    {
+      "path": "data/figure09.csv",
+      "classification": "mixed",
+      "row_count": 17,
+      "sha256": "3f9a2f4342616b58cf766bd486329f3a5793c8cadeff75fc372257c49625e617",
+      "fields": [
+        {
+          "name": "category",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "分类/条件；与样式顺序一致",
+            "en": "Category/condition; match style ordering"
+          }
+        },
+        {
+          "name": "indigo",
+          "type": "number",
+          "unit": "OD600",
+          "description": {
+            "zh": "Indigoidine OD600 组均值",
+            "en": "Mean Indigoidine OD600"
+          }
+        },
+        {
+          "name": "indigo_error",
+          "type": "number ≥ 0",
+          "unit": "OD600",
+          "description": {
+            "zh": "Indigoidine 对应误差",
+            "en": "Error of the Indigoidine summary"
+          }
+        },
+        {
+          "name": "daptomycin",
+          "type": "number",
+          "unit": "μg/ml",
+          "description": {
+            "zh": "Daptomycin 浓度组均值",
+            "en": "Mean Daptomycin concentration"
+          }
+        },
+        {
+          "name": "dap_error",
+          "type": "number ≥ 0",
+          "unit": "μg/ml",
+          "description": {
+            "zh": "Daptomycin 对应误差",
+            "en": "Error of the Daptomycin summary"
+          }
+        }
+      ]
+    }
+  ]
+}

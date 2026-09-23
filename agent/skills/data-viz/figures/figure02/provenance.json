@@ -1,0 +1,69 @@
+{
+  "figure": 2,
+  "title": {
+    "zh": "PCoA 与边缘箱线图",
+    "en": "PCoA with marginal boxplots"
+  },
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "source_publication_note": "The supplied screenshot collection did not identify a verified paper/DOI for each image.",
+  "classification": "digitized",
+  "provenance": {
+    "zh": "截图颜色连通区域提取的近似点；遮挡点不可恢复；椭圆由截图估读",
+    "en": "Approximate coordinates extracted from colored connected components. Overlapping points are lost; ellipses were visually estimated."
+  },
+  "seed_note": "Original example-generation session used NumPy seed 190913 across all figures; the seed alone does not reconstruct digitized/manual values. The committed CSVs and SHA-256 hashes define this snapshot.",
+  "raw_data_required": {
+    "zh": [
+      "每个样本的丰度/特征矩阵或样本间距离矩阵，以及样本 ID 到组别的映射。",
+      "距离度量、变换方法、PCoA 实现、PCoA1/2 坐标和各轴解释比例。",
+      "PERMANOVA 的模型、置换次数、分层信息，以及椭圆计算约定。"
+    ],
+    "en": [
+      "A sample-feature/abundance matrix or sample distance matrix, plus sample-to-group metadata.",
+      "Distance metric, transformations, PCoA method, axis 1/2 coordinates and explained variation.",
+      "PERMANOVA model, permutation count and strata, plus the ellipse convention."
+    ]
+  },
+  "preprocessing": {
+    "zh": "先在原分析流程中计算 PCoA，再把前两轴坐标写入 x/y。本项目不运行 PCoA 或 PERMANOVA；新数据的椭圆使用二维协方差近似。",
+    "en": "Compute PCoA upstream and export the first two coordinates to x/y. This project does not run PCoA or PERMANOVA; replacement-data ellipses use a bivariate covariance approximation."
+  },
+  "files": [
+    {
+      "path": "data/figure02.csv",
+      "classification": "digitized",
+      "row_count": 94,
+      "sha256": "9b9cf5830431ee372847462aad6cf499de444ca98773902bc8fdf35883c8e8a6",
+      "fields": [
+        {
+          "name": "group",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "实验组或细胞群；与样式一致",
+            "en": "Experimental group or cell population; match style"
+          }
+        },
+        {
+          "name": "x",
+          "type": "number",
+          "unit": "ordination coordinate",
+          "description": {
+            "zh": "已转换的横轴坐标；不是原始特征矩阵",
+            "en": "Transformed x coordinate, not a raw feature matrix"
+          }
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "unit": "ordination coordinate",
+          "description": {
+            "zh": "已转换的纵轴坐标",
+            "en": "Transformed y coordinate"
+          }
+        }
+      ]
+    }
+  ]
+}

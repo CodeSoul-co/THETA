@@ -1,0 +1,3 @@
+#!/bin/sh
+# Resolve from this script, not the caller's working directory.
+exec node "$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)/scripts/workbench.mjs" "$@"

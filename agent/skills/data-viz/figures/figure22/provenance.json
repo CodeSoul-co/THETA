@@ -1,0 +1,258 @@
+{
+  "figure": 22,
+  "title": {
+    "zh": "文档—词语关联与分布",
+    "en": "Document–word flows and distributions"
+  },
+  "classification": "transcribed_estimated_and_synthetic",
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "provenance": {
+    "zh": "文档/词组标签依据图片转录，可能存在拼写估读误差；带状位置与 10 组箱线图五数概括为视觉估计。300 条文档—词组关联流线由固定种子 202622 模拟，不是从图片恢复的真实关联权重或文本分析结果。蓝色小方点是路径控制位置的视觉标记，不表示额外观测。",
+    "en": "Document/topic labels are transcribed with possible reading errors; band positions and ten box summaries are visual estimates. The 300 association curves are simulated with seed 202622, not recovered links or text-analysis results. Blue squares mark path-routing positions and are not additional observations."
+  },
+  "raw_data_required": {
+    "zh": [
+      "文档或文档组的 ID 和短标签；主题、关键词或词组的 ID、标签与类别颜色。",
+      "文档—词组关联表：如共现次数、TF-IDF、主题权重或人工编码强度；必须说明自己的权重含义。",
+      "可选：每个词组的某项数值指标分布，或同一指标的有序五数概括。Dissemination 在原图中的定义未核实，可替换为自己有定义的覆盖率或其他指标。"
+    ],
+    "en": [
+      "Document/document-group IDs and short labels; topic, keyword or word-group IDs, labels and colors.",
+      "Document-to-topic association rows, such as co-occurrence counts, TF-IDF, topic weights or coded strengths, with a documented definition.",
+      "Optionally, a defined per-topic metric distribution or ordered five-number summary. The source meaning of Dissemination is unverified; replace it with a defined coverage or other metric."
+    ]
+  },
+  "preprocessing": {
+    "zh": "预先整理关联表与词组表；把每条流线的起止位置写成所属带内的 0–1 布局比例。颜色取目标词组，线宽=weight×flow_width，弯曲路径通过组内中心聚束。路径不是时间顺序，也不是守恒 Sankey 流量。箱线图读取给定摘要，不从流线权重推导。",
+    "en": "Prepare association and label tables upstream. Give each link start/end a 0–1 layout fraction within its band. Color follows the target topic, width equals weight×flow_width, and paths bundle through group centers. Curves are neither chronology nor conserved Sankey flows. Boxes use supplied summaries, not quantities inferred from link weights."
+  },
+  "files": [
+    {
+      "path": "data/figure22.csv",
+      "classification": "synthetic",
+      "row_count": 300,
+      "sha256": "422499090ef4e101fdcc35d271a7a9ac7e3a354ef1c4a67732b2322602871fa4",
+      "fields": [
+        {
+          "name": "link_id",
+          "type": "string",
+          "unit": "ID",
+          "description": {
+            "zh": "流线唯一标识",
+            "en": "Unique association-link ID"
+          }
+        },
+        {
+          "name": "document_id",
+          "type": "string",
+          "unit": "ID",
+          "description": {
+            "zh": "文档或文档组标识",
+            "en": "Document or document-group ID"
+          }
+        },
+        {
+          "name": "topic_id",
+          "type": "string",
+          "unit": "ID",
+          "description": {
+            "zh": "词组或主题标识",
+            "en": "Word-group or topic ID"
+          }
+        },
+        {
+          "name": "weight",
+          "type": "number",
+          "unit": "relative weight",
+          "description": {
+            "zh": "正值关联权重；乘以 flow_width 得到线宽",
+            "en": "Positive association weight; multiplied by flow_width for line width"
+          }
+        },
+        {
+          "name": "source_position",
+          "type": "number",
+          "unit": "fraction [0,1]",
+          "description": {
+            "zh": "流线起点在文档带内的位置；布局参数",
+            "en": "Link start position within document band; layout parameter"
+          }
+        },
+        {
+          "name": "target_position",
+          "type": "number",
+          "unit": "fraction [0,1]",
+          "description": {
+            "zh": "流线终点在词组带内的位置；布局参数",
+            "en": "Link end position within topic band; layout parameter"
+          }
+        }
+      ]
+    },
+    {
+      "path": "data/figure22_documents.csv",
+      "classification": "transcribed_estimated_and_synthetic",
+      "row_count": 8,
+      "sha256": "6cb379b1a2433a282f6f56193321b16c9f147240a5389a57da74e9a2f54ffb38",
+      "fields": [
+        {
+          "name": "document_id",
+          "type": "string",
+          "unit": "ID",
+          "description": {
+            "zh": "文档或文档组标识",
+            "en": "Document or document-group ID"
+          }
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "unit": "text",
+          "description": {
+            "zh": "显示标签，以 | 换行",
+            "en": "Displayed label; | creates a line break"
+          }
+        },
+        {
+          "name": "y0",
+          "type": "number",
+          "unit": "canvas pixels",
+          "description": {
+            "zh": "带状区域上边界",
+            "en": "Upper band boundary"
+          }
+        },
+        {
+          "name": "y1",
+          "type": "number",
+          "unit": "canvas pixels",
+          "description": {
+            "zh": "带状区域下边界，必须大于 y0",
+            "en": "Lower band boundary, strictly greater than y0"
+          }
+        }
+      ]
+    },
+    {
+      "path": "data/figure22_summary.csv",
+      "classification": "transcribed_estimated_and_synthetic",
+      "row_count": 10,
+      "sha256": "e6219040a5b21f9b1270f7a19e4eb4c970444875ed13ea58a768857049a02a01",
+      "fields": [
+        {
+          "name": "topic_id",
+          "type": "string",
+          "unit": "ID",
+          "description": {
+            "zh": "词组或主题标识",
+            "en": "Word-group or topic ID"
+          }
+        },
+        {
+          "name": "minimum",
+          "type": "number",
+          "unit": "metric units",
+          "description": {
+            "zh": "显示的下须值；需注明使用最小值或其他须规则",
+            "en": "Displayed lower whisker; specify whether this is minimum or another whisker rule"
+          }
+        },
+        {
+          "name": "q1",
+          "type": "number",
+          "unit": "metric units",
+          "description": {
+            "zh": "第一四分位数",
+            "en": "First quartile"
+          }
+        },
+        {
+          "name": "median",
+          "type": "number",
+          "unit": "metric units",
+          "description": {
+            "zh": "中位数",
+            "en": "Median"
+          }
+        },
+        {
+          "name": "q3",
+          "type": "number",
+          "unit": "metric units",
+          "description": {
+            "zh": "第三四分位数",
+            "en": "Third quartile"
+          }
+        },
+        {
+          "name": "maximum",
+          "type": "number",
+          "unit": "metric units",
+          "description": {
+            "zh": "显示的上须值；需注明所用须规则",
+            "en": "Displayed upper whisker; document the chosen whisker rule"
+          }
+        }
+      ]
+    },
+    {
+      "path": "data/figure22_topics.csv",
+      "classification": "transcribed_estimated_and_synthetic",
+      "row_count": 10,
+      "sha256": "537c6439e75439a7a8549cff8ae839377e0caaa187bcd864fa3e19d6121cd36d",
+      "fields": [
+        {
+          "name": "topic_id",
+          "type": "string",
+          "unit": "ID",
+          "description": {
+            "zh": "词组或主题标识",
+            "en": "Word-group or topic ID"
+          }
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "unit": "text",
+          "description": {
+            "zh": "显示标签，以 | 换行",
+            "en": "Displayed label; | creates a line break"
+          }
+        },
+        {
+          "name": "y0",
+          "type": "number",
+          "unit": "canvas pixels",
+          "description": {
+            "zh": "带状区域上边界",
+            "en": "Upper band boundary"
+          }
+        },
+        {
+          "name": "y1",
+          "type": "number",
+          "unit": "canvas pixels",
+          "description": {
+            "zh": "带状区域下边界，必须大于 y0",
+            "en": "Lower band boundary, strictly greater than y0"
+          }
+        },
+        {
+          "name": "color",
+          "type": "string",
+          "unit": "Matplotlib color",
+          "description": {
+            "zh": "该词组关联流线的颜色",
+            "en": "Color for links associated with this topic"
+          }
+        }
+      ]
+    }
+  ],
+  "simulation": {
+    "seed": 202622,
+    "script": "simulate_links.py",
+    "scope": "figure22.csv only; labels and box summaries are separate estimated snapshots"
+  }
+}

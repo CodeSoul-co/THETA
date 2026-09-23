@@ -1,0 +1,96 @@
+{
+  "figure": 8,
+  "title": {
+    "zh": "PARP1 变体柱状图",
+    "en": "PARP1 variant grouped bars"
+  },
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "source_publication_note": "The supplied screenshot collection did not identify a verified paper/DOI for each image.",
+  "classification": "screenshot_estimate",
+  "provenance": {
+    "zh": "柱高和误差人工估读；示例散点由均值及误差构造，不是真实重复",
+    "en": "Manual estimates of means and errors; example points are constructed from those summaries, not measured replicates."
+  },
+  "seed_note": "Original example-generation session used NumPy seed 190913 across all figures; the seed alone does not reconstruct digitized/manual values. The committed CSVs and SHA-256 hashes define this snapshot.",
+  "raw_data_required": {
+    "zh": [
+      "每个 PARP1 变体、药物条件和生物学重复的 GFP 读数与样本 ID。",
+      "背景扣除、−DOX/DMSO 对照、FC 的归一化与配对规则。",
+      "真实重复值、汇总误差类型及检验结果；不要用 mean ± error 充当重复。"
+    ],
+    "en": [
+      "GFP measurements and biological replicate IDs for each PARP1 variant and drug condition.",
+      "Background subtraction, −DOX/DMSO controls, fold-change normalization and pairing rules.",
+      "Actual replicate values, summary-error definition and test results; mean ± error is not a substitute for replicates."
+    ]
+  },
+  "preprocessing": {
+    "zh": "先完成 FC 归一化并提供实际重复值。截图示例中的点来自估计汇总，不可用于统计推断。",
+    "en": "Normalize fold changes upstream and provide actual replicates. Screenshot-example points constructed from estimated summaries cannot support inference."
+  },
+  "files": [
+    {
+      "path": "data/figure08.csv",
+      "classification": "screenshot_estimate",
+      "row_count": 84,
+      "sha256": "8e92197ce757a04a2a8ce96af61e50bfdc693ab5bf7afe69d16ee3ef685a9412",
+      "fields": [
+        {
+          "name": "category",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "分类/条件；与样式顺序一致",
+            "en": "Category/condition; match style ordering"
+          }
+        },
+        {
+          "name": "group",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "实验组或细胞群；与样式一致",
+            "en": "Experimental group or cell population; match style"
+          }
+        },
+        {
+          "name": "sample",
+          "type": "string",
+          "unit": "identifier",
+          "description": {
+            "zh": "示例重复编号，真实数据应保留真实样本 ID",
+            "en": "Example replicate ID; preserve real sample IDs when available"
+          }
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "unit": "normalized expression / fold change",
+          "description": {
+            "zh": "单个观测值；单位及归一化见本图原始数据要求",
+            "en": "One observation; units/normalization are specified in this figure’s raw-data requirements"
+          }
+        },
+        {
+          "name": "mean",
+          "type": "number",
+          "unit": "normalized expression / fold change",
+          "description": {
+            "zh": "组均值；相同组每行重复同一数值",
+            "en": "Group mean; repeat the same summary within each group"
+          }
+        },
+        {
+          "name": "error",
+          "type": "number ≥ 0",
+          "unit": "normalized expression / fold change",
+          "description": {
+            "zh": "指定的误差幅度；需注明 SD/SEM/CI",
+            "en": "Error magnitude; explicitly specify SD/SEM/CI"
+          }
+        }
+      ]
+    }
+  ]
+}

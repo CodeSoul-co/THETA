@@ -1,0 +1,40 @@
+{
+  "id": 5,
+  "title": "半小提琴 雨云图",
+  "width": 1098,
+  "height": 814,
+  "dpi": 100,
+  "font": "Arial",
+  "font_size": 23,
+  "line_width": 1.2,
+  "seed": 190913,
+  "provenance": "截图散点区域颜色占比估计分布，并生成示例点；不能恢复重叠样本",
+  "data_file": "figure05.csv",
+  "annotation_policy": "reference_only",
+  "annotations": [],
+  "axes": [
+    136,
+    47,
+    738,
+    662
+  ],
+  "colors": [
+    "#8aaa49",
+    "#b26462",
+    "#c8ac32",
+    "#8c8c8b"
+  ],
+  "groups": [
+    "subtilis",
+    "cereus",
+    "megaterium",
+    "circulans"
+  ],
+  "ylim": [
+    -1.7,
+    33.5
+  ],
+  "ylabel": "No. of BGCs / genome",
+  "bandwidth": 0.18,
+  "title_en": "Half-violin raincloud plot"
+}

@@ -1,0 +1,131 @@
+{
+  "figure": 19,
+  "title": {
+    "zh": "相关性 哑铃 气泡 与条形组合图",
+    "en": "Correlation, expression and proximity composite"
+  },
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "source_publication_note": "The supplied screenshot collection did not identify a verified paper/DOI for each image.",
+  "classification": "screenshot_estimate_and_digitized",
+  "provenance": {
+    "zh": "相关系数和条形人工估读，气泡按截图网格估读；非原始统计结果",
+    "en": "Correlations and KS bars were estimated manually; expression bubbles were estimated from the screenshot grid. No original cell-level data were recovered."
+  },
+  "seed_note": "Original example-generation session used NumPy seed 190913 across all figures; the seed alone does not reconstruct digitized/manual values. The committed CSVs and SHA-256 hashes define this snapshot.",
+  "raw_data_required": {
+    "zh": [
+      "单细胞表达矩阵、细胞类型、WT/KO 条件、样本 ID，以及细胞空间坐标或邻近度量。",
+      "TGFβRII signature、P14 CD8 T cell 参考群、邻近/距离定义与相关方法。",
+      "每种细胞类型的 WT/KO 相关系数、指定基因的平均表达/阳性率、两样本 KS 值及 Further/Closer/Similar 判定规则。"
+    ],
+    "en": [
+      "Single-cell expression, cell types, WT/KO conditions, sample IDs and spatial coordinates or proximity measurements.",
+      "TGFβRII signature, P14 CD8 T-cell reference population, proximity/distance definition and correlation method.",
+      "Per-cell-type WT/KO correlations, gene mean expression/positive fractions, two-sample KS values and the Further/Closer/Similar rule."
+    ]
+  },
+  "preprocessing": {
+    "zh": "相关系数、表达汇总、KS 和邻近类别均需在原分析流程中计算。绘图脚本不从表达和坐标重新推断这些统计量。",
+    "en": "Compute correlations, expression summaries, KS and proximity categories upstream. The renderer does not re-infer those statistics from expression and spatial coordinates."
+  },
+  "files": [
+    {
+      "path": "data/figure19.csv",
+      "classification": "screenshot_estimate_and_digitized",
+      "row_count": 36,
+      "sha256": "fde58caf653d6f59741106f5a6b2bb7c5e4fabca51576907ea1fee17b5fee996",
+      "fields": [
+        {
+          "name": "cell_type",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "细胞类型；与样式顺序一致",
+            "en": "Cell type matching style ordering"
+          }
+        },
+        {
+          "name": "wt",
+          "type": "number [-1, 1]",
+          "unit": "correlation",
+          "description": {
+            "zh": "WT 条件下的指定相关系数",
+            "en": "Specified correlation coefficient in WT"
+          }
+        },
+        {
+          "name": "ko",
+          "type": "number [-1, 1]",
+          "unit": "correlation",
+          "description": {
+            "zh": "KO 条件下的指定相关系数",
+            "en": "Specified correlation coefficient in KO"
+          }
+        },
+        {
+          "name": "ks",
+          "type": "number [0, 1]",
+          "unit": "statistic",
+          "description": {
+            "zh": "已计算的两样本 KS 统计量",
+            "en": "Precomputed two-sample KS statistic"
+          }
+        },
+        {
+          "name": "relation",
+          "type": "Further | Closer | Similar",
+          "unit": "category",
+          "description": {
+            "zh": "按原分析判定的邻近类别",
+            "en": "Proximity category assigned upstream"
+          }
+        }
+      ]
+    },
+    {
+      "path": "data/figure19_expression.csv",
+      "classification": "screenshot_estimate_and_digitized",
+      "row_count": 288,
+      "sha256": "966a0ae9ec8deae494d0cc94508af6fc7f712ff185641a539e5866770546ee83",
+      "fields": [
+        {
+          "name": "cell_type",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "细胞类型；与样式顺序一致",
+            "en": "Cell type matching style ordering"
+          }
+        },
+        {
+          "name": "gene",
+          "type": "string",
+          "unit": "identifier",
+          "description": {
+            "zh": "基因名称；与样式中的基因顺序一致",
+            "en": "Gene name matching style ordering"
+          }
+        },
+        {
+          "name": "expression",
+          "type": "number",
+          "unit": "normalized expression",
+          "description": {
+            "zh": "指定归一化方式下的平均表达；非原始计数",
+            "en": "Mean expression under stated normalization, not raw counts"
+          }
+        },
+        {
+          "name": "percent",
+          "type": "number [0, 100]",
+          "unit": "percent",
+          "description": {
+            "zh": "阳性细胞百分比；控制气泡面积",
+            "en": "Percent positive cells; controls bubble area"
+          }
+        }
+      ]
+    }
+  ]
+}

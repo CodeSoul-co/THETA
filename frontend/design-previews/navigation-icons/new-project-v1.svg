@@ -1,0 +1,35 @@
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="np-tile" x1="42" y1="35" x2="121" y2="126" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F5F9FF"/>
+      <stop offset="1" stop-color="#E9F1FF"/>
+    </linearGradient>
+    <linearGradient id="np-folder" x1="45" y1="51" x2="111" y2="115" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5F91FF"/>
+      <stop offset="1" stop-color="#3E68DB"/>
+    </linearGradient>
+    <linearGradient id="np-badge" x1="91" y1="91" x2="121" y2="121" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6999FF"/>
+      <stop offset="1" stop-color="#466DDF"/>
+    </linearGradient>
+    <filter id="np-shadow" x="22" y="22" width="116" height="121" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#3C65B0" flood-opacity="0.14"/>
+    </filter>
+    <filter id="np-badge-shadow" x="82" y="82" width="49" height="49" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#355BB4" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#np-shadow)">
+    <rect x="32" y="32" width="96" height="96" rx="28" fill="url(#np-tile)" stroke="#D4E1F4"/>
+    <path d="M45 59.5C45 54.806 48.806 51 53.5 51H68.4C70.552 51 72.625 51.817 74.198 53.286L80.7 59.357C82.273 60.826 84.346 61.643 86.498 61.643H106.5C111.194 61.643 115 65.449 115 70.143V101.5C115 106.194 111.194 110 106.5 110H53.5C48.806 110 45 106.194 45 101.5V59.5Z" fill="#FFFFFF" stroke="url(#np-folder)" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M45.5 72H114.5" stroke="#B9CDF4" stroke-width="3" stroke-linecap="round"/>
+    <path d="M58 84H86" stroke="#D5E1F3" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M58 94H78" stroke="#E1E9F5" stroke-width="3.5" stroke-linecap="round"/>
+  </g>
+
+  <g filter="url(#np-badge-shadow)">
+    <circle cx="106" cy="106" r="15" fill="url(#np-badge)" stroke="#FFFFFF" stroke-width="3"/>
+    <path d="M106 99.5V112.5M99.5 106H112.5" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round"/>
+  </g>
+</svg>

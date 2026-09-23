@@ -1,0 +1,87 @@
+{
+  "figure": 15,
+  "title": {
+    "zh": "流式细胞术山脊矩阵",
+    "en": "Flow-cytometry ridgeline matrix"
+  },
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "source_publication_note": "The supplied screenshot collection did not identify a verified paper/DOI for each image.",
+  "classification": "synthetic_fitted_curve",
+  "provenance": {
+    "zh": "按截图峰位与多峰形态估计的混合高斯示例轮廓；不是原始流式数据",
+    "en": "Gaussian-mixture demonstration curves approximating visible modes; not FCS events."
+  },
+  "seed_note": "Original example-generation session used NumPy seed 190913 across all figures; the seed alone does not reconstruct digitized/manual values. The committed CSVs and SHA-256 hashes define this snapshot.",
+  "raw_data_required": {
+    "zh": [
+      "原始 FCS 文件或每个 event 的 marker 强度、样本 ID、细胞群和刺激 −/+ 条件。",
+      "补偿矩阵、门控层级、活细胞/双细胞排除及 marker 对应通道。",
+      "对数/logicle/arcsinh 变换及参数、阴性对照和密度归一化方法。"
+    ],
+    "en": [
+      "Original FCS files or per-event marker intensities, sample IDs, cell populations and −/+ stimulation condition.",
+      "Compensation matrix, gating hierarchy, live-cell/doublet filters and marker-to-channel mapping.",
+      "Log/logicle/arcsinh transformation and parameters, negative controls and density normalization."
+    ]
+  },
+  "preprocessing": {
+    "zh": "先完成补偿、门控与表达变换，再提供 marker/group/condition/value；也可提供 x/density。横轴上的 10 的幂标签假定输入已在对应对数坐标。",
+    "en": "Compensate, gate and transform expression upstream, then supply marker/group/condition/value or x/density. Power-of-ten ticks assume the input is already in the corresponding logarithmic coordinates."
+  },
+  "files": [
+    {
+      "path": "data/figure15.csv",
+      "classification": "synthetic_fitted_curve",
+      "row_count": 12320,
+      "sha256": "24ea923212379dd34b556e6494e478f3d1ee08e4e9bc9973edba2a1fc8787fdf",
+      "fields": [
+        {
+          "name": "marker",
+          "type": "string",
+          "unit": "identifier",
+          "description": {
+            "zh": "通道对应的 marker 名称",
+            "en": "Marker corresponding to the measurement channel"
+          }
+        },
+        {
+          "name": "group",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "实验组或细胞群；与样式一致",
+            "en": "Experimental group or cell population; match style"
+          }
+        },
+        {
+          "name": "condition",
+          "type": "− | +",
+          "unit": "category",
+          "description": {
+            "zh": "未刺激/刺激；注意负号为 Unicode −",
+            "en": "Unstimulated/stimulated; minus is Unicode −"
+          }
+        },
+        {
+          "name": "x",
+          "type": "number",
+          "unit": "transformed expression",
+          "description": {
+            "zh": "已转换的横轴坐标；不是原始特征矩阵",
+            "en": "Transformed x coordinate, not a raw feature matrix"
+          }
+        },
+        {
+          "name": "density",
+          "type": "number ≥ 0",
+          "unit": "row spacing",
+          "description": {
+            "zh": "分布的展示高度，不是样本量",
+            "en": "Display height of a distribution, not sample count"
+          }
+        }
+      ]
+    }
+  ]
+}

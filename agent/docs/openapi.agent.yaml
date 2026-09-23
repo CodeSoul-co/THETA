@@ -1,0 +1,1567 @@
+openapi: 3.1.0
+info:
+  title: THETA Agent Frontend API
+  version: 1.0.0
+  description: |
+    Stable browser-facing Agent API. The THETA Worker and Business API contracts
+    are unchanged. JSON uses a `{ok,data}` or `{ok,error}` envelope. Browser write
+    requests require the authenticated session cookie and `X-CSRF-Token`.
+servers:
+  - url: https://theta.example.com
+tags:
+  - { name: Service, description: Health and readiness probes. }
+  - { name: Capabilities, description: Frontend-safe Agent and model capabilities. }
+  - { name: Advisory, description: Independent durable sidebar consultations and selected-result interpretation. }
+  - { name: Projects, description: User-owned Agent projects. }
+  - { name: Datasets, description: User-owned managed datasets. }
+  - { name: Runs, description: User-owned Agent conversations. }
+  - { name: Tasks, description: Durable asynchronous turn receipts. }
+  - { name: Results, description: Selectable model results and exact interpretation selection. }
+  - { name: Artifacts, description: Files delivered by the Agent. }
+paths:
+  /api/v3/projects/import-manual-results:
+    post:
+      tags: [Projects]
+      operationId: importLocalManualResults
+      summary: Copy completed local manual-project results into an independent Agent project
+      description: |
+        Localhost only. Copies datasets, model plans, completed compute artifacts and
+        a durable conversation; does not train or invoke inference. Repeated imports
+        of the same snapshot return its active destination. Remote/deployed mode
+        returns 409 and never reads the local manual store.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              anyOf:
+                - required: [projectId]
+                - required: [datasetName]
+              properties:
+                projectId: { type: integer, minimum: 1 }
+                datasetName: { type: string, minLength: 1, maxLength: 160 }
+                selectedJobId: { type: string }
+      responses:
+        '200':
+          description: Independent result copy is ready, or an existing copy was reused.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, data]
+                properties:
+                  ok: { const: true }
+                  data:
+                    type: object
+                    required: [project, runId, copiedJobs, reused]
+                    properties:
+                      project: { type: object, description: Persisted destination project with id, name and runIds. }
+                      runId: { type: string }
+                      copiedJobs: { type: integer, minimum: 1 }
+                      reused: { type: boolean }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+  /healthz:
+    get:
+      tags: [Service]
+      operationId: agentHealth
+      summary: Check whether the Agent process is alive
+      security: []
+      responses:
+        '200':
+          description: Process is alive.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthEnvelope' }
+  /readyz:
+    get:
+      tags: [Service]
+      operationId: agentReady
+      summary: Check inference and authentication readiness
+      security: []
+      responses:
+        '200':
+          description: Service is ready.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReadinessEnvelope' }
+        '503':
+          description: Service is alive but not ready.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReadinessEnvelope' }
+  /api/v1/agent/capabilities:
+    get:
+      tags: [Capabilities]
+      operationId: getAgentCapabilities
+      summary: Get runtime, model, tool and transport capabilities
+      responses:
+        '200':
+          description: Safe equivalent of relevant CLI model/help/runtime information.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CapabilitiesEnvelope' }
+        '401': { $ref: '#/components/responses/Error' }
+        '503': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/inference:
+    get:
+      tags: [Capabilities]
+      operationId: listInferenceProviders
+      summary: Get the frontend-safe provider and model catalog
+      responses:
+        '200':
+          description: Configured providers and the current server-owned selection.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InferenceCatalogEnvelope' }
+        '401': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/inference/settings:
+    get:
+      tags: [Capabilities]
+      operationId: getInferenceSettings
+      summary: Get non-secret inference settings
+      description: Deployed mode is read-only. Local Workbench may use the compatibility `/api/v3` PATCH route.
+      responses:
+        '200':
+          description: Current non-secret LLM and embedding settings.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InferenceSettingsEnvelope' }
+        '401': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/advisory:
+    post:
+      tags: [Advisory]
+      operationId: createStatelessAdvisory
+      summary: Ask a read-only question, optionally persisting sidebar consultation history
+      description: |
+        Shared by both result entry points and manual mode. No tools or training runs.
+        With consultation.scope/id/requestId, messages and references are persisted
+        independently in the authenticated user's sidebar history. Without it, stateless.
+        Up to four selected charts may be attached. Each chart contains the
+        CSV/JSON data used to draw it; image pixels are never sent or read.
+      parameters: [{ $ref: '#/components/parameters/CsrfToken' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdvisoryRequest' }
+            examples:
+              chartAnalysis:
+                summary: Ask the Agent to write a research-result paragraph from a figure's data
+                value:
+                  message: 请根据这份图表的原始数据，写一段可以直接放进研究报告的结果分析。
+                  purpose: chart-analysis
+                  charts:
+                    - chartName: 主题占比分布
+                      chartPath: native/global/Topic Proportion Distribution.png
+                      dataset: OPCdata_research_2400.csv
+                      model: STM
+                      sources:
+                        - name: topic_proportions.csv
+                          path: native/global/topic_proportions.csv
+                          format: csv
+                          content: "topic_id,mean_weight\n1,0.0644\n2,0.0574\n"
+                          truncated: false
+                          totalCharacters: 48
+      responses:
+        '200':
+          description: Self-contained advisory answer.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdvisoryEnvelope' }
+        '400': { $ref: '#/components/responses/Error' }
+        '202': { description: The identical consultation request is already running; poll consultation history. }
+        '409': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '502': { $ref: '#/components/responses/Error' }
+        '503': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/consultations:
+    parameters: [{ $ref: '#/components/parameters/ConsultationScope' }]
+    get:
+      tags: [Advisory]
+      operationId: listConsultations
+      summary: List the authenticated user's project consultations, including soft-deleted records
+      responses:
+        '200':
+          description: Pinned first, then most recently updated; activeId excludes deleted threads.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConsultationEnvelope' }
+    post:
+      tags: [Advisory]
+      operationId: createConsultation
+      summary: Create and select a sidebar consultation
+      parameters: [{ $ref: '#/components/parameters/CsrfToken' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id: { type: string, pattern: '^[a-zA-Z0-9_-]{1,120}$' }
+      responses:
+        '200':
+          description: Updated consultation history.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConsultationEnvelope' }
+  /api/v1/agent/consultations/import:
+    parameters: [{ $ref: '#/components/parameters/ConsultationScope' }]
+    post:
+      tags: [Advisory]
+      operationId: importConsultations
+      summary: Atomically import legacy browser history without overwriting existing or deleted records
+      parameters: [{ $ref: '#/components/parameters/CsrfToken' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [threads]
+              properties:
+                activeId: { type: string }
+                threads: { type: array, maxItems: 1000, items: { type: object, required: [id, messages], additionalProperties: true } }
+      responses:
+        '200':
+          description: Updated consultation history.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConsultationEnvelope' }
+  /api/v1/agent/consultations/{consultationId}:
+    parameters:
+      - { $ref: '#/components/parameters/ConsultationScope' }
+      - { name: consultationId, in: path, required: true, schema: { type: string } }
+    patch:
+      tags: [Advisory]
+      operationId: updateConsultation
+      summary: Pin, select, soft-delete or restore a consultation
+      parameters: [{ $ref: '#/components/parameters/CsrfToken' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              minProperties: 1
+              properties:
+                pinned: { type: boolean }
+                select: { type: boolean }
+                deleted: { type: boolean }
+      responses:
+        '200':
+          description: Updated consultation history.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConsultationEnvelope' }
+    delete:
+      tags: [Advisory]
+      operationId: deleteConsultation
+      summary: Soft-delete a consultation; messages remain recoverable
+      parameters: [{ $ref: '#/components/parameters/CsrfToken' }]
+      responses:
+        '200':
+          description: Updated consultation history.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConsultationEnvelope' }
+  /api/v1/agent/projects:
+    get:
+      tags: [Projects]
+      operationId: listAgentProjects
+      summary: List projects owned by the authenticated user
+      responses:
+        '200':
+          description: Project list.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectListEnvelope' }
+        '401': { $ref: '#/components/responses/Error' }
+    post:
+      tags: [Projects]
+      operationId: createAgentProject
+      summary: Create a project
+      parameters: [{ $ref: '#/components/parameters/CsrfToken' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectCreateRequest' }
+      responses:
+        '200':
+          description: Created project.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectEnvelope' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/projects/{projectId}:
+    parameters: [{ $ref: '#/components/parameters/ProjectId' }]
+    patch:
+      tags: [Projects]
+      operationId: updateAgentProject
+      summary: Rename or pin a project
+      parameters: [{ $ref: '#/components/parameters/CsrfToken' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProjectUpdateRequest' }
+      responses:
+        '200':
+          description: Updated project.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectEnvelope' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [Projects]
+      operationId: archiveAgentProject
+      summary: Archive a project without destroying stored records
+      parameters: [{ $ref: '#/components/parameters/CsrfToken' }]
+      responses:
+        '200':
+          description: Archived project.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectEnvelope' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/datasets:
+    get:
+      tags: [Datasets]
+      operationId: listAgentDatasets
+      summary: List datasets owned by the authenticated user, optionally scoped to one project
+      parameters:
+        - { name: projectId, in: query, required: false, schema: { type: string }, description: Return only datasets attached to this owned project. }
+      responses:
+        '200':
+          description: Dataset list.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DatasetListEnvelope' }
+        '401': { $ref: '#/components/responses/Error' }
+    post:
+      tags: [Datasets]
+      operationId: uploadAgentDataset
+      summary: Upload and register a managed dataset
+      parameters:
+        - { $ref: '#/components/parameters/CsrfToken' }
+        - { name: projectId, in: query, required: false, schema: { type: string }, description: Attach the uploaded dataset to this owned project. }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '200':
+          description: Registered dataset metadata.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DatasetEnvelope' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '413': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/runs:
+    get:
+      tags: [Runs]
+      operationId: listAgentRuns
+      summary: List active conversations owned by the authenticated user
+      responses:
+        '200':
+          description: Run summaries.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RunListEnvelope' }
+        '401': { $ref: '#/components/responses/Error' }
+    post:
+      tags: [Runs]
+      operationId: createAgentRun
+      summary: Create a conversation in a project
+      parameters: [{ $ref: '#/components/parameters/CsrfToken' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RunCreateRequest' }
+      responses:
+        '200':
+          description: Initial run snapshot.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RunEnvelope' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/runs/{runId}:
+    parameters: [{ $ref: '#/components/parameters/RunId' }]
+    get:
+      tags: [Runs]
+      operationId: getAgentRun
+      summary: Get the latest run snapshot
+      responses:
+        '200':
+          description: Latest run snapshot.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RunEnvelope' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+    patch:
+      tags: [Runs]
+      operationId: updateAgentRun
+      summary: Rename a conversation or change its analysis mode
+      parameters: [{ $ref: '#/components/parameters/CsrfToken' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RunUpdateRequest' }
+      responses:
+        '200':
+          description: Updated run identity fields.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RunUpdateEnvelope' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [Runs]
+      operationId: archiveAgentRun
+      summary: Archive a conversation without destroying its history
+      parameters: [{ $ref: '#/components/parameters/CsrfToken' }]
+      responses:
+        '200':
+          description: Archived run identity.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArchivedRunEnvelope' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/runs/{runId}/conversation:
+    parameters: [{ $ref: '#/components/parameters/RunId' }]
+    get:
+      tags: [Runs]
+      operationId: getAgentConversation
+      summary: Get visible messages and persisted confirmation cards
+      responses:
+        '200':
+          description: Conversation history with opaque artifact links.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConversationEnvelope' }
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/runs/{runId}/activities:
+    parameters: [{ $ref: '#/components/parameters/RunId' }]
+    get:
+      tags: [Runs]
+      operationId: getAgentActivities
+      summary: Get recent safe execution activity
+      responses:
+        '200':
+          description: At most the 100 most recent calls.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ActivityEnvelope' }
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/runs/{runId}/activities/stream:
+    parameters: [{ $ref: '#/components/parameters/RunId' }]
+    get:
+      tags: [Runs]
+      operationId: streamAgentActivities
+      summary: Stream complete frontend snapshots using SSE
+      description: 'Emits `event: sync`; JSON in `data:` conforms to `SseSyncPayload`. Unchanged connections receive comment heartbeats.'
+      responses:
+        '200':
+          description: Server-sent event stream.
+          content:
+            text/event-stream:
+              schema: { type: string }
+              example: |-
+                event: sync
+                data: {"snapshot":{},"checkpoint":null,"conversation":{"runId":"...","messages":[]},"activity":{"runId":"...","recent":[],"progress":{"completedGates":0,"totalGates":0,"percent":0,"label":"等待你的消息"}}}
+          x-sse-data-schema: { $ref: '#/components/schemas/SseSyncPayload' }
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/runs/{runId}/checkpoint:
+    parameters: [{ $ref: '#/components/parameters/RunId' }]
+    get:
+      tags: [Runs]
+      operationId: getAgentCheckpoint
+      summary: Get the current human confirmation card
+      responses:
+        '200':
+          description: Pending checkpoint, or null.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CheckpointEnvelope' }
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/runs/{runId}/results:
+    parameters: [{ $ref: '#/components/parameters/RunId' }]
+    get:
+      tags: [Results]
+      operationId: listAgentResults
+      summary: List selectable training results and the current exact selection
+      responses:
+        '200':
+          description: Result identities, progress, hydration readiness and approved report navigation metadata; no raw source rows.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ResultCatalogEnvelope' }
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/runs/{runId}/results/{jobId}/archive:
+    parameters:
+      - { $ref: '#/components/parameters/RunId' }
+      - { $ref: '#/components/parameters/JobId' }
+    get:
+      tags: [Results]
+      operationId: downloadAgentResultArchive
+      summary: ZIP of one result's figures, tables and report document
+      description: |
+        Requires the same result access as the result catalog. Model binaries
+        (.npy, .npz, .joblib, .pkl, .pt, .bin, .h5) are excluded; the archive
+        keeps the delivered training/, native/ and tables/ layout.
+      responses:
+        '200':
+          description: ZIP archive of the result deliverables.
+          content:
+            application/zip:
+              schema: { type: string, format: binary }
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/runs/{runId}/results/{jobId}/figure-bundle:
+    parameters:
+      - { $ref: '#/components/parameters/RunId' }
+      - { $ref: '#/components/parameters/JobId' }
+      - name: path
+        in: query
+        required: true
+        description: File name of a delivered figure, as returned in artifacts.files[].
+        schema: { type: string, maxLength: 300 }
+    get:
+      tags: [Results]
+      operationId: downloadAgentFigureBundle
+      summary: ZIP of one figure, the data it was drawn from and the plotting notes
+      description: |
+        Contains every delivered format of that figure, the CSV table mapped to
+        the figure family (or the table recorded in a re-rendered figure's
+        sidecar), adjustment-spec.json when the figure was re-rendered, and
+        plot-code.md with the implementation notes from the visualization module.
+      responses:
+        '200':
+          description: ZIP archive for one figure.
+          content:
+            application/zip:
+              schema: { type: string, format: binary }
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/runs/{runId}/result-selection:
+    parameters:
+      - { $ref: '#/components/parameters/RunId' }
+      - { $ref: '#/components/parameters/CsrfToken' }
+    post:
+      tags: [Results]
+      operationId: selectAgentResults
+      summary: Resolve and persist exact result IDs without reading result contents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ResultSelectionRequest' }
+      responses:
+        '200':
+          description: Persisted selection with immutable resolved job IDs.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ResultSelectionEnvelope' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/runs/{runId}/messages:
+    parameters:
+      - { $ref: '#/components/parameters/RunId' }
+      - { $ref: '#/components/parameters/CsrfToken' }
+    post:
+      tags: [Runs]
+      operationId: sendAgentMessage
+      summary: Send a message and optional owned dataset attachments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MessageRequest' }
+      responses:
+        '200':
+          description: Synchronous turn completed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RunEnvelope' }
+        '202':
+          description: Asynchronous turn accepted with a durable task receipt.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RunEnvelope' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '503': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/runs/{runId}/checkpoint-decision:
+    parameters:
+      - { $ref: '#/components/parameters/RunId' }
+      - { $ref: '#/components/parameters/CsrfToken' }
+    post:
+      tags: [Runs]
+      operationId: decideAgentCheckpoint
+      summary: Approve, reject or revise the displayed checkpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CheckpointDecision' }
+      responses:
+        '200':
+          description: Synchronous decision handling completed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RunEnvelope' }
+        '202':
+          description: Asynchronous decision handling accepted.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RunEnvelope' }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/runs/{runId}/stop:
+    parameters:
+      - { $ref: '#/components/parameters/RunId' }
+      - { $ref: '#/components/parameters/CsrfToken' }
+    post:
+      tags: [Runs]
+      operationId: stopAgentGeneration
+      summary: Request cancellation of the active Agent turn
+      responses:
+        '200':
+          description: Stop signal accepted; task state finalizes asynchronously.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StopEnvelope' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/runs/{runId}/tasks/{taskId}:
+    parameters:
+      - { $ref: '#/components/parameters/RunId' }
+      - { $ref: '#/components/parameters/TaskId' }
+    get:
+      tags: [Tasks]
+      operationId: getAgentTask
+      summary: Read a durable asynchronous turn receipt
+      responses:
+        '200':
+          description: Current task state.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TaskEnvelope' }
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+  /api/v1/agent/runs/{runId}/artifacts/{artifactId}/download:
+    parameters:
+      - { $ref: '#/components/parameters/RunId' }
+      - { $ref: '#/components/parameters/ArtifactId' }
+    get:
+      tags: [Artifacts]
+      operationId: downloadAgentArtifact
+      summary: Open or download a registered conversation artifact
+      responses:
+        '200':
+          description: Original bytes. Content-Type follows the file type; HTML child assets use protected artifact URLs.
+          headers:
+            X-Content-Type-Options:
+              schema: { type: string, const: nosniff }
+          content:
+            application/octet-stream: { schema: { type: string, format: binary } }
+            text/html: { schema: { type: string } }
+            text/markdown: { schema: { type: string } }
+            text/csv: { schema: { type: string } }
+            application/json: { schema: {} }
+            application/pdf: { schema: { type: string, format: binary } }
+            image/png: { schema: { type: string, format: binary } }
+            image/svg+xml: { schema: { type: string } }
+            image/jpeg: { schema: { type: string, format: binary } }
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+components:
+  securitySchemes:
+    thetaSession:
+      type: apiKey
+      in: cookie
+      name: __Host-theta_session
+      description: Existing THETA browser session. A trusted proxy may translate a bearer token to this cookie.
+  parameters:
+    ConsultationScope:
+      name: scope
+      in: query
+      required: true
+      schema: { type: string, minLength: 1, maxLength: 300 }
+    CsrfToken:
+      name: X-CSRF-Token
+      in: header
+      required: true
+      description: Token returned by the existing Business API session.
+      schema: { type: string, minLength: 1 }
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      schema: { type: string, minLength: 1 }
+    RunId:
+      name: runId
+      in: path
+      required: true
+      schema: { type: string, minLength: 1 }
+    JobId:
+      name: jobId
+      in: path
+      required: true
+      description: Training job id as returned in results[].jobId.
+      schema: { type: string, minLength: 1 }
+    TaskId:
+      name: taskId
+      in: path
+      required: true
+      schema: { type: string, minLength: 1 }
+    ArtifactId:
+      name: artifactId
+      in: path
+      required: true
+      schema: { type: string, pattern: '^[a-f0-9]{64}$' }
+  schemas:
+    Error:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code: { type: string, examples: [validation_failed, not_found, csrf_failed, agent_error] }
+        message: { type: string }
+    ErrorEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, error]
+      properties:
+        ok: { const: false }
+        error: { $ref: '#/components/schemas/Error' }
+    Health:
+      type: object
+      additionalProperties: false
+      required: [service, status]
+      properties:
+        service: { const: theta-agent }
+        status: { const: ok }
+    HealthEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data: { $ref: '#/components/schemas/Health' }
+    Readiness:
+      type: object
+      additionalProperties: false
+      required: [service, status, checks]
+      properties:
+        service: { const: theta-agent }
+        status: { type: string, enum: [ready, not_ready] }
+        checks:
+          type: object
+          additionalProperties: false
+          required: [inference, authentication]
+          properties:
+            inference: { type: boolean }
+            authentication: { type: boolean }
+    ReadinessEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data: { $ref: '#/components/schemas/Readiness' }
+    AnalysisMode: { type: string, enum: [topic, free] }
+    InferenceCapability:
+      type: object
+      additionalProperties: false
+      required: [configured, providerId, model]
+      properties:
+        configured: { type: boolean }
+        providerId: { type: [string, 'null'] }
+        model: { type: [string, 'null'] }
+    InferenceProvider:
+      type: object
+      additionalProperties: false
+      required: [id, displayName, credentialConfigured, configured, configuredModel, selected, local, category, models, capabilities]
+      properties:
+        id: { type: string }
+        displayName: { type: string }
+        baseUrl: { type: string, description: Empty in browser-safe responses. }
+        credentialConfigured: { type: boolean }
+        configured: { type: boolean }
+        configuredModel: { type: string }
+        selected: { type: boolean }
+        local: { type: boolean }
+        category: { type: string, enum: [direct] }
+        models: { type: array, items: { type: string } }
+        capabilities:
+          type: object
+          additionalProperties: false
+          required: [streaming, reasoning, reasoningEffort]
+          properties:
+            streaming: { type: boolean }
+            reasoning: { type: boolean }
+            reasoningEffort: { type: boolean }
+    InferenceCatalogEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data:
+          type: object
+          additionalProperties: false
+          required: [kind, selection, providers]
+          properties:
+            kind: { const: inference.provider.list }
+            selection:
+              oneOf:
+                - type: object
+                  additionalProperties: false
+                  required: [providerId, model, source]
+                  properties:
+                    providerId: { type: string }
+                    model: { type: string }
+                    source: { type: string }
+                - type: 'null'
+            providers: { type: array, items: { $ref: '#/components/schemas/InferenceProvider' } }
+    InferenceSettingsEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data:
+          type: object
+          additionalProperties: false
+          required: [readOnly, llm, embedding]
+          properties:
+            readOnly: { type: boolean }
+            llm:
+              type: object
+              required: [providerId, model, apiKeyConfigured, reasoningMode, reasoningEffort, temperature, maxTokens, timeoutMs, streaming, typewriter, typewriterSpeedMs]
+              additionalProperties: true
+              properties:
+                providerId: { type: [string, 'null'] }
+                model: { type: string }
+                apiKeyConfigured: { type: boolean }
+                reasoningMode: { type: string }
+                reasoningEffort: { type: string }
+                temperature: { type: number }
+                maxTokens: { type: integer }
+                timeoutMs: { type: integer }
+                streaming: { type: boolean }
+                typewriter: { type: boolean }
+                typewriterSpeedMs: { type: integer }
+            embedding:
+              type: object
+              additionalProperties: true
+              required: [enabled, providerId, model, apiKeyConfigured]
+              properties:
+                enabled: { type: boolean }
+                providerId: { type: string }
+                model: { type: string }
+                apiKeyConfigured: { type: boolean }
+    ComputeCapability:
+      type: object
+      additionalProperties: false
+      required: [backend, workerApiUnchanged, resultSelection]
+      properties:
+        backend: { type: string, enum: [business-api, go-control-plane, local] }
+        workerApiUnchanged: { const: true }
+        resultSelection:
+          type: object
+          additionalProperties: false
+          required: [modes, automaticStrategies, readsResultContent]
+          properties:
+            modes: { type: array, prefixItems: [{ const: manual }, { const: automatic }], minItems: 2, maxItems: 2 }
+            automaticStrategies: { type: array, prefixItems: [{ const: latest_completed }, { const: all_completed }], minItems: 2, maxItems: 2 }
+            readsResultContent: { const: false }
+    DatasetCapability:
+      type: object
+      additionalProperties: false
+      required: [formats, maximumUploadBytes, maximumTrainingRows]
+      properties:
+        formats:
+          type: array
+          items: { type: string, enum: [csv, tsv, txt, md, json, jsonl, ndjson, xlsx, xls, parquet, pdf, docx] }
+        maximumUploadBytes: { type: integer, const: 209715200 }
+        maximumTrainingRows: { type: integer, const: 1000000 }
+    ModelParameterValue:
+      oneOf:
+        - { type: string }
+        - { type: number }
+        - { type: boolean }
+        - { type: 'null' }
+        - { type: array, items: { type: number } }
+    ModelParameter:
+      type: object
+      required: [type, default, target, source]
+      properties:
+        flag: { type: string }
+        type: { type: string, enum: [str, int, float, bool, array] }
+        default: { $ref: '#/components/schemas/ModelParameterValue' }
+        choices:
+          type: [array, 'null']
+          items: { $ref: '#/components/schemas/ModelParameterValue' }
+        action: { type: [string, 'null'] }
+        nullable: { type: boolean }
+        source: { type: string, description: Repository-relative implementation source. }
+        line: { type: integer, minimum: 1 }
+        target: { type: string }
+        note: { type: string }
+      additionalProperties: true
+    ModelCapability:
+      type: object
+      additionalProperties: false
+      required: [modelId, description, runtimeProfile, requiresTime, requiresCovariates, requiresWeights, embeddingOptions, parameterNotes, supportedParameters, parameters, parameterChoices, languageNote, engine]
+      properties:
+        modelId: { type: string, enum: [lda, btm, hdp, dtm, stm, bertopic, ctm, theta, etm, nvdm, gsm, prodlda] }
+        description: { type: string }
+        runtimeProfile: { type: string }
+        requiresTime: { type: boolean }
+        requiresCovariates: { type: boolean }
+        requiresWeights: { type: boolean }
+        embeddingOptions: { type: array, items: { type: string } }
+        parameterNotes: { type: object, additionalProperties: { type: string } }
+        supportedParameters: { type: array, items: { type: string } }
+        parameters: { type: object, additionalProperties: { $ref: '#/components/schemas/ModelParameter' } }
+        parameterChoices:
+          type: object
+          additionalProperties:
+            type: array
+            items: { $ref: '#/components/schemas/ModelParameterValue' }
+        languageNote: { type: string }
+        engine: { type: string }
+    ToolCapability:
+      type: object
+      additionalProperties: false
+      required: [id, domain, effect, description]
+      properties:
+        id: { type: string }
+        domain: { type: string }
+        effect: { type: string, enum: [read, write, effect] }
+        description: { type: string }
+    AgentLimits:
+      type: object
+      additionalProperties: false
+      required: [messageCharacters, recentActivities, autonomousModelCallsPerTurn, toolRequestsPerTurn]
+      properties:
+        messageCharacters: { type: integer, const: 16000 }
+        recentActivities: { type: integer, const: 100 }
+        autonomousModelCallsPerTurn: { type: integer, const: 8 }
+        toolRequestsPerTurn: { type: integer, const: 12 }
+    TransportCapability:
+      type: object
+      additionalProperties: false
+      required: [asynchronousMessages, serverSentEvents, idempotencyKey]
+      properties:
+        asynchronousMessages: { const: true }
+        serverSentEvents: { const: true }
+        idempotencyKey: { const: requestId }
+    Capabilities:
+      type: object
+      additionalProperties: false
+      required: [service, apiVersion, serviceMode, analysisModes, inference, compute, datasets, models, tools, approvals, limits, transport]
+      properties:
+        service: { const: theta-agent }
+        apiVersion: { const: v1 }
+        serviceMode: { type: string, enum: [local, deployed] }
+        analysisModes: { type: array, items: { $ref: '#/components/schemas/AnalysisMode' } }
+        inference: { $ref: '#/components/schemas/InferenceCapability' }
+        compute: { $ref: '#/components/schemas/ComputeCapability' }
+        datasets: { $ref: '#/components/schemas/DatasetCapability' }
+        models: { type: array, minItems: 12, maxItems: 12, items: { $ref: '#/components/schemas/ModelCapability' } }
+        tools: { type: array, items: { $ref: '#/components/schemas/ToolCapability' } }
+        approvals: { type: array, items: { type: string } }
+        limits: { $ref: '#/components/schemas/AgentLimits' }
+        transport: { $ref: '#/components/schemas/TransportCapability' }
+    CapabilitiesEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data: { $ref: '#/components/schemas/Capabilities' }
+    AdvisoryChartSource:
+      type: object
+      additionalProperties: false
+      required: [name, path, format, content, truncated, totalCharacters]
+      properties:
+        name: { type: string, maxLength: 200 }
+        path: { type: string, maxLength: 500 }
+        format: { type: string, enum: [csv, json] }
+        content: { type: string, minLength: 1, maxLength: 512000 }
+        truncated: { type: boolean }
+        totalCharacters: { type: integer, minimum: 1 }
+    AdvisoryChart:
+      type: object
+      additionalProperties: false
+      required: [chartName, chartPath, dataset, model, sources]
+      properties:
+        chartName: { type: string, maxLength: 200 }
+        chartPath: { type: string, maxLength: 500 }
+        dataset: { type: string, maxLength: 200 }
+        model: { type: string, maxLength: 100 }
+        sources:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items: { $ref: '#/components/schemas/AdvisoryChartSource' }
+    AdvisoryRequest:
+      type: object
+      additionalProperties: false
+      required: [message]
+      properties:
+        consultation:
+          type: object
+          required: [scope, id, requestId]
+          properties:
+            scope: { type: string, minLength: 1, maxLength: 300 }
+            id: { type: string, pattern: '^[a-zA-Z0-9_-]{1,120}$' }
+            requestId: { type: string, pattern: '^[a-zA-Z0-9_-]{1,120}$' }
+        message: { type: string, minLength: 1, maxLength: 16000 }
+        context: { type: object, maxProperties: 100, additionalProperties: true }
+        charts: { type: array, maxItems: 4, items: { $ref: '#/components/schemas/AdvisoryChart' } }
+        purpose:
+          type: string
+          enum: [consultation, chart-analysis]
+          default: consultation
+          description: chart-analysis switches the instruction set to a research-result paragraph built only from the attached drawing data.
+    AdvisoryEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data:
+          type: object
+          additionalProperties: false
+          required: [message]
+          properties:
+            message: { type: string }
+            pending: { type: boolean }
+            usage:
+              oneOf:
+                - type: object
+                  additionalProperties: false
+                  properties:
+                    inputTokens: { type: integer, minimum: 0 }
+                    outputTokens: { type: integer, minimum: 0 }
+                    totalTokens: { type: integer, minimum: 0 }
+                - type: 'null'
+    ConsultationEnvelope:
+      type: object
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data:
+          type: object
+          required: [activeId, threads]
+          properties:
+            activeId: { type: string }
+            threads:
+              type: array
+              items:
+                type: object
+                required: [id, title, createdAt, updatedAt, pinned, messages]
+                properties:
+                  id: { type: string }
+                  title: { type: string }
+                  createdAt: { type: string, format: date-time }
+                  updatedAt: { type: string, format: date-time }
+                  pinned: { type: boolean }
+                  deletedAt: { type: string, format: date-time }
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, role, content, timestamp]
+                      properties:
+                        id: { type: string }
+                        role: { type: string, enum: [user, ai] }
+                        type: { const: text }
+                        content: { type: string }
+                        timestamp: { type: string }
+                        isThinking: { type: boolean }
+                        data: { type: object, additionalProperties: true }
+                        requestId: { type: string }
+                        fingerprint: { type: string }
+    Project:
+      type: object
+      additionalProperties: false
+      required: [id, name, createdAt, updatedAt, pinned, runIds]
+      properties:
+        id: { type: string }
+        name: { type: string, maxLength: 120 }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        pinned: { type: boolean }
+        archived: { type: boolean }
+        runIds: { type: array, items: { type: string } }
+    ProjectCreateRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        pinned: { type: boolean, default: false }
+    ProjectUpdateRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        pinned: { type: boolean }
+    ProjectEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data: { $ref: '#/components/schemas/Project' }
+    ProjectListEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data:
+          type: object
+          additionalProperties: false
+          required: [projects]
+          properties:
+            projects: { type: array, items: { $ref: '#/components/schemas/Project' } }
+    Dataset:
+      type: object
+      additionalProperties: false
+      required: [datasetRef, displayName, sizeBytes, suffix, createdAt]
+      properties:
+        datasetRef: { type: string }
+        displayName: { type: string }
+        sizeBytes: { type: integer, minimum: 1 }
+        suffix: { type: string, description: Extension including the leading dot. }
+        createdAt: { type: string, format: date-time }
+    DatasetEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data: { $ref: '#/components/schemas/Dataset' }
+    DatasetListEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data:
+          type: object
+          additionalProperties: false
+          required: [datasets]
+          properties:
+            datasets: { type: array, items: { $ref: '#/components/schemas/Dataset' } }
+    TaskStatus: { type: string, enum: [queued, running, waiting_human, completed, failed, cancelled, interrupted] }
+    TaskProgress:
+      type: object
+      additionalProperties: false
+      required: [completed, total]
+      properties:
+        completed: { type: integer, minimum: 0 }
+        total: { type: integer, minimum: 0 }
+    AgentTask:
+      type: object
+      additionalProperties: false
+      required: [id, status, phase, objective, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        status: { $ref: '#/components/schemas/TaskStatus' }
+        phase: { type: string }
+        objective: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time }
+        error: { type: string }
+        lastOperation: { type: string }
+        progress: { $ref: '#/components/schemas/TaskProgress' }
+    RunSnapshot:
+      type: object
+      additionalProperties: false
+      required: [runId, projectId, status, currentState, analysisMode, eventCount, conversationTitle, messageCount, lastMessageAt, lastEventAt]
+      properties:
+        runId: { type: string }
+        projectId: { type: string }
+        status: { type: string, enum: [ready, running, waiting_human] }
+        task: { $ref: '#/components/schemas/AgentTask' }
+        currentState: { type: string }
+        analysisMode: { $ref: '#/components/schemas/AnalysisMode' }
+        eventCount: { type: integer, minimum: 0 }
+        datasetRef: { type: string }
+        conversationTitle: { type: string }
+        datasetRefs: { type: array, items: { type: string }, description: 会话已绑定的数据版本；移除输入框引用不删除绑定或项目数据。 }
+        messageCount: { type: integer, minimum: 0, description: 用户发送消息数，userMessageCount 的兼容别名；不包含助手、工具、后台事件和确认卡点击。 }
+        userMessageCount: { type: integer, minimum: 0 }
+        lastMessageAt: { type: string, format: date-time }
+        lastEventAt: { type: string, format: date-time }
+        pendingReason: { type: string }
+        pendingActionRef: { type: string }
+        trainingStatus: { type: string, enum: [queued, running, completed, failed, cancelled] }
+        trainingPercent: { type: number, minimum: 0, maximum: 100 }
+        trainingPhase: { type: string }
+    RunCreateRequest:
+      type: object
+      additionalProperties: false
+      required: [projectId]
+      properties:
+        projectId: { type: string, minLength: 1 }
+        researchGoal: { type: string, maxLength: 120 }
+        analysisMode: { $ref: '#/components/schemas/AnalysisMode' }
+        datasetRef: { type: string }
+    RunUpdateRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        displayName: { type: string, minLength: 1, maxLength: 120 }
+        analysisMode: { $ref: '#/components/schemas/AnalysisMode' }
+    RunUpdate:
+      type: object
+      additionalProperties: false
+      required: [runId, displayName, analysisMode]
+      properties:
+        runId: { type: string }
+        displayName: { type: string }
+        analysisMode: { $ref: '#/components/schemas/AnalysisMode' }
+    RunEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data: { $ref: '#/components/schemas/RunSnapshot' }
+    RunListEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data:
+          type: object
+          additionalProperties: false
+          required: [runs]
+          properties:
+            runs: { type: array, items: { $ref: '#/components/schemas/RunSnapshot' } }
+    RunUpdateEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data: { $ref: '#/components/schemas/RunUpdate' }
+    ArchivedRunEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data:
+          type: object
+          additionalProperties: false
+          required: [runId]
+          properties:
+            runId: { type: string }
+    ConversationMessage:
+      type: object
+      additionalProperties: false
+      required: [messageId, role, content, createdAt]
+      properties:
+        messageId: { type: string }
+        role: { type: string, enum: [user, assistant] }
+        content: { type: string, description: Markdown; confirmation snapshots are backward-compatible JSON strings. }
+        messageKind: { type: string, enum: [conversation.error, activity.interaction.snapshot] }
+        createdAt: { type: string, format: date-time }
+    Conversation:
+      type: object
+      additionalProperties: false
+      required: [runId, messages]
+      properties:
+        runId: { type: string }
+        messages: { type: array, items: { $ref: '#/components/schemas/ConversationMessage' } }
+    ConversationEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data: { $ref: '#/components/schemas/Conversation' }
+    ActivityItem:
+      type: object
+      additionalProperties: false
+      required: [eventId, kind, displayName, userMessage, status, startedAt, safeOutputSummary]
+      properties:
+        eventId: { type: string }
+        kind: { type: string, enum: [inference, tool, provider] }
+        toolId: { type: string }
+        displayName: { type: string }
+        userMessage: { type: string, maxLength: 160 }
+        status: { type: string, enum: [started, completed, failed, cancelled, cached] }
+        startedAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time }
+        safeOutputSummary: { type: string }
+    ActivityProgress:
+      type: object
+      additionalProperties: false
+      required: [completedGates, totalGates, percent, label]
+      properties:
+        completedGates: { type: integer, minimum: 0 }
+        totalGates: { type: integer, minimum: 0 }
+        percent: { type: number, minimum: 0, maximum: 100 }
+        label: { type: string }
+    Activity:
+      type: object
+      additionalProperties: false
+      required: [runId, recent, progress]
+      properties:
+        runId: { type: string }
+        recent: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/ActivityItem' } }
+        progress: { $ref: '#/components/schemas/ActivityProgress' }
+    ActivityEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data: { $ref: '#/components/schemas/Activity' }
+    CheckpointView:
+      type: object
+      additionalProperties: false
+      required: [title, summary, sections]
+      properties:
+        title: { type: string }
+        summary: { type: string }
+        sections: { type: array, items: {} }
+    Checkpoint:
+      type: object
+      additionalProperties: false
+      required: [checkpointId, kind, contentHash, summaryForUser, content, warnings, view]
+      properties:
+        checkpointId: { type: string }
+        kind: { const: action }
+        contentHash: { type: string }
+        summaryForUser: { type: string }
+        content: { type: object }
+        warnings: { type: array, items: { type: string } }
+        view: { $ref: '#/components/schemas/CheckpointView' }
+    CheckpointEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data:
+          oneOf:
+            - { $ref: '#/components/schemas/Checkpoint' }
+            - { type: 'null' }
+    Attachment:
+      type: object
+      additionalProperties: false
+      required: [kind, id]
+      properties:
+        kind: { const: dataset }
+        id: { type: string }
+    MessageRequest:
+      type: object
+      additionalProperties: false
+      required: [content]
+      properties:
+        content: { type: string, minLength: 1, maxLength: 16000 }
+        attachments: { type: array, items: { $ref: '#/components/schemas/Attachment' } }
+        modelPreference:
+          type: string
+          enum: [lda, btm, hdp, dtm, stm, bertopic, ctm, theta, etm, nvdm, gsm, prodlda]
+          description: Optional frontend-selected topic-model preference for plan formation. It never grants training approval.
+        resultSelection: { $ref: '#/components/schemas/ResultSelectionRequest' }
+        async: { type: boolean, default: false, description: Frontends should set true and consume the task plus SSE. }
+        requestId: { type: string, pattern: '^[a-zA-Z0-9_-]{8,100}$', description: Required when async is true; reuse only for the identical request. }
+    ResultSelectionRequest:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [mode, jobIds]
+          properties:
+            mode: { const: manual }
+            jobIds: { type: array, minItems: 1, maxItems: 12, uniqueItems: true, items: { type: string } }
+        - type: object
+          additionalProperties: false
+          required: [mode, strategy]
+          properties:
+            mode: { const: automatic }
+            strategy: { type: string, enum: [latest_completed, all_completed] }
+    ResultSelection:
+      type: object
+      additionalProperties: false
+      required: [mode, resolvedJobIds, resolvedAt]
+      properties:
+        mode: { type: string, enum: [manual, automatic] }
+        strategy: { type: string, enum: [latest_completed, all_completed] }
+        resolvedJobIds: { type: array, minItems: 1, maxItems: 12, uniqueItems: true, items: { type: string } }
+        resolvedAt: { type: string, format: date-time }
+    ResultSummary:
+      type: object
+      additionalProperties: false
+      required: [jobId, modelId, status, selected, reportStatus]
+      properties:
+        jobId: { type: string }
+        modelId: { type: string }
+        status: { type: string, enum: [queued, running, completed, failed, cancelled] }
+        selected: { type: boolean }
+        reportStatus: { type: string, enum: [not_requested, ready, incomplete] }
+        phase: { type: string }
+        percent: { type: number, minimum: 0, maximum: 100 }
+        artifacts:
+          type: object
+          additionalProperties: false
+          required: [reportUrl, fileCount, figureCount, tableCount, matrixCount, files]
+          properties:
+            reportUrl: { type: string, description: Same-origin opaque artifact URL for an already authorized report. }
+            archiveUrl: { type: string, description: Same-origin URL of a ZIP with this result's figures, tables and report; model binaries are excluded. }
+            fileCount: { type: integer, minimum: 0 }
+            figureCount: { type: integer, minimum: 0 }
+            tableCount: { type: integer, minimum: 0 }
+            matrixCount: { type: integer, minimum: 0 }
+            files:
+              type: array
+              description: Opaque same-origin links for the already authorized result files. Host filesystem paths are never returned.
+              items:
+                type: object
+                additionalProperties: false
+                required: [name, kind, url]
+                properties:
+                  name: { type: string }
+                  kind: { type: string }
+                  url: { type: string }
+    ResultCatalogEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data:
+          type: object
+          additionalProperties: false
+          required: [results, selection]
+          properties:
+            results: { type: array, items: { $ref: '#/components/schemas/ResultSummary' } }
+            selection:
+              oneOf:
+                - { $ref: '#/components/schemas/ResultSelection' }
+                - { type: 'null' }
+    ResultSelectionEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data:
+          type: object
+          additionalProperties: false
+          required: [selection]
+          properties:
+            selection: { $ref: '#/components/schemas/ResultSelection' }
+    CheckpointDecision:
+      type: object
+      additionalProperties: false
+      required: [action, checkpointId, expectedContentHash]
+      properties:
+        action: { type: string, enum: [approve, reject, revise] }
+        checkpointId: { type: string }
+        expectedContentHash: { type: string }
+        feedback: { type: string, description: Required for revise. }
+        async: { type: boolean, default: false, description: Frontends should set true and consume the task plus SSE. }
+        requestId: { type: string, pattern: '^[a-zA-Z0-9_-]{8,100}$', description: Required when async is true. }
+    StopEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data:
+          type: object
+          additionalProperties: false
+          required: [stopped]
+          properties:
+            stopped: { const: true }
+    TaskEnvelope:
+      type: object
+      additionalProperties: false
+      required: [ok, data]
+      properties:
+        ok: { const: true }
+        data: { $ref: '#/components/schemas/AgentTask' }
+    SseSyncPayload:
+      type: object
+      additionalProperties: false
+      required: [snapshot, checkpoint, conversation, activity]
+      properties:
+        snapshot: { $ref: '#/components/schemas/RunSnapshot' }
+        checkpoint:
+          oneOf:
+            - { $ref: '#/components/schemas/Checkpoint' }
+            - { type: 'null' }
+        conversation: { $ref: '#/components/schemas/Conversation' }
+        activity: { $ref: '#/components/schemas/Activity' }
+  responses:
+    Error:
+      description: Request failed. Cross-user resources intentionally return 404.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+security:
+  - thetaSession: []

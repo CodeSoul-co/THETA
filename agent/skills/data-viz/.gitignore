@@ -1,0 +1,22 @@
+# Local environments and private working data
+.venv/
+__pycache__/
+*.py[cod]
+.DS_Store
+.env
+.env.*
+!.env.example
+my_data/
+my_output/
+my_style.json
+output/
+output_highres/
+tmp/
+*.zip
+
+# Original reference assets and first-pass local layout (kept on disk only)
+/references/
+/data/
+/styles/
+/prepare_examples.py
+/compare.py

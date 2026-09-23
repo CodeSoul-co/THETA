@@ -1,0 +1,183 @@
+"use client"
+
+import { useEffect, useRef, useState } from "react"
+import { AlertCircle, Check, Loader2, Upload } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
+import { BackendAPI, SimpleETMAPI, type TrainStatusResponse } from "@/lib/api/backend"
+import { isUploadedFileId, uploadManualFiles } from "@/lib/manual-upload"
+import { statusLabel, systemText } from "@/lib/presentation"
+import { AnalysisConfigPanel, type AnalysisConfig } from "./analysis-config-panel"
+import { ColumnSelectPanel, type ColumnSelection } from "./column-select-panel"
+import { useProjectDraft } from "@/lib/use-project-draft"
+
+interface PipelineResult { success: boolean; taskId?: string; dataset?: string; metrics?: Record<string, number>; topicWords?: Record<string, string[]>; duration: number }
+interface AutoPipelineProps {
+  projectKey: string
+  datasetName?: string
+  projectName: string
+  mode?: "zero_shot" | "unsupervised" | "supervised"
+  numTopics?: number
+  initialTaskId?: string | null
+  pipelineStatus?: "running" | "completed" | "error" | "draft"
+  onComplete?: (result: PipelineResult) => void
+  onError?: (error: string) => void
+  onUploadComplete?: (dataset: string) => void
+  onTaskCreated?: (id: string) => void
+  onConfigConfirmed?: (config: AnalysisConfig) => void
+  onDlcStarted?: () => void
+  onViewResults?: () => void
+}
+type JobState = TrainStatusResponse & { queued_models?: string[]; states?: { id: string; status: string; phase: string; percent: number; phaseHistory?: { phase: string; at: number }[] }[]; workers?: { id: string; model: string }[] }
+const phases = ["上传数据", "数据预处理", "模型训练", "模型评估", "生成可视化"]
+const phaseIndex = (phase?: string) => ({ preparing: 1, preparing_data: 1, preprocessing: 1, training: 2, evaluating: 3, evaluation: 3, visualizing: 4, visualization: 4, publishing: 4, uploading: 4 }[phase ?? ""] ?? 1)
+const executionPhaseLabel = (phase: string) => phase === 'uploading' ? '整理模型与图表产物' : phase === 'downloading' ? '读取已上传的数据' : systemText(phase)
+
+/** Independent manual lifecycle; every progress update comes from a real job. */
+export function AutoPipeline(props: AutoPipelineProps) {
+  const dataset = props.datasetName || props.projectName.trim().replace(/\s+/g, "_").replace(/[^\w\u4e00-\u9fa5-]/g, "").toLowerCase() || "dataset"
+  const callbacks = useRef(props)
+  callbacks.current = props
+  const [files, setFiles] = useState<File[]>([])
+  const [uploads, setUploads] = useState<{ name: string; fileId: string; size: number }[]>([])
+  const [fileId, setFileId] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [submitting, setSubmitting] = useState(false)
+  const [recovering, setRecovering] = useState(true)
+  const [taskId, setTaskId] = useState<string | null>(props.initialTaskId ?? null)
+  const [task, setTask] = useState<JobState | null>(null)
+  const [selection, setSelection] = useState<ColumnSelection | null>(null)
+  const [draft, setDraft] = useProjectDraft<{ fileId: string | null; selection: ColumnSelection | null; columnsOpen: boolean; configOpen: boolean }>(props.projectKey + ':data', { fileId: null, selection: null, columnsOpen: false, configOpen: false })
+  const [columnsOpen, setColumnsOpen] = useState(false)
+  const [configOpen, setConfigOpen] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [pollError, setPollError] = useState<string | null>(null)
+  const [logs, setLogs] = useState<string[]>([])
+  const completed = useRef<string | null>(null)
+  const lastObservation = useRef("")
+  const busy = useRef(false)
+  const log = (message: string) => setLogs(prev => [...prev.slice(-99), `[${new Date().toLocaleTimeString('zh-CN')}] ${message}`])
+
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const [knownFiles, jobs] = await Promise.all([BackendAPI.getFiles(), BackendAPI.getTrainJobs()])
+        if (cancelled) return
+        const matching = knownFiles.filter(file => file.dataset_name === dataset && isUploadedFileId(file.id))
+        setUploads(matching.map(file => ({ name: file.filename, fileId: String(file.id), size: 0 })))
+        if (matching[0]) { setFileId(String(matching[0].id)); setUploadProgress(100) }
+        if (props.initialTaskId) { setTaskId(props.initialTaskId); return }
+        // Recover a task whose HTTP response was lost instead of duplicating it.
+        const existing = jobs.find(job => job.dataset_name === dataset && (props.pipelineStatus !== 'draft' || ['pending', 'creating', 'running', 'cancelling'].includes(job.status)))
+        if (existing) { setTaskId(String(existing.job_id)); callbacks.current.onTaskCreated?.(String(existing.job_id)) }
+      } catch (e) { if (!cancelled) setError(e instanceof Error ? e.message : '无法恢复项目状态') }
+      finally { if (!cancelled) setRecovering(false) }
+    })()
+    return () => { cancelled = true }
+  }, [dataset, props.initialTaskId])
+
+  useEffect(() => {
+    if (recovering) return
+    if (draft.fileId && uploads.some(file => file.fileId === draft.fileId)) {
+      setFileId(draft.fileId); setSelection(draft.selection)
+      setColumnsOpen(draft.columnsOpen); setConfigOpen(draft.configOpen)
+    }
+  }, [recovering])
+
+  const changeColumnsOpen = (open: boolean) => { setColumnsOpen(open); setDraft(prev => ({ ...prev, fileId, columnsOpen: open })) }
+  const changeConfigOpen = (open: boolean) => { setConfigOpen(open); setDraft(prev => ({ ...prev, fileId, configOpen: open })) }
+
+  useEffect(() => {
+    if (!taskId) return
+    let cancelled = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const poll = async () => {
+      let terminal = false
+      try {
+        const next: JobState = await BackendAPI.getTrainStatus(Number(taskId))
+        if (cancelled) return
+        setTask(next); setPollError(null); setError(null)
+        const observation = `${next.status}:${next.current_step}:${next.progress}:${next.error_message}`
+        if (observation !== lastObservation.current) { lastObservation.current = observation; log(next.error_message || systemText(next.message || statusLabel(next.status))) }
+        terminal = ['succeeded', 'failed', 'cancelled'].includes(next.status)
+        if (next.status === 'succeeded' && completed.current !== taskId) {
+          completed.current = taskId
+          callbacks.current.onComplete?.({ success: true, taskId, dataset, duration: Math.max(0, Date.now() - Date.parse(next.created_at)) })
+        }
+        if (next.status === 'failed' || next.status === 'cancelled') {
+          setError(next.status === 'cancelled' ? '任务已取消，原始数据与记录保留。' : next.error_message || '训练失败，请查看真实错误后调整参数。')
+          callbacks.current.onError?.(next.error_message || '任务已结束，需处理')
+        }
+      } catch (e) { if (!cancelled) setPollError(`状态暂时无法同步，后台任务不会因此重启。${e instanceof Error ? e.message : ''}`) }
+      if (!cancelled && !terminal) timer = setTimeout(poll, 2500)
+    }
+    void poll()
+    return () => { cancelled = true; if (timer) clearTimeout(timer) }
+  }, [taskId, dataset])
+
+  const upload = async () => {
+    if (busy.current || !files.length) return
+    busy.current = true; setUploading(true); setError(null)
+    try {
+      log(`开始上传 ${files.length} 个文件`)
+      const receipts = await uploadManualFiles(files, (file, progress) => SimpleETMAPI.uploadDataset(file, dataset, progress), setUploadProgress)
+      setUploads(receipts); setFileId(receipts[0].fileId)
+      setDraft({ fileId: receipts[0].fileId, selection: null, columnsOpen: receipts.length === 1, configOpen: false })
+      callbacks.current.onUploadComplete?.(dataset)
+      log('上传成功，请选择本次分析的文本列与元数据。')
+      if (receipts.length === 1) setColumnsOpen(true)
+    } catch (e) { const message = e instanceof Error ? e.message : '上传失败'; setError(message); log(message) }
+    finally { busy.current = false; setUploading(false) }
+  }
+
+  const start = (config: AnalysisConfig) => {
+    if (busy.current || !fileId || !selection?.textColumn) { setError('请先成功上传数据并选择正文列。'); return false }
+    if (config.models.includes('dtm') && !selection.timeColumn) { setError('DTM 需要真实时间列，请返回列选择。'); return false }
+    if (config.models.includes('stm') && !selection.metaColumns.length) { setError('STM 需要选择至少一个元数据列作为协变量。'); return false }
+    if (config.mode === 'supervised' && !selection.labelColumn) { setError('有监督嵌入需要标签列，请返回列选择。'); return false }
+    busy.current = true; setSubmitting(true); setError(null)
+    callbacks.current.onConfigConfirmed?.(config)
+    void (async () => {
+      try {
+        const modelParams = Object.fromEntries(config.models.map(model => [model, config.parameters[model] ?? {}]))
+        const response = await BackendAPI.startTraining({ file_id: Number(fileId), dataset_name: dataset, model_type: config.models.join(','), model_params: modelParams,
+          num_topics: Number(modelParams[config.models[0]].num_topics ?? modelParams[config.models[0]].max_topics ?? 20), vocab_size: config.vocabSize,
+          plot_language: config.plotLanguage, stopwords_id: config.stopwords ? Number(config.stopwords.id) : undefined, model_size: config.modelSize, mode: config.mode,
+          embedding_provider: config.embeddingProvider, cloud_confirmed: config.cloudConfirmed, external_request_limit: config.externalRequestLimit,
+          cloud_selection: config.cloudSelection,
+          text_column: selection.textColumn, meta_columns: selection.metaColumns, time_column: selection.timeColumn, label_column: selection.labelColumn })
+        setTaskId(String(response.id)); setTask(null)
+        callbacks.current.onTaskCreated?.(String(response.id))
+        log('任务已保存，服务正在检查数据和运行环境。')
+      } catch (e) { const message = e instanceof Error ? e.message : '任务提交失败'; setError(message); log(message) }
+      finally { busy.current = false; setSubmitting(false) }
+    })()
+    return true
+  }
+
+  const running = !!taskId && (!task || ['pending', 'creating', 'running', 'cancelling'].includes(task.status))
+  const done = task?.status === 'succeeded'
+  const current = taskId ? phaseIndex(task?.current_step) : 0
+  return <div className="min-w-0 space-y-5 p-4 [overflow-wrap:anywhere] sm:p-6 lg:p-8">
+    {props.onViewResults && <Button variant="outline" onClick={props.onViewResults}>查看已有结果（不影响后台训练）</Button>}
+    <div className="flex flex-wrap items-center justify-between gap-3"><div><h1 className="text-2xl font-semibold text-slate-900">{props.projectName}</h1><p className="mt-2 text-sm text-slate-500">数据集：{dataset}</p></div>
+      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">{recovering ? '正在恢复项目' : done ? '已完成' : error ? '需要处理' : running ? '分析中' : fileId ? '待配置' : '请上传数据'}</span></div>
+    <ol className="flex flex-wrap gap-3 rounded-xl border bg-white p-4 text-sm">{phases.map((phase, index) => <li key={phase} className={`flex items-center gap-2 rounded-lg px-3 py-2 ${done || (index === 0 && fileId) || (running && index < current) ? 'bg-emerald-50 text-emerald-700' : running && current === index ? 'bg-blue-50 text-blue-700' : 'text-slate-400'}`}>
+      {done || (index === 0 && fileId) || (running && index < current) ? <Check className="size-4" /> : running && current === index ? <Loader2 className="size-4 animate-spin" /> : <span>{index + 1}</span>}{phase}</li>)}</ol>
+    {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700"><p className="flex items-center gap-2"><AlertCircle className="size-4" />{error}</p>{!running && fileId && <Button variant="outline" className="mt-3" onClick={() => { setTaskId(null); setTask(null); setError(null); changeColumnsOpen(true) }}>调整配置后重试</Button>}</div>}
+    {pollError && <p role="status" className="text-sm text-amber-700">{pollError}</p>}
+    {task?.states?.some(state => state.phaseHistory?.length) && <details className="rounded-xl border bg-white p-4" open><summary className="cursor-pointer text-sm font-medium">已保存的实际执行阶段</summary><div className="mt-3 space-y-3">{task.states.map(state => <div key={state.id} className="text-xs leading-6 text-slate-600"><strong>{task.workers?.find(item => item.id === state.id)?.model.toUpperCase()}</strong>{state.phaseHistory?.map((entry, index) => <p key={index}>{new Date(entry.at * 1000).toLocaleTimeString('zh-CN')} · {executionPhaseLabel(entry.phase)}</p>)}</div>)}</div></details>}
+    {!!task?.queued_models?.length && <p className="text-sm text-slate-600">排队模型：{task.queued_models.map(model => model.toUpperCase()).join('、')}。按顺序执行，关闭页面不会中断队列。</p>}
+    {running && <Button variant="outline" onClick={async () => { try { const cancelled = await BackendAPI.cancelTraining(Number(taskId)); setTask(cancelled); setError(cancelled.status === 'cancelled' ? '任务已取消，可以调整数据与参数后重新开始。' : null) } catch (e) { setError(e instanceof Error ? e.message : '取消失败，请重试') } }}>取消本次训练</Button>}
+    {(running || submitting) && <div role="status" className="space-y-4 rounded-2xl border bg-white p-6"><p className="flex items-center gap-2 text-sm font-medium"><Loader2 className="size-4 animate-spin" />{submitting ? '正在保存分析任务…' : systemText(task?.message || '正在检查数据与运行环境…')}</p><Progress value={task?.progress ?? 0} /><p className="text-xs leading-5 text-slate-500">{task?.progress ?? 0}% 为 worker 阶段进度，不是剩余时间估算。可以离开页面，返回后恢复真实任务状态。</p>{task?.states?.map(state => <p key={state.id} className="text-xs text-slate-600">{task.workers?.find(item => item.id === state.id)?.model.toUpperCase()} · {statusLabel(state.status)} · {systemText(state.phase)} · {state.percent}%</p>)}</div>}
+    {!recovering && !running && !done && !submitting && <section className="space-y-4 rounded-2xl border bg-white p-6"><h2 className="font-semibold">{fileId ? '选择数据与分析参数' : '上传数据'}</h2>
+      {!fileId && <><p className="text-sm text-slate-500">支持 Excel、CSV、TXT、PDF、DOCX、JSON 等格式。上传后选择正文列，无需手动转换 CSV。</p><label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed p-8 text-sm text-blue-700"><Upload className="size-5" />选择文件<input className="sr-only" aria-label="选择文件" type="file" multiple accept=".csv,.tsv,.txt,.md,.xlsx,.xls,.json,.jsonl,.ndjson,.parquet,.pdf,.docx" disabled={uploading} onChange={e => setFiles(Array.from(e.target.files || []))} /></label>{files.map((file, index) => <p key={`${file.name}-${index}`} className="text-sm text-slate-600">{file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB</p>)}{uploading ? <><Progress value={uploadProgress} /><p className="text-sm">正在上传 · {uploadProgress}%</p></> : <Button disabled={!files.length} onClick={() => void upload()}>上传并配置分析</Button>}</>}
+      {fileId && <><label className="block space-y-2 text-sm">本次分析文件<select aria-label="本次分析文件" className="block w-full rounded-lg border p-2" value={fileId} onChange={e => { setFileId(e.target.value); setSelection(null); setDraft({ fileId: e.target.value, selection: null, columnsOpen: false, configOpen: false }) }}>{uploads.map(file => <option key={file.fileId} value={file.fileId}>{file.name}</option>)}</select></label><p className="text-xs text-slate-500">每个任务分析一个文件。多文件上传后，请明确选择本次文件。</p><Button variant="outline" onClick={() => changeColumnsOpen(true)}>选择数据列</Button>{selection && <Button className="ml-2" onClick={() => changeConfigOpen(true)}>配置分析参数</Button>}</>}
+    </section>}
+    <details className="rounded-xl border bg-white p-4"><summary className="cursor-pointer text-sm font-medium">执行日志</summary><pre className="mt-3 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-950 p-4 text-xs leading-6 text-slate-200">{logs.join('\n') || '暂无执行记录'}</pre></details>
+    <ColumnSelectPanel key={fileId} projectKey={props.projectKey} open={columnsOpen} onOpenChange={changeColumnsOpen} datasetName={dataset} jobId={fileId} onConfirm={value => { setSelection(value); setColumnsOpen(false); setConfigOpen(true); setDraft({ fileId, selection: value, columnsOpen: false, configOpen: true }) }} />
+    <AnalysisConfigPanel projectKey={props.projectKey} open={configOpen} onOpenChange={changeConfigOpen} datasetName={dataset} error={error} onConfirm={start} />
+  </div>
+}

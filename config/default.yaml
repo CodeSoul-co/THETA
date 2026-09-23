@@ -1,0 +1,211 @@
+# =============================================================================
+# THETA Default Configuration
+# =============================================================================
+# This file contains default hyperparameters for all models.
+# Priority: CLI args > YAML config > .env paths
+#
+# Note: All physical paths (QWEN_PATH, SBERT_MODEL_PATH, DATA_DIR, etc.)
+# must be defined in .env file, NOT here.
+# =============================================================================
+
+# =============================================================================
+# Global Settings
+# =============================================================================
+global:
+  # Default language for visualization (zh for Chinese, en for English)
+  language: zh
+  # Vocabulary size for BOW matrix
+  vocab_size: 5000
+  # Random seed for reproducibility
+  seed: 42
+
+# =============================================================================
+# THETA Model (Main Model)
+# =============================================================================
+theta:
+  # Model size: 0.6B, 4B, 8B
+  model_size: "0.6B"
+  # Embedding mode: zero_shot, supervised, unsupervised
+  mode: zero_shot
+  # Number of topics
+  num_topics: 20
+  # Number of encoder hidden layers
+  num_layers: 2
+  # Hidden dimension per layer
+  hidden_dim: 512
+  # Training epochs
+  epochs: 100
+  # Batch size
+  batch_size: 64
+  # Learning rate
+  learning_rate: 0.002
+  # Dropout rate
+  dropout: 0.2
+  # KL annealing start weight
+  kl_start: 0.0
+  # KL annealing end weight
+  kl_end: 1.0
+  # KL warmup epochs
+  kl_warmup: 50
+  # Early stopping patience
+  patience: 10
+  # Vocabulary size
+  vocab_size: 5000
+
+# =============================================================================
+# Baseline Models
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# LDA (Latent Dirichlet Allocation)
+# -----------------------------------------------------------------------------
+lda:
+  num_topics: 20
+  max_iter: 100
+  # alpha: auto (1/K), set to null for auto
+  alpha: null
+  vocab_size: 5000
+
+# -----------------------------------------------------------------------------
+# HDP (Hierarchical Dirichlet Process)
+# -----------------------------------------------------------------------------
+hdp:
+  max_topics: 150
+  alpha: 1.0
+  vocab_size: 5000
+
+# -----------------------------------------------------------------------------
+# STM (Structural Topic Model)
+# -----------------------------------------------------------------------------
+stm:
+  num_topics: 20
+  max_iter: 100
+  vocab_size: 5000
+
+# -----------------------------------------------------------------------------
+# BTM (Biterm Topic Model)
+# -----------------------------------------------------------------------------
+btm:
+  num_topics: 20
+  n_iter: 100
+  alpha: 1.0
+  beta: 0.01
+  vocab_size: 5000
+
+# -----------------------------------------------------------------------------
+# ETM (Embedded Topic Model)
+# -----------------------------------------------------------------------------
+etm:
+  num_topics: 20
+  num_layers: 2
+  hidden_dim: 800
+  embedding_dim: 300
+  epochs: 100
+  batch_size: 64
+  learning_rate: 0.002
+  dropout: 0.5
+  vocab_size: 5000
+
+# -----------------------------------------------------------------------------
+# CTM (Contextualized Topic Model)
+# -----------------------------------------------------------------------------
+ctm:
+  num_topics: 20
+  inference_type: zeroshot
+  num_layers: 2
+  hidden_dim: 100
+  epochs: 100
+  batch_size: 64
+  learning_rate: 0.002
+  dropout: 0.2
+  vocab_size: 5000
+
+# -----------------------------------------------------------------------------
+# DTM (Dynamic Topic Model)
+# -----------------------------------------------------------------------------
+dtm:
+  num_topics: 20
+  num_layers: 2
+  hidden_dim: 512
+  epochs: 100
+  batch_size: 64
+  learning_rate: 0.002
+  dropout: 0.2
+  vocab_size: 5000
+
+# -----------------------------------------------------------------------------
+# NVDM (Neural Variational Document Model)
+# -----------------------------------------------------------------------------
+nvdm:
+  num_topics: 20
+  num_layers: 2
+  hidden_dim: 256
+  epochs: 100
+  batch_size: 64
+  learning_rate: 0.002
+  dropout: 0.2
+  vocab_size: 5000
+
+# -----------------------------------------------------------------------------
+# GSM (Gaussian Softmax Model)
+# -----------------------------------------------------------------------------
+gsm:
+  num_topics: 20
+  num_layers: 2
+  hidden_dim: 256
+  epochs: 100
+  batch_size: 64
+  learning_rate: 0.002
+  dropout: 0.2
+  vocab_size: 5000
+
+# -----------------------------------------------------------------------------
+# ProdLDA (Product of Experts LDA)
+# -----------------------------------------------------------------------------
+prodlda:
+  num_topics: 20
+  num_layers: 2
+  hidden_dim: 256
+  epochs: 100
+  batch_size: 64
+  learning_rate: 0.002
+  dropout: 0.2
+  vocab_size: 5000
+
+# -----------------------------------------------------------------------------
+# BERTopic
+# -----------------------------------------------------------------------------
+bertopic:
+  # num_topics: null means auto-detect
+  num_topics: null
+  min_cluster_size: 10
+  top_n_words: 10
+  n_neighbors: 15
+  n_components: 5
+
+# =============================================================================
+# Visualization Settings
+# =============================================================================
+visualization:
+  # Default language: zh (Chinese) or en (English)
+  language: zh
+  # DPI for saved figures
+  dpi: 150
+  # Enable temporal analysis if timestamps available
+  enable_temporal: true
+  # Generate wordclouds
+  enable_wordcloud: true
+
+# =============================================================================
+# Evaluation Settings
+# =============================================================================
+evaluation:
+  # Top words for coherence calculation
+  top_words: 10
+  # Metrics to compute
+  metrics:
+    - topic_diversity
+    - coherence_npmi
+    - coherence_cv
+    - exclusivity
+    - significance

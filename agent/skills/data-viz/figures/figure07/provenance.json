@@ -1,0 +1,96 @@
+{
+  "figure": 7,
+  "title": {
+    "zh": "基因表达分组柱状图",
+    "en": "Gene-expression grouped bars"
+  },
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "source_publication_note": "The supplied screenshot collection did not identify a verified paper/DOI for each image.",
+  "classification": "screenshot_estimate",
+  "provenance": {
+    "zh": "柱高 误差 散点人工估读",
+    "en": "Manual estimates of visible gene-expression values, means and errors."
+  },
+  "seed_note": "Original example-generation session used NumPy seed 190913 across all figures; the seed alone does not reconstruct digitized/manual values. The committed CSVs and SHA-256 hashes define this snapshot.",
+  "raw_data_required": {
+    "zh": [
+      "每个基因、基因型、Day15 样本的 mRNA 测量和生物学重复 ID。",
+      "原始 Ct/表达量、内参和归一化方法；保留技术重复与生物学重复的对应关系。",
+      "组间比较与多重检验、误差定义；P 值不能从图片恢复计算过程。"
+    ],
+    "en": [
+      "mRNA measurement and biological replicate ID for each gene/genotype at Day15.",
+      "Raw Ct/expression, reference controls and normalization; preserve technical-to-biological replicate mapping.",
+      "Group comparisons, multiplicity correction and error definition; a screenshot cannot recover the P-value calculation."
+    ]
+  },
+  "preprocessing": {
+    "zh": "先归一化 mRNA 表达，再填每组重复值；默认重算均值和 SEM，不做新的显著性检验。",
+    "en": "Normalize mRNA upstream, then supply replicate values. Default replacement-data summaries are mean/SEM; no new significance test is run."
+  },
+  "files": [
+    {
+      "path": "data/figure07.csv",
+      "classification": "screenshot_estimate",
+      "row_count": 91,
+      "sha256": "07e181401f1ff725ee0050632dadb27be587f9eb901e6d2116c82e36956f67ec",
+      "fields": [
+        {
+          "name": "category",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "分类/条件；与样式顺序一致",
+            "en": "Category/condition; match style ordering"
+          }
+        },
+        {
+          "name": "group",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "实验组或细胞群；与样式一致",
+            "en": "Experimental group or cell population; match style"
+          }
+        },
+        {
+          "name": "sample",
+          "type": "string",
+          "unit": "identifier",
+          "description": {
+            "zh": "示例重复编号，真实数据应保留真实样本 ID",
+            "en": "Example replicate ID; preserve real sample IDs when available"
+          }
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "unit": "normalized expression / fold change",
+          "description": {
+            "zh": "单个观测值；单位及归一化见本图原始数据要求",
+            "en": "One observation; units/normalization are specified in this figure’s raw-data requirements"
+          }
+        },
+        {
+          "name": "mean",
+          "type": "number",
+          "unit": "normalized expression / fold change",
+          "description": {
+            "zh": "组均值；相同组每行重复同一数值",
+            "en": "Group mean; repeat the same summary within each group"
+          }
+        },
+        {
+          "name": "error",
+          "type": "number ≥ 0",
+          "unit": "normalized expression / fold change",
+          "description": {
+            "zh": "指定的误差幅度；需注明 SD/SEM/CI",
+            "en": "Error magnitude; explicitly specify SD/SEM/CI"
+          }
+        }
+      ]
+    }
+  ]
+}

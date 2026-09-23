@@ -1,0 +1,97 @@
+category,group,sample,value,mean,error
+WT,−DOX,1,-0.02,0,0.02
+WT,−DOX,2,0,0,0.02
+WT,−DOX,3,0.02,0,0.02
+WT,DMSO,1,0.96,1,0.04
+WT,DMSO,2,1,1,0.04
+WT,DMSO,3,1.04,1,0.04
+WT,10 nM veliparib,1,0.82,1.4,0.58
+WT,10 nM veliparib,2,1.4,1.4,0.58
+WT,10 nM veliparib,3,1.98,1.4,0.58
+WT,1 μM veliparib,1,0.6199999999999999,1.4,0.78
+WT,1 μM veliparib,2,1.4,1.4,0.78
+WT,1 μM veliparib,3,2.1799999999999997,1.4,0.78
+L713F,−DOX,1,-0.03,0,0.03
+L713F,−DOX,2,0,0,0.03
+L713F,−DOX,3,0.03,0,0.03
+L713F,DMSO,1,0.96,1,0.04
+L713F,DMSO,2,1,1,0.04
+L713F,DMSO,3,1.04,1,0.04
+L713F,10 nM veliparib,1,1.0,1.7,0.7
+L713F,10 nM veliparib,2,1.7,1.7,0.7
+L713F,10 nM veliparib,3,2.4,1.7,0.7
+L713F,1 μM veliparib,1,2.9999999999999996,5.1,2.1
+L713F,1 μM veliparib,2,5.1,5.1,2.1
+L713F,1 μM veliparib,3,7.199999999999999,5.1,2.1
+L698A,−DOX,1,-0.03,0,0.03
+L698A,−DOX,2,0,0,0.03
+L698A,−DOX,3,0.03,0,0.03
+L698A,DMSO,1,0.96,1,0.04
+L698A,DMSO,2,1,1,0.04
+L698A,DMSO,3,1.04,1,0.04
+L698A,10 nM veliparib,1,1.1,1.5,0.4
+L698A,10 nM veliparib,2,1.5,1.5,0.4
+L698A,10 nM veliparib,3,1.9,1.5,0.4
+L698A,1 μM veliparib,1,1.0,1.8,0.8
+L698A,1 μM veliparib,2,1.8,1.8,0.8
+L698A,1 μM veliparib,3,2.6,1.8,0.8
+L701A,−DOX,1,-0.02,0,0.02
+L701A,−DOX,2,0,0,0.02
+L701A,−DOX,3,0.02,0,0.02
+L701A,DMSO,1,0.96,1,0.04
+L701A,DMSO,2,1,1,0.04
+L701A,DMSO,3,1.04,1,0.04
+L701A,10 nM veliparib,1,0.85,1.5,0.65
+L701A,10 nM veliparib,2,1.5,1.5,0.65
+L701A,10 nM veliparib,3,2.15,1.5,0.65
+L701A,1 μM veliparib,1,0.65,1.5,0.85
+L701A,1 μM veliparib,2,1.5,1.5,0.85
+L701A,1 μM veliparib,3,2.35,1.5,0.85
+L765A,−DOX,1,-0.15,0,0.15
+L765A,−DOX,2,0,0,0.15
+L765A,−DOX,3,0.15,0,0.15
+L765A,DMSO,1,0.96,1,0.04
+L765A,DMSO,2,1,1,0.04
+L765A,DMSO,3,1.04,1,0.04
+L765A,10 nM veliparib,1,1.6,2.6,1.0
+L765A,10 nM veliparib,2,2.6,2.6,1.0
+L765A,10 nM veliparib,3,3.6,2.6,1.0
+L765A,1 μM veliparib,1,3.75,4.3,0.55
+L765A,1 μM veliparib,2,4.3,4.3,0.55
+L765A,1 μM veliparib,3,4.85,4.3,0.55
+L768A,−DOX,1,-0.05,0,0.05
+L768A,−DOX,2,0,0,0.05
+L768A,−DOX,3,0.05,0,0.05
+L768A,DMSO,1,0.96,1,0.04
+L768A,DMSO,2,1,1,0.04
+L768A,DMSO,3,1.04,1,0.04
+L768A,10 nM veliparib,1,2.1,3.0,0.9
+L768A,10 nM veliparib,2,3.0,3.0,0.9
+L768A,10 nM veliparib,3,3.9,3.0,0.9
+L768A,1 μM veliparib,1,6.0,6.8,0.8
+L768A,1 μM veliparib,2,6.8,6.8,0.8
+L768A,1 μM veliparib,3,7.6,6.8,0.8
+"L698A/
+L701A",−DOX,1,-0.3,0,0.3
+"L698A/
+L701A",−DOX,2,0,0,0.3
+"L698A/
+L701A",−DOX,3,0.3,0,0.3
+"L698A/
+L701A",DMSO,1,0.96,1,0.04
+"L698A/
+L701A",DMSO,2,1,1,0.04
+"L698A/
+L701A",DMSO,3,1.04,1,0.04
+"L698A/
+L701A",10 nM veliparib,1,1.2999999999999998,2.4,1.1
+"L698A/
+L701A",10 nM veliparib,2,2.4,2.4,1.1
+"L698A/
+L701A",10 nM veliparib,3,3.5,2.4,1.1
+"L698A/
+L701A",1 μM veliparib,1,2.1999999999999997,4.3,2.1
+"L698A/
+L701A",1 μM veliparib,2,4.3,4.3,2.1
+"L698A/
+L701A",1 μM veliparib,3,6.4,4.3,2.1

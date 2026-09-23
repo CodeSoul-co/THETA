@@ -1,0 +1,78 @@
+{
+  "figure": 16,
+  "title": {
+    "zh": "细胞群表达山脊矩阵",
+    "en": "Cell-population expression ridgelines"
+  },
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "source_publication_note": "The supplied screenshot collection did not identify a verified paper/DOI for each image.",
+  "classification": "synthetic_fitted_curve",
+  "provenance": {
+    "zh": "按截图峰位与多峰形态估计的混合高斯示例轮廓；不是原始细胞表达数据",
+    "en": "Gaussian-mixture demonstration curves approximating visible modes; not original cell measurements."
+  },
+  "seed_note": "Original example-generation session used NumPy seed 190913 across all figures; the seed alone does not reconstruct digitized/manual values. The committed CSVs and SHA-256 hashes define this snapshot.",
+  "raw_data_required": {
+    "zh": [
+      "每个细胞/event 的 CD161、NKG2A、CD31、CD8、CD57、CD28 表达，以及样本与 c1–c8 群标签。",
+      "Vγ9Vδ2/Vδ1 群的定义、预处理变换、门控/聚类方法和 All cells 的组成。",
+      "原始样本权重及中位数的计算规则；不能从峰高推断细胞数量。"
+    ],
+    "en": [
+      "Per-cell/event CD161, NKG2A, CD31, CD8, CD57 and CD28 expression, with sample IDs and c1–c8 labels.",
+      "Vγ9Vδ2/Vδ1 definitions, preprocessing transformation, gating/clustering and composition of All cells.",
+      "Sample weights and the median convention; peak height does not identify the number of cells."
+    ]
+  },
+  "preprocessing": {
+    "zh": "先确定细胞群和表达变换，再提供 marker/group/value 或 x/density。新数据的中位线由输入分布估计，不沿用截图中位线。",
+    "en": "Define populations and expression transformation upstream; supply marker/group/value or x/density. Replacement-data median lines are estimated from input distributions rather than reused from the screenshot."
+  },
+  "files": [
+    {
+      "path": "data/figure16.csv",
+      "classification": "synthetic_fitted_curve",
+      "row_count": 11880,
+      "sha256": "d2e3f0e59b79a4273e64efcb3608f3866535b641707cb911fc90c1a8eb9f0175",
+      "fields": [
+        {
+          "name": "marker",
+          "type": "string",
+          "unit": "identifier",
+          "description": {
+            "zh": "通道对应的 marker 名称",
+            "en": "Marker corresponding to the measurement channel"
+          }
+        },
+        {
+          "name": "group",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "实验组或细胞群；与样式一致",
+            "en": "Experimental group or cell population; match style"
+          }
+        },
+        {
+          "name": "x",
+          "type": "number",
+          "unit": "transformed expression",
+          "description": {
+            "zh": "已转换的横轴坐标；不是原始特征矩阵",
+            "en": "Transformed x coordinate, not a raw feature matrix"
+          }
+        },
+        {
+          "name": "density",
+          "type": "number ≥ 0",
+          "unit": "row spacing",
+          "description": {
+            "zh": "分布的展示高度，不是样本量",
+            "en": "Display height of a distribution, not sample count"
+          }
+        }
+      ]
+    }
+  ]
+}

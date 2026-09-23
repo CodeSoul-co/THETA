@@ -1,0 +1,113 @@
+{
+  "figure": 4,
+  "title": {
+    "zh": "时间序列与 iAUC 插图",
+    "en": "Time course with iAUC insets"
+  },
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "source_publication_note": "The supplied screenshot collection did not identify a verified paper/DOI for each image.",
+  "classification": "mixed",
+  "provenance": {
+    "zh": "均值和误差人工估读；iAUC 散点为固定种子的示例数据",
+    "en": "Time-course means and errors were visually estimated. Inset observations are seeded synthetic examples."
+  },
+  "seed_note": "Original example-generation session used NumPy seed 190913 across all figures; the seed alone does not reconstruct digitized/manual values. The committed CSVs and SHA-256 hashes define this snapshot.",
+  "raw_data_required": {
+    "zh": [
+      "每只动物在每个 day 的体重、基线体重、处理组及个体 ID；保留纵向配对关系。",
+      "体重变化百分比公式、Exposure/Cessation 的时间窗与 iAUC 积分及基线定义。",
+      "每个个体的 iAUC、组均值、指定的 SD/SEM/CI 及原始统计检验。"
+    ],
+    "en": [
+      "Weight, baseline weight, treatment and subject ID for each animal/day, preserving longitudinal pairing.",
+      "Weight-change formula, Exposure/Cessation windows, and the iAUC integration and baseline definitions.",
+      "Individual iAUC values, group means, the specified SD/SEM/CI and original statistical tests."
+    ]
+  },
+  "preprocessing": {
+    "zh": "时序 CSV 直接接收 mean/error；iAUC 必须按个体轨迹另行计算后写入辅助表，代码不会从均值曲线求个体 iAUC。",
+    "en": "The time-course CSV accepts mean/error. Calculate individual iAUC upstream and supply the inset table; the code does not infer individual iAUC from mean curves."
+  },
+  "files": [
+    {
+      "path": "data/figure04.csv",
+      "classification": "mixed",
+      "row_count": 24,
+      "sha256": "895f569ec29cbc404230453c97de23a060e65ff818cbbb131a2eb80faf087018",
+      "fields": [
+        {
+          "name": "group",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "实验组或细胞群；与样式一致",
+            "en": "Experimental group or cell population; match style"
+          }
+        },
+        {
+          "name": "day",
+          "type": "number",
+          "unit": "day",
+          "description": {
+            "zh": "相对实验起点的天数",
+            "en": "Days relative to experimental start"
+          }
+        },
+        {
+          "name": "mean",
+          "type": "number",
+          "unit": "percent weight change",
+          "description": {
+            "zh": "组均值；相同组每行重复同一数值",
+            "en": "Group mean; repeat the same summary within each group"
+          }
+        },
+        {
+          "name": "error",
+          "type": "number ≥ 0",
+          "unit": "percent weight change",
+          "description": {
+            "zh": "指定的误差幅度；需注明 SD/SEM/CI",
+            "en": "Error magnitude; explicitly specify SD/SEM/CI"
+          }
+        }
+      ]
+    },
+    {
+      "path": "data/figure04_insets.csv",
+      "classification": "synthetic",
+      "row_count": 400,
+      "sha256": "1428dd59c0409ba6b8729b25e99f1887e55185b8077a23439663a86e8ab6ba48",
+      "fields": [
+        {
+          "name": "phase",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "Exposure 或 Cessation；两个插图阶段",
+            "en": "Exposure or Cessation inset phase"
+          }
+        },
+        {
+          "name": "group",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "实验组或细胞群；与样式一致",
+            "en": "Experimental group or cell population; match style"
+          }
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "unit": "iAUC in the documented integration convention",
+          "description": {
+            "zh": "单个观测值；单位及归一化见本图原始数据要求",
+            "en": "One observation; units/normalization are specified in this figure’s raw-data requirements"
+          }
+        }
+      ]
+    }
+  ]
+}

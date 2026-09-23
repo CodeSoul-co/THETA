@@ -1,0 +1,18 @@
+<svg width="128" height="128" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="conversation-stroke" x1="12" y1="12" x2="52" y2="54" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#72B8F3"/>
+      <stop offset="1" stop-color="#657FE4"/>
+    </linearGradient>
+    <filter id="conversation-glow" x="2" y="3" width="59" height="58" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7094DE" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <g filter="url(#conversation-glow)" stroke="url(#conversation-stroke)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M11 21.5C11 15.701 15.701 11 21.5 11H38.5C44.299 11 49 15.701 49 21.5V33.5C49 39.299 44.299 44 38.5 44H28L17 53V43.15C13.459 41.449 11 37.829 11 33.5V21.5Z" stroke-width="3.4"/>
+    <path d="M20 28H38" stroke-width="3.4"/>
+    <path d="M20 35H31" stroke-width="3.4"/>
+    <path d="M52.5 8.5V16.5M48.5 12.5H56.5" stroke-width="2.8"/>
+  </g>
+  <circle cx="41" cy="35" r="2.2" fill="#7695EA"/>
+</svg>

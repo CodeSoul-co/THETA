@@ -1,0 +1,7 @@
+.host {
+  width: 100%;
+  height: 100vh;
+  min-height: 540px;
+  overflow: hidden;
+  background: #fff;
+}

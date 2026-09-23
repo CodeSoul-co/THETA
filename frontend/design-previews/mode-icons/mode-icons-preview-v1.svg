@@ -1,0 +1,39 @@
+<svg width="720" height="320" viewBox="0 0 720 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="preview-bg" x1="40" y1="26" x2="680" y2="294" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FBFF"/>
+      <stop offset="1" stop-color="#EEF4FB"/>
+    </linearGradient>
+    <linearGradient id="preview-icon" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#72B8F3"/>
+      <stop offset="1" stop-color="#657FE4"/>
+    </linearGradient>
+    <filter id="card-shadow" x="20" y="20" width="680" height="280" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#45618D" flood-opacity="0.12"/>
+    </filter>
+    <filter id="icon-shadow" x="-20" y="-20" width="104" height="104" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#7094DE" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+  <rect width="720" height="320" rx="30" fill="url(#preview-bg)"/>
+  <g filter="url(#card-shadow)">
+    <rect x="42" y="40" width="300" height="240" rx="28" fill="white" fill-opacity="0.9" stroke="#D9E4F1"/>
+    <rect x="378" y="40" width="300" height="240" rx="28" fill="white" fill-opacity="0.9" stroke="#D9E4F1"/>
+  </g>
+  <g transform="translate(160 82)" filter="url(#icon-shadow)" stroke="url(#preview-icon)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M-20 21.5C-20 15.701 -15.299 11 -9.5 11H7.5C13.299 11 18 15.701 18 21.5V33.5C18 39.299 13.299 44 7.5 44H-3L-14 53V43.15C-17.541 41.449 -20 37.829 -20 33.5V21.5Z" stroke-width="3.4"/>
+    <path d="M-11 28H7M-11 35H0" stroke-width="3.4"/>
+    <path d="M21.5 8.5V16.5M17.5 12.5H25.5" stroke-width="2.8"/>
+    <circle cx="10" cy="35" r="2.2" fill="#7695EA" stroke="none"/>
+  </g>
+  <g transform="translate(498 82)" filter="url(#icon-shadow)" stroke="url(#preview-icon)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M-20 17H-6M4 17H24M-20 32H6M16 32H24M-20 47H-12M-2 47H24" stroke-width="3.4"/>
+    <rect x="-6" y="12" width="10" height="10" rx="5" stroke-width="3"/>
+    <rect x="6" y="27" width="10" height="10" rx="5" stroke-width="3"/>
+    <rect x="-12" y="42" width="10" height="10" rx="5" stroke-width="3"/>
+  </g>
+  <text x="192" y="206" text-anchor="middle" fill="#22314A" font-family="HONOR Sans CN, Noto Sans SC, sans-serif" font-size="24" font-weight="500">对话</text>
+  <text x="528" y="206" text-anchor="middle" fill="#22314A" font-family="HONOR Sans CN, Noto Sans SC, sans-serif" font-size="24" font-weight="500">手动</text>
+  <text x="192" y="238" text-anchor="middle" fill="#8A98AD" font-family="HONOR Sans CN, Noto Sans SC, sans-serif" font-size="13">气泡 · 星点</text>
+  <text x="528" y="238" text-anchor="middle" fill="#8A98AD" font-family="HONOR Sans CN, Noto Sans SC, sans-serif" font-size="13">参数 · 滑杆</text>
+</svg>

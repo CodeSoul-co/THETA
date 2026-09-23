@@ -1,0 +1,105 @@
+{
+  "figure": 18,
+  "title": {
+    "zh": "进化年龄分面箱线图",
+    "en": "Evolutionary-age faceted boxplots"
+  },
+  "original_raw_data_available": false,
+  "source_publication": null,
+  "source_publication_note": "The supplied screenshot collection did not identify a verified paper/DOI for each image.",
+  "classification": "screenshot_estimate",
+  "provenance": {
+    "zh": "截图五数概括估读；统计标注为原图展示值，未重新做检验",
+    "en": "Five-number summaries estimated by eye; displayed P values are unverified reference annotations."
+  },
+  "seed_note": "Original example-generation session used NumPy seed 190913 across all figures; the seed alone does not reconstruct digitized/manual values. The committed CSVs and SHA-256 hashes define this snapshot.",
+  "raw_data_required": {
+    "zh": [
+      "每个旁系同源基因对的 ID、dN、dS 或 dN/dS，以及基因年龄和 Reference/diapause 分组。",
+      "序列比对/替代率估计与过滤方法、dS=0 处理、年龄区间定义。",
+      "从实际样本计算的箱线概括、whisker 规则、比较检验和校正 P 值。"
+    ],
+    "en": [
+      "Paralog-pair IDs, dN and dS or dN/dS, gene age and Reference/diapause assignment.",
+      "Alignment/substitution-rate estimation and filtering, dS=0 handling and age-bin definitions.",
+      "Box summaries computed from actual observations, whisker convention, comparison tests and adjusted P values."
+    ]
+  },
+  "preprocessing": {
+    "zh": "先计算 low/q1/median/q3/high 并明确 low/high 是极值还是 whisker。代码按输入绘制，不从序列估计 dN/dS 或重新检验 P 值。",
+    "en": "Compute low/q1/median/q3/high and state whether low/high are extremes or whisker endpoints. The renderer does not estimate dN/dS from sequences or retest P values."
+  },
+  "files": [
+    {
+      "path": "data/figure18.csv",
+      "classification": "screenshot_estimate",
+      "row_count": 8,
+      "sha256": "28c5cec5c48bfbacee1c3f5b480d4a76653bc1cf48cf92cc51ffcf07990d73cd",
+      "fields": [
+        {
+          "name": "panel",
+          "type": "string or integer",
+          "unit": "label",
+          "description": {
+            "zh": "分面编号或名称；与样式定义一致",
+            "en": "Panel index/name matching style"
+          }
+        },
+        {
+          "name": "group",
+          "type": "string",
+          "unit": "label",
+          "description": {
+            "zh": "实验组或细胞群；与样式一致",
+            "en": "Experimental group or cell population; match style"
+          }
+        },
+        {
+          "name": "low",
+          "type": "number",
+          "unit": "same as observations",
+          "description": {
+            "zh": "下 whisker 或最小值，需明确约定",
+            "en": "Lower whisker or minimum; state the convention"
+          }
+        },
+        {
+          "name": "q1",
+          "type": "number",
+          "unit": "same as observations",
+          "description": {
+            "zh": "第25百分位",
+            "en": "25th percentile"
+          }
+        },
+        {
+          "name": "median",
+          "type": "number",
+          "unit": "same as observations",
+          "description": {
+            "zh": "第50百分位",
+            "en": "50th percentile"
+          }
+        },
+        {
+          "name": "q3",
+          "type": "number",
+          "unit": "same as observations",
+          "description": {
+            "zh": "第75百分位",
+            "en": "75th percentile"
+          }
+        },
+        {
+          "name": "high",
+          "type": "number",
+          "unit": "same as observations",
+          "description": {
+            "zh": "上 whisker 或最大值，需明确约定",
+            "en": "Upper whisker or maximum; state the convention"
+          }
+        }
+      ]
+    }
+  ]
+}

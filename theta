@@ -1,0 +1,3 @@
+#!/bin/sh
+THETA_LAUNCH_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+exec node --disable-warning=ExperimentalWarning "$THETA_LAUNCH_ROOT/agent/cli/bin/theta.mjs" "$@"

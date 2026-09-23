@@ -1,0 +1,43 @@
+{
+  "id": 13,
+  "title": "双对数散点与边缘直方图",
+  "width": 1050,
+  "height": 950,
+  "dpi": 100,
+  "font": "Arial",
+  "font_size": 22,
+  "line_width": 1.3,
+  "seed": 190913,
+  "provenance": "模拟相关散点；样本量沿用截图标签，不代表获得了原始样本",
+  "data_file": "figure13.csv",
+  "annotation_policy": "reference_only",
+  "annotations": [],
+  "axes": [
+    149,
+    133,
+    702,
+    706
+  ],
+  "colors": [
+    "#508bbb",
+    "#e5a126",
+    "#737573"
+  ],
+  "groups": [
+    "MHQ SAG (N=226)",
+    "MHQ MAG (N=2288)",
+    "MHQ WGS (N=3164)"
+  ],
+  "xlim": [
+    510000.0,
+    17000000.0
+  ],
+  "ylim": [
+    580,
+    16400
+  ],
+  "xlabel": "Genome total size [bp] (corrected)",
+  "ylabel": "Number of predicted CDS (corrected)",
+  "bins": 60,
+  "title_en": "Log-log scatter with marginal histograms"
+}

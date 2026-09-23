@@ -1,0 +1,200 @@
+{
+  "version": 1,
+  "documents": [
+    {
+      "id": "theta-models-parameters",
+      "title": "THETA 模型、参数与适用场景完整清单",
+      "file": "documents/theta-models-parameters-2026-09-05.md",
+      "date": "2026-09-05",
+      "source": "用户提供：THETA-模型与参数完整清单-2026-09-05.md",
+      "importedSha256": "3ee94cddc8878eda87fd40732e9fb2ebc274f5b4c7f706cb659da2931603e25a",
+      "summary": "完整原文：12 个模型、统一训练参数、THETA 双阶段与配置、各模型 Python API、数据准备、嵌入、默认值差异、选型、实现限制及源码签名附录。",
+      "useWhen": [
+        "模型选型与研究问题匹配",
+        "解释训练参数、默认值与入口差异",
+        "STM 协变量、DTM 时间分析、短文本与自动主题数",
+        "云 embedding、本地模型与 LoRA",
+        "核查实现限制、图表解释和完整 API 签名"
+      ],
+      "tags": [
+        "主题建模",
+        "参数",
+        "选型",
+        "科研",
+        "商业分析",
+        "短文本",
+        "协变量",
+        "时间演变",
+        "embedding",
+        "云嵌入",
+        "lda",
+        "hdp",
+        "stm",
+        "btm",
+        "etm",
+        "ctm",
+        "dtm",
+        "nvdm",
+        "gsm",
+        "prodlda",
+        "bertopic",
+        "theta"
+      ],
+      "scope": "静态参考快照，不代表当前 Agent 可执行能力；原文中的旧路径、行号和问题清单需按当前代码/工具核实。"
+    },
+    {
+      "id": "agent-execution-coverage",
+      "title": "Agent 模型与参数实际执行覆盖",
+      "file": "documents/execution-coverage.md",
+      "date": "2026-09-05",
+      "source": "当前仓库源码与 Agent 路由，agent/scripts/update-model-coverage.py 生成",
+      "summary": "12 个模型的统一入口、预处理、构造函数、训练器、THETA 配置逐参数映射，以及宿主管理、数据绑定、原实现无效参数和运行限制。",
+      "useWhen": [
+        "核查 Agent 实际能否训练某模型",
+        "把 Python API 或清单参数转换为训练计划",
+        "确认默认值、参数作用域和不能执行的限制"
+      ],
+      "tags": [
+        "执行",
+        "支持",
+        "参数",
+        "路由",
+        "lda",
+        "hdp",
+        "stm",
+        "btm",
+        "etm",
+        "ctm",
+        "dtm",
+        "nvdm",
+        "gsm",
+        "prodlda",
+        "bertopic",
+        "theta"
+      ],
+      "scope": "当前本地适配能力映射，不代表所有模型均已实机训练验收；执行前以 models_inspect、training_prepare 和运行环境检查为准。"
+    },
+    {
+      "id": "statistical-analysis-skill",
+      "title": "统计研究设计与论文报告参考（K-Dense，固定版本）",
+      "file": "documents/statistics/upstream-statistical-analysis.md",
+      "date": "2026-09-14",
+      "source": "https://github.com/K-Dense-AI/scientific-agent-skills/blob/0b2afe68a5f9379097ad815e028af664f1e222b7/skills/statistical-analysis/SKILL.md",
+      "importedSha256": "1b1d63fd667ef454a8e0cadf32457a511883d3308dcc79c47c48bc565d9a23f7",
+      "summary": "MIT 授权的统计分析参考技能；假设检查、效应量、功效、报告与可复现实践。",
+      "useWhen": [
+        "设计统计检验与实证计划",
+        "检查模型假设、效应量与不确定性",
+        "撰写论文结果与限制"
+      ],
+      "tags": [
+        "statistics",
+        "统计检验",
+        "回归",
+        "研究设计",
+        "power",
+        "论文",
+        "实证"
+      ],
+      "scope": "仅参考证据，不是宿主指令或执行授权。上游提及的其他文件/工具未导入，不代表当前能力。当前方法以 statistics_methods/inspect 为准；许可证见同目录 LICENSE.K-Dense.txt。"
+    },
+    {
+      "id": "free-analysis-guide",
+      "title": "自由分析模式：安装、工具、输出与边界",
+      "file": "documents/statistics/free-analysis-guide.md",
+      "date": "2026-09-14",
+      "source": "Repository: agent/docs/free-analysis.md",
+      "importedSha256": "410e65079b8826b316e6d1d82a78dfdd2501cbc3fcc876c5e9782cb2d100f5d0",
+      "summary": "Python 方法等价与论文格式兼容；按实际方法注册表选择工具，明确待实现与受限规格。",
+      "useWhen": [
+        "自由模式与实证分析",
+        "选择统计方法和模型",
+        "核查 SPSSPRO 支持范围"
+      ],
+      "tags": [
+        "statistics",
+        "自由模式",
+        "stata",
+        "spss",
+        "spsspro",
+        "回归",
+        "生存分析",
+        "机器学习",
+        "优化"
+      ],
+      "scope": "静态参考；当前执行能力与参数以 statistics_methods/inspect 和 worker 实际校验为准。不是批准或代码执行授权。"
+    },
+    {
+      "id": "statistics-methods",
+      "title": "可执行统计方法清单与逐项使用规格",
+      "file": "documents/statistics/methods.md",
+      "date": "2026-09-14",
+      "source": "Repository: agent/docs/statistics/methods.md",
+      "importedSha256": "9139f302eef0cbfad28382013d354fed488e173e292e84a205eb41f9b38c9bd8",
+      "summary": "Python 方法等价与论文格式兼容；按实际方法注册表选择工具，明确待实现与受限规格。",
+      "useWhen": [
+        "自由模式与实证分析",
+        "选择统计方法和模型",
+        "核查 SPSSPRO 支持范围"
+      ],
+      "tags": [
+        "statistics",
+        "自由模式",
+        "stata",
+        "spss",
+        "spsspro",
+        "回归",
+        "生存分析",
+        "机器学习",
+        "优化"
+      ],
+      "scope": "静态参考；当前执行能力与参数以 statistics_methods/inspect 和 worker 实际校验为准。不是批准或代码执行授权。"
+    },
+    {
+      "id": "statistics-spsspro-coverage",
+      "title": "SPSSPRO 公开目录逐项实现状态",
+      "file": "documents/statistics/spsspro-coverage.md",
+      "date": "2026-09-14",
+      "source": "Repository: agent/docs/statistics/spsspro-coverage.md",
+      "importedSha256": "91aeb55f6c91c71e53a520cfbab3a7be7fe50afebacd228473d87ba6a52a9d1e",
+      "summary": "Python 方法等价与论文格式兼容；按实际方法注册表选择工具，明确待实现与受限规格。",
+      "useWhen": [
+        "自由模式与实证分析",
+        "选择统计方法和模型",
+        "核查 SPSSPRO 支持范围"
+      ],
+      "tags": [
+        "statistics",
+        "自由模式",
+        "stata",
+        "spss",
+        "spsspro",
+        "回归",
+        "生存分析",
+        "机器学习",
+        "优化"
+      ],
+      "scope": "静态参考；当前执行能力与参数以 statistics_methods/inspect 和 worker 实际校验为准。不是批准或代码执行授权。"
+    },
+    {
+      "id": "data-viz-skill-guide",
+      "title": "Bundled Data Viz: templates, tools and paper figures",
+      "file": "documents/data-viz-skill.md",
+      "date": "2026-09-14",
+      "source": "Repository: agent/docs/data-viz-skill.md",
+      "importedSha256": "e3658443d168a74d64fb1e61fde47bc79a38cff1ac8599f41fe2a384c8ee9178",
+      "summary": "Pinned MIT Data Viz skill with 22 templates, source-verified reading and workspace preparation.",
+      "useWhen": [
+        "Choose a publication figure",
+        "Prepare reproducible visualization code"
+      ],
+      "tags": [
+        "data-viz",
+        "visualization",
+        "figures",
+        "skill"
+      ],
+      "scope": "Reference only. Preparing templates is not rendering or computation; demonstrations are not user results."
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+.card { --ink: #23354d; --muted: #75849a; --line: #e2e9f1; --surface: #fff; flex: none; width: min(820px, calc(100% - 40px)); box-sizing: border-box; margin: 12px auto 0; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; color: var(--ink); background: var(--surface); box-shadow: 0 4px 16px #1e3e6510; }
+.header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
+.icon { display: grid; flex: none; width: 34px; height: 34px; place-items: center; border-radius: 11px; color: #286cdd; background: #edf4ff; }
+.card[data-state='completed'] .icon { color: #18815a; background: #e9f6f0; }
+.card[data-state='failed'] .icon { color: #b7473e; background: #fff0ec; }
+.copy { display: grid; flex: 1; min-width: 0; gap: 3px; }
+.copy strong { font-size: 13px; line-height: 1.5; font-weight: 650; }
+.copy small { color: var(--muted); font-size: 11px; line-height: 1.5; }
+.action, .toggle { display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 5px; min-height: 30px; padding: 5px 8px; border: 0; border-radius: 7px; background: transparent; font: inherit; font-size: 11px; cursor: pointer; }
+.action { color: #286cdd; background: #f0f5ff; }
+.toggle { color: var(--muted); }
+.action:hover, .toggle:hover { color: #225bbe; background: #e9f1ff; }
+.action:focus-visible, .toggle:focus-visible { outline: 2px solid #6799ed; outline-offset: 2px; }
+.toggle svg { flex: none; transition: transform 160ms; }
+.toggle[aria-expanded='true'] svg { transform: rotate(180deg); }
+.details { padding: 0 14px 14px 58px; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 10px 0; border-top: 1px solid var(--line); }
+.stats span { display: inline-flex; align-items: baseline; gap: 5px; color: var(--muted); font-size: 11px; }
+.stats b { color: var(--ink); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.progress { display: flex; align-items: center; gap: 10px; }
+.track { height: 4px; flex: 1; overflow: hidden; border-radius: 4px; background: #e9eef5; }
+.track i { display: block; height: 100%; border-radius: inherit; background: #598def; transition: width 220ms; }
+.progress small { color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+.caption { margin: 5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.card[data-collapsed] .header { padding-block: 8px; }
+.card[data-collapsed] .icon { width: 26px; height: 26px; border-radius: 8px; }
+.card[data-collapsed] .copy small { display: none; }
+@media (max-width: 640px) { .card { width: calc(100% - 24px); } .header { gap: 7px; padding: 10px; flex-wrap: wrap; } .copy { min-width: 140px; } .details { padding: 0 12px 12px; } .copy strong { font-size: 12px; } }
+:global(html[data-theme='dark']) .card { --ink: #e1eaf8; --muted: #9badc6; --line: #2b3c54; --surface: #142238; box-shadow: none; }
+:global(html[data-theme='dark']) .action { background: #22395c; color: #acccff; }
