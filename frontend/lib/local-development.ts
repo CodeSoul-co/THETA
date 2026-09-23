@@ -21,9 +21,12 @@ export function isLocalRequestOrigin(protocol: string, host: string | null, orig
   } catch { return false }
 }
 
-/** The open-source manual workspace exposes data APIs without account services. */
+/** Local workspace APIs; hosted account and storage services remain unavailable. */
 export function isManualWorkspacePath(parts: string[]) {
   if (parts.some(part => !part || part === '.' || part === '..' || /[/\\%]/u.test(part))) return false
   if (parts.length === 1) return parts[0] === 'config' || parts[0] === 'health'
+  if (parts[0] !== 'api') return false
+  if (parts[1] === 'datasets') return parts.length === 4 && parts[3] === 'preview'
+  if (parts[1] === 'preprocessing') return parts.length === 4 && parts[2] === 'check'
   return parts[0] === 'api' && ['projects', 'files', 'upload', 'train', 'results', 'data', 'models', 'runtime', 'stopwords'].includes(parts[1])
 }

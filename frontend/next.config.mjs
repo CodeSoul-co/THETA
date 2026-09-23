@@ -18,10 +18,9 @@ const nextConfig = {
     buildActivity: false,
   },
   // 环境变量配置
-  // Vercel 会自动读取环境变量，无需在此处设置默认值
-  // 本地开发时使用 .env.local 文件
+  // 本地服务通过启动器或 .env.local 配置
   // 输出配置
-  // Docker 部署需要 standalone 模式
+  // 桌面安装包使用 standalone 模式
   output: 'standalone',
   async redirects() {
     return [

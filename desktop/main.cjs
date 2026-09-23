@@ -237,13 +237,30 @@ async function runSmoke(services) {
   await window.webContents.executeJavaScript(`window.thetaDesktop.saveEmbedding(${JSON.stringify(embedding)})`);
   const manual = await get(origin, '/api/backend/api/projects', { method: 'POST', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify({ name: `Desktop smoke ${Date.now()}` }) });
   assert.equal(manual.status, 201);
+  const project = await manual.json();
+  // Reproduce column selection through the production frontend proxy, not just the backend.
+  const fixture = await pythonCall(['-I', '-c', 'import io,base64; from openpyxl import Workbook; w=Workbook(); s=w.active; s.append(["正文","时间","标签"]); s.append(["本地列预览测试","2026-09-23","测试"]); b=io.BytesIO(); w.save(b); print(base64.b64encode(b.getvalue()).decode())']);
+  const upload = await get(origin, '/api/backend/api/upload?' + new URLSearchParams({ filename: '列预览测试.xlsx', dataset_name: project.dataset_name }), {
+    method: 'POST', headers: { ...headers, 'content-type': 'application/octet-stream' }, body: Buffer.from(fixture.trim(), 'base64'),
+  });
+  const uploaded = await upload.json();
+  assert.equal(upload.status, 201, JSON.stringify(uploaded));
+  const preview = await get(origin, `/api/backend/api/datasets/${encodeURIComponent(project.dataset_name)}/preview?file_id=${uploaded.id}`);
+  const table = await preview.json();
+  assert.equal(preview.status, 200, JSON.stringify(table));
+  assert.deepEqual(table.columns, ['正文', '时间', '标签']);
+  assert.deepEqual(table.rows[0], ['本地列预览测试', '2026-09-23', '测试']);
+  const preprocessing = await get(origin, `/api/backend/api/preprocessing/check/${encodeURIComponent(project.dataset_name)}`);
+  assert.equal(preprocessing.status, 200);
+  assert.equal((await preprocessing.json()).managed_by_training, true);
+  assert.equal((await get(origin, '/api/backend/api/projects', { headers: { ...headers, origin: 'https://evil.example' } })).status, 403);
   const inventory = await pythonCall(['-I', '-c', 'import json,sys,sqlite3,ssl,numpy,pandas,scipy,torch,sklearn,gensim,transformers; print(json.dumps({"executable":sys.executable,"prefix":sys.prefix,"version":sys.version.split()[0]}))']);
   const parsed = JSON.parse(inventory);
   assert.equal(path.resolve(parsed.prefix), path.resolve(runtime, 'python'));
   const model = await get(origin, '/api/backend/api/models/lda');
   assert.equal(model.status, 200);
   assert.equal((await model.json()).modelId, 'lda');
-  console.log(JSON.stringify({ ok: true, app: app.getVersion(), node: process.versions.node, electron: process.versions.electron, python: parsed, checks: ['production UI', 'agent API', 'manual API', 'project write', 'desktop authentication', 'origin rejection', 'sandboxed settings bridge', 'live GLM embedding configuration', 'bundled Python imports', 'Python model inspection'] }, null, 2));
+  console.log(JSON.stringify({ ok: true, app: app.getVersion(), node: process.versions.node, electron: process.versions.electron, python: parsed, checks: ['production UI', 'agent API', 'manual API', 'project write', 'XLSX upload and column preview through frontend proxy', 'local preprocessing status', 'desktop authentication', 'origin rejection', 'sandboxed settings bridge', 'live GLM embedding configuration', 'bundled Python imports', 'Python model inspection'] }, null, 2));
 }
 if (single) app.whenReady().then(async () => {
   if (process.platform === 'darwin') app.dock.setIcon(path.join(__dirname, 'ui/icon.png'));

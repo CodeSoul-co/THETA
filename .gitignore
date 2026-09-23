@@ -258,3 +258,6 @@ desktop/runtime/
 desktop/release/
 desktop/.python-download/
 desktop/.smoke-home/
+
+# Generated Next.js standalone entry (packaged under desktop/runtime).
+/frontend/server.js

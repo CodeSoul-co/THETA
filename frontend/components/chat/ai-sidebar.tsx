@@ -1054,6 +1054,7 @@ export function AiSidebar({
             </div>
             <Textarea
               aria-label="项目咨询消息"
+              data-composer-input
               disabled={inputDisabled}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}

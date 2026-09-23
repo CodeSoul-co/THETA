@@ -4,7 +4,9 @@
 
 ## 使用
 
-首版构建目标为 **macOS Apple Silicon（arm64）** 和 **Windows x64**。安装包位于桌面构建工作流的 Artifacts 或后续 GitHub Releases。未配置发行证书时，构建产物为未经过正式签名／公证的测试版；正式分发前需要平台签名和实机验证。暂不提供 Intel Mac 版本。
+首版构建目标为 **macOS Apple Silicon（arm64）** 和 **Windows x64**。从 [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.0) 下载：Mac 使用 `THETA-0.3.0-mac-arm64.dmg`，Windows 使用 `THETA-0.3.0-win-x64.exe`。Mac 打开 DMG 后将 THETA 拖入「应用程序」；Windows 运行 EXE 安装程序。当前为未正式签名／公证的预览版，系统可能显示安全提示。暂不提供 Intel Mac 或 Windows ARM 原生版本。
+
+发行页提供 `SHA256SUMS.txt`，用于核对下载文件完整性。macOS 可运行 `shasum -a 256 文件名.dmg`；Windows PowerShell 可运行 `Get-FileHash 文件名.exe -Algorithm SHA256`，与校验文件对应行比较。
 
 应用启动后直接进入工作台。打开左下角「设置」：
 
@@ -51,6 +53,6 @@ npm --prefix desktop run dist
 
 输出在 `desktop/release`：macOS `.app`、`.dmg` 和 `.zip`，Windows NSIS `.exe` 安装程序。`desktop/runtime` 和 `desktop/release` 不提交到 Git。
 
-`.github/workflows/desktop.yml` 支持手动选择平台构建；`desktop-v*` 标签构建两种平台。工作流验证源码运行和打包后的应用，再上传安装包。当前不自动发布公共 Release，也不自动更新应用。
+`.github/workflows/desktop.yml` 支持手动选择平台构建；`desktop-v*` 标签构建两种平台。工作流验证源码运行和打包后的应用，再上传安装包。标签构建全部通过后，会发布带 SHA-256 校验文件的 GitHub 预览版 Release；手动构建只上传 Artifacts。应用不自动更新，下载新版安装程序升级即可。
 
-冒烟验证覆盖生产界面、两套 API、项目写入、访问令牌与来源检查、设置桥接、Embedding 配置即时生效、内置 Python 导入和模型信息读取。它不调用付费云 API；真实云服务需配置用户自己的密钥后验证。
+冒烟验证覆盖生产界面、两套 API、项目写入、Excel 上传与列预览、预处理状态、访问令牌与来源检查、设置桥接、Embedding 配置即时生效、内置 Python 导入和模型信息读取。它不调用付费云 API；真实云服务需配置用户自己的密钥后验证。

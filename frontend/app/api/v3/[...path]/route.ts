@@ -1,6 +1,5 @@
 
-import { OPEN_SOURCE_EDITION } from '@/lib/edition'
-import { isLocalRequestOrigin } from '@/lib/local-development'
+import { allowLocalSession, isLocalRequestOrigin } from '@/lib/local-development'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
@@ -11,7 +10,6 @@ interface RouteContext {
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export const maxDuration = 300
-const SESSION_COOKIE = 'theta_session'
 
 export async function GET(request: NextRequest, context: RouteContext) {
   return proxy(request, context)
@@ -34,14 +32,12 @@ export async function OPTIONS() {
 }
 
 async function proxy(request: NextRequest, context: RouteContext) {
-  const configuredBaseUrl = process.env.THETA_AGENT_API_URL?.trim()
-    || (process.env.NODE_ENV === 'development' ? 'http://127.0.0.1:4318' : undefined)
-  if (!configuredBaseUrl) {
-    return unavailable('THETA_AGENT_API_URL is not configured in Vercel.')
+  const configuredBaseUrl = process.env.THETA_AGENT_API_URL?.trim() || 'http://127.0.0.1:4318'
+  if (!allowLocalSession(request.url, configuredBaseUrl, process.env.NODE_ENV, process.env.THETA_LOCAL_AUTH_ENABLED, process.env.THETA_DESKTOP_TOKEN)) {
+    return unavailable('无法使用本地 THETA Agent，请从本机工作台或 THETA 应用启动。')
   }
-
-  if (['127.0.0.1', 'localhost'].includes(new URL(configuredBaseUrl).hostname) && !['127.0.0.1', 'localhost'].includes(request.nextUrl.hostname)) {
-    return new NextResponse('Local Agent is only available on localhost.', { status: 403 })
+  if (!isLocalRequestOrigin(request.nextUrl.protocol, request.headers.get('host'), request.headers.get('origin'), request.headers.get('sec-fetch-site'))) {
+    return new NextResponse('本地接口不接受跨站请求。', { status: 403 })
   }
 
   const { path } = await context.params
@@ -52,21 +48,11 @@ async function proxy(request: NextRequest, context: RouteContext) {
   target.search = request.nextUrl.search
 
   const headers = new Headers()
-  if (process.env.THETA_DESKTOP_TOKEN) {
-    if (!isLocalRequestOrigin(request.nextUrl.protocol, request.headers.get('host'), request.headers.get('origin'), request.headers.get('sec-fetch-site'))) {
-      return new NextResponse('Local application origin required.', { status: 403 })
-    }
-    headers.set('x-theta-desktop-token', process.env.THETA_DESKTOP_TOKEN)
-  }
-  for (const name of ['accept', 'authorization', 'content-type', 'last-event-id', 'user-agent', 'x-forwarded-for', 'x-forwarded-proto']) {
+  if (process.env.THETA_DESKTOP_TOKEN) headers.set('x-theta-desktop-token', process.env.THETA_DESKTOP_TOKEN)
+  for (const name of ['accept', 'content-type', 'last-event-id', 'user-agent', 'x-forwarded-for', 'x-forwarded-proto']) {
     const value = request.headers.get(name)
-    if (value && !(OPEN_SOURCE_EDITION && name === 'authorization')) headers.set(name, value)
+    if (value) headers.set(name, value)
   }
-  const sessionToken = request.cookies.get(SESSION_COOKIE)?.value
-  if (!OPEN_SOURCE_EDITION && !headers.has('authorization') && sessionToken) {
-    headers.set('authorization', `Bearer ${sessionToken}`)
-  }
-
   try {
     const response = await fetch(target, streamingRequestInit(request, headers))
     return new NextResponse(response.body, {
@@ -74,9 +60,7 @@ async function proxy(request: NextRequest, context: RouteContext) {
       headers: responseHeaders(response),
     })
   } catch {
-    return unavailable(process.env.NODE_ENV === 'development'
-      ? '无法连接本地 THETA CLI Agent API，请确认 127.0.0.1:4318 已启动。'
-      : 'Unable to reach the deployed THETA CLI Agent API.')
+    return unavailable('无法连接本地 THETA Agent，请重新启动工作台或应用。')
   }
 }
 
@@ -90,6 +74,7 @@ function streamingRequestInit(request: NextRequest, headers: Headers): Streaming
     headers,
     body: hasBody ? request.body : undefined,
     signal: request.signal,
+    redirect: 'manual',
     ...(hasBody ? { duplex: 'half' as const } : {}),
   }
 }
@@ -111,7 +96,7 @@ function responseHeaders(response: Response) {
   const headers = new Headers({ 'Cache-Control': 'no-store' })
   for (const name of ['content-type', 'x-request-id', 'content-security-policy', 'x-content-type-options', 'content-disposition']) {
     const value = response.headers.get(name)
-    if (value && !(OPEN_SOURCE_EDITION && name === 'authorization')) headers.set(name, value)
+    if (value) headers.set(name, value)
   }
   if (response.headers.get('content-type')?.startsWith('text/event-stream')) {
     headers.set('Cache-Control', 'no-cache, no-transform')

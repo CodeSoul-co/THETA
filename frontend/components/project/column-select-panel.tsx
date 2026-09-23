@@ -31,7 +31,7 @@ interface ColumnSelectPanelProps {
   onConfirm: (selection: ColumnSelection) => void
   onSkip?: () => void
   datasetName: string
-  /** OSS 直传后文件在 data/{job_id}/，传此参数才能正确预览 */
+  /** 本地上传返回的文件 ID，确保预览用户当前选择的文件。 */
   jobId?: string | null
 }
 

@@ -1,46 +1,10 @@
-
-import { OPEN_SOURCE_EDITION } from '@/lib/edition'
-/**
- * API 配置 - 统一管理后端连接
- *
- * theta_1-main 后端由两个服务组成：
- *   1. 主 API (api/main.py) — 认证、OSS 上传、DLC 训练任务
- *   2. Agent API (agent/api.py) — AI 对话、分析解读、可视化
- *
- * 开发环境下两个服务通常运行在不同端口，生产环境通过 nginx 统一代理。
- */
-
+/** 工作台数据始终通过同源代理访问本机服务。模型 API 由用户在设置中单独配置。 */
 import { toast } from 'sonner'
 import { ApiError } from './api-error'
 
-export const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL !== undefined
-    ? process.env.NEXT_PUBLIC_API_URL
-    : '/api/backend';
+export const API_BASE = '/api/backend';
+export const AGENT_BASE = API_BASE;
 
-export const AGENT_BASE =
-  process.env.NEXT_PUBLIC_AGENT_URL !== undefined
-    ? process.env.NEXT_PUBLIC_AGENT_URL
-    : API_BASE; // 默认与主 API 同域，通过 nginx 代理
-
-function isLocalNoAuthMode(): boolean {
-  if (process.env.NEXT_PUBLIC_LOCAL_NO_AUTH === 'true') return true;
-  if (process.env.NEXT_PUBLIC_LOCAL_NO_AUTH === 'false') return false;
-  return false;
-}
-
-function localNoAuthToken(): string {
-  return process.env.NEXT_PUBLIC_LOCAL_AUTH_TOKEN || 'theta-local-dev-token';
-}
-
-function getAuthHeader(): Record<string, string> {
-  if (OPEN_SOURCE_EDITION) return {};
-  if (typeof window === 'undefined') return {};
-  const token = localStorage.getItem('access_token');
-  if (token) return { Authorization: `Bearer ${token}` };
-  if (isLocalNoAuthMode()) return { Authorization: `Bearer ${localNoAuthToken()}` };
-  return {};
-}
 /** 将 FastAPI 的 detail（可能是字符串或对象数组）转为可读错误信息 */
 function formatErrorDetail(detail: unknown, fallback: string): string {
   if (detail == null) return String(fallback);
@@ -60,7 +24,7 @@ function formatErrorDetail(detail: unknown, fallback: string): string {
 }
 
 /**
- * 通用 fetch 封装。认证由同源代理通过 HttpOnly Cookie 完成。
+ * 通用 fetch 封装。桌面认证由应用和同源代理完成。
  */
 export async function apiFetch<T>(
   base: string,
@@ -72,7 +36,6 @@ export async function apiFetch<T>(
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    ...getAuthHeader(),
     ...fetchOptions.headers,
   };
 
@@ -99,24 +62,11 @@ export async function apiFetch<T>(
   }
 
   if (!response.ok) {
-    if (response.status === 401) {
-      const hadSession = typeof window !== 'undefined'
-        && localStorage.getItem('theta_auth_state') === 'authenticated';
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('theta_auth_state');
-        localStorage.removeItem('user');
-        localStorage.removeItem('access_token');
-      }
-      if (hadSession && typeof window !== 'undefined' && window.location.pathname !== '/') {
-        toast.error('登录已过期，请重新登录');
-      }
-    } else if (response.status >= 500 && typeof window !== 'undefined') {
-      toast.error('服务异常，请稍后重试');
-    }
+    if (response.status >= 500 && typeof window !== 'undefined') toast.error('本地服务异常，请稍后重试');
     const body = await response.json().catch(() => ({ detail: `HTTP ${response.status}` }));
     const detail = body.detail ?? body.error?.message;
     const msg = formatErrorDetail(detail, `HTTP ${response.status}`);
-    throw new ApiError(response.status === 401 ? '登录已过期，请重新登录后再试' : msg, response.status);
+    throw new ApiError(response.status === 401 ? '本地服务验证失败，请重新启动 THETA' : msg, response.status);
   }
 
   // 204 No Content 无响应体，直接返回

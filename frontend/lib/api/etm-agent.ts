@@ -1,11 +1,6 @@
 /**
- * THETA API Client — 适配 theta_1-main 后端
- *
- * 两个后端服务：
- *   主 API  (api/main.py)  → 认证、OSS 数据上传、DLC 训练任务管理
- *   Agent API (agent/api.py) → AI 分析、多轮对话、指标/主题解读、图表分析
- *
- * 前端通过 NEXT_PUBLIC_API_URL / NEXT_PUBLIC_AGENT_URL 指向它们。
+ * THETA 工作台 API 客户端。
+ * 手动数据操作经 /api/backend 访问本机服务，对话经 /api/v3 访问本机 Agent。
  */
 
 import { apiFetch, API_BASE, AGENT_BASE } from './config';

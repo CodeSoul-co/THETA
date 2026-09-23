@@ -1,8 +1,8 @@
 # THETA 网页对话
 
-前端唯一源码目录为仓库根目录的 `frontend/`。安装、开发、构建及部署均从这里执行，不再维护域名命名的源码副本。公开网站域名与后端地址不受目录调整影响。
+前端唯一源码目录为仓库根目录的 `frontend/`。安装、开发与构建均从这里执行。本仓库只维护本地工作台，不再使用旧托管网站或远端后备地址。
 
-当前 `dev` 的对话模式直接连接 `agent/web/server.ts`，与 CLI 共用 `ConversationAgent`、工具、模型配置和 SQLite 存储，没有接入旧固定训练 FSM。两种模式只在最终结果页汇合，共用 `ResearchResultView` 和右侧咨询助手。
+对话模式直接连接 `agent/web/server.ts`，与 CLI 共用 `ConversationAgent`、工具、模型配置和 SQLite 存储，没有接入旧固定训练 FSM。两种模式只在最终结果页汇合，共用 `ResearchResultView` 和右侧咨询助手。
 
 ## 本地启动
 

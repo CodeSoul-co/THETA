@@ -80,3 +80,41 @@ jobs:
         with:
           name: desktop-logs-${{ matrix.platform }}
           path: desktop/.smoke-home/logs/
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/desktop-v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: THETA-*
+          path: release-assets
+          merge-multiple: true
+      - name: Publish verified installers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(node -p "require('./desktop/package.json').version")
+          test "$RELEASE_TAG" = "desktop-v$version"
+          notes="$GITHUB_WORKSPACE/docs/releases/$RELEASE_TAG.md"
+          test -f "$notes"
+          # upload-artifact preserves the common desktop/ directory structure.
+          mkdir -p publish
+          find release-assets -type f \( -name '*.dmg' -o -name '*.exe' -o -name '*.zip' \) -exec cp {} publish/ \;
+          cd publish
+          test -s "THETA-$version-mac-arm64.dmg"
+          test -s "THETA-$version-win-x64.exe"
+          sha256sum THETA-* > SHA256SUMS.txt
+          gh release create "$RELEASE_TAG" THETA-* SHA256SUMS.txt \
+            --verify-tag --draft --prerelease \
+            --title "THETA $version — Web, CLI Agent & Desktop (Preview)" \
+            --notes-file "$notes"
+          gh release edit "$RELEASE_TAG" --draft=false

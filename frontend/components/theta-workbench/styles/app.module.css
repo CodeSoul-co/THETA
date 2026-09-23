@@ -1193,8 +1193,8 @@
 .shell button:focus-visible,
 .shell select:focus-visible,
 .shell input:focus-visible,
-/* The composer already indicates focus on its enclosing surface. */
-.shell textarea:focus-visible:not(.composerInput) {
+/* Conversation and sidebar composers indicate focus on their enclosing surface. */
+.shell textarea:focus-visible:not(.composerInput):not([data-composer-input]) {
   outline: 2px solid color-mix(in srgb, var(--dsw-alias-state-business-primary) 70%, white);
   outline-offset: 2px;
 }

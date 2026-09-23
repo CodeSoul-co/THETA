@@ -16,19 +16,10 @@
  */
 
 // =============================================================================
-// 基础 URL（前端通过环境变量指定后端地址）
+// 基础 URL（统一通过同源代理连接本机服务）
 // =============================================================================
 
-export const API_BASE_URLS = {
-  development: "http://localhost:8000",
-  production: "/api/backend",
-  backup: "http://47.86.49.93:8000",
-} as const;
-
-// 前端当前使用的基础 URL（从环境变量或默认值）
-export const getApiBaseUrl = (): string => {
-  return (process.env.NEXT_PUBLIC_API_URL as string) || API_BASE_URLS.production;
-};
+export const getApiBaseUrl = (): string => '/api/backend';
 
 // =============================================================================
 // 端点配置

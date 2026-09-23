@@ -30,7 +30,7 @@ npm --prefix frontend ci
 
 ## 版本边界
 
-`frontend/lib/edition.json` 是随发行版提交的构建配置。开源快照值为 `opensource`；dev/main 保持 `hosted`，免登录不会由浏览器参数、localStorage 或环境误操作启用。开源 AuthProvider 保持 `user=null`，工作台依据发行版开放访问，而不是伪造已登录身份。账号相关代理在开源版禁用。
+本仓库统一维护本地版，`frontend/lib/edition.ts` 固定启用免账号的本地工作台。前端仅代理本机数据与 Agent 服务，不再回退到托管平台；账号服务不可用。用户可自行配置云端 LLM / Embedding API，密钥不随安装包分发。
 
 这是个人本地工作台，没有租户隔离或公开多用户服务承诺。后台仅绑定 loopback；生产构建需要明确设置 `THETA_AGENT_API_URL`。发布远端多用户服务需要部署者自行实现身份和数据隔离。
 
