@@ -1,5 +1,7 @@
 # Evaluation
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/user-guide/evaluation.zh.md)
+
 Training automatically runs evaluation using multiple metrics. Results are saved in JSON format.
 
 ---

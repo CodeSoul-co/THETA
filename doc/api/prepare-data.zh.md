@@ -1,6 +1,6 @@
 # prepare_data.py
 
-**[English](prepare-data.md)** | **[中文](prepare-data.zh.md)**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/api/prepare-data.md) | **中文**
 
 ---
 

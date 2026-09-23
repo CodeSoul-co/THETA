@@ -1,5 +1,7 @@
 # 项目概述
 
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/getting-started/overview.md) | **中文**
+
 理解THETA的架构和工作流程将帮助您更有效地使用它。
 
 ---
@@ -184,9 +186,9 @@ THETA按以下结构组织文件：
 
 现在您已经了解了架构，可以：
 
-- 探索 **[用户指南](../user-guide/data-preparation.md)** 获取每个组件的详细文档
+- 探索 **[用户指南](../user-guide/data-preparation.zh.md)** 获取每个组件的详细文档
 - 尝试不同的**训练模式**（有监督、无监督）
 - 实验不同的**模型规模**（4B、8B）
-- 在高级使用部分学习**[超参数调优](../advanced/hyperparameters.md)**
-- 将THETA与**[基线模型](../models/baselines.md)**（LDA、ETM、CTM）进行比较
-- 使用专门流程处理**[中文文本数据](../advanced/chinese-data.md)**
+- 在高级使用部分学习**[超参数调优](../advanced/hyperparameters.zh.md)**
+- 将THETA与**[基线模型](../models/baselines.zh.md)**（LDA、ETM、CTM）进行比较
+- 使用专门流程处理**[中文文本数据](../advanced/chinese-data.zh.md)**

@@ -1,5 +1,7 @@
 # visualization.run_visualization
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/api/visualization.zh.md)
+
 Separate visualization generation tool.
 
 ---

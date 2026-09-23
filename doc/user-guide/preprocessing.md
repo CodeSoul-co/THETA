@@ -1,5 +1,7 @@
 # Data Preprocessing
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/user-guide/preprocessing.zh.md)
+
 Preprocessing converts cleaned text into numerical representations required for training. This stage generates embeddings using Qwen models and constructs bag-of-words representations.
 
 ---

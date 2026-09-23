@@ -1,5 +1,7 @@
 # Installation
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/getting-started/installation.zh.md)
+
 This guide will help you install THETA on your system.
 
 ---

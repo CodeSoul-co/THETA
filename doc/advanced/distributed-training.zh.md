@@ -1,6 +1,6 @@
 # 分布式与内存高效训练
 
-**[English](distributed-training.md)** | **[中文](distributed-training.zh.md)**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/advanced/distributed-training.md) | **中文**
 
 ---
 

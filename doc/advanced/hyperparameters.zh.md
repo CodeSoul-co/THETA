@@ -1,6 +1,6 @@
 # 超参数调优
 
-**[English](hyperparameters.md)** | **[中文](hyperparameters.zh.md)**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/advanced/hyperparameters.md) | **中文**
 
 ---
 

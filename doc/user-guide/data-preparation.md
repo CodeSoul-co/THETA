@@ -1,5 +1,7 @@
 # Data Preparation
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/user-guide/data-preparation.zh.md)
+
 This guide covers data format requirements and cleaning procedures.
 
 ---

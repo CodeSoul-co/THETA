@@ -1,5 +1,7 @@
 # 对话中的代码预处理
 
+[English](conversation-preprocessing.en.md) | **中文**
+
 Agent 可在数据理解之后、训练配置之前调用 `dataset_preprocess`。这是受限 pandas 代码解释器，不是任意 Python 主机执行权限；不依赖 Docker，也不开放 shell、文件读写、联网、安装包、import、循环、lambda 或任意回调。文件内容只作为数据，不作为指令或代码。
 
 ## Agent 工具 / Worker 契约
@@ -29,4 +31,4 @@ df["时间"] = pd.to_datetime(df["发布时间"], errors="coerce").dt.strftime("
 
 `GET /api/v3/runs/{runId}`、会话列表和现有 SSE 快照返回 `userMessageCount`，从持久化记录统计用户真实输入（包含明确发送后失败的轮次），排除助手、工具、后台监控和确认卡点击。`messageCount` 是兼容别名，现在也表示用户发送数。重复 requestId 不增加计数；旧记录缺来源标记时按已存角色和已知确认格式兼容统计。
 
-`datasetRefs` 为会话持久数据绑定；输入框引用单独保存，首次发送后收起或手动移除不会删除项目数据。后续消息沿用已绑定数据，无需重复引用。OpenAPI 已同步以上字段；本轮不修改训练进度协议。
+`datasetRefs` 为会话持久数据绑定；输入框引用单独保存，首次发送后收起或手动移除不会删除项目数据。后续消息沿用已绑定数据，无需重复引用。OpenAPI 已同步以上字段。

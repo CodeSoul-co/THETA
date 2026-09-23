@@ -1,6 +1,6 @@
 # 中文数据集示例
 
-**[English](chinese-dataset.md)** | **[中文](chinese-dataset.zh.md)**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/examples/chinese-dataset.md) | **中文**
 
 ---
 

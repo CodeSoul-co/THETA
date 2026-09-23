@@ -1,6 +1,6 @@
 # 可视化
 
-**[English](visualization.md)** | **[中文](visualization.zh.md)**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/user-guide/visualization.md) | **中文**
 
 ---
 

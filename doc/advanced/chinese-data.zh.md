@@ -1,6 +1,6 @@
 # 中文数据处理
 
-**[English](chinese-data.md)** | **[中文](chinese-data.zh.md)**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/advanced/chinese-data.md) | **中文**
 
 ---
 

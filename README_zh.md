@@ -5,9 +5,8 @@
 <h1>THETA (θ)</h1>
 
 [![Desktop](https://img.shields.io/badge/Desktop-macOS%20%7C%20Windows-blue?style=flat-square)](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.0)
-[![CLI Agent + Web](https://img.shields.io/badge/CLI%20Agent%20%2B%20Web-local-green?style=flat-square)](agent/README.md)
+[![CLI Agent + Web](https://img.shields.io/badge/CLI%20Agent%20%2B%20Web-local-green?style=flat-square)](agent/README_zh.md)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-CodeSoulco%2FTHETA-yellow?style=flat-square)](https://huggingface.co/CodeSoulco/THETA)
-[![Paper](https://img.shields.io/badge/arXiv-2603.05972-b31b1b.svg)](https://arxiv.org/abs/2603.05972)
 
 [English](README.md) | **中文**
 
@@ -22,8 +21,8 @@ THETA 提供 **Web 工作台、CLI Agent、桌面应用**三种入口，另可�
 | 使用方式 | 适合谁 | 如何开始 |
 | --- | --- | --- |
 | **桌面端（Mac / Windows）** | 希望安装后直接使用的用户 | [下载安装包](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.0)；内置 Python 和 CPU 计算依赖，无需另装 Python、Node.js 或 Conda |
-| **Web 工作台** | 希望在浏览器中使用对话／手动分析的用户 | 完成[源码环境配置](agent/README.md)后运行 `./theta-web start`，打开本机网页 |
-| **CLI Agent** | 希望在终端中用自然语言分析数据的用户 | 完成[Agent 安装](agent/README.md)后运行 `./theta` |
+| **Web 工作台** | 希望在浏览器中使用对话／手动分析的用户 | 完成[源码环境配置](agent/README_zh.md)后运行 `./theta-web start`，打开本机网页 |
+| **CLI Agent** | 希望在终端中用自然语言分析数据的用户 | 完成[Agent 安装](agent/README_zh.md)后运行 `./theta` |
 
 已有 Agent 的用户还可使用 [THETA Workflow Skill](skills/theta-workflow/SKILL.md) 引导研究与训练流程。
 
@@ -36,7 +35,7 @@ THETA 提供 **Web 工作台、CLI Agent、桌面应用**三种入口，另可�
 
 Mac 打开 DMG 后将 **THETA** 拖入「应用程序」；Windows 运行 EXE 安装程序。启动后在「设置」中填写自己的模型 API 地址与 Key，并按需配置本地或云端 Embedding。**安装包不含用户密钥，也不含大模型权重**；默认本地 Embedding 为 Qwen3-Embedding-0.6B，云端预设为 GLM embedding-3。LDA 等传统算法无需下载神经网络权重。
 
-本次桌面发行是未正式签名／公证的预览版，系统可能显示安全提示；暂不提供 Intel Mac 和 Windows ARM 原生安装包。参见[桌面使用说明](docs/desktop.md)、[发行说明与 SHA-256 校验文件](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.0)。
+当前桌面版本是未正式签名／公证的预览版，系统可能显示安全提示；暂不提供 Intel Mac 和 Windows ARM 原生安装包。参见[桌面使用说明](docs/desktop.zh.md)、[发行说明与 SHA-256 校验文件](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.0)。
 
 ## 启动网页工作台（对话 / 手动）
 
@@ -52,7 +51,7 @@ Mac 打开 DMG 后将 **THETA** 拖入「应用程序」；Windows 运行 EXE �
 
 打开 **<http://127.0.0.1:4320/workbench?mode=conversation>**，顶部切换“对话 / 手动”。关闭终端不会停止服务；电脑重启后重新运行 `./theta-web start`。
 
-首次使用需准备 **Node.js ≥ 22.13、pnpm、Python 计算环境和私有 `agent/.env.local`**（见 [Agent 环境安装](agent/README.md)），并安装依赖：
+首次使用需准备 **Node.js ≥ 22.13、pnpm、Python 计算环境和私有 `agent/.env.local`**（见 [Agent 环境安装](agent/README_zh.md)），并安装依赖：
 
 ```bash
 pnpm --dir agent install --frozen-lockfile
@@ -61,20 +60,19 @@ npm --prefix frontend ci
 
 启动入口固定使用 `frontend/`、对话 API `4318` 和手动 API `4321`，复用 `.theta_agent/` 与 `.local/manual-workbench/` 中的已有数据，不需要启动旧服务。**不要删除这两个数据目录或覆盖现有 `.env.local`。** 日志位于 `.local/workbench/`。端口冲突时会报错，不会自动杀死其他进程。
 
-这是本机开发入口，不是生产免登录部署方案。完整配置与故障排查见 [网页启动说明](frontend/README.md)。独立命令行 Agent 使用 `./theta`。
+这是本机开发入口，不是生产免登录部署方案。完整配置与故障排查见 [网页启动说明](frontend/README_zh.md)。独立命令行 Agent 使用 `./theta`。
 
-> 下方快速上手针对计算引擎，不是双模式网页工作台。历史迁移背景见 [架构说明](docs/architecture/agent-migration.md)，分布式训练部署见 [Python Worker](trainning/worker/README.md)。
-
+> 下方环境配置面向源码版计算引擎。桌面用户直接下载安装包即可。
 
 ---
 
 ## 目录
 
-1. [快速上手：五分钟环境就绪](#快速上手五分钟环境就绪)
-2. [Agent Workflow Skill：THETA Workflow](#agent-workflow-skilltheta-workflow)
+1. [计算引擎环境配置](#计算引擎环境配置)
+2. [THETA Workflow 技能](#theta-workflow-技能)
 3. [数据格式要求](#数据格式要求)
 4. [配置系统：从硬件到实验](#配置系统从硬件到实验)
-5. [运行模式：小白 vs 专家](#运行模式小白-vs-专家)
+5. [运行模式：入门与专家](#运行模式入门与专家)
 6. [产物地图：结果在哪？](#产物地图结果在哪)
 7. [科学评估标准](#科学评估标准)
 8. [支持的模型](#支持的模型)
@@ -83,7 +81,7 @@ npm --prefix frontend ci
 
 ---
 
-## 快速上手：五分钟环境就绪
+## 计算引擎环境配置
 
 ### 步骤 1：克隆仓库
 
@@ -169,22 +167,22 @@ bash scripts/train_theta.sh --dataset your_dataset --model_size 0.6B
 
 ---
 
-## Agent Workflow Skill：THETA Workflow
+## THETA Workflow 技能
 
-本仓库内置了可发布的通用 agent workflow skill：[`skills/theta-workflow/`](skills/theta-workflow/)。独立公开版本发布在 [CodeSoul-co/theta-skill](https://github.com/CodeSoul-co/theta-skill)，方便不想 clone 完整 THETA 项目的 agent 单独安装。独立仓库也会反向链接到 [CodeSoul-co/THETA](https://github.com/CodeSoul-co/THETA)，两个发布入口互相指向。当你希望 agent 帮你处理完整 THETA 流程时，可以使用它，包括仓库检查、数据确认、环境预检、embedding 模式选择、模型推荐、命令生成、执行确认、结果解释、调参和报告整理。这个 skill 由 Markdown 指令和一个只读 Python 预检脚本组成，不依赖 Codex 专有 API；同时内置中文和英文两套用户询问与确认流程。
+本仓库提供通用 Agent 工作流技能：[`skills/theta-workflow/`](skills/theta-workflow/)。独立公开版本发布在 [CodeSoul-co/theta-skill](https://github.com/CodeSoul-co/theta-skill)，可供 Agent 单独安装，无需克隆完整 THETA 项目。独立仓库也会反向链接到 [CodeSoul-co/THETA](https://github.com/CodeSoul-co/THETA)，两个发布入口互相指向。当你希望 Agent 帮你处理完整 THETA 流程时，可以使用它，包括仓库检查、数据确认、环境预检、嵌入模式选择、模型推荐、命令生成、执行确认、结果解释、调参和报告整理。该技能由 Markdown 指令和一个只读 Python 预检脚本组成，不依赖 Codex 专有 API；同时内置中文和英文两套用户询问与确认流程。
 
 通用用法：
 
-1. 让你的 agent 读取 [`skills/theta-workflow/SKILL.md`](skills/theta-workflow/SKILL.md)，或者把整个 `skills/theta-workflow/` 目录安装/复制到该 agent 的 skills 目录。
-2. 向 agent 说明使用 THETA Workflow skill 或其中的指令：
+1. 让你的 Agent 读取 [`skills/theta-workflow/SKILL.md`](skills/theta-workflow/SKILL.md)，或者把整个 `skills/theta-workflow/` 目录安装/复制到该 Agent 的技能目录。
+2. 向 Agent 说明使用 THETA Workflow 技能 或其中的指令：
 
 ```text
-使用 skills/theta-workflow 里的 THETA Workflow skill 帮我跑一个政策文本主题建模流程。
+使用 skills/theta-workflow 里的 THETA Workflow 技能帮我执行一个政策文本主题建模流程。
 ```
 
-如果你的 agent runtime 支持命名 skill 调用，也可以使用 `$theta-workflow`。
+如果你的 Agent 支持按名称调用技能，也可以使用 `$theta-workflow`。
 
-如果要从独立仓库安装，而不是从当前 THETA checkout 安装：
+如果要从独立仓库安装，而不是从当前 THETA 本地仓库安装：
 
 ```bash
 git clone https://github.com/CodeSoul-co/theta-skill.git
@@ -205,11 +203,11 @@ mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
 cp -R skills/theta-workflow "${CODEX_HOME:-$HOME/.codex}/skills/theta-workflow"
 ```
 
-如果你的 agent 会缓存 skill 列表，安装后需要重启或重新加载对应 agent runtime。
+如果你的 Agent 会缓存技能列表，安装后需要重启或重新加载对应 Agent。
 
-独立仓库内置维护用同步脚本：在 `theta-skill` 仓库中运行 `scripts/sync_from_theta.sh` 可以从本仓库拉取最新 skill，运行 `scripts/sync_to_theta.sh` 可以把独立仓库修改同步回 `skills/theta-workflow/`。
+独立仓库内置维护用同步脚本：在 `theta-skill` 仓库中运行 `scripts/sync_from_theta.sh` 可以从本仓库拉取最新技能，运行 `scripts/sync_to_theta.sh` 可以把独立仓库修改同步回 `skills/theta-workflow/`。
 
-启动 skill 后会先检查当前工作区是否是可用 THETA 仓库；如果不存在，第一步是确认后克隆 `https://github.com/CodeSoul-co/THETA.git`，然后才进入环境配置、数据检查或训练命令生成。
+启动技能后会先检查当前工作区是否是可用 THETA 仓库；如果不存在，第一步是确认后克隆 `https://github.com/CodeSoul-co/THETA.git`，然后才进入环境配置、数据检查或训练命令生成。
 
 在修改本地文件或启动训练前，可以先运行只读预检：
 
@@ -303,7 +301,7 @@ visualization:
   dpi: 150
 ```
 
-### 优先级准则 (Priority Rule)
+### 参数优先级
 
 参数生效优先级：
 
@@ -317,9 +315,9 @@ visualization:
 
 ---
 
-## 运行模式：小白 vs 专家
+## 运行模式：入门与专家
 
-### 小白模式：一键自动化 (Bash Scripts)
+### 入门模式：自动化脚本
 
 只需准备好数据，脚本将自动完成**清洗 → 预处理 → 训练 → 评估 → 可视化**全流程：
 
@@ -333,7 +331,7 @@ bash scripts/quick_start.sh my_dataset --language english
 - 将原始文档放入 `data/{dataset}/` 目录
 - 支持格式：`.txt`、`.csv`、`.docx`、`.pdf`
 
-### 专家模式：手术刀级调优 (Python CLI)
+### 专家模式：Python 命令行配置
 
 直接调用 Python 脚本，精确控制每个参数：
 
@@ -501,7 +499,6 @@ THETA 强制执行 **7 大金标准指标**，确保所有模型（THETA 及 12 
 │   └─ 比较研究 → 使用多个模型：lda,nvdm,prodlda,theta            │
 └─────────────────────────────────────────────────────────────────┘
 ```
-
 
 
 ### 训练参数参考
@@ -724,15 +721,16 @@ kill -9 <PID>
 
 ## 引用
 
-如果您在研究中发现**THETA**有用，请考虑引用我们的论文：
+如果您在研究中发现**THETA**有用，请引用本仓库：
 
 ```bibtex
-@article{duan2026theta,
-  title={THETA: A Textual Hybrid Embedding-based Topic Analysis Framework and AI Scientist Agent for Scalable Computational Social Science},
-  author={Codesoul.co},
-  journal={TBD},
-  year={2026},
-  doi={TBD}
+@misc{codesoul2026theta,
+  author = {{CodeSoul-co}},
+  title = {THETA: Local Topic Modeling and Research Analysis},
+  year = {2026},
+  howpublished = {GitHub repository},
+  url = {https://github.com/CodeSoul-co/THETA},
+  note = {Version 0.3.0}
 }
 ```
 
@@ -748,13 +746,18 @@ kill -9 <PID>
 
 ## 许可证
 
-Apache-2.0
+[MIT](LICENSE)
 
-
-[论文级可视化与高清导出](docs/publication-visualization.md)
+[论文级可视化与高清导出](docs/publication-visualization.zh.md)
 
 [中英文完整组图示例](docs/examples/figure-atlas/README_zh.md)
 
-## Agent, CLI and local workbench
+## 文档
 
-The open-source edition now includes the conversational Agent, free statistical analysis, a CLI, and the existing web workbench with direct access (no account or simulated user). See the [startup guide](docs/opensource-agent.md), [Agent documentation](agent/README.md), and [bundled Data Viz skill](agent/docs/data-viz-skill.md).
+- [本地安装](docs/opensource-agent.zh.md)
+- [命令行 Agent](agent/README_zh.md)
+- [网页工作台](frontend/README_zh.md)
+- [桌面应用](docs/desktop.zh.md)
+- [计算引擎](doc/index.zh.md)
+
+仓库引用元数据见 [CITATION.cff](CITATION.cff)。

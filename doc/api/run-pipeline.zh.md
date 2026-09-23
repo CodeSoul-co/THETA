@@ -1,6 +1,6 @@
 # run_pipeline.py
 
-**[English](run-pipeline.md)** | **[中文](run-pipeline.zh.md)**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/api/run-pipeline.md) | **中文**
 
 ---
 

@@ -1,5 +1,7 @@
 # Distributed & Memory-Efficient Training
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/advanced/distributed-training.zh.md)
+
 Guide for scaling THETA to larger datasets and constrained environments.
 
 ---

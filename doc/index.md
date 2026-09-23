@@ -1,122 +1,37 @@
-# THETA Topic Model
+# THETA documentation
 
-**Advanced Topic Modeling with Qwen Embeddings**
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/index.zh.md)
 
----
+THETA is a local topic-modeling and analysis toolkit for text research, available through a Web workbench, CLI Agent, and desktop apps.
 
-THETA is a state-of-the-art topic modeling framework that leverages **Qwen3-Embedding** models to achieve superior performance in topic discovery and analysis. Designed as an improvement over traditional topic models like LDA and ETM, THETA combines the power of large language model embeddings with advanced neural topic modeling architectures.
+## Choose an entry point
 
-<div class="grid cards" markdown>
+| Entry point | Guide |
+| --- | --- |
+| Desktop app | [Download Mac / Windows installers](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.0) with bundled Python |
+| Web workbench | [Source setup and launch](https://github.com/CodeSoul-co/THETA/blob/main/frontend/README.md) for your local browser |
+| CLI Agent | [Terminal setup and usage](https://github.com/CodeSoul-co/THETA/blob/main/agent/README.md) for natural-language analysis |
 
--   :material-rocket-launch:{ .lg .middle } **Getting Started**
+## Computation engine guides
 
-    ---
+- [Installation](getting-started/installation.md) and [quick start](getting-started/quickstart.md).
+- [Data preparation](user-guide/data-preparation.md), [preprocessing](user-guide/preprocessing.md), and [training](user-guide/training.md).
+- [Model comparison](models/comparison.md), [evaluation](user-guide/evaluation.md), and [visualization](user-guide/visualization.md).
+- [FAQ](appendix/faq.md) and [troubleshooting](troubleshooting.md).
 
-    Install THETA and train your first topic model in minutes
+## Cite the repository
 
-    [:octicons-arrow-right-24: Quick Start](getting-started/quickstart.md)
-
--   :material-book-open-variant:{ .lg .middle } **User Guide**
-
-    ---
-
-    Complete workflow from data preparation to result analysis
-
-    [:octicons-arrow-right-24: User Guide](user-guide/data-preparation.md)
-
--   :material-brain:{ .lg .middle } **Models**
-
-    ---
-
-    Architecture details of THETA and baseline models
-
-    [:octicons-arrow-right-24: Models](models/theta.md)
-
--   :material-api:{ .lg .middle } **API Reference**
-
-    ---
-
-    Complete parameter documentation for all CLI tools
-
-    [:octicons-arrow-right-24: API Reference](api/prepare-data.md)
-
--   :material-book-multiple:{ .lg .middle } **Appendix**
-
-    ---
-
-    FAQ, supplementary references, and hardware benchmarks
-
-    [:octicons-arrow-right-24: Appendix A](appendix/faq.md)
-
-</div>
-
----
-
-## Key Features
-
-| Feature | Description |
-|---------|-------------|
-| :material-chip: **Powerful Embeddings** | Built on Qwen3-Embedding (0.6B / 4B / 8B) for superior semantic understanding |
-| :material-tune: **Flexible Training** | Zero-shot, supervised, and unsupervised modes |
-| :material-chart-box: **Rich Visualizations** | Topic distributions, heatmaps, UMAP projections, pyLDAvis |
-| :material-translate: **Multilingual** | Full support for English and Chinese data |
-| :material-cog: **Extensible** | Easy customization with new datasets and configurations |
-| :material-speedometer: **Comprehensive Evaluation** | TD, TC, NPMI, and more metrics |
-
----
-
-## Model Comparison
-
-| Model | Embedding | Type | Characteristics |
-|-------|-----------|------|----------------|
-| **THETA** | Qwen3-Embedding | Neural | Our method — best performance |
-| LDA | — | Probabilistic | Classic generative model |
-| ETM | Word2Vec | Neural | Embedded topic model |
-| CTM | SBERT | Neural | Contextualized model |
-| DTM | SBERT | Neural | Dynamic temporal model |
-
----
-
-## Quick Example
-
-```bash
-# 1. Preprocess data
-python prepare_data.py \
-    --dataset 20ng \
-    --model theta \
-    --model_size 0.6B \
-    --mode zero_shot \
-    --vocab_size 5000 \
-    --gpu 0
-
-# 2. Train model
-python run_pipeline.py \
-    --dataset 20ng \
-    --models theta \
-    --model_size 0.6B \
-    --mode zero_shot \
-    --num_topics 20 \
-    --epochs 100 \
-    --gpu 0
-```
-
----
-
-## Citation
-
-If you use THETA in your research, please cite:
+If you use THETA in your research, cite this repository and record the version or commit used.
 
 ```bibtex
-@article{theta2025,
-  title={THETA: Advanced Topic Modeling with Qwen Embeddings},
-  author={CodeSoul},
-  year={2025}
+@misc{codesoul2026theta,
+  author = {{CodeSoul-co}},
+  title = {THETA: Local Topic Modeling and Research Analysis},
+  year = {2026},
+  howpublished = {GitHub repository},
+  url = {https://github.com/CodeSoul-co/THETA},
+  note = {Version 0.3.0}
 }
 ```
 
----
-
-## Links
-
-- [:fontawesome-brands-github: GitHub Repository](https://github.com/CodeSoul-co/THETA)
-- [:material-web: Website](https://theta.code-soul.com)
+Machine-readable metadata is available in [CITATION.cff](https://github.com/CodeSoul-co/THETA/blob/main/CITATION.cff).

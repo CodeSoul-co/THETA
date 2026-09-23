@@ -1,45 +1,38 @@
-# 开源 Agent、CLI 与工作台
+# Local setup guide
 
-开源发布包含 `agent/` 的设计、CLI、HTTP 后端、统计 worker、内置技能，以及 `frontend/` 现有工作台、`src/models/` 计算引擎和其所需的 `trainning/worker/` Python 适配器。普通本地使用不需要商业账号服务、Go 控制面、MySQL 或 Redis。
+**English** | [中文](opensource-agent.zh.md)
 
-## 启动
+THETA provides a Web workbench, CLI Agent, and desktop apps. Local use does not require a commercial account, Go services, MySQL, or Redis. Projects and results stay on your computer. You can configure your own cloud conversation and embedding APIs.
 
-安装 Node.js ≥22.13、pnpm 和 Python 3.11–3.13。先在两个目录分别安装依赖：
+## Desktop apps
 
-```sh
-cd agent
-pnpm install --frozen-lockfile
-npm run build
-cp .env.example .env.local
-# 在 .env.local 填写自己的对话模型配置；不要提交这个文件。
-```
+Download the Mac DMG or Windows EXE from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.0). Python and CPU compute dependencies are bundled. Download model weights as needed and enter your API keys in Settings. See the [desktop guide](desktop.md).
 
-随后安装前端依赖并在仓库根目录启动：
+## Source installation
+
+Prepare Node.js 22.13+, pnpm, and a Python compute environment. Follow the [Agent guide](../agent/README.md) and [engine installation](../doc/getting-started/installation.md). From the repository root:
 
 ```sh
+pnpm --dir agent install --frozen-lockfile
+npm --prefix agent run build
 npm --prefix frontend ci
-./theta-web start
-./theta-web status
+# First-time setup only; preserve existing configuration.
+cp agent/.env.example agent/.env.local
 ```
 
-打开 `http://127.0.0.1:4320/workbench?mode=conversation`，顶部可切换对话和手动工作台。`./theta-web restart` 更新编译并重启，`./theta-web stop` 停止服务但保留数据。启动器同时运行前端 4320、对话 API 4318 和手动 API 4321。开源版不登录、不生成账号；手动数据接口仅在本机开发模式开放，账号接口继续禁用。
+Enter your conversation-model settings in private `agent/.env.local`, then choose an entry point:
 
-统计环境按 [自由分析指南](../agent/docs/free-analysis.md) 安装；主题计算按原引擎要求安装 Python 依赖与模型。缺少环境或 API key 时会说明具体问题。完整启动说明见 [前端文档](../frontend/README.md)。
+```sh
+./theta
+./theta-web start
+```
 
-只使用 CLI：在仓库根目录运行 `./theta`；`./theta --help`、`./theta doctor --json`、`./theta tools list` 可查看使用方式、运行环境与工具。CLI 与网页共享 Agent 核心，`THETA_AGENT_HOME` 指向同一目录时共享本地研究记录。
+The Web address is `http://127.0.0.1:4320/workbench?mode=conversation`. Switch between conversation and manual modes at the top. Use `./theta-web status` to inspect services, `restart` to rebuild and restart, and `stop` to shut down Web services. On Windows, launch the CLI with `node agent/cli/bin/theta.mjs`.
 
-## 版本边界
+## Storage and runtime
 
-本仓库统一维护本地版，`frontend/lib/edition.ts` 固定启用免账号的本地工作台。前端仅代理本机数据与 Agent 服务，不再回退到托管平台；账号服务不可用。用户可自行配置云端 LLM / Embedding API，密钥不随安装包分发。
+Services listen only on the local computer. Source installations use `.theta_agent/` and `.local/manual-workbench/`; desktop apps use the operating system's THETA application-data directory. Preserve these directories to retain projects, uploads, and results.
 
-这是个人本地工作台，没有租户隔离或公开多用户服务承诺。后台仅绑定 loopback；生产构建需要明确设置 `THETA_AGENT_API_URL`。发布远端多用户服务需要部署者自行实现身份和数据隔离。
+Refreshing the page does not cancel accepted compute jobs. After an interruption, inspect saved job records before resubmitting. Training, cloud embeddings, and result interpretation require explicit confirmation. Installers contain no model weights, personal data, or API keys.
 
-项目、对话、任务回执和分析计划存于 Agent home；报告、复现脚本和技能工程保存在其子目录。刷新页面不取消已受理任务；服务中断后先核查记录与已有结果，避免重复计算。详见 [自由模式与恢复](../agent/docs/free-analysis.md)、[确认卡](../agent/docs/web-confirmation-cards.md)。
-
-## 内置绘图技能
-
-已内置 [Data Viz Skill](https://github.com/AdamsukS/data-viz-skill)，含固定来源、MIT 许可证、模板代码和预览，见 [推荐说明、工具与运行方法](../agent/docs/data-viz-skill.md)。模板工程准备与真正渲染分开记账，示例数据不会被称为用户结果。
-
-## 发布方式
-
-开源分支从公开历史上接收允许目录的代码快照；不合并商业分支历史。私有配置、本地数据库、上传数据、模型权重、部署凭据和内部验收记录不进入快照。两种发行版共享业务代码，只对明确列出的发行版配置和说明作差异处理。回到 dev 通过集成测试后再合并 main。
+Details: [CLI Agent](../agent/README.md), [Web workbench](../frontend/README.md), [desktop apps](desktop.md).

@@ -1,5 +1,7 @@
 # Baseline Models
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/models/baselines.zh.md)
+
 THETA includes several baseline models for comparison.
 
 ---

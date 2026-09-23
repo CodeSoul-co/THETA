@@ -1,5 +1,7 @@
 # 故障排除
 
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/troubleshooting.md) | **中文**
+
 THETA主题建模的常见问题及解决方案。
 
 ---

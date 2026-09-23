@@ -1,6 +1,6 @@
 # THETA模型
 
-**[English](theta.md)** | **[中文](theta.zh.md)**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/models/theta.md) | **中文**
 
 ---
 

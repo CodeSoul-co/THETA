@@ -1,6 +1,6 @@
 # THETA Agent Frontend API
 
-对话代码预处理、引用持久化和用户消息计数：见 [预处理与会话契约](conversation-preprocessing.md) 及 [OpenAPI schema](openapi.agent.yaml)。
+For preprocessing, persistent attachments, and user-message counts, see [conversation preprocessing](conversation-preprocessing.en.md) and the [OpenAPI schema](openapi.agent.yaml).
 
 This is the stable browser-facing contract for the deployable Agent service. It
 uses the same session, Origin and CSRF rules as the THETA Business API and does
@@ -83,7 +83,7 @@ authenticated transport, never read the local unauthenticated manual store.
    selection, or Workbench may resolve `automatic/latest_completed`; both modes
    are persisted as the same immutable list of job IDs before interpretation.
    Both modes reuse the result UI. Local manual projects retain independent
-   storage. Clicking “咨询结果助手” on a manual result explicitly copies completed
+   storage. Clicking the result consultation action on a manual result explicitly copies completed
    results into an Agent project via the local bridge described below;
    merely switching workbench modes does not copy anything.
    A completed result opens from the opaque `artifacts.reportUrl`
@@ -143,7 +143,7 @@ The service sends no tools to the model and does not create a training run.
 With `consultation: {scope, id, requestId}`, the question, answer and chart references
 are saved server-side to the independent sidebar consultation history. Without it,
 the endpoint remains stateless (for standalone chart analysis). See
-[右侧咨询历史存储与接口](consultation-history.md) for migration, pin/delete and recovery.
+[consultation history API](consultation-history.en.md) for migration, pin/delete and recovery.
 Training, parameter changes
 and task cancellation remain project-card operations. Selecting a chart sends the
 CSV/JSON data used to draw it, plus dataset/model/chart identifiers. No image bytes
@@ -203,7 +203,7 @@ Content-Type: application/json
 X-CSRF-Token: <token>
 
 {
-  "content": "分析这个数据集",
+  "content": "Analyze this dataset",
   "attachments": [{"kind": "dataset", "id": "dataset-..."}],
   "async": true,
   "requestId": "browser-generated-uuid"
@@ -300,13 +300,13 @@ async function agentJson<T>(path: string, init: RequestInit = {}): Promise<T> {
 const project = await agentJson<{id: string}>('/projects', {
   method: 'POST',
   headers: { 'X-CSRF-Token': csrfToken },
-  body: JSON.stringify({ name: '舆情研究' }),
+  body: JSON.stringify({ name: 'Public opinion research' }),
 });
 
 const run = await agentJson<{runId: string}>('/runs', {
   method: 'POST',
   headers: { 'X-CSRF-Token': csrfToken },
-  body: JSON.stringify({ projectId: project.id, researchGoal: '分析主题变化', analysisMode: 'topic' }),
+  body: JSON.stringify({ projectId: project.id, researchGoal: 'Analyze topic changes', analysisMode: 'topic' }),
 });
 
 const events = new EventSource(`${prefix}/runs/${encodeURIComponent(run.runId)}/activities/stream`, {
@@ -326,7 +326,7 @@ const selection = await agentJson(`/runs/${encodeURIComponent(run.runId)}/result
 await agentJson(`/runs/${encodeURIComponent(run.runId)}/messages`, {
   method: 'POST',
   headers: { 'X-CSRF-Token': csrfToken },
-  body: JSON.stringify({ content: '解释我选中的结果', resultSelection: { mode: 'manual', jobIds: selection.selection.resolvedJobIds },
+  body: JSON.stringify({ content: 'Explain the selected results', resultSelection: { mode: 'manual', jobIds: selection.selection.resolvedJobIds },
     async: true, requestId: crypto.randomUUID() }),
 });
 ```

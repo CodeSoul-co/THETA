@@ -14,12 +14,12 @@ Real OPC visualization examples generated on 2026-09-08 using THETA's native plo
 | Section | Data and model | Figures per language |
 | --- | --- | ---: |
 | Full OPC | 32,601 documents, LDA K=8 | 49 |
-| LDA validation sample | 1,800 documents, K=6; evaluation at K=4/6/8 | 41 |
-| DTM validation sample | Same 1,800 documents, K=6 | 49 |
-| STM validation sample | Same 1,800 documents, K=6 | 48 |
+| LDA example sample | 1,800 documents, K=6; evaluation at K=4/6/8 | 41 |
+| DTM example sample | Same 1,800 documents, K=6 | 49 |
+| STM example sample | Same 1,800 documents, K=6 | 48 |
 | Optional network threshold | Full OPC, absolute Pearson r > 0.15 | 1 |
 
-The sample training runs validate visualization coverage; they are not full-corpus research conclusions or a model ranking. Figures requiring unavailable evidence remain omitted rather than fabricated. Earlier design revisions and synthetic renderer fixtures are not duplicated here. The index's `source` column records paths relative to the local `result/` directory; source files, raw text, matrices and model weights are not included in this example directory. The full paginated PDF/ZIP bundles remain local; this repository contains the complete overview PNGs and one detail page per language.
+The sample training runs validate visualization coverage; they are not full-corpus research conclusions or a model ranking. Figures requiring unavailable evidence remain omitted rather than fabricated. The index's `source` column records paths relative to the local `result/` directory; source files, raw text, matrices and model weights are not included in this example directory. The full paginated PDF/ZIP bundles remain local; this repository contains the complete overview PNGs and one detail page per language.
 
 ## Chinese overview
 
@@ -29,4 +29,4 @@ The sample training runs validate visualization coverage; they are not full-corp
 
 [![English atlas preview](en/overview-preview.jpg)](en/THETA-all-figures-en.png)
 
-To generate figures from your own results, follow the [native export guide](../../publication-visualization.md). To check all supported rendering routes without training or external API calls, run `python tests/render_model_visualizations.py --output result/model-render-check` from the repository root with the visualization dependencies installed. That check uses explicitly synthetic data, not these OPC examples.
+To generate figures from your own results, follow the [native export guide](../../publication-visualization.md).

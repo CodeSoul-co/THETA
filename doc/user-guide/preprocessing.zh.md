@@ -1,6 +1,6 @@
 # 数据预处理
 
-**[English](preprocessing.md)** | **[中文](preprocessing.zh.md)**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/user-guide/preprocessing.md) | **中文**
 
 ---
 

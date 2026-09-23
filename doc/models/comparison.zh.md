@@ -1,6 +1,6 @@
 # 模型比较
 
-**[English](comparison.md)** | **[中文](comparison.zh.md)**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/models/comparison.md) | **中文**
 
 ---
 

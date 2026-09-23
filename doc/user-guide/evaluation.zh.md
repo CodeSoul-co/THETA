@@ -1,6 +1,6 @@
 # 评估
 
-**[English](evaluation.md)** | **[中文](evaluation.zh.md)**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/user-guide/evaluation.md) | **中文**
 
 ---
 

@@ -1,6 +1,6 @@
 # 使用自定义数据集
 
-**[English](custom-datasets.md)** | **[中文](custom-datasets.zh.md)**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/advanced/custom-datasets.md) | **中文**
 
 ---
 

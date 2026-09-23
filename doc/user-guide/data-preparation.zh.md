@@ -1,6 +1,6 @@
 # 数据准备
 
-**[English](data-preparation.md)** | **[中文](data-preparation.zh.md)**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/user-guide/data-preparation.md) | **中文**
 
 ---
 

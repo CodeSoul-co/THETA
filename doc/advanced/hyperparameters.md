@@ -1,5 +1,7 @@
 # Hyperparameter Tuning
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/advanced/hyperparameters.zh.md)
+
 Systematic guide to optimizing THETA hyperparameters.
 
 ---

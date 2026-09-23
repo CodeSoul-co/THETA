@@ -1,5 +1,7 @@
 # Chinese Dataset Example
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/examples/chinese-dataset.zh.md)
+
 This example demonstrates Chinese text processing with THETA.
 
 ---

@@ -1,5 +1,7 @@
 # Visualization
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/user-guide/visualization.zh.md)
+
 Training automatically generates visualizations. Additional visualizations can be created separately.
 
 ---

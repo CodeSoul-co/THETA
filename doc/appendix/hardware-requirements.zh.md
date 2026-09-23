@@ -1,6 +1,6 @@
 # 附录 B: 计算资源与硬件需求
 
-**[English](hardware-requirements.md)** | **[中文](hardware-requirements.zh.md)**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/appendix/hardware-requirements.md) | **中文**
 
 ---
 

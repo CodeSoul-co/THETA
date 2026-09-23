@@ -1,123 +1,37 @@
-# THETA主题模型
+# THETA 文档
 
-**基于通义千问嵌入的先进主题建模**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/index.md) | **中文**
 
----
+THETA 是面向文本研究的本地主題建模与分析工具，提供网页工作台、CLI Agent 和桌面应用。
 
-THETA是一个先进的主题建模框架，利用**Qwen3-Embedding**模型在主题发现和分析中实现卓越性能。THETA设计为对LDA和ETM等传统主题模型的改进，结合了大语言模型嵌入的强大能力与先进的神经主题建模架构。
+## 选择入口
 
-<div class="grid cards" markdown>
+| 入口 | 使用说明 |
+| --- | --- |
+| 桌面应用 | [下载 Mac / Windows 安装包](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.0)，内置 Python |
+| 网页工作台 | [源码安装与启动](https://github.com/CodeSoul-co/THETA/blob/main/frontend/README_zh.md)，在本机浏览器中使用 |
+| CLI Agent | [终端安装与使用](https://github.com/CodeSoul-co/THETA/blob/main/agent/README_zh.md)，通过自然语言操作 |
 
--   :material-rocket-launch:{ .lg .middle } **快速入门**
+## 计算引擎指南
 
-    ---
+- [安装](getting-started/installation.zh.md)与[快速开始](getting-started/quickstart.zh.md)。
+- [数据准备](user-guide/data-preparation.zh.md)、[预处理](user-guide/preprocessing.zh.md)与[训练](user-guide/training.zh.md)。
+- [模型比较](models/comparison.zh.md)、[评估](user-guide/evaluation.zh.md)与[可视化](user-guide/visualization.zh.md)。
+- [常见问题](appendix/faq.zh.md)与[故障排查](troubleshooting.zh.md)。
 
-    几分钟内安装THETA并训练您的第一个主题模型
+## 引用仓库
 
-    [:octicons-arrow-right-24: 快速开始](getting-started/quickstart.md)
-
--   :material-book-open-variant:{ .lg .middle } **用户指南**
-
-    ---
-
-    从数据准备到结果分析的完整工作流程
-
-    [:octicons-arrow-right-24: 用户指南](user-guide/data-preparation.md)
-
--   :material-brain:{ .lg .middle } **模型**
-
-    ---
-
-    THETA和基线模型的架构细节
-
-    [:octicons-arrow-right-24: 模型](models/theta.md)
-
--   :material-api:{ .lg .middle } **API参考**
-
-    ---
-
-    所有CLI工具的完整参数文档
-
-    [:octicons-arrow-right-24: API参考](api/prepare-data.md)
-
--   :material-book-multiple:{ .lg .middle } **附录**
-
-    ---
-
-    常见问题、补充参考与硬件性能基准
-
-    [:octicons-arrow-right-24: 附录A](appendix/faq.md)
-
-</div>
-
----
-
-## 主要特点
-
-| 特点 | 描述 |
-|---------|-------------|
-| :material-chip: **强大嵌入** | 基于Qwen3-Embedding（0.6B / 4B / 8B）实现卓越语义理解 |
-| :material-tune: **灵活训练** | 零样本、有监督和无监督模式 |
-| :material-chart-box: **丰富可视化** | 主题分布、热图、UMAP投影、pyLDAvis |
-| :material-translate: **多语言** | 完全支持英文和中文数据 |
-| :material-cog: **可扩展** | 通过新数据集和配置轻松定制 |
-| :material-speedometer: **全面评估** | TD、TC、NPMI等更多指标 |
-
----
-
-## 模型比较
-
-| 模型 | 嵌入 | 类型 | 特点 |
-|-------|-----------|------|----------------|
-| **THETA** | Qwen3-Embedding | 神经模型 | 我们的方法 — 最佳性能 |
-| LDA | — | 概率模型 | 经典生成式模型 |
-| ETM | Word2Vec | 神经模型 | 嵌入主题模型 |
-| CTM | SBERT | 神经模型 | 上下文模型 |
-| DTM | SBERT | 神经模型 | 动态时序模型 |
-
----
-
-## 快速示例
-
-```bash
-# 1. 预处理数据
-python prepare_data.py \
-    --dataset 20ng \
-    --model theta \
-    --model_size 0.6B \
-    --mode zero_shot \
-    --vocab_size 5000 \
-    --gpu 0
-
-# 2. 训练模型
-python run_pipeline.py \
-    --dataset 20ng \
-    --models theta \
-    --model_size 0.6B \
-    --mode zero_shot \
-    --num_topics 20 \
-    --epochs 100 \
-    --gpu 0
-```
-
----
-
-## 引用
-
-如果您在研究中使用THETA，请引用：
+如果在研究中使用 THETA，请引用本仓库，并记录所使用的版本或提交。
 
 ```bibtex
-@article{theta2025,
-  title={THETA: Advanced Topic Modeling with Qwen Embeddings},
-  author={CodeSoul},
-  year={2025}
+@misc{codesoul2026theta,
+  author = {{CodeSoul-co}},
+  title = {THETA: Local Topic Modeling and Research Analysis},
+  year = {2026},
+  howpublished = {GitHub repository},
+  url = {https://github.com/CodeSoul-co/THETA},
+  note = {Version 0.3.0}
 }
 ```
 
----
-
-## 链接
-
-
-- [:fontawesome-brands-github: GitHub Repository](https://github.com/CodeSoul-co/THETA)
-- [:material-web: Website](https://theta.code-soul.com)
+机器可读引用信息见 [CITATION.cff](https://github.com/CodeSoul-co/THETA/blob/main/CITATION.cff)。

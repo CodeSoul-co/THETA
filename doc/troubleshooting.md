@@ -1,5 +1,7 @@
 # Troubleshooting
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/troubleshooting.zh.md)
+
 Common issues and solutions for THETA topic modeling.
 
 ---

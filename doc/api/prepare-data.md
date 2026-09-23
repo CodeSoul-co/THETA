@@ -1,5 +1,7 @@
 # prepare_data.py
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/api/prepare-data.zh.md)
+
 Data preprocessing script for generating embeddings and bag-of-words representations.
 
 ---

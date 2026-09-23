@@ -1,45 +1,36 @@
 # THETA 0.3.0 · Desktop Preview
 
-THETA 现支持 **Web 工作台、CLI Agent、Mac / Windows 桌面端**，另提供可供其他 Agent 使用的 THETA Workflow Skill。
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/docs/releases/desktop-v0.3.0.zh.md)
 
-## 下载安装
+THETA provides a local **Web workbench, CLI Agent, and desktop app**, with an optional workflow Skill for compatible agents.
 
-| 系统 | 文件 | 安装方法 |
+## Download and install
+
+| Platform | Download | Installation |
 | --- | --- | --- |
-| macOS Apple Silicon（M 系列） | `THETA-0.3.0-mac-arm64.dmg` | 打开 DMG，将 THETA 拖入「应用程序」 |
-| Windows x64 | `THETA-0.3.0-win-x64.exe` | 运行安装程序 |
+| macOS Apple Silicon | [DMG](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.0/THETA-0.3.0-mac-arm64.dmg) | Open the DMG and drag THETA into Applications |
+| Windows x64 | [EXE](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.0/THETA-0.3.0-win-x64.exe) | Run the installer |
 
-macOS ZIP 是备用应用压缩包，常规安装请使用 DMG。`SHA256SUMS.txt` 提供安装资源的 SHA-256 校验值。源码压缩包不包含桌面运行环境。
+The macOS ZIP is an alternative app archive; use the DMG for a standard installation. [SHA256SUMS.txt](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.0/SHA256SUMS.txt) contains checksums for each installer. Source archives do not include the desktop runtime.
 
-## 本次版本
+Python 3.12 and CPU compute dependencies are bundled. You do not need a separate Python, Node.js, or Conda installation. The app is named THETA and uses the ragdoll-cat logo.
 
-- 桌面安装包内置 Python 3.12 与 CPU 计算依赖，无需另装 Python、Node.js 或 Conda。
-- 应用名称统一为 THETA，使用布偶猫 Logo，启动后直接进入工作台。
-- Web、CLI Agent 和桌面端使用同一套本地 Agent 与计算引擎，支持对话和手动分析。
-- 修复手动模式 Excel 数据列预览被代理拦截的问题，并验证上传、列预览及预处理状态的完整链路。
-- 修复对话模式及手动模式右侧咨询输入框的重复焦点边框。
-- 工作台统一连接本地服务，移除旧线上后端回退和托管部署入口。
+## Models and data
 
-## 模型与数据
+Open Settings to enter your conversation-model endpoint, model name, and API key. Local embeddings use a compatible model directory; the default suggestion is Qwen3-Embedding-0.6B. Cloud embeddings accept a user-configured API, with GLM embedding-3 as the preset.
 
-进入设置后填写自己的对话模型 API 地址、模型名称和 API Key。Embedding 支持自选本地兼容模型目录，默认建议 Qwen3-Embedding-0.6B；也支持自行配置云端 API，默认预设为 GLM embedding-3。
+Installers contain no user keys, private data, or model weights. Traditional models such as LDA do not require neural weights. Download local embedding models separately. Cloud embeddings currently support THETA zero-shot and require confirmation of the text scope and request budget.
 
-安装包不包含用户密钥、私人数据或模型权重。LDA 等传统模型无需神经网络权重；需要本地 Embedding 的模型请另行下载并配置。云端 Embedding 目前支持 THETA zero-shot，发送文本前需在任务中确认。
+Projects and results are stored locally. Updating the application preserves application data. Desktop and source installations have independent data directories.
 
-项目和结果保存在本机。升级安装保留应用数据；桌面端与源码版的数据目录各自独立。
+## Other entry points
 
-## 其他使用方式
+- **Web:** after source setup, run `./theta-web start` and visit `http://127.0.0.1:4320/workbench`.
+- **CLI Agent:** after Agent setup, run `./theta`.
+- **Skill:** use `skills/theta-workflow/SKILL.md` with a compatible agent.
 
-- **Web**：完成源码环境配置后运行 `./theta-web start`，访问 `http://127.0.0.1:4320/workbench`。
-- **CLI Agent**：完成 Agent 环境配置后运行 `./theta`。
-- **Skill**：使用仓库中的 `skills/theta-workflow/SKILL.md`。
+See the [README](https://github.com/CodeSoul-co/THETA/blob/main/README.md) and [desktop guide](https://github.com/CodeSoul-co/THETA/blob/main/docs/desktop.md).
 
-详细步骤见仓库 [README](https://github.com/CodeSoul-co/THETA#choose-how-to-use-theta)、[中文说明](https://github.com/CodeSoul-co/THETA/blob/main/README_zh.md)和[桌面指南](https://github.com/CodeSoul-co/THETA/blob/main/docs/desktop.md)。
+## Preview requirements
 
-## 预览版范围
-
-本版本未正式签名／公证，操作系统可能显示安全提示。提供 macOS arm64 与 Windows x64，不提供 Intel Mac 或 Windows ARM 原生安装包，也不启用自动更新。构建流程验证两种平台的源码运行与打包后应用，不调用付费模型 API。
-
----
-
-**English:** Download the DMG for Apple Silicon Macs or the EXE installer for Windows x64. Python 3.12 and CPU dependencies are included; model weights and user API keys are not. Configure your own model endpoints in Settings. The repository also provides a local Web workbench (`./theta-web start`), CLI Agent (`./theta`), and an optional workflow Skill. This unsigned desktop preview includes local Excel preview fixes and removes duplicate focus outlines in both chat composers. See `SHA256SUMS.txt` for file integrity checks.
+This release is unsigned and not notarized. The operating system may show a security warning. Supported installers are macOS arm64 and Windows x64; native Intel Mac and Windows ARM installers are not provided. Updates are installed manually.

@@ -1,5 +1,7 @@
 # English Dataset Examples
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/examples/english-dataset.zh.md)
+
 Complete tutorials demonstrating THETA usage with English data.
 
 ---

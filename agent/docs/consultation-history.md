@@ -1,5 +1,7 @@
 # 右侧咨询历史
 
+[English](consultation-history.en.md) | **中文**
+
 右侧项目助手与左侧训练对话独立。咨询内容不再仅保存在浏览器：由 Agent 服务在
 `THETA_AGENT_HOME/research.sqlite` 的 `consultations` 和 `consultation_selection` 表保存。
 本地默认位置为仓库根目录 `.theta_agent/research.sqlite`，部署时须将该目录挂载为持久卷。

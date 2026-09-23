@@ -1,5 +1,7 @@
 # 快速入门
 
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/getting-started/quickstart.md) | **中文**
+
 本教程演示如何在5分钟内对您的数据集训练THETA模型。
 
 ---
@@ -190,6 +192,6 @@ cat ./result/0.6B/my_dataset/zero_shot/metrics/evaluation_results.json
 
 ## 下一步？
 
-- [用户指南](../user-guide/data-preparation.md) - 完整工作流程文档
-- [高级用法](../advanced/custom-datasets.md) - 高级功能
-- [示例](../examples/english-dataset.md) - 实际使用案例
+- [用户指南](../user-guide/data-preparation.zh.md) - 完整工作流程文档
+- [高级用法](../advanced/custom-datasets.zh.md) - 高级功能
+- [示例](../examples/english-dataset.zh.md) - 实际使用案例

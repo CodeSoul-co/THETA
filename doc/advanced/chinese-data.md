@@ -1,5 +1,7 @@
 # Chinese Data Processing
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/advanced/chinese-data.zh.md)
+
 Specialized guide for processing Chinese text with THETA.
 
 ---

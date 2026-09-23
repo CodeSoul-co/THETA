@@ -1,5 +1,7 @@
 # 推荐并内置：Data Viz Skill
 
+[English](data-viz-skill.en.md) | **中文**
+
 推荐 [AdamsukS/data-viz-skill](https://github.com/AdamsukS/data-viz-skill)：适合把已验证数据转成论文图，复用实际 Python 模板、布局、配色与数据契约，输出 PNG/SVG/PDF 和可修改源码。它适合主题模型结果、调查和业务数据，不限于生物学案例。
 
 THETA 已随代码内置完整技能，位于 `agent/skills/data-viz/`，无需首次启动联网下载。固定上游 commit 为 `a01848fcfacfcde4dfdf116611030eb9212d467e`，当前快照实际包含 22 个模板，包括自然语言相关图式。许可证为 MIT，原文保留在技能目录；逐文件 SHA-256 与来源见 `agent/skills/data-viz.source.json`。上游 README 的模板数量可能滞后，以实际目录为准。

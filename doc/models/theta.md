@@ -1,5 +1,7 @@
 # THETA Model
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/models/theta.zh.md)
+
 THETA is a neural topic model that combines variational autoencoders with Qwen3-Embedding representations.
 
 ---

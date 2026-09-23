@@ -1,6 +1,6 @@
 # 基线模型
 
-**[English](baselines.md)** | **[中文](baselines.zh.md)**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/models/baselines.md) | **中文**
 
 ---
 

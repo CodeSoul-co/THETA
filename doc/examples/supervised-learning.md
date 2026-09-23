@@ -1,5 +1,7 @@
 # Supervised Learning Example
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/examples/supervised-learning.zh.md)
+
 This example demonstrates supervised topic modeling and temporal analysis.
 
 ---

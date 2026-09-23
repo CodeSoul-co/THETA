@@ -1,5 +1,7 @@
 # Shell Scripts Reference
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/user-guide/scripts.zh.md)
+
 All scripts are **non-interactive** (pure command-line parameters), suitable for DLC/batch environments. No stdin input required.
 
 ## Script Overview

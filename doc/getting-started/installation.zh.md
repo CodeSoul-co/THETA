@@ -1,5 +1,7 @@
 # 安装
 
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/getting-started/installation.md) | **中文**
+
 本指南将帮助您在系统上安装THETA。
 
 ---
@@ -121,5 +123,5 @@ python -c "from src.model import etm; print('THETA安装成功')"
 
 ## 下一步
 
-- [快速入门教程](quickstart.md) - 5分钟内训练您的第一个模型
-- [数据准备指南](../user-guide/data-preparation.md) - 了解数据格式
+- [快速入门教程](quickstart.zh.md) - 5分钟内训练您的第一个模型
+- [数据准备指南](../user-guide/data-preparation.zh.md) - 了解数据格式

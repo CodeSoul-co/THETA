@@ -1,5 +1,7 @@
 # Appendix A: FAQ & Supplementary Information
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/appendix/faq.zh.md)
+
 Reference materials and supplementary information.
 
 ---
@@ -60,18 +62,20 @@ A: 500+ documents with 50+ words average recommended.
 A: 5K docs with 0.6B on V100: ~25 min. 4B: ~50 min.
 
 **Q: GPU required?**  
-A: Yes. GPU required for preprocessing and training.
+A: Traditional models can run on CPU. Local neural embeddings can be slow on CPU; use compatible GPU hardware when needed. Desktop installers include CPU dependencies.
 
 ---
 
 ## Citation
 
 ```bibtex
-@article{theta2024,
-  title={THETA: Advanced Topic Modeling with Qwen Embeddings},
-  author={CodeSoul Team},
-  year={2024},
-  url={https://github.com/CodeSoul-co/THETA}
+@misc{codesoul2026theta,
+  author = {{CodeSoul-co}},
+  title = {THETA: Local Topic Modeling and Research Analysis},
+  year = {2026},
+  howpublished = {GitHub repository},
+  url = {https://github.com/CodeSoul-co/THETA},
+  note = {Version 0.3.0}
 }
 ```
 
@@ -79,11 +83,7 @@ A: Yes. GPU required for preprocessing and training.
 
 ## Contact
 
-- Website: [https://theta.code-soul.com](https://theta.code-soul.com)
 - GitHub: [https://github.com/CodeSoul-co/THETA](https://github.com/CodeSoul-co/THETA)
 - Email: support@theta.code-soul.com
 
 ---
-
-**Document Version**: 1.0.0  
-**Last Updated**: February 6, 2026

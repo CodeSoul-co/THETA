@@ -1,6 +1,6 @@
 # 有监督学习示例
 
-**[English](supervised-learning.md)** | **[中文](supervised-learning.zh.md)**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/examples/supervised-learning.md) | **中文**
 
 ---
 

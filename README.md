@@ -60,22 +60,21 @@ npm --prefix frontend ci
 
 The launcher uses `frontend/`, the conversation API on `4318`, and the manual API on `4321`, preserving existing data in `.theta_agent/` and `.local/manual-workbench/`. No legacy services are required. **Do not delete these data directories or overwrite existing `.env.local` files.** Logs are in `.local/workbench/`. Port conflicts are reported without killing unrelated processes.
 
-对话支持[受限代码预处理与会话持久化](agent/docs/conversation-preprocessing.md)：保留原始数据，保存派生数据、代码与校验报告，再由用户确认训练。输入框的文件引用移除后，数据仍保留在项目中；用户发送条数保存在会话记录中。
+Conversation mode preserves original data and saves derived files, preprocessing code, and validation reports before asking you to confirm training. Removing an attachment reference from the composer does not delete project data; sent-message counts are stored with the conversation.
 
 This is a local development entry point, not an unauthenticated production deployment. See [web setup and troubleshooting](frontend/README.md) for details. The independent CLI remains `./theta`.
 
-对话模式的 **THETA 零样本分析**会先显示“本地／云端嵌入”选择卡，不会自动采用环境中的云端默认值。选定后才检查资源并生成独立的训练确认卡，确认后才执行；云端服务、发送范围与请求上限会在卡片中列明。选择与待确认状态保存在服务端，刷新或切换页面不会丢失。也可在选择卡出现后回复“本地嵌入”或“云端嵌入”。CTM、BERTopic 和 THETA 微调仍使用各自支持的本地嵌入，不提供无效的云端切换。以下计算引擎命令的默认参数与网页对话的显式选择流程不同。
+For THETA zero-shot analysis, choose local or cloud embeddings before confirming training. The confirmation card identifies the cloud service, data scope, and request budget. CTM, BERTopic, and THETA fine-tuning require compatible local embeddings.
 
-对话模式与手动模式复用同一训练配置弹窗。Agent 预填一个或多个模型及各自参数，用户可增减模型、修改数据列与参数，再点击“确认并开始训练”。确认前不会训练；确认后弹窗收起，多个模型按顺序执行并分别保留结果。未提交的表单在当前浏览器保存，已确认的队列保存在服务端，刷新页面或重启服务不会重复提交训练。
+Conversation and manual modes share the training configuration dialog. Review the proposed models, data columns, and parameters before starting. Multiple models run sequentially and retain separate results. Draft settings and confirmed queues persist across refreshes without submitting duplicate tasks.
 
-> The quickstart below is for the computation engine, not the dual-mode web workbench. Historical migration notes are in the [architecture documentation](docs/architecture/agent-migration.md); distributed training setup is in [Python workers](trainning/worker/README.md).
-
+> The engine quickstart below is for source users. Desktop users can install THETA directly from the downloads above.
 
 ---
 
 ## Table of Contents
 
-1. [Quick Start: 5-Minute Setup](#quick-start-5-minute-setup)
+1. [Computation Engine Setup](#computation-engine-setup)
 2. [Agent Workflow Skill: THETA Workflow](#agent-workflow-skill-theta-workflow)
 3. [Data Format Requirements](#data-format-requirements)
 4. [Configuration System: From Hardware to Experiments](#configuration-system-from-hardware-to-experiments)
@@ -88,7 +87,7 @@ This is a local development entry point, not an unauthenticated production deplo
 
 ---
 
-## Quick Start: 5-Minute Setup
+## Computation Engine Setup
 
 ### Step 1: Clone Repository
 
@@ -497,7 +496,6 @@ THETA enforces **7 Gold Standard Metrics** to ensure evaluation alignment across
 ```
 
 
-
 ### Training Parameters Reference
 
 #### Common Parameters
@@ -694,7 +692,7 @@ You can also use `hdp` or `bertopic` to auto-detect topic count as a reference.
 **Q: What does the `--language` parameter do?**
 
 A: Controls the language of visualization charts:
-- `chinese` or `zh`: Chinese chart titles and filenames (e.g., `主题网络图.png`)
+- `chinese` or `zh`: Chinese chart titles and filenames
 - `english` or `en`: English chart titles and filenames (e.g., `topic_network.png`)
 
 Only affects visualization, not model training or evaluation.
@@ -718,15 +716,16 @@ A:
 
 ## Citation
 
-If you find **THETA** useful in your research, please consider citing our paper:
+If you find **THETA** useful in your research, please cite this repository:
 
 ```bibtex
-@article{duan2026theta,
-  title={THETA: A Textual Hybrid Embedding-based Topic Analysis Framework and AI Scientist Agent for Scalable Computational Social Science},
-  author={Codesoul.co},
-  journal={TBD},
-  year={2026},
-  doi={TBD}
+@misc{codesoul2026theta,
+  author = {{CodeSoul-co}},
+  title = {THETA: Local Topic Modeling and Research Analysis},
+  year = {2026},
+  howpublished = {GitHub repository},
+  url = {https://github.com/CodeSoul-co/THETA},
+  note = {Version 0.3.0}
 }
 ```
 
@@ -737,18 +736,22 @@ If you find **THETA** useful in your research, please consider citing our paper:
 For questions, please contact:
 - duanzhenke@code-soul.com
 
-- Agent through CLI Application is coming soon.
-
 ---
 
 ## License
 
-Apache-2.0
+[MIT](LICENSE)
 
 [Publication figures and high-resolution export](docs/publication-visualization.md)
 
 [Bilingual figure atlas examples](docs/examples/figure-atlas/README.md)
 
-## Agent, CLI and local workbench
+## Documentation
 
-The open-source edition now includes the conversational Agent, free statistical analysis, a CLI, and the existing web workbench with direct access (no account or simulated user). See the [startup guide](docs/opensource-agent.md), [Agent documentation](agent/README.md), and [bundled Data Viz skill](agent/docs/data-viz-skill.md).
+- [Local setup](docs/opensource-agent.md)
+- [CLI Agent](agent/README.md)
+- [Web workbench](frontend/README.md)
+- [Desktop app](docs/desktop.md)
+- [Computation engine](doc/index.md)
+
+Repository citation metadata is also available in [CITATION.cff](CITATION.cff).

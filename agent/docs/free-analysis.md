@@ -1,5 +1,7 @@
 # THETA 自由分析模式
 
+[English](free-analysis.en.md) | **中文**
+
 默认仍为主题分析：发现主题、解释结果，再围绕主题做挖掘。自由分析从研究问题出发，主题模型不再是前置步骤；数值统计、预测、生存、计量、数学优化和文本分析共用现有 Agent 对话界面、研究记录及确认卡。
 
 **当前实现不是“Stata/SPSS 的所有功能”。** Python worker 登记了 138 个可执行方法标识；[逐项方法与示例](statistics/methods.md)记录参数和边界。[SPSSPRO 对照](statistics/spsspro-coverage.md)冻结了 2026-09-14 观察到的 172 个公开目录条目：113 个有有限方法映射、52 个未实现、7 个为导航/案例。一个入口可能包含多个估计量/选项，多个入口也可能映射同一方法，不能将这些数字解释为产品功能覆盖率。
@@ -36,7 +38,7 @@ Agent 会读取数据 → 查方法规格 → 保存可证伪假设、分析计�
 
 ## 独立 worker 安装
 
-在仓库根目录执行（Python 3.11–3.13；本次在 3.13 验证）：
+在仓库根目录执行（Python 3.11–3.13）：
 
 ```sh
 python3 -m venv agent/.local/runtimes/statistics
@@ -46,7 +48,7 @@ npm run build
 npm run test:statistics
 ```
 
-`requirements.txt` 是受限版本依赖范围；`requirements-lock.txt` 是本次通过测试的完整版本快照。跨平台安装需重新验证；不包含商业软件、R 或 Stata。不要使用 `--system-site-packages`。启动时默认选择上述 venv；也可以由宿主设置 `THETA_WORKER_STATISTICS_PYTHON` 的绝对路径与 `THETA_WORKER_STATISTICS_REVISION`。缺失环境不会回退到主题 worker，也不自动安装依赖或下载模型。
+`requirements.txt` 是受限版本依赖范围；`requirements-lock.txt` 是锁定依赖的完整版本快照。跨平台安装需重新验证；不包含商业软件、R 或 Stata。不要使用 `--system-site-packages`。启动时默认选择上述 venv；也可以由宿主设置 `THETA_WORKER_STATISTICS_PYTHON` 的绝对路径与 `THETA_WORKER_STATISTICS_REVISION`。缺失环境不会回退到主题 worker，也不自动安装依赖或下载模型。
 
 每次批准绑定数据 SHA-256、完整计划、研究键、Python 路径、解释器版本、依赖指纹、统计实现源码指纹及环境版本。Python 端复核宿主 SQLite 批准并一次性消费；重放同一个凭据不会重算。数值线程限制为 1。venv 是依赖隔离，不是操作系统沙箱；注册工具只接受白名单数据/参数，不接受任意 Python 或公式执行。代码型 `analysis_execute` 仍要求原有宿主显式授权的 Docker workspace，不能因为切换自由模式就获得任意主机代码执行能力。
 
@@ -117,9 +119,7 @@ HTML/Markdown 的数值段落是确定性证据报告；Agent 根据实际回执
 
 特别限制：Cox/AFT 目前仅右删失；Fine–Gray 尚未实现。DID 仅两组两期，RDD 为预设带宽 uniform kernel 的 sharp 局部线性估计。PSM 为有放回最近邻、logit 倾向分数卡尺，提供匹配 ATT 与 SMD，没有匹配推断 SE。SEM 不含 WLSMV、测量不变性、多层 SEM。重复测量 ANOVA 仅平衡被试内设计，没有球形性校正。ML 默认独立随机拆分，分组/时间数据必须显式选择；禁止用测试集调参。参数网格最多 12 组、CV 最多 5 折。`tune` 省略、`{}` 或 `false` 表示不调参；`cv=0` 关闭交叉验证，启用调参需 `cv=2..5`。非法网格/CV 在创建计划时检查。
 
-## 验证与来源
-
-`npm test` 检查 Agent/审批/Web 集成；`npm run test:workers` 检查原主题 worker；`npm run test:statistics` 在独立环境运行所有登记方法的合成数据执行矩阵，并验证 OLS 闭式解/标准误、优化已知解、AHP 权重、缺失值/序列间隔、目标泄漏/分组隔离与导出转义。执行矩阵不是全部方法对 Stata/SPSS 的逐值认证，也不是在真实业务数据上证实模型有效。
+## 方法来源
 
 实现依据：[statsmodels](https://www.statsmodels.org/stable/index.html)、[scikit-learn](https://scikit-learn.org/stable/common_pitfalls.html)、[lifelines](https://lifelines.readthedocs.io/en/latest/Survival%20Regression.html)、[linearmodels](https://bashtage.github.io/linearmodels/)、[SciPy optimize](https://docs.scipy.org/doc/scipy/reference/optimize.html)、[semopy](https://semopy.com/)、[esttab 文档](https://repec.sowi.unibe.ch/stata/estout/esttab.html)。
 

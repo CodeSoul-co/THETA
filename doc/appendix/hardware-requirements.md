@@ -1,5 +1,7 @@
 # Appendix B: Hardware Requirements & Performance Benchmarks
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/appendix/hardware-requirements.zh.md)
+
 ---
 
 This appendix provides detailed performance benchmarks and hardware requirements for THETA's three Qwen3-Embedding models (0.6B/4B/8B) across different hardware configurations.

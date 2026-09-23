@@ -1,6 +1,6 @@
 # 训练模型
 
-**[English](training.md)** | **[中文](training.zh.md)**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/user-guide/training.md) | **中文**
 
 ---
 

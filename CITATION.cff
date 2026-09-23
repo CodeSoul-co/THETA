@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "Please cite this repository when using THETA."
+type: software
+title: "THETA: Local Topic Modeling and Research Analysis"
+authors:
+  - name: CodeSoul-co
+repository-code: "https://github.com/CodeSoul-co/THETA"
+url: "https://github.com/CodeSoul-co/THETA"
+version: 0.3.0
+date-released: 2026-09-23
+license: MIT

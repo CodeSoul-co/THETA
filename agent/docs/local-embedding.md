@@ -1,5 +1,7 @@
 # 本地与云端 Embedding
 
+[English](local-embedding.en.md) | **中文**
+
 THETA 的 `zero_shot` 模式需要预训练词/文档向量，两条路都支持：
 
 | provider | 说明 | 需要的配置 |

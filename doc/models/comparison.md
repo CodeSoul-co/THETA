@@ -1,5 +1,7 @@
 # Model Comparison
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/models/comparison.zh.md)
+
 Comprehensive comparison of all models supported by THETA.
 
 ---

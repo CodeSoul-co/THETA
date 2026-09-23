@@ -1,5 +1,7 @@
 # Shell 脚本参考手册
 
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/user-guide/scripts.md) | **中文**
+
 所有脚本均为**非交互式**（纯命令行参数），适用于 DLC/批处理环境，无需标准输入。
 
 ## 脚本概览

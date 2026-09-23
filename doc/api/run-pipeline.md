@@ -1,5 +1,7 @@
 # run_pipeline.py
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/api/run-pipeline.zh.md)
+
 Unified training, evaluation, and visualization pipeline.
 
 ---

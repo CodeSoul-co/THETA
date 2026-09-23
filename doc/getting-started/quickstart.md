@@ -1,5 +1,7 @@
 # Quick Start
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/getting-started/quickstart.zh.md)
+
 This tutorial demonstrates how to train a THETA model on your dataset in under 5 minutes.
 
 ---

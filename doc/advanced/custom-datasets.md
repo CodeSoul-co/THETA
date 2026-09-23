@@ -1,5 +1,7 @@
 # Working with Custom Datasets
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/advanced/custom-datasets.zh.md)
+
 This guide covers complete workflows for processing new datasets.
 
 ---

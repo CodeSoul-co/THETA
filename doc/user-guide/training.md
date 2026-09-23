@@ -1,5 +1,7 @@
 # Training Models
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/user-guide/training.zh.md)
+
 This guide covers training THETA and baseline models with various configurations.
 
 ---

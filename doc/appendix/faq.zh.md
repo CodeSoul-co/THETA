@@ -1,6 +1,6 @@
 # 附录A：常见问题与补充信息
 
-**[English](faq.md)** | **[中文](faq.zh.md)**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/doc/appendix/faq.md) | **中文**
 
 ---
 
@@ -64,18 +64,20 @@
 答：5K文档在V100上：0.6B约25分钟，4B约50分钟。
 
 **问：需要GPU吗？**  
-答：是的。预处理和训练都需要GPU。
+答：传统模型可使用 CPU。本地神经网络嵌入在 CPU 上可能较慢，可按需要配置兼容 GPU；桌面安装包内置 CPU 依赖。
 
 ---
 
 ## 引用
 
 ```bibtex
-@article{theta2024,
-  title={THETA：基于通义千问嵌入的先进主题建模},
-  author={CodeSoul团队},
-  year={2024},
-  url={https://github.com/CodeSoul-co/THETA}
+@misc{codesoul2026theta,
+  author = {{CodeSoul-co}},
+  title = {THETA: Local Topic Modeling and Research Analysis},
+  year = {2026},
+  howpublished = {GitHub repository},
+  url = {https://github.com/CodeSoul-co/THETA},
+  note = {Version 0.3.0}
 }
 ```
 
@@ -83,11 +85,7 @@
 
 ## 联系方式
 
-- 网站：[https://theta.code-soul.com](https://theta.code-soul.com)
 - GitHub：[https://github.com/CodeSoul-co/THETA](https://github.com/CodeSoul-co/THETA)
 - 邮箱：support@theta.code-soul.com
 
 ---
-
-**文档版本**：1.0.0  
-**最后更新**：2026年2月6日

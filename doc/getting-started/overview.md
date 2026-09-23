@@ -1,5 +1,7 @@
 # Project Overview
 
+**English** | [中文](https://github.com/CodeSoul-co/THETA/blob/main/doc/getting-started/overview.zh.md)
+
 Understanding THETA's architecture and workflow will help you use it effectively.
 
 ---
