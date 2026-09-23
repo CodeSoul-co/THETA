@@ -1193,7 +1193,8 @@
 .shell button:focus-visible,
 .shell select:focus-visible,
 .shell input:focus-visible,
-.shell textarea:focus-visible {
+/* The composer already indicates focus on its enclosing surface. */
+.shell textarea:focus-visible:not(.composerInput) {
   outline: 2px solid color-mix(in srgb, var(--dsw-alias-state-business-primary) 70%, white);
   outline-offset: 2px;
 }
