@@ -42,6 +42,7 @@ import { PROMPTS } from "@/lib/config"
 import { API_BASE } from "@/lib/api/config"
 import type { AgentChartDataPayload } from "@/lib/api/etm-agent"
 import { useProjectDraft } from "@/lib/use-project-draft"
+import { chartReferenceKey, mergeChartReferences } from "@/lib/chart-reference"
 import styles from './ai-sidebar.module.css'
 
 // Message Types
@@ -468,6 +469,7 @@ export function AiSidebar({
   const [chartAnalyses, setChartAnalyses] = useProjectDraft<Record<string, string>>(`${draftKey}:analyses`, {})
   const fileInputRef = useRef<HTMLInputElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const sendInFlight = useRef(false)
   const pendingImagesRef = useRef<PendingImageAttachment[]>([])
 
   useEffect(() => {
@@ -530,15 +532,7 @@ export function AiSidebar({
     const handleChartDataToChat = (e: Event) => {
       const charts = (e as CustomEvent<AgentChartDataPayload[]>).detail
       if (!charts?.length) return
-      setPendingCharts((prev) => {
-        const merged = [...prev]
-        for (const chart of charts) {
-          const index = merged.findIndex((item) => item.chartName === chart.chartName)
-          if (index >= 0) merged[index] = chart
-          else merged.push(chart)
-        }
-        return merged.slice(-4)
-      })
+      setPendingCharts(prev => mergeChartReferences(prev, charts))
     }
     const handleChartAnalysis = (e: Event) => {
       const detail = (e as CustomEvent<{ chartName?: string; analysis?: string }>).detail
@@ -554,8 +548,15 @@ export function AiSidebar({
     }
   }, [onSendMessage])
 
-  const removePendingChart = useCallback((chartName: string) => {
-    setPendingCharts((prev) => prev.filter((chart) => chart.chartName !== chartName))
+  useEffect(() => {
+    const publish = () => window.dispatchEvent(new CustomEvent("theta:chart-references-changed", { detail: pendingCharts.map(chartReferenceKey) }))
+    window.addEventListener("theta:request-chart-references", publish)
+    publish()
+    return () => { window.removeEventListener("theta:request-chart-references", publish) }
+  }, [pendingCharts])
+
+  const removePendingChart = useCallback((key: string) => {
+    setPendingCharts(prev => prev.filter(chart => chartReferenceKey(chart) !== key))
   }, [])
 
   const removePendingImage = useCallback((id: string) => {
@@ -699,6 +700,7 @@ export function AiSidebar({
 
   // Handle send message
   const handleSend = useCallback(async () => {
+    if (inputDisabled || isResponding || sendInFlight.current) return
     const trimmed = inputValue.trim()
     if (!trimmed && pendingImages.length === 0 && pendingFiles.length === 0 && pendingCharts.length === 0) {
       return
@@ -707,13 +709,27 @@ export function AiSidebar({
       .map((chart) => ({ chartName: chart.chartName, analysis: chartAnalyses[chart.chartName] }))
       .filter((item): item is { chartName: string; analysis: string } => Boolean(item.analysis))
 
+    const sendDraft = async (payload: SendMessagePayload) => {
+      // Clear the submitted draft before waiting for the model, preserving anything typed next.
+      setInputValue("")
+      setPendingCharts([])
+      try {
+        const accepted = await onSendMessage(payload)
+        if (accepted !== false) return true
+      } catch (error) { console.error("Failed to send message:", error) }
+      setInputValue(current => current || inputValue)
+      setPendingCharts(current => mergeChartReferences(pendingCharts, current))
+      return false
+    }
+    sendInFlight.current = true
     if (pendingImages.length === 0 && pendingFiles.length === 0) {
-      const accepted = await onSendMessage({
-        content: trimmed || "请基于我引用的原始绘图数据写一段研究结论。",
-        ...(pendingCharts.length ? { charts: pendingCharts } : {}),
-        ...(analyses.length ? { chartAnalyses: analyses } : {}),
-      })
-      if (accepted !== false) { setInputValue(""); setPendingCharts([]) }
+      try {
+        await sendDraft({
+          content: trimmed || "请基于我引用的原始绘图数据写一段研究结论。",
+          ...(pendingCharts.length ? { charts: pendingCharts } : {}),
+          ...(analyses.length ? { chartAnalyses: analyses } : {}),
+        })
+      } finally { sendInFlight.current = false }
       return
     }
 
@@ -734,7 +750,7 @@ export function AiSidebar({
           dataUrl: await fileToDataUrl(doc.file),
         }))
       )
-      const accepted = await onSendMessage({
+      const accepted = await sendDraft({
         content: trimmed,
         images,
         files,
@@ -742,17 +758,16 @@ export function AiSidebar({
         ...(analyses.length ? { chartAnalyses: analyses } : {}),
       })
       if (accepted === false) return
-      setInputValue("")
-      setPendingImages((prev) => {
-        prev.forEach((p) => URL.revokeObjectURL(p.previewUrl))
-        return []
+      setPendingImages(prev => {
+        const sent = new Set(pendingImages.map(image => image.id))
+        prev.filter(image => sent.has(image.id)).forEach(image => URL.revokeObjectURL(image.previewUrl))
+        return prev.filter(image => !sent.has(image.id))
       })
-      setPendingFiles([])
-      setPendingCharts([])
+      setPendingFiles(prev => prev.filter(file => !pendingFiles.some(sent => sent.id === file.id)))
     } catch (error) {
-      console.error("[v0] Failed to send image attachments:", error)
-    }
-  }, [chartAnalyses, inputValue, onSendMessage, pendingCharts, pendingFiles, pendingImages])
+      console.error("Failed to send attachments:", error)
+    } finally { sendInFlight.current = false }
+  }, [chartAnalyses, inputValue, onSendMessage, pendingCharts, pendingFiles, pendingImages, inputDisabled, isResponding])
 
   // Handle follow-up click
   const handleFollowUpClick = useCallback((question: string) => {
@@ -1031,7 +1046,7 @@ export function AiSidebar({
               <div className="mb-2 space-y-1.5">
                 <div className="px-1 text-[11px] font-medium text-slate-500">引用中的结果数据</div>
                 {pendingCharts.map((chart) => (
-                  <div key={chart.chartName} className="flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50/70 px-2.5 py-2">
+                  <div key={chartReferenceKey(chart)} className="flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50/70 px-2.5 py-2">
                     <Quote className="h-3.5 w-3.5 shrink-0 text-blue-500" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs text-slate-700">{chart.chartName}</p>
@@ -1042,7 +1057,7 @@ export function AiSidebar({
                     <button
                       type="button"
                       className="rounded-full bg-white p-1 text-slate-500 hover:bg-slate-100"
-                      onClick={() => removePendingChart(chart.chartName)}
+                      onClick={() => removePendingChart(chartReferenceKey(chart))}
                       title="移除引用"
                     >
                       <X className="h-3 w-3" />

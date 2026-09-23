@@ -265,6 +265,7 @@ export interface AgentChartDataSource {
 }
 
 export interface AgentChartDataPayload {
+  referenceId?: string;
   chartName: string;
   chartPath: string;
   dataset: string;

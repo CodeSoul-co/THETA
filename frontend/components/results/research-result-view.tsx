@@ -117,8 +117,15 @@ export function ResearchResultView({ source, initialDestination, onOpenAssistant
   const [figurePage, setFigurePage] = useState(0)
   const [analyses, setAnalyses] = useProjectDraft<Record<string, string>>(`results:${runId}:${selectedJobId}:analyses`, {})
   const [busy, setBusy] = useState<Record<string, boolean>>({})
-  const [quoted, setQuoted] = useState<Record<string, boolean>>({})
-  useEffect(() => { setQuoted({}); setBusy({}); setTables({}); setTableErrors({}) }, [selectedJobId])
+  const [quoted, setQuoted] = useState<string[]>([])
+  const referenceId = (family: string) => JSON.stringify([runId, selectedJobId, family])
+  useEffect(() => {
+    const sync = (event: Event) => setQuoted((event as CustomEvent<string[]>).detail ?? [])
+    window.addEventListener("theta:chart-references-changed", sync)
+    window.dispatchEvent(new CustomEvent("theta:request-chart-references"))
+    return () => { window.removeEventListener("theta:chart-references-changed", sync) }
+  }, [])
+  useEffect(() => { setBusy({}); setTables({}); setTableErrors({}) }, [selectedJobId])
   const [tableErrors, setTableErrors] = useState<Record<string, string>>({})
   const [tables, setTables] = useState<Record<string, { markdown: string; shown: number; total: number }>>({})
   const [datasetLabel, setDatasetLabel] = useState(() => datasetName && !datasetName.startsWith("dataset-") ? datasetName : undefined)
@@ -264,13 +271,12 @@ export function ResearchResultView({ source, initialDestination, onOpenAssistant
     setBusy(prev => ({ ...prev, [family]: true }))
     try {
       const payload = await buildPayload(label, sourcesFor(family))
-      window.dispatchEvent(new CustomEvent("theta:chart-data-to-chat", { detail: [payload] }))
-      setQuoted(prev => ({ ...prev, [family]: true }))
+      window.dispatchEvent(new CustomEvent("theta:chart-data-to-chat", { detail: [{ ...payload, referenceId: referenceId(family) }] }))
       onOpenAssistant()
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : "引用失败，请重试")
     } finally { setBusy(prev => ({ ...prev, [family]: false })) }
-  }, [buildPayload, quoted, sourcesFor, onOpenAssistant])
+  }, [buildPayload, runId, selectedJobId, sourcesFor, onOpenAssistant])
 
   const downloadSources = useCallback(async (family: string) => {
     for (const file of sourcesFor(family)) {
@@ -336,8 +342,8 @@ export function ResearchResultView({ source, initialDestination, onOpenAssistant
             {download && <button type="button" onClick={() => downloadFile(download.url, basename(download.name))} className="shrink-0 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[11px] text-slate-600 transition hover:border-blue-200 hover:text-blue-600" title={artifactLabel(download.name, "figure")}>下载图</button>}
           </div>
           <div className="mt-2.5 flex flex-wrap items-center gap-2">
-            <button type="button" disabled={busy[family]} onClick={() => void toggleQuote(family)} className={"inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] transition " + (quoted[family] ? "bg-blue-600 text-white" : "border border-slate-200 text-slate-600 hover:border-blue-200 hover:text-blue-600")}>
-              <Quote className="h-3 w-3" />{quoted[family] ? "已引用到对话" : "引用"}
+            <button type="button" disabled={busy[family]} onClick={() => void toggleQuote(family)} className={"inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] transition " + (quoted.includes(referenceId(family)) ? "bg-blue-600 text-white" : "border border-slate-200 text-slate-600 hover:border-blue-200 hover:text-blue-600")}>
+              <Quote className="h-3 w-3" />{quoted.includes(referenceId(family)) ? "已引用到对话" : "引用"}
             </button>
             <button type="button" disabled={busy[family]} onClick={() => void analyze(family)} className="inline-flex items-center gap-1 rounded-lg bg-slate-900 px-2.5 py-1.5 text-[11px] text-white transition hover:bg-blue-600 disabled:opacity-60">
               {busy[family] ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}猫咪科学家解读

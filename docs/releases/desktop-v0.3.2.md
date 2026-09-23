@@ -21,6 +21,8 @@ Missing API configuration and embedding weights now include setup guidance. Data
 
 Click **Done** to save changes in Settings. Saved API keys are displayed as asterisks.
 
+Chart citation badges now follow the assistant’s current attachments. Sending clears the submitted text immediately while preserving any new draft typed during the response.
+
 ## Models and data
 
 Open Settings to enter your conversation-model endpoint, model name, and API key. Local embeddings use a compatible model directory; the default suggestion is Qwen3-Embedding-0.6B. Cloud embeddings accept a user-configured API, with GLM embedding-3 as the preset.
