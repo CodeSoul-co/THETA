@@ -40,7 +40,7 @@ def rtf(value):
     return output
 
 
-NOTE='Coefficients; standard errors in parentheses. * p<0.05, ** p<0.01, *** p<0.001; two-sided, unadjusted. Confidence level, estimator, covariance and sample exclusions are recorded per model. Blank cells mean not estimated. Formatting follows esttab conventions; this is not Stata output.'
+NOTE='Coefficients; standard errors in parentheses. * p<0.05, ** p<0.01, *** p<0.001; two-sided, unadjusted. Confidence level, estimator, covariance and sample exclusions are recorded per model. Blank cells mean not estimated. Tables present coefficients and standard errors side by side.'
 
 
 def esttab(results):

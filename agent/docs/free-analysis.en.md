@@ -4,7 +4,7 @@
 
 Topic mode focuses on discovering and interpreting text topics. Free analysis starts from the research question and can use statistics, econometrics, prediction, survival analysis, optimization, or text models without requiring topic modeling first.
 
-The Python worker registers 138 executable method IDs. Availability does not imply equivalence to every Stata/SPSS feature, default, or estimator, nor that a method's identifying assumptions hold for a dataset.
+The Python worker registers 138 executable method IDs. Available methods and parameters are defined by the executable registry. Check each method's assumptions against the dataset before use.
 
 ## Use the mode
 
@@ -81,8 +81,8 @@ Interpretation separates observations, estimates, and inference, and should expl
 
 ## Method limits
 
-Cox and AFT methods support right censoring. DID is limited to two groups and two periods. RDD uses a prespecified bandwidth and local linear sharp design. PSM uses nearest-neighbor matching with replacement and does not supply matching-inference standard errors. SEM does not provide all commercial estimators or multilevel features. Repeated-measures ANOVA requires balanced within-subject designs without sphericity correction.
+Cox and AFT methods support right censoring. DID is limited to two groups and two periods. RDD uses a prespecified bandwidth and local linear sharp design. PSM uses nearest-neighbor matching with replacement and does not supply matching-inference standard errors. SEM does not support WLSMV, measurement invariance, or multilevel models. Repeated-measures ANOVA requires balanced within-subject designs without sphericity correction.
 
 Predictive tools require explicit group/time splits when relevant. Encoding, imputation, scaling, and tuning must use training data only. Parameter grids allow at most 12 combinations and cross-validation up to five folds. The test set must not be used for tuning or selecting a favorable random seed.
 
-Use `statistics_methods` and `statistics_inspect` to obtain the complete executable specifications for the installed version. Source references include statsmodels, scikit-learn, lifelines, linearmodels, SciPy, and semopy; THETA does not execute Stata or SPSS scripts.
+Use `statistics_methods` and `statistics_inspect` to obtain the complete executable specifications for the installed version. Source references include statsmodels, scikit-learn, lifelines, linearmodels, SciPy, and semopy.

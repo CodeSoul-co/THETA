@@ -55,7 +55,7 @@ robust_linear|Huber M 稳健回归
 glm_gamma|Gamma GLM（log 链接）
 glm_binomial|Binomial GLM（logit 链接）
 gee|交换相关 Gaussian GEE
-mixed_linear|随机截距线性混合模型''', required=('y', 'x'), parameters=('covariance', 'max_lags', 'quantile'), limitation='分类自变量须显式哑变量编码；默认含截距。仅支持登记的协方差选项；不是 Stata 命令解析器。')
+mixed_linear|随机截距线性混合模型''', required=('y', 'x'), parameters=('covariance', 'max_lags', 'quantile'), limitation='分类自变量须显式哑变量编码；默认含截距。仅支持登记的协方差选项；不接受任意统计命令。')
 register('econometrics', '''panel_fe|个体固定效应面板回归
 panel_twfe|个体与时间双向固定效应
 panel_re|随机效应面板回归
@@ -132,7 +132,7 @@ def catalog(payload):
     if offset < 0 or limit < 1: raise ValueError('Invalid pagination')
     return {'total': len(rows), 'methods': rows[offset:offset + limit],
             'nextOffset': offset + limit if offset + limit < len(rows) else None,
-            'compatibility': 'Python method equivalents, not exhaustive SPSS/Stata command or numerical-default compatibility.'}
+            'compatibility': 'Registered Python methods; supported parameters and numerical defaults are defined per method.'}
 
 
 def inspect(payload):

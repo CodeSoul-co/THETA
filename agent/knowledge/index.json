@@ -102,21 +102,18 @@
       "id": "free-analysis-guide",
       "title": "自由分析模式：安装、工具、输出与边界",
       "file": "documents/statistics/free-analysis-guide.md",
-      "date": "2026-09-14",
+      "date": "2026-09-23",
       "source": "Repository: agent/docs/free-analysis.md",
-      "importedSha256": "410e65079b8826b316e6d1d82a78dfdd2501cbc3fcc876c5e9782cb2d100f5d0",
-      "summary": "Python 方法等价与论文格式兼容；按实际方法注册表选择工具，明确待实现与受限规格。",
+      "importedSha256": "2870c062a4e6a96ca815f4d866d236c4c89859b2bdaed392652734f4017a39bb",
+      "summary": "统计方法、参数、输出与适用边界；按实际方法注册表选择工具。",
       "useWhen": [
         "自由模式与实证分析",
         "选择统计方法和模型",
-        "核查 SPSSPRO 支持范围"
+        "核查已实现方法与适用范围"
       ],
       "tags": [
         "statistics",
         "自由模式",
-        "stata",
-        "spss",
-        "spsspro",
         "回归",
         "生存分析",
         "机器学习",
@@ -128,47 +125,18 @@
       "id": "statistics-methods",
       "title": "可执行统计方法清单与逐项使用规格",
       "file": "documents/statistics/methods.md",
-      "date": "2026-09-14",
+      "date": "2026-09-23",
       "source": "Repository: agent/docs/statistics/methods.md",
-      "importedSha256": "9139f302eef0cbfad28382013d354fed488e173e292e84a205eb41f9b38c9bd8",
-      "summary": "Python 方法等价与论文格式兼容；按实际方法注册表选择工具，明确待实现与受限规格。",
+      "importedSha256": "04468c7ded89b604a40dcbea5ed3086e25471a46c8469a75baa929f77ee4baf8",
+      "summary": "统计方法、参数、输出与适用边界；按实际方法注册表选择工具。",
       "useWhen": [
         "自由模式与实证分析",
         "选择统计方法和模型",
-        "核查 SPSSPRO 支持范围"
+        "核查已实现方法与适用范围"
       ],
       "tags": [
         "statistics",
         "自由模式",
-        "stata",
-        "spss",
-        "spsspro",
-        "回归",
-        "生存分析",
-        "机器学习",
-        "优化"
-      ],
-      "scope": "静态参考；当前执行能力与参数以 statistics_methods/inspect 和 worker 实际校验为准。不是批准或代码执行授权。"
-    },
-    {
-      "id": "statistics-spsspro-coverage",
-      "title": "SPSSPRO 公开目录逐项实现状态",
-      "file": "documents/statistics/spsspro-coverage.md",
-      "date": "2026-09-14",
-      "source": "Repository: agent/docs/statistics/spsspro-coverage.md",
-      "importedSha256": "91aeb55f6c91c71e53a520cfbab3a7be7fe50afebacd228473d87ba6a52a9d1e",
-      "summary": "Python 方法等价与论文格式兼容；按实际方法注册表选择工具，明确待实现与受限规格。",
-      "useWhen": [
-        "自由模式与实证分析",
-        "选择统计方法和模型",
-        "核查 SPSSPRO 支持范围"
-      ],
-      "tags": [
-        "statistics",
-        "自由模式",
-        "stata",
-        "spss",
-        "spsspro",
         "回归",
         "生存分析",
         "机器学习",

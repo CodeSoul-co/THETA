@@ -2,7 +2,7 @@
 
 [English](opensource-agent.md) | **中文**
 
-THETA 提供网页工作台、CLI Agent 和桌面应用。本机使用无需商业账号、Go 控制面、MySQL 或 Redis。项目和结果保存在本机，用户可自行配置云端对话模型与 Embedding API。
+THETA 提供网页工作台、CLI Agent 和桌面应用。本机使用无需账号、Go 控制面、MySQL 或 Redis。项目和结果保存在本机，用户可自行配置云端对话模型与 Embedding API。
 
 ## 桌面应用
 

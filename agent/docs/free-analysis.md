@@ -4,7 +4,7 @@
 
 默认仍为主题分析：发现主题、解释结果，再围绕主题做挖掘。自由分析从研究问题出发，主题模型不再是前置步骤；数值统计、预测、生存、计量、数学优化和文本分析共用现有 Agent 对话界面、研究记录及确认卡。
 
-**当前实现不是“Stata/SPSS 的所有功能”。** Python worker 登记了 138 个可执行方法标识；[逐项方法与示例](statistics/methods.md)记录参数和边界。[SPSSPRO 对照](statistics/spsspro-coverage.md)冻结了 2026-09-14 观察到的 172 个公开目录条目：113 个有有限方法映射、52 个未实现、7 个为导航/案例。一个入口可能包含多个估计量/选项，多个入口也可能映射同一方法，不能将这些数字解释为产品功能覆盖率。
+Python worker 登记了 138 个可执行方法标识；[逐项方法与示例](statistics/methods.md)记录参数和边界。可用方法以 `statistics_methods` 与 `statistics_inspect` 返回的当前规格为准；使用前仍需核查数据条件与方法假设。
 
 ## 使用方式
 
@@ -48,7 +48,7 @@ npm run build
 npm run test:statistics
 ```
 
-`requirements.txt` 是受限版本依赖范围；`requirements-lock.txt` 是锁定依赖的完整版本快照。跨平台安装需重新验证；不包含商业软件、R 或 Stata。不要使用 `--system-site-packages`。启动时默认选择上述 venv；也可以由宿主设置 `THETA_WORKER_STATISTICS_PYTHON` 的绝对路径与 `THETA_WORKER_STATISTICS_REVISION`。缺失环境不会回退到主题 worker，也不自动安装依赖或下载模型。
+`requirements.txt` 是受限版本依赖范围；`requirements-lock.txt` 是锁定依赖的完整版本快照。跨平台安装需重新验证；计算由独立 Python 环境执行。不要使用 `--system-site-packages`。启动时默认选择上述 venv；也可以由宿主设置 `THETA_WORKER_STATISTICS_PYTHON` 的绝对路径与 `THETA_WORKER_STATISTICS_REVISION`。缺失环境不会回退到主题 worker，也不自动安装依赖或下载模型。
 
 每次批准绑定数据 SHA-256、完整计划、研究键、Python 路径、解释器版本、依赖指纹、统计实现源码指纹及环境版本。Python 端复核宿主 SQLite 批准并一次性消费；重放同一个凭据不会重算。数值线程限制为 1。venv 是依赖隔离，不是操作系统沙箱；注册工具只接受白名单数据/参数，不接受任意 Python 或公式执行。代码型 `analysis_execute` 仍要求原有宿主显式授权的 Docker workspace，不能因为切换自由模式就获得任意主机代码执行能力。
 
@@ -89,29 +89,29 @@ npm run test:statistics
 
 批次不支持把上一步的派生 CSV 自动当作下一步数据：先交付、检查行标识并显式附加派生文件。原始文件始终保留。主题权重与元数据联结必须使用已验证的行来源，不能凭长度一致就按行拼接。纯文本也可使用预测工具的 `params.text_column`：字符 2–3 gram TF-IDF 在训练折内拟合，数值 `x` 与文本特征结合；不是 SBERT 的替代实现。SBERT/主题模型仍走仓库既有模型路径。
 
-## Python 与 Stata/SPSS 用法对应
+## 常用分析方法
 
-| 常见工作 | Stata/SPSS 惯用入口（示意） | THETA 方法 |
-|---|---|---|
-| 描述/频数 | summarize / FREQUENCIES | describe / frequency |
-| 相关 | pwcorr / CORRELATIONS | correlation，params.correlation 指定秩相关 |
-| t 检验 | ttest / T-TEST | ttest_one / ttest_ind / ttest_paired |
-| 卡方/精确检验 | tabulate, chi2 exact / CROSSTABS | chi_square / fisher / mcnemar |
-| 线性回归 | regress / REGRESSION | ols；HC1、HC3、cluster、HAC 显式选择 |
-| 二分类/有序/多项 | logit, probit, ologit, mlogit | logit / probit / ordinal_logit / multinomial_logit |
-| 分位数/稳健回归 | qreg / rreg | quantile / robust_linear（估计细节不同） |
-| 计数 | poisson / nbreg | poisson / negative_binomial |
-| 面板 | xtreg, fe / re | panel_fe / panel_twfe / panel_re |
-| 工具变量 | ivregress 2sls / gmm | iv_2sls / iv_gmm（线性 IV） |
-| 生存 | sts / stcox / streg | kaplan_meier / cox / AFT 系列 |
-| SEM | sem / AMOS | sem（连续数据 MLW，受限关系语法） |
-| 表格 | esttab / estout | 自动 esttab.csv / .tex / .rtf |
+| 常见工作 | THETA 方法 |
+| --- | --- |
+| 描述/频数 | describe / frequency |
+| 相关 | correlation，params.correlation 指定秩相关 |
+| t 检验 | ttest_one / ttest_ind / ttest_paired |
+| 卡方/精确检验 | chi_square / fisher / mcnemar |
+| 线性回归 | ols；HC1、HC3、cluster、HAC 显式选择 |
+| 二分类/有序/多项 | logit / probit / ordinal_logit / multinomial_logit |
+| 分位数/稳健回归 | quantile / robust_linear（估计细节不同） |
+| 计数 | poisson / negative_binomial |
+| 面板 | panel_fe / panel_twfe / panel_re |
+| 工具变量 | iv_2sls / iv_gmm（线性 IV） |
+| 生存 | kaplan_meier / cox / AFT 系列 |
+| SEM | sem（连续数据 MLW，受限关系语法） |
+| 表格 | 自动 esttab.csv / .tex / .rtf |
 
-仅对应方法与论文格式，不解析 `.do`/`.sps`，不运行 Stata，也不承诺命令级或默认数值一致。OLS 明确包含截距；分类自变量的统计回归须显式编码；Logit 因变量用 0/1。机器学习工具自动对分类输入编码，但统计推断回归不会偷偷猜参照组。OLS/WLS 显式使用 Student t 推断（聚类时按估计器的推断自由度）；其他模型在 metrics.inference_distribution 标明 t 或渐近 z。
+方法、参数和估计结果以当前登记规格为准。OLS 明确包含截距；分类自变量的统计回归须显式编码；Logit 因变量用 0/1。机器学习工具自动对分类输入编码，但统计推断回归不会偷偷猜参照组。OLS/WLS 显式使用 Student t 推断（聚类时按估计器的推断自由度）；其他模型在 metrics.inference_distribution 标明 t 或渐近 z。
 
 ## 论文输出与解释
 
-每批交付 HTML/Markdown 报告、完整 CSV 表、原始精度 JSON、esttab 风格并列系数表（CSV、LaTeX、RTF）、适用方法的 PDF/SVG/300 dpi PNG 图、计划 JSON、`reproduce.py` 和文件哈希清单。TeX 是 `booktabs` 表格片段，主文档加载 `booktabs`；中文标签建议 XeLaTeX/ctex。RTF 可以在 Word 打开。星号定义为 `* p<0.05, ** p<0.01, *** p<0.001`，表注明确，未做全批多重检验校正。空白是未估计，不能写成零。
+每批交付 HTML/Markdown 报告、完整 CSV 表、原始精度 JSON、esttab 风格并列系数表（CSV、LaTeX、RTF）、适用方法的 PDF/SVG/300 dpi PNG 图、计划 JSON、`reproduce.py` 和文件哈希清单。TeX 是 `booktabs` 表格片段，主文档加载 `booktabs`；中文标签建议 XeLaTeX/ctex。RTF 可使用兼容的文档编辑器打开。星号定义为 `* p<0.05, ** p<0.01, *** p<0.001`，表注明确，未做全批多重检验校正。空白是未估计，不能写成零。
 
 复现时从仓库 `agent/` 目录执行 `.local/runtimes/statistics/bin/python -s /绝对路径/reproduce.py`。输入版本会再次校验；结果写到旁边的 `reproduced/`，记录当前运行环境及 `reproduction.originalRuntime`、`sameSource`，不会将变更后的代码冒充为原版本。保留原仓库提交与锁定依赖可重建相同环境。
 
@@ -121,6 +121,6 @@ HTML/Markdown 的数值段落是确定性证据报告；Agent 根据实际回执
 
 ## 方法来源
 
-实现依据：[statsmodels](https://www.statsmodels.org/stable/index.html)、[scikit-learn](https://scikit-learn.org/stable/common_pitfalls.html)、[lifelines](https://lifelines.readthedocs.io/en/latest/Survival%20Regression.html)、[linearmodels](https://bashtage.github.io/linearmodels/)、[SciPy optimize](https://docs.scipy.org/doc/scipy/reference/optimize.html)、[semopy](https://semopy.com/)、[esttab 文档](https://repec.sowi.unibe.ch/stata/estout/esttab.html)。
+实现依据：[statsmodels](https://www.statsmodels.org/stable/index.html)、[scikit-learn](https://scikit-learn.org/stable/common_pitfalls.html)、[lifelines](https://lifelines.readthedocs.io/en/latest/Survival%20Regression.html)、[linearmodels](https://bashtage.github.io/linearmodels/)、[SciPy optimize](https://docs.scipy.org/doc/scipy/reference/optimize.html)、[semopy](https://semopy.com/)。
 
 Agent 知识库复用了 [K-Dense statistical-analysis skill](https://github.com/K-Dense-AI/scientific-agent-skills/blob/0b2afe68a5f9379097ad815e028af664f1e222b7/skills/statistical-analysis/SKILL.md) 的 MIT 参考文本，保留许可证、固定 commit 与导入 SHA。它只提供研究设计/报告参考，不会安装插件、执行其脚本、绕过确认或赋予工具不存在的能力。

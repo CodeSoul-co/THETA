@@ -2,7 +2,7 @@
 
 **English** | [中文](opensource-agent.zh.md)
 
-THETA provides a Web workbench, CLI Agent, and desktop apps. Local use does not require a commercial account, Go services, MySQL, or Redis. Projects and results stay on your computer. You can configure your own cloud conversation and embedding APIs.
+THETA provides a Web workbench, CLI Agent, and desktop apps. Local use does not require an account, Go services, MySQL, or Redis. Projects and results stay on your computer. You can configure your own cloud conversation and embedding APIs.
 
 ## Desktop apps
 
