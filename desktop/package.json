@@ -12,7 +12,10 @@
     "start": "electron .",
     "test": "node --test test/*.test.mjs",
     "smoke": "electron . --smoke-test",
+    "check:package": "node scripts/check-package.mjs",
+    "prepack": "npm run check:package",
     "pack": "electron-builder --dir --publish never",
+    "predist": "npm run check:package",
     "dist": "electron-builder --publish never"
   },
   "devDependencies": {
@@ -25,8 +28,8 @@
     "asar": true,
     "npmRebuild": false,
     "directories": { "output": "release" },
-    "files": ["main.cjs", "preload.cjs", "services.mjs", "settings.cjs", "ui/**", "package.json"],
-    "extraResources": [{ "from": "runtime", "to": "runtime", "filter": ["**/*", "!**/__pycache__/**", "!**/*.pyc"] }],
+    "files": ["main.cjs", "preload.cjs", "services.mjs", "settings.cjs", "ui/icon.png", "package.json"],
+    "extraResources": [{ "from": "runtime", "to": "runtime", "filter": ["**/*", "!**/__pycache__/**", "!**/*.pyc", "!**/.env", "!**/.env.*", "!**/settings.json", "!**/credentials.json", "!**/.smoke-home/**"] }],
     "artifactName": "THETA-${version}-${os}-${arch}.${ext}",
     "mac": { "target": ["dmg", "zip"], "category": "public.app-category.education", "icon": "ui/icon.png" },
     "win": { "target": ["nsis"], "icon": "ui/icon.png" },

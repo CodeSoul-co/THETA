@@ -219,6 +219,9 @@ async function runSmoke(services) {
   assert.equal((await get(origin, '/workbench?mode=conversation')).status, 200);
   // Exercise the same sandboxed preload and IPC used by the settings dialog.
   const embedding = await window.webContents.executeJavaScript('window.thetaDesktop.read().then(value => value.embedding)');
+  const catalog = await window.webContents.executeJavaScript('window.thetaDesktop.catalog()');
+  assert.ok(catalog.providers.every(provider => !provider.credentialConfigured));
+  assert.equal(embedding.apiKeyConfigured, false);
   assert.equal(embedding.localModel, 'Qwen/Qwen3-Embedding-0.6B');
   const cloud = { ...embedding, mode: 'cloud', model: 'embedding-3', dimensions: 1024 };
   await window.webContents.executeJavaScript(`window.thetaDesktop.saveEmbedding(${JSON.stringify(cloud)})`);
@@ -243,6 +246,7 @@ async function runSmoke(services) {
   console.log(JSON.stringify({ ok: true, app: app.getVersion(), node: process.versions.node, electron: process.versions.electron, python: parsed, checks: ['production UI', 'agent API', 'manual API', 'project write', 'desktop authentication', 'origin rejection', 'sandboxed settings bridge', 'live GLM embedding configuration', 'bundled Python imports', 'Python model inspection'] }, null, 2));
 }
 if (single) app.whenReady().then(async () => {
+  if (process.platform === 'darwin') app.dock.setIcon(path.join(__dirname, 'ui/icon.png'));
   mkdirSync(path.join(home, 'logs'), { recursive: true });
   providerSpecs = (await import(pathToFileURL(path.join(runtime, 'agent/dist/src/providers/provider-registry.js')).href)).inferenceProviderSpecs;
   registerSettings();
