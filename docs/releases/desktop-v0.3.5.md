@@ -17,13 +17,13 @@ Python 3.12 and compute dependencies are bundled. You do not need a separate Pyt
 
 ## What changed
 
-Windows now automatically uses a compatible NVIDIA CUDA GPU for supported local models and embeddings. The installer includes CUDA 12.8-enabled PyTorch and still runs on CPU-only computers. Python and CUDA Toolkit do not need to be installed separately; GPU acceleration requires a compatible NVIDIA driver. AMD and Intel graphics use CPU in this version. macOS continues to use CPU.
+Windows now automatically uses a compatible NVIDIA CUDA GPU for supported local models and embeddings. The installer includes a CPU runtime. On a compatible NVIDIA system, the first accelerated task downloads and verifies an optional CUDA 12.8 component from PyTorch, then caches it for reuse. Python and CUDA Toolkit do not need to be installed separately; GPU acceleration requires a compatible NVIDIA driver. AMD and Intel graphics use CPU in this version. macOS continues to use CPU.
 
 Before training, THETA tests GPU allocation and kernel execution. If unavailable, it selects CPU. If an automatic GPU run fails with a CUDA error, including insufficient GPU memory, the analysis restarts once on CPU with a clean workspace. The failed log is retained, and the original timeout, cancellation and cloud request budget remain in effect. Data errors and timeouts are not automatically retried.
 
 Execution logs show the selected device and warn when CPU fallback restarts the analysis. LDA, BTM, HDP and STM continue to use CPU. An explicitly selected CPU or CUDA device is respected.
 
-The Windows installer is larger because it includes GPU libraries. Quit THETA before upgrading: replace the app in Applications on macOS, or run the new EXE on Windows. Projects and settings are retained. Updates are installed manually.
+The optional component download is about 2.6 GiB and needs about 9 GiB free during setup. Downloads can resume; setup progress appears in execution logs. If setup fails or disk space is insufficient, THETA uses the bundled CPU runtime. Component downloads contain no research text. Quit THETA before upgrading: replace the app in Applications on macOS, or run the new EXE on Windows. Projects and settings are retained. Updates are installed manually.
 
 ## Models and data
 

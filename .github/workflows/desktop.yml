@@ -51,9 +51,12 @@ jobs:
           npm --prefix desktop ci
           npm --prefix desktop run prepare:python
           if [ "$RUNNER_OS" = 'Windows' ]; then
-            PYTHONPATH='agent;trainning' desktop/runtime/python/python.exe -m unittest workers.tests.test_compute_device workers.tests.test_execution_policy workers.tests.test_training_progress
+            PYTHONPATH='agent;trainning' desktop/runtime/python/python.exe -m unittest workers.tests.test_compute_device workers.tests.test_cuda_runtime workers.tests.test_execution_policy workers.tests.test_training_progress
           else
-            PYTHONPATH=agent:trainning desktop/runtime/python/bin/python3 -m unittest workers.tests.test_compute_device workers.tests.test_execution_policy workers.tests.test_training_progress
+            PYTHONPATH=agent:trainning desktop/runtime/python/bin/python3 -m unittest workers.tests.test_compute_device workers.tests.test_cuda_runtime workers.tests.test_execution_policy workers.tests.test_training_progress
+          fi
+          if [ "$RUNNER_OS" = 'Windows' ]; then
+            desktop/runtime/python/python.exe desktop/scripts/check-cuda-component.py
           fi
           npm --prefix desktop run prepare:runtime
           npm --prefix desktop test

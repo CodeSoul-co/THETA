@@ -18,12 +18,17 @@ def parse_progress(line):
     if line.startswith('THETA_DEVICE '):
         try:
             payload = json.loads(line[len('THETA_DEVICE '):])
-            if payload.get('status') not in {'selected', 'cpu_model', 'unavailable', 'fallback'}:
+            if payload.get('status') not in {'selected', 'cpu_model', 'unavailable', 'fallback', 'downloading', 'installing', 'setup_failed', 'disk_space'}:
                 return None
             device = payload.get('device', '')
             if device != 'cpu' and not re.fullmatch(r'cuda:[0-9]+', device):
                 return None
-            return {'kind': 'device', 'device': device, 'status': payload['status']}
+            event = {'kind': 'device', 'device': device, 'status': payload['status']}
+            if payload['status'] == 'downloading':
+                if type(payload.get('current')) is not int or type(payload.get('total')) is not int or not 0 <= payload['current'] <= payload['total'] or payload['total'] <= 0:
+                    return None
+                event.update(current=payload['current'], total=payload['total'])
+            return event
         except (ValueError, TypeError, AttributeError):
             return None
     if line.startswith('THETA_EMBEDDING '):

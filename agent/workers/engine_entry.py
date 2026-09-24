@@ -106,6 +106,9 @@ if __name__ == '__main__':
             plan = json.loads(row[0]).get('plan')
     else:
         plan = None
+    cuda_runtime = os.environ.get('THETA_CUDA_SITE_PACKAGES')
+    if cuda_runtime:
+        sys.path.insert(0, cuda_runtime)
     if plan and script.name in {'prepare_data.py', 'run_pipeline.py', 'main.py'}:
         from workers.api_overrides import install
         sys.path.insert(0, str(root))

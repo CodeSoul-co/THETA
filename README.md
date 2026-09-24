@@ -28,6 +28,8 @@ You can also use the [THETA Workflow Skill](skills/theta-workflow/SKILL.md) with
 
 ### Desktop downloads · 0.3.5 preview
 
+Windows automatically uses compatible NVIDIA GPUs, with CPU fallback. The first accelerated task downloads a verified GPU component (about 2.6 GiB); CPU-only computers do not need it. See the [GPU setup details](docs/desktop.md#windows-gpu-acceleration).
+
 The desktop app bundles its own homepage and does not update automatically. To get the new homepage and live execution logs, quit THETA and install this version over the previous one. Your projects and settings are retained.
 
 | System | Installer |

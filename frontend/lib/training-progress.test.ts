@@ -21,3 +21,9 @@ test('device events explain automatic CPU fallback', () => {
   assert.match(trainingEventText({ id: 2, at: 1, kind: 'device', device: 'cpu', status: 'unavailable' }), /自动使用 CPU/)
   assert.match(trainingEventText({ id: 3, at: 2, kind: 'device', device: 'cpu', status: 'fallback' }), /回退到 CPU 重新执行/)
 })
+
+test('optional GPU setup shows download progress and actionable CPU fallback', () => {
+  assert.match(trainingEventText({ id: 1, at: 0, kind: 'device', device: 'cpu', status: 'downloading', current: 25, total: 100 }), /25%/)
+  assert.match(trainingEventText({ id: 2, at: 0, kind: 'device', device: 'cpu', status: 'disk_space' }), /9 GB.*CPU/)
+  assert.match(trainingEventText({ id: 3, at: 0, kind: 'device', device: 'cpu', status: 'setup_failed' }), /本次使用 CPU/)
+})

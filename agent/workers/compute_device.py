@@ -9,7 +9,7 @@ def requested_device(plan):
     return plan.get('device') or ('auto' if sys.platform == 'win32' else 'cpu')
 
 
-def resolve_device(plan):
+def resolve_device(plan, cuda_runtime=None):
     requested = requested_device(plan)
     if requested != 'auto':
         return requested, 'selected'
@@ -17,7 +17,9 @@ def resolve_device(plan):
         return 'cpu', 'cpu_model'
     # Probe real allocation and kernel execution, not just driver enumeration.
     # A broken driver cannot poison the separate training process's CUDA context.
-    probe = '''import torch
+    probe = '''import sys
+if len(sys.argv) > 1: sys.path.insert(0, sys.argv[1])
+import torch
 assert torch.cuda.is_available()
 x = torch.ones((32, 32), device='cuda:0')
 assert (x @ x).sum().item() == 32768
@@ -25,7 +27,7 @@ torch.cuda.synchronize()
 print('THETA_CUDA_READY')
 '''
     try:
-        result = subprocess.run([sys.executable, '-I', '-c', probe],
+        result = subprocess.run([sys.executable, '-I', '-c', probe, *([str(cuda_runtime)] if cuda_runtime else [])],
             env={**os.environ, 'CUDA_VISIBLE_DEVICES': '0'}, capture_output=True, text=True, timeout=30)
         if result.returncode == 0 and 'THETA_CUDA_READY' in result.stdout.splitlines():
             return 'cuda:0', 'selected'

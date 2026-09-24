@@ -17,13 +17,13 @@ Mac ZIP 是备用应用压缩包，常规安装请使用 DMG。[SHA256SUMS.txt](
 
 ## 本次更新
 
-Windows 默认使用兼容的 NVIDIA CUDA 显卡加速支持的本地模型和嵌入计算。安装包内置支持 CUDA 12.8 的 PyTorch，无显卡电脑仍可使用 CPU。无需另装 Python 或 CUDA Toolkit；显卡加速需要兼容的 NVIDIA 驱动。本版本中的 AMD、Intel 显卡使用 CPU，macOS 继续使用 CPU。
+Windows 默认使用兼容的 NVIDIA CUDA 显卡加速支持的本地模型和嵌入计算。安装包内置 CPU 环境；兼容的 NVIDIA 电脑首次使用加速任务时，会从 PyTorch 下载并校验 CUDA 12.8 组件，随后缓存复用。无需另装 Python 或 CUDA Toolkit；显卡加速需要兼容的 NVIDIA 驱动。本版本中的 AMD、Intel 显卡使用 CPU，macOS 继续使用 CPU。
 
 训练前实际检查 GPU 分配与运算，不可用则直接选择 CPU。自动模式下遇到 CUDA 错误或显存不足时，会保留失败日志、清理本任务临时结果，并在 CPU 上重新执行一次；原有时间上限、取消请求及云端请求预算继续生效。数据错误和超时不会自动重试。
 
 执行日志显示所用设备，并在回退到 CPU 重新执行时提醒用户。LDA、BTM、HDP、STM 继续使用 CPU；显式指定的 CPU 或 CUDA 设备会被保留。
 
-GPU 依赖使 Windows 安装包体积增大。升级前请退出 THETA：Mac 在「应用程序」中替换旧版，Windows 运行新版 EXE。项目与配置会保留，更新需要手动下载安装。
+GPU 组件下载约 2.6 GiB，准备时需约 9 GiB 可用空间，支持断点续传，并在执行日志中显示进度。空间不足或准备失败时使用内置 CPU 环境；组件下载不发送研究文本。升级前请退出 THETA：Mac 在「应用程序」中替换旧版，Windows 运行新版 EXE。项目与配置会保留，更新需要手动下载安装。
 
 ## 模型与数据
 

@@ -186,13 +186,24 @@ def run(home: str, job_id: str) -> None:
         params = {**plan["params"]}
         if plan["modelId"] == "theta":
             params.setdefault("embedding_provider", "local")
-        selected_device, device_status = resolve_device(plan)
-        gpu = selected_device.startswith('cuda:')
+        started = time.monotonic()
+        deadline = started + plan['timeoutSeconds']
         recorder = ProgressRecorder(root / 'progress.jsonl')
+        selected_device, device_status = resolve_device(plan)
+        cuda_runtime = None
+        if requested_device(plan) == 'auto' and sys.platform == 'win32' and device_status == 'unavailable':
+            from .cuda_runtime import prepare_runtime
+            cuda_runtime = prepare_runtime(home, recorder, lambda: cancelled(home, job_id), deadline)
+            if cuda_runtime:
+                selected_device, device_status = resolve_device(plan, cuda_runtime)
+        gpu = selected_device.startswith('cuda:')
         recorder(device_event(selected_device, device_status))
         update(home, job_id, computeDevice=selected_device)
         if cancelled(home, job_id):
             raise JobCancelled('用户已取消训练')
+        remaining = int(deadline - time.monotonic())
+        if remaining <= 0:
+            raise TimeoutError('计算准备超过任务时间上限')
         spec = ExecutionSpec.from_dict({
             "schema_version": 2, "type": "job.ready", "event_id": job_id,
             "task_id": int(job_id[4:16], 16) + 1, "attempt": 1, "task_version": 1,
@@ -203,7 +214,7 @@ def run(home: str, job_id: str) -> None:
             "runtime": {"id": 1, "key": payload["execution"]["runtime"]["profile"], "version": payload["execution"]["runtime"]["revision"], "executor": "theta_pipeline", "image": "local"},
             "params": params,
             "resources": {"accelerator": "cuda" if gpu else "none", "gpu_count": 1 if gpu else 0, "gpu_memory_mb": 0,
-                          "cpu_cores": 2, "memory_mb": 4096, "timeout_seconds": plan["timeoutSeconds"]},
+                          "cpu_cores": 2, "memory_mb": 4096, "timeout_seconds": remaining},
             "output_prefix": job_id + "/", "created_at": datetime.now(timezone.utc).isoformat(),
         })
         config = replace(WorkerConfig.load(), project_root=engine_root(), job_root=root / "jobs",
@@ -211,6 +222,9 @@ def run(home: str, job_id: str) -> None:
                          keep_job_dir=True, heartbeat_interval_seconds=2)
         environment = training_environment({**payload['execution'], 'device': selected_device})
         environment['THETA_COMPUTE_DEVICE'] = selected_device
+        environment.pop('THETA_CUDA_SITE_PACKAGES', None)
+        if gpu and cuda_runtime:
+            environment['THETA_CUDA_SITE_PACKAGES'] = str(cuda_runtime)
         environment.update({'THETA_PROJECT_ROOT': str(engine_root()), 'THETA_COMPUTE_DATABASE': str(Path(home).resolve() / 'compute.sqlite'), 'THETA_COMPUTE_JOB_ID': job_id})
 
         class ApprovedProcessRunner(GPUAwareProcessRunner):
@@ -229,8 +243,6 @@ def run(home: str, job_id: str) -> None:
                 kwargs['env'] = child_env
                 return super().run(**kwargs)
 
-        started = time.monotonic()
-        deadline = started + plan['timeoutSeconds']
         progress = lambda phase, percent, message: update(home, job_id, phase=phase, percent=percent, message=message)
         for attempt in range(2):
             pipeline = AgentThetaPipeline(config, FilesystemObjectStorage(objects), ApprovedProcessRunner(on_output=recorder))
@@ -255,6 +267,7 @@ def run(home: str, job_id: str) -> None:
                 config = replace(config, resource_class='cpu', gpu_id=None)
                 spec = replace(spec, resources=replace(spec.resources, accelerator='none', gpu_count=0, timeout_seconds=remaining))
                 environment.update({'CUDA_VISIBLE_DEVICES': '', 'THETA_COMPUTE_DEVICE': 'cpu'})
+                environment.pop('THETA_CUDA_SITE_PACKAGES', None)
         if cancelled(home, job_id):
             raise JobCancelled("用户已取消训练")
         digest = tree_hash(result.result_dir)

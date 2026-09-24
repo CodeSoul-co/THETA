@@ -30,16 +30,16 @@ def observe(home, job, updated, now=None):
     try:
         paths = list((root / 'jobs').glob('task-*-attempt-*/worker.log'))
         paths = [p for p in paths if p.resolve() == p and p.is_file()]
-        if not paths:
-            return result
-        file = max(paths, key=lambda p: p.stat().st_mtime)
-        with os.fdopen(os.open(file, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0)), 'rb') as handle:
-            size = handle.seek(0, os.SEEK_END)
-            handle.seek(max(0, size - 32768))
-            text = handle.read(32768).decode('utf-8', errors='replace')
-            result['lastLogAgeSeconds'] = max(0, now - os.fstat(handle.fileno()).st_mtime)
+        text = ''
+        if paths:
+            file = max(paths, key=lambda p: p.stat().st_mtime)
+            with os.fdopen(os.open(file, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0)), 'rb') as handle:
+                size = handle.seek(0, os.SEEK_END)
+                handle.seek(max(0, size - 32768))
+                text = handle.read(32768).decode('utf-8', errors='replace')
+                result['lastLogAgeSeconds'] = max(0, now - os.fstat(handle.fileno()).st_mtime)
     except OSError:
-        return result
+        text = ''
     # Only expose recognized signals, never raw dataset text, paths or credentials.
     events = []
     journal = root / 'progress.jsonl'
@@ -70,6 +70,7 @@ def observe(home, job, updated, now=None):
         kind = event['kind']
         if kind == 'device':
             result['computeDevice'] = event['device']
+            result['detail'] = event if active and event.get('status') in {'downloading', 'installing'} else None
             continue
         if kind in {'command', 'visualizing'}:
             result.update(iteration=None, detail=None, activity='visualizing' if kind == 'visualizing' and phase == 'training' else None)

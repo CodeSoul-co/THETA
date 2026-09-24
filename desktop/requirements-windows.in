@@ -1,0 +1,2 @@
+# Bundled CPU wheel matches the optional CUDA component version.
+torch @ https://download.pytorch.org/whl/cpu/torch-2.11.0%2Bcpu-cp312-cp312-win_amd64.whl#sha256=1abeaa46fa7532ed35ed79146f4de5d7a9d4b30462c98052ea4ddfe781ea3eca

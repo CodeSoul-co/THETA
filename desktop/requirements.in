@@ -1,4 +1,4 @@
-# Full desktop runtime; Windows includes CUDA with CPU fallback. Model weights are intentionally not dependencies.
+# Full desktop runtime; Windows supports an optional verified CUDA component. Model weights are intentionally not dependencies.
 -r ../agent/requirements.service.txt
 -r ../src/models/requirements.txt
 -r ../agent/workers/statistics/requirements.txt

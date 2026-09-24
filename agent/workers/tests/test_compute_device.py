@@ -110,7 +110,8 @@ class LocalFallbackIntegrationTests(unittest.TestCase):
             self.assertEqual(state['status'],'completed',state.get('error'))
             self.assertEqual(state['computeDevice'],'cpu'); self.assertTrue(state['gpuFallback'])
             self.assertEqual([(c[0],c[1]) for c in calls],[('gpu',0),('cpu',None)])
-            self.assertLess(calls[1][2],calls[0][2])
+            self.assertLessEqual(calls[1][2],calls[0][2])
+            self.assertLess(calls[0][2],payload['plan']['timeoutSeconds'])
             jobroot=Path(home)/'compute'/job
             self.assertIn('CUDA out of memory',(jobroot/'gpu-attempt.log').read_text())
             self.assertEqual(len(list((jobroot/'jobs').glob('*/workspace'))),1)

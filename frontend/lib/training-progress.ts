@@ -28,6 +28,10 @@ const metricLabels: Record<string, string> = { loss: '损失', train_loss: '训�
 const activityLabels: Record<string, string> = { 'Generating embeddings': '生成嵌入', 'Embedding vocabulary': '词表嵌入', 'Cleaning text': '清理正文', Tokenizing: '分词', BOW: '生成词袋', Batches: '生成嵌入' }
 export function trainingEventText(event: TrainingEvent): string {
   if (event.kind === 'device') {
+    if (event.status === 'downloading') return `首次使用 GPU：正在下载加速组件 ${Math.floor((event.current ?? 0) / (event.total || 1) * 100)}%（约 2.6 GB，可断点续传）`
+    if (event.status === 'installing') return '正在准备 GPU 加速组件；完成后会自动使用，后续无需重复下载'
+    if (event.status === 'setup_failed') return 'GPU 组件准备未完成，本次使用 CPU；下次运行可继续下载'
+    if (event.status === 'disk_space') return '准备 GPU 组件需要约 9 GB 可用空间，本次使用 CPU'
     if (event.status === 'fallback') return 'GPU 计算失败，已回退到 CPU 重新执行；耗时可能增加'
     if (event.status === 'unavailable') return '未检测到可用的 GPU 计算环境，自动使用 CPU'
     if (event.status === 'cpu_model') return '当前模型使用 CPU 计算'

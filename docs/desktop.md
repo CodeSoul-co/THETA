@@ -6,11 +6,11 @@ The desktop app combines the CLI Agent, Web workbench, and Python compute engine
 
 ## Windows GPU acceleration
 
-Windows defaults to automatic device selection for local training and embeddings. The installer includes CUDA 12.8-enabled PyTorch; a compatible NVIDIA GPU and driver are required for acceleration. A separate Python or CUDA Toolkit installation is not required. AMD/Intel GPUs and incompatible NVIDIA devices use CPU in this version. macOS continues to use CPU.
+Windows defaults to automatic device selection for local training and embeddings. The installer includes Python and a CPU runtime. On a compatible NVIDIA system, the first automatic GPU task downloads a publisher-verified CUDA 12.8 component from PyTorch (about 2.6 GiB; allow about 9 GiB free during setup). The component is cached, supports resumed downloads, and requires a compatible NVIDIA driver. A separate Python or CUDA Toolkit installation is not required. AMD/Intel GPUs and incompatible NVIDIA devices use CPU in this version. macOS continues to use CPU.
 
 THETA tests a real GPU allocation and operation before training. If the probe fails, it uses CPU immediately. If a CUDA error occurs during an automatic GPU run (including insufficient GPU memory), THETA preserves the failed log and restarts the analysis once on CPU in a clean workspace. The original time limit, cancellation and cloud request budget remain in force. Data errors and timeouts are not retried. Execution logs show the selected device and any fallback; a restarted analysis can take longer.
 
-LDA, BTM, HDP and STM use their existing CPU implementations. CLI Agent plans accept `device: "auto"`, `"cpu"`, or `"cuda:0"`; an explicit selection is respected. GPU support increases the Windows installation size. Neural model weights still need to be provided separately.
+LDA, BTM, HDP and STM use their existing CPU implementations. CLI Agent plans accept `device: "auto"`, `"cpu"`, or `"cuda:0"`; an explicit selection is respected. If the component cannot be downloaded, verified, or loaded, THETA uses the bundled CPU runtime. Download and setup progress appear in execution logs. Component requests contain no research text. GPU components are stored in the application data directory, outside the installed program; updating the app preserves this cache. Neural model weights still need to be provided separately.
 
 ## Download and install
 

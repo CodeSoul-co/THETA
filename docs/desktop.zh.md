@@ -6,11 +6,11 @@
 
 ## Windows 显卡加速
 
-Windows 的本地训练与嵌入默认自动选择计算设备。安装包内置支持 CUDA 12.8 的 PyTorch；兼容的 NVIDIA 显卡及驱动可启用加速，无需另装 Python 或 CUDA Toolkit。本版本中 AMD、Intel 显卡及不兼容的 NVIDIA 设备使用 CPU；macOS 继续使用 CPU。
+Windows 的本地训练与嵌入默认自动选择计算设备。安装包内置 Python 和 CPU 环境；检测到兼容的 NVIDIA 驱动后，首次自动加速任务会从 PyTorch 下载并校验 CUDA 12.8 组件（约 2.6 GiB，准备过程请预留约 9 GiB 空间）。组件会缓存复用，支持断点续传，无需另装 Python 或 CUDA Toolkit。本版本中 AMD、Intel 显卡及不兼容的 NVIDIA 设备使用 CPU；macOS 继续使用 CPU。
 
 训练前会实际测试 GPU 分配和运算，测试失败则直接使用 CPU。自动模式下，如果 GPU 运行时出现 CUDA 错误（包括显存不足），会保留失败日志，清理本任务的临时结果，并在 CPU 上重新执行一次。原有时间上限、取消请求和云端请求预算仍然有效；数据错误及超时不会触发重跑。执行日志会显示所用设备和回退情况，重新执行可能需要更长时间。
 
-LDA、BTM、HDP、STM 继续使用已有 CPU 实现。CLI Agent 方案支持 `device: "auto"`、`"cpu"` 或 `"cuda:0"`，显式指定的设备会被保留。GPU 支持会增加 Windows 安装体积；神经模型权重仍需另行提供。
+LDA、BTM、HDP、STM 继续使用已有 CPU 实现。CLI Agent 方案支持 `device: "auto"`、`"cpu"` 或 `"cuda:0"`，显式指定的设备会被保留。组件下载、校验或加载失败时使用内置 CPU 环境，执行日志会显示准备进度和原因。组件下载不发送研究文本。GPU 组件保存在应用数据目录，升级应用时保留；神经模型权重仍需另行提供。
 
 ## 使用
 
