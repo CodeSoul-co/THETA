@@ -223,6 +223,20 @@ async function runSmoke(services) {
   assert.equal((await get(origin, '/api/backend/api/auth/me')).status, 404);
   assert.equal((await get(origin, '/api/v3/projects', { headers: { ...headers, origin: 'https://evil.example' } })).status, 403);
   assert.equal((await get(origin, '/workbench?mode=conversation')).status, 200);
+  // Verify homepage images through the authenticated Electron session. Internal
+  // optimizer fetches do not carry its token and previously left these blank.
+  await window.loadURL(origin + '/');
+  const homepageImages = await window.webContents.executeJavaScript(`(async () => {
+    const images = [...document.querySelectorAll('img')].filter(image => image.getAttribute('src')?.includes('/screenshots/'));
+    await Promise.race([
+      Promise.all(images.map(image => { image.loading = 'eager'; return image.decode(); })),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Homepage images timed out')), 20000)),
+    ]);
+    return images.map(image => ({ src: image.getAttribute('src'), width: image.naturalWidth }));
+  })()`);
+  assert.ok(homepageImages.length >= 4, 'Homepage must include actual product screenshots');
+  assert.ok(homepageImages.every(image => image.width > 0 && image.src.startsWith('/screenshots/')), 'Homepage screenshots must load directly');
+  await window.loadURL(origin + '/workbench?mode=conversation');
   // Exercise the same sandboxed preload and IPC used by the settings dialog.
   const embedding = await window.webContents.executeJavaScript('window.thetaDesktop.read().then(value => value.embedding)');
   const catalog = await window.webContents.executeJavaScript('window.thetaDesktop.catalog()');
@@ -275,7 +289,7 @@ async function runSmoke(services) {
   const model = await get(origin, '/api/backend/api/models/lda');
   assert.equal(model.status, 200);
   assert.equal((await model.json()).modelId, 'lda');
-  console.log(JSON.stringify({ ok: true, app: app.getVersion(), node: process.versions.node, electron: process.versions.electron, python: parsed, checks: ['production UI', 'agent API', 'manual API', 'project write', 'XLSX upload and column preview through frontend proxy', 'local preprocessing status', 'desktop authentication', 'origin rejection', 'sandboxed settings bridge', 'live GLM embedding configuration', 'bundled Python imports', 'Python model inspection'] }, null, 2));
+  console.log(JSON.stringify({ ok: true, app: app.getVersion(), node: process.versions.node, electron: process.versions.electron, python: parsed, checks: ['production UI', 'authenticated homepage screenshots', 'agent API', 'manual API', 'project write', 'XLSX upload and column preview through frontend proxy', 'local preprocessing status', 'desktop authentication', 'origin rejection', 'sandboxed settings bridge', 'live GLM embedding configuration', 'bundled Python imports', 'Python model inspection'] }, null, 2));
 }
 app.whenReady().then(async () => {
   if (startupError) {

@@ -6,7 +6,7 @@ $newFolder = Join-Path $env:RUNNER_TEMP 'THETA-current'
 $baselineFolder = Join-Path $env:RUNNER_TEMP 'theta-upgrade-baseline'
 if ($Phase -eq 'download') {
   New-Item -ItemType Directory -Force $baselineFolder | Out-Null
-  & gh release download desktop-v0.3.2 --repo CodeSoul-co/THETA --pattern 'THETA-0.3.2-win-x64.exe' --dir $baselineFolder
+  & gh release download desktop-v0.3.3 --repo CodeSoul-co/THETA --pattern 'THETA-0.3.3-win-x64.exe' --dir $baselineFolder
   if ($LASTEXITCODE -ne 0) { throw 'Could not download upgrade baseline' }
   return
 }
@@ -30,7 +30,7 @@ $obsolete = Join-Path $oldFolder 'obsolete-version-test.txt'
 $userData = Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'THETA'
 $keep = Join-Path $userData 'upgrade-data-retention-test.txt'
 if ($Phase -eq 'baseline') {
-  Install-Theta (Join-Path $baselineFolder 'THETA-0.3.2-win-x64.exe') $oldFolder
+  Install-Theta (Join-Path $baselineFolder 'THETA-0.3.3-win-x64.exe') $oldFolder
   Set-Content -Path $obsolete -Value 'old application payload'
   New-Item -ItemType Directory -Force $userData | Out-Null
   Set-Content -Path $keep -Value 'preserve user data'

@@ -1,7 +1,7 @@
 {
   "name": "theta-desktop",
   "productName": "THETA",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "private": true,
   "description": "THETA local research workbench with bundled Python",
   "author": "CodeSoul",
