@@ -187,9 +187,9 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
     if (cached) return cached;
     const roots: string[] = [];
     const files = new Set<string>();
-    const add = (candidate: string) => { try { files.add(realpathSync(candidate)); } catch { /* missing files are simply not allowed */ } };
+    const add = (candidate: string) => { try { files.add(realpathSync.native(candidate)); } catch { /* missing files are simply not allowed */ } };
     for (const report of session.reports ?? []) {
-      try { roots.push(realpathSync(path.dirname(report.reportPath))); } catch { /* ignore */ }
+      try { roots.push(realpathSync.native(path.dirname(report.reportPath))); } catch { /* ignore */ }
       for (const artifact of report.files ?? []) add(artifact.path);
     }
     for (const report of session.statisticalReports ?? []) for (const artifact of report.files ?? []) add(artifact.path);
@@ -202,14 +202,14 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
   };
   const artifactAllowedUncached = (session: ProductSession, file: string) => {
     let resolved: string;
-    try { resolved = realpathSync(file); } catch { return false; }
+    try { resolved = realpathSync.native(file); } catch { return false; }
     const { roots, files } = artifactIndex(session);
     if (files.has(resolved)) return true;
     return roots.some(root => { const rel = path.relative(root, resolved); return Boolean(rel) && !rel.startsWith('..') && !path.isAbsolute(rel); });
   };
   const artifactAllowed = (session: ProductSession, file: string) => {
     let resolved: string;
-    try { resolved = realpathSync(file); } catch { return false; }
+    try { resolved = realpathSync.native(file); } catch { return false; }
     const key = session.id + '\u0000' + artifactScope(session) + '\u0000' + resolved;
     const cached = artifactAllowedCache.get(key);
     if (cached !== undefined) return cached;
@@ -219,7 +219,7 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
     return allowed;
   };
   const registerArtifact = (session: ProductSession, file: string) => {
-    const resolved = realpathSync(file);
+    const resolved = realpathSync.native(file);
     if (!artifactAllowed(session, resolved) || !statSync(resolved).isFile()) throw new HttpError(403, '文件不属于当前对话的已交付报告。', 'artifact_forbidden');
     const id = contentHash({ runId: session.id, path: resolved });
     records.put('web-artifact', id, { id, runId: session.id, path: resolved } satisfies WebArtifact);
@@ -243,7 +243,7 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
     return url;
   };
   const sendArtifact = (res: ServerResponse, session: ProductSession, file: string) => {
-    const resolved = realpathSync(file);
+    const resolved = realpathSync.native(file);
     if (!artifactAllowed(session, resolved) || !statSync(resolved).isFile()) throw new HttpError(403, '文件不属于当前对话的已交付报告。', 'artifact_forbidden');
     const types: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.png': 'image/png', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.md': 'text/markdown; charset=utf-8', '.csv': 'text/csv; charset=utf-8', '.pdf': 'application/pdf', '.json': 'application/json', '.log': 'text/plain; charset=utf-8' };
     let content = readFileSync(resolved);
@@ -871,11 +871,11 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
       }
       if (action === 'files') {
         if (mode !== 'local') throw new HttpError(404, '接口不存在。', 'not_found');
-        const file = realpathSync(url.searchParams.get('path') ?? '');
+        const file = realpathSync.native(url.searchParams.get('path') ?? '');
         const allowed = (session.reports ?? []).some(r => {
-          const root = realpathSync(path.dirname(r.reportPath)); const rel = path.relative(root, file); return (!rel.startsWith('..') && !path.isAbsolute(rel)) || r.files.some(artifact => { try { return realpathSync(artifact.path) === file; } catch { return false; } });
-        }) || (session.statisticalReports ?? []).some(r => r.files.some(f => {try{return realpathSync(f.path)===file;}catch{return false;}})) || (session.interpretations ?? []).some(i => realpathSync(i.documentPath) === file);
-        const skillAllowed=(session.skillArtifacts??[]).some(f=>{try{return realpathSync(f.path)===file;}catch{return false;}});
+          const root = realpathSync.native(path.dirname(r.reportPath)); const rel = path.relative(root, file); return (!rel.startsWith('..') && !path.isAbsolute(rel)) || r.files.some(artifact => { try { return realpathSync.native(artifact.path) === file; } catch { return false; } });
+        }) || (session.statisticalReports ?? []).some(r => r.files.some(f => {try{return realpathSync.native(f.path)===file;}catch{return false;}})) || (session.interpretations ?? []).some(i => realpathSync.native(i.documentPath) === file);
+        const skillAllowed=(session.skillArtifacts??[]).some(f=>{try{return realpathSync.native(f.path)===file;}catch{return false;}});
         if ((!allowed && !skillAllowed) || !statSync(file).isFile()) throw new HttpError(403, '文件不属于当前对话的已交付报告。');
         const types: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.png': 'image/png', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.md': 'text/markdown; charset=utf-8', '.csv': 'text/csv; charset=utf-8', '.pdf': 'application/pdf', '.json': 'application/json', '.log': 'text/plain; charset=utf-8' };
         let content = readFileSync(file);

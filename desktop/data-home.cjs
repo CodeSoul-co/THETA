@@ -29,11 +29,11 @@ module.exports = { prepareDataHome, readDataLocation, saveDataLocation };
 function clearUpgradeCaches(home, version) {
   const marker = path.join(home, '.desktop-version');
   if (fs.existsSync(marker) && fs.readFileSync(marker, 'utf8') === version) return;
-  const root = fs.realpathSync(home);
+  const root = fs.realpathSync.native(home);
   for (const relative of ['Cache/Cache_Data', 'Code Cache', 'GPUCache', 'ShaderCache', 'GrShaderCache', 'DawnGraphiteCache', 'DawnWebGPUCache', 'Partitions/theta/Cache', 'Partitions/theta/Code Cache', 'Partitions/theta/GPUCache']) {
     const target = path.join(home, relative);
     if (!fs.existsSync(target)) continue;
-    const resolved = path.relative(root, fs.realpathSync(target));
+    const resolved = path.relative(root, fs.realpathSync.native(target));
     if (resolved.startsWith('..') || path.isAbsolute(resolved)) continue;
     try { fs.rmSync(target, { recursive: true, force: true }); } catch { /* A locked cache can be retried next upgrade. */ }
   }

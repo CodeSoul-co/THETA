@@ -51,7 +51,7 @@ export class WorkerAnalysisRuntime implements AnalysisRuntime {
     if (description.image!==binding.image || (this.options.worker || binding.workerFingerprint) && binding.workerFingerprint!==description.fingerprint) throw new Error('Sandbox worker changed or is not authorized: bind the current worker fingerprint before continuing');
     if (description.network!=='none' || description.execution!=='python-script' || !description.persistentFiles || description.persistentVariables!==false || !Number.isFinite(description.maxSeconds) || description.maxSeconds<=0) throw new Error('Incompatible sandbox worker capabilities');
     for (const dir of [binding.workspace, binding.inputs, binding.model, this.options.libraryDirectory]) {
-      if (!path.isAbsolute(dir) || !lstatSync(dir).isDirectory() || lstatSync(dir).isSymbolicLink() || realpathSync(dir) !== path.resolve(dir) || dir.includes(',')) throw new Error('Analysis mounts must be real absolute directories without symlinks or commas');
+      if (!path.isAbsolute(dir) || !lstatSync(dir).isDirectory() || lstatSync(dir).isSymbolicLink() || realpathSync.native(dir) !== path.resolve(dir) || dir.includes(',')) throw new Error('Analysis mounts must be real absolute directories without symlinks or commas');
     }
     const key = hash(JSON.stringify({session:session.id,run:session.runId,binding,worker:description.fingerprint}));
     const state = path.join(this.options.stateDirectory, key); mkdirSync(state, { recursive: true, mode: 0o700 });

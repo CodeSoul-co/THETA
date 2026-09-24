@@ -22,8 +22,8 @@ export interface ImportedProject {
 }
 
 const inside = (root: string, file: string): string => {
-  const resolved = realpathSync(file);
-  const relative = path.relative(realpathSync(root), resolved);
+  const resolved = realpathSync.native(file);
+  const relative = path.relative(realpathSync.native(root), resolved);
   if (!relative || relative.startsWith('..') || path.isAbsolute(relative) || lstatSync(file).isSymbolicLink()) {
     throw new ManualImportError(409, '项目文件路径无效，未复制结果。');
   }

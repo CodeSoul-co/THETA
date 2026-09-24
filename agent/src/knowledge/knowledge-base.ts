@@ -26,8 +26,8 @@ export class KnowledgeBase {
   constructor(readonly directory = path.join(packageRoot, 'knowledge')) {}
 
   private file(relative: string): string {
-    const root = realpathSync(this.directory);
-    const file = realpathSync(path.resolve(root, relative));
+    const root = realpathSync.native(this.directory);
+    const file = realpathSync.native(path.resolve(root, relative));
     const rel = path.relative(root, file);
     if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) throw new Error('知识文件必须位于知识库目录内');
     if (!statSync(file).isFile() || statSync(file).size > 2 * 1024 * 1024) throw new Error('知识文件必须为不超过 2 MiB 的普通文件');

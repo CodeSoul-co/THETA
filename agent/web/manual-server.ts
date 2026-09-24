@@ -127,7 +127,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
       const current = await observe(job);
       const selected = current.workers.find((w: RecordValue) => !model || w.model === model);
       const state = current.states?.find((s: ComputeJob) => s.id === selected?.id && s.status === 'completed');
-      if (state?.resultDir) return { root: realpathSync(state.resultDir), model: selected.model };
+      if (state?.resultDir) return { root: realpathSync.native(state.resultDir), model: selected.model };
     }
     throw new HttpError(404, '该模型还没有已完成的结果');
   };
@@ -325,7 +325,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
               const modelId = current.workers.find((item: RecordValue) => item.id === state.id)?.model;
               const base = `/api/backend/api/results/${encodeURIComponent(dataset)}`;
               const query = `model=${encodeURIComponent(modelId)}&job_id=${encodeURIComponent(state.id)}`;
-              const resultRoot = state.status === 'completed' && state.resultDir ? realpathSync(state.resultDir) : undefined;
+              const resultRoot = state.status === 'completed' && state.resultDir ? realpathSync.native(state.resultDir) : undefined;
               const entries = resultRoot ? files(resultRoot).map(file => {
                 const name = path.relative(resultRoot, file).split(path.sep).join('/');
                 const ext = path.extname(file).toLowerCase();
@@ -351,7 +351,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
         if (selectedJobId && !owner) throw new HttpError(404, '该项目没有此训练结果');
         const selectedState = owner ? ((await observe(owner)).states as ComputeJob[]).find(state => state.id === selectedJobId && state.status === 'completed') : undefined;
         if (selectedJobId && !selectedState?.resultDir) throw new HttpError(404, '该训练结果尚未完成');
-        const result = selectedState?.resultDir ? { root: realpathSync(selectedState.resultDir), model: owner!.workers.find((item: RecordValue) => item.id === selectedJobId).model } : await latest(dataset, model);
+        const result = selectedState?.resultDir ? { root: realpathSync.native(selectedState.resultDir), model: owner!.workers.find((item: RecordValue) => item.id === selectedJobId).model } : await latest(dataset, model);
         if (parts[3] === 'archive' && method === 'GET') {
           const stage = path.join(home, 'incoming', `delivery-${randomUUID()}`);
           const archive = stage + '.zip';
@@ -373,7 +373,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
           const artifacts = files(result.root);
           if (parts[4] === 'file') {
             const relative = url.searchParams.get('path') ?? ''; const file = path.resolve(result.root, relative);
-            if (!artifacts.includes(file) || !realpathSync(file).startsWith(result.root + path.sep)) throw new HttpError(404, '结果文件不存在');
+            if (!artifacts.includes(file) || !realpathSync.native(file).startsWith(result.root + path.sep)) throw new HttpError(404, '结果文件不存在');
             const mime: Record<string, string> = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml', '.html': 'text/html', '.csv': 'text/csv; charset=utf-8', '.json': 'application/json', '.pdf': 'application/pdf', '.txt': 'text/plain; charset=utf-8' };
             res.writeHead(200, { 'Content-Type': mime[path.extname(file)] ?? 'application/octet-stream', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "sandbox allow-scripts; default-src 'self' data: https: 'unsafe-inline'" });
             const stream = createReadStream(file);

@@ -63,7 +63,7 @@ export class StatisticalTools {
         if(effect.status!=='approved'||effect.action!=='statistics.execute'||payload.analysisId!==execution.analysisId||payload.studyKey!==key)throw new Error('Recovery does not match the approved study');
         const manifest=JSON.parse(readFileSync(path.join(directory,'manifest.json'),'utf8')) as {files:Array<{name:string;path:string;kind:string;sha256:string}>};
         for(const file of manifest.files){
-          if(path.dirname(realpathSync(file.path))!==realpathSync(directory)||path.basename(file.path)!==file.name||createHash('sha256').update(readFileSync(file.path)).digest('hex')!==file.sha256)throw new Error('Recovered artifact failed integrity validation');
+          if(path.dirname(realpathSync.native(file.path))!==realpathSync.native(directory)||path.basename(file.path)!==file.name||createHash('sha256').update(readFileSync(file.path)).digest('hex')!==file.sha256)throw new Error('Recovered artifact failed integrity validation');
         }
         if(!['results.json','report.html'].every(name=>manifest.files.some(f=>f.name===name)))throw new Error('Incomplete report manifest');
         const raw=JSON.parse(readFileSync(path.join(directory,'results.json'),'utf8'));

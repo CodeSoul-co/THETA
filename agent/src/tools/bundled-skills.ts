@@ -18,7 +18,7 @@ export class BundledSkills {
   private file(name:string){
     const source=this.source();
     if(!Object.hasOwn(source.files,name))throw new Error('Unknown bundled skill file');
-    const root=realpathSync(path.join(this.directory,'data-viz')), file=realpathSync(path.join(root,name));
+    const root=realpathSync.native(path.join(this.directory,'data-viz')), file=realpathSync.native(path.join(root,name));
     if(!file.startsWith(root+path.sep))throw new Error('Skill path escapes its bundle');
     const bytes=readFileSync(file);
     if(createHash('sha256').update(bytes).digest('hex')!==source.files[name])throw new Error('Bundled skill source changed; verify and update its import manifest first');
