@@ -50,6 +50,7 @@ jobs:
           pnpm --dir agent install --frozen-lockfile
           npm --prefix frontend ci
           npm --prefix desktop ci
+          node desktop/scripts/check-native-paths.cjs
           npm --prefix desktop run prepare:python
           if [ "$RUNNER_OS" = 'Windows' ]; then
             PYTHONPATH='agent;trainning' desktop/runtime/python/python.exe -m unittest workers.tests.test_compute_device workers.tests.test_cuda_runtime workers.tests.test_execution_policy workers.tests.test_training_progress workers.tests.test_dataset_preview workers.tests.test_small_corpus

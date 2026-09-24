@@ -9,6 +9,7 @@ writeFileSync(probe, `
 console.log('native-path: main entered');
 const { app, session } = require('electron');
 const fs = require('node:fs');
+const path = require('node:path');
 const { prepareDataHome, clearUpgradeCaches } = require(${JSON.stringify(path.resolve(__dirname, '../data-home.cjs'))});
 console.log('native-path: prepare data');
 const home = prepareDataHome(process.env.THETA_NATIVE_PATH_HOME);
@@ -19,7 +20,11 @@ app.whenReady().then(() => {
   console.log('native-path: ready');
   app.requestSingleInstanceLock();
   console.log('native-path: caches');
+  const cache = path.join(home, 'Cache', 'Cache_Data');
+  fs.mkdirSync(cache, { recursive: true });
+  fs.writeFileSync(path.join(cache, 'entry'), 'disposable cache');
   clearUpgradeCaches(home, 'test');
+  if (fs.existsSync(cache)) throw new Error('Upgrade cache was not removed');
   console.log('native-path: session');
   session.fromPartition('theta-path-test');
   console.log('native-path: complete');
