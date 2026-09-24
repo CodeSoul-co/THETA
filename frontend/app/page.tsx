@@ -487,7 +487,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-5 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           {/* Left: Logo - 使用上传的 THETA 图片（青绿+橙边） */}
           <div className="flex items-center">
-            <Image
+            <Image unoptimized
               src="/theta-logo.png"
               alt="THETA"
               width={1653}
@@ -1039,7 +1039,7 @@ export default function LandingPage() {
         <DialogContent className="sm:max-w-md bg-white">
           <DialogHeader className="space-y-3 pb-2">
             <div className="flex items-center justify-center mb-2">
-              <Image
+              <Image unoptimized
                 src="/theta-logo.png"
                 alt="THETA"
                 width={1653}
