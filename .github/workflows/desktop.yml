@@ -64,12 +64,34 @@ jobs:
           else
             desktop/release/win-unpacked/THETA.exe --smoke-test
           fi
-      - name: Verify Windows upgrade preserves data and removes old program files
+      - name: Download Windows upgrade baseline
         if: ${{ runner.os == 'Windows' && (!inputs.target || inputs.target == 'all' || inputs.target == matrix.platform) }}
+        timeout-minutes: 5
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: ./desktop/scripts/check-windows-upgrade.ps1
+        run: ./desktop/scripts/check-windows-upgrade.ps1 -Phase download
+      - name: Install previous Windows version
+        if: ${{ runner.os == 'Windows' && (!inputs.target || inputs.target == 'all' || inputs.target == matrix.platform) }}
+        timeout-minutes: 12
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./desktop/scripts/check-windows-upgrade.ps1 -Phase baseline
+      - name: Verify Windows upgrade and data retention
+        if: ${{ runner.os == 'Windows' && (!inputs.target || inputs.target == 'all' || inputs.target == matrix.platform) }}
+        timeout-minutes: 12
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./desktop/scripts/check-windows-upgrade.ps1 -Phase upgrade
+      - name: Verify installed Windows application
+        if: ${{ runner.os == 'Windows' && (!inputs.target || inputs.target == 'all' || inputs.target == matrix.platform) }}
+        timeout-minutes: 5
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./desktop/scripts/check-windows-upgrade.ps1 -Phase smoke
       - uses: actions/upload-artifact@v4
         if: ${{ success() && (!inputs.target || inputs.target == 'all' || inputs.target == matrix.platform) }}
         with:
