@@ -1,6 +1,7 @@
+import { rm } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync, readdirSync, statSync, realpathSync, rmSync, createReadStream } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync, readdirSync, statSync, realpathSync, createReadStream } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
@@ -356,16 +357,17 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
           const stage = path.join(home, 'incoming', `delivery-${randomUUID()}`);
           const archive = stage + '.zip';
           mkdirSync(stage, { recursive: true });
-          const cleanup = () => { rmSync(stage, { recursive: true, force: true }); rmSync(archive, { force: true }); };
+          const cleanup = () => Promise.allSettled([rm(stage, { recursive: true, force: true }), rm(archive, { force: true })]);
           try {
             stageDelivery(stage, files(result.root).map(file => ({ path: file, name: '训练结果/' + path.relative(result.root, file).split(path.sep).join('/') })));
             await createDeliveryZip(stage, archive);
             res.writeHead(200, { 'Content-Type': 'application/zip', 'Content-Disposition': `attachment; filename="THETA-${result.model}-complete.zip"`, 'Cache-Control': 'no-store' });
             const stream = createReadStream(archive);
-            res.on('close', () => { stream.destroy(); cleanup(); });
-            stream.on('error', () => { res.destroy(); cleanup(); });
+            res.on('close', () => stream.destroy());
+            stream.once('close', () => { void cleanup(); });
+            stream.on('error', () => res.destroy());
             return stream.pipe(res);
-          } catch (error) { cleanup(); throw error; }
+          } catch (error) { await cleanup(); throw error; }
         }
         if (parts[3] === 'topic-words') return json(res, { dataset, model: result.model, topics: topics(result.root) });
         if (parts[3] === 'metrics') return json(res, { dataset, model: result.model, metrics: readResult(result.root, /^(?:evaluation_)?metrics.*\.json$/u) });

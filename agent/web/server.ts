@@ -1,6 +1,7 @@
+import { rm } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, writeFileSync, readFileSync, realpathSync, statSync, rmSync, existsSync, createReadStream, linkSync, copyFileSync, readdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, realpathSync, statSync, existsSync, createReadStream, linkSync, copyFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ProductSessionStore, type ProductSession } from '../src/memory/session-store.js';
@@ -656,7 +657,7 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
             projectIds: [...new Set([...(owns(previousOwner?.ownerId, principal) ? previousOwner?.projectIds ?? [] : []), ...(projectId ? [projectId] : [])])],
           } satisfies DatasetOwner);
           return json(res, view(records.get<Dataset>('dataset', receipt.datasetRef)));
-        } finally { rmSync(tempDir, { recursive: true, force: true }); }
+        } finally { await rm(tempDir, { recursive: true, force: true }); }
       }
       if (parts[2] !== 'runs') throw new HttpError(404, '接口不存在。');
       if (!parts[3]) {
@@ -826,11 +827,11 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
           res.writeHead(200, { 'Content-Type': 'application/zip', 'Content-Disposition': `attachment; filename="theta-figure-${path.basename(family).replace(/[^\w.-]+/gu, '_')}.zip"`, 'Cache-Control': 'no-store' });
           const stream = createReadStream(zipPath);
           stream.pipe(res);
-          stream.on('close', () => { rmSync(stage, { recursive: true, force: true }); rmSync(zipPath, { force: true }); });
+          stream.once('close', () => { void Promise.allSettled([rm(stage, { recursive: true, force: true }), rm(zipPath, { force: true })]); });
           return;
         } catch (error) {
-          rmSync(stage, { recursive: true, force: true });
-          rmSync(zipPath, { force: true });
+          await rm(stage, { recursive: true, force: true });
+          await rm(zipPath, { force: true });
           throw new HttpError(500, `打包失败：${error instanceof Error ? error.message : String(error)}`, 'bundle_failed');
         }
       }
@@ -856,11 +857,11 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
           });
           const stream = createReadStream(zipPath);
           stream.pipe(res);
-          stream.on('close', () => { rmSync(stage, { recursive: true, force: true }); rmSync(zipPath, { force: true }); });
+          stream.once('close', () => { void Promise.allSettled([rm(stage, { recursive: true, force: true }), rm(zipPath, { force: true })]); });
           return;
         } catch (error) {
-          rmSync(stage, { recursive: true, force: true });
-          rmSync(zipPath, { force: true });
+          await rm(stage, { recursive: true, force: true });
+          await rm(zipPath, { force: true });
           throw new HttpError(500, `打包失败：${error instanceof Error ? error.message : String(error)}`, 'archive_failed');
         }
       }

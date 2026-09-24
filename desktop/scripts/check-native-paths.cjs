@@ -17,7 +17,7 @@ const home = prepareDataHome(process.env.THETA_NATIVE_PATH_HOME);
 console.log('native-path: set Chromium paths');
 app.setPath('userData', home);
 app.setPath('sessionData', home);
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   console.log('native-path: ready');
   app.requestSingleInstanceLock();
   console.log('native-path: caches');
@@ -28,7 +28,7 @@ app.whenReady().then(() => {
   fs.mkdirSync(cache, { recursive: true });
   fs.writeFileSync(path.join(cache, 'entry'), 'disposable cache');
   console.log('native-path: cache removal');
-  clearUpgradeCaches(home, 'test');
+  await clearUpgradeCaches(home, 'test');
   if (fs.existsSync(cache)) throw new Error('Upgrade cache was not removed');
   console.log('native-path: session');
   session.fromPartition('theta-path-test');

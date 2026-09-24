@@ -26,7 +26,7 @@ function saveDataLocation(file, directory) {
 module.exports = { prepareDataHome, readDataLocation, saveDataLocation };
 
 // Only disposable Chromium caches; project databases, drafts, credentials and model caches stay intact.
-function clearUpgradeCaches(home, version) {
+async function clearUpgradeCaches(home, version) {
   const marker = path.join(home, '.desktop-version');
   if (fs.existsSync(marker) && fs.readFileSync(marker, 'utf8') === version) return;
   const root = fs.realpathSync.native(home);
@@ -35,7 +35,8 @@ function clearUpgradeCaches(home, version) {
     if (!fs.existsSync(target)) continue;
     const resolved = path.relative(root, fs.realpathSync.native(target));
     if (resolved.startsWith('..') || path.isAbsolute(resolved)) continue;
-    try { fs.rmSync(target, { recursive: true, force: true }); } catch { /* A locked cache can be retried next upgrade. */ }
+    // Electron's synchronous recursive remover can abort on Windows Unicode paths.
+    try { await fs.promises.rm(target, { recursive: true, force: true }); } catch { /* A locked cache can be retried next upgrade. */ }
   }
   fs.writeFileSync(marker, version);
 }

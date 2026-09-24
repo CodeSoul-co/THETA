@@ -321,7 +321,7 @@ app.whenReady().then(async () => {
     app.exit(0); return;
   }
   if (!app.requestSingleInstanceLock()) { app.quit(); return; }
-  clearUpgradeCaches(home, app.getVersion());
+  await clearUpgradeCaches(home, app.getVersion());
   settingsFile = path.join(home, 'settings.json');
   if (!smoke) {
     try { saveDataLocation(locationFile, home); }

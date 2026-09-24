@@ -1,4 +1,5 @@
-import { createWriteStream, lstatSync, mkdirSync, openAsBlob, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { rm } from 'node:fs/promises';
+import { createWriteStream, lstatSync, mkdirSync, openAsBlob, readFileSync, readdirSync } from 'node:fs';
 import { createHash, randomUUID } from 'node:crypto';
 import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
@@ -177,8 +178,8 @@ export class GoComputeGateway implements ComputeGateway {
       const report = await this.worker.call<Record<string, unknown>>('compute.remote_report', { home: this.home, jobId, bundleRoot: bundle,
         normalizedInputSha256: normalized, dataset: mapping.request.dataset, plan: mapping.request.plan });
       this.store.put('remote-report', jobId, report); return report;
-    } catch (error) { rmSync(bundle, { recursive: true, force: true }); throw error; }
-    finally { rmSync(archive, { force: true }); }
+    } catch (error) { await rm(bundle, { recursive: true, force: true }); throw error; }
+    finally { await rm(archive, { force: true }); }
   }
   async results(jobId: string, view: ResultView, offset?: number): Promise<unknown> {
     if ((await this.status(jobId)).status !== 'completed') throw new Error('远端任务尚未完成');
