@@ -21,6 +21,7 @@ export function ExecutionLog({ states = [], workers = [], logs, running }: {
     <div className="mt-3 space-y-3">
       {states.map(state => <div key={state.id} className="rounded-lg bg-slate-50 p-3 text-sm">
         <p className="font-medium">{modelName(state.id)} · {statusLabel(state.status)} · {systemText(state.phase)}</p>
+        {state.computeDevice && <p className={`mt-1 text-xs ${state.gpuFallback ? 'font-medium text-amber-700' : 'text-slate-600'}`}>{state.gpuFallback ? 'GPU 计算失败，已回退到 CPU 重新执行；耗时可能增加' : state.computeDevice.startsWith('cuda:') ? `NVIDIA GPU · ${state.computeDevice}` : 'CPU 计算'}</p>}
         {state.telemetry?.detail && <p className="mt-1 font-mono text-blue-700">{trainingEventText(state.telemetry.detail)}</p>}
         <p className="mt-1 text-xs text-slate-500">{state.telemetry?.elapsedSeconds != null && `已用时 ${trainingElapsed(state.telemetry.elapsedSeconds)}`}
           {running && state.status === 'running' && state.telemetry?.lastLogAgeSeconds != null && ` · ${Math.floor(state.telemetry.lastLogAgeSeconds)} 秒前收到训练输出`}</p>

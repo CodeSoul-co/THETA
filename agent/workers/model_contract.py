@@ -205,7 +205,7 @@ def validate_parameters(root, plan):
             if value < 0 or value == 0 and not zero: raise ValueError(f'{key} 必须为正数' + ('或零' if zero else ''))
             if ('dropout' in name or name.endswith('_ratio') or name == 'scheduler_factor') and value >= 1: raise ValueError(f'{key} 必须小于 1')
     if params.get('mode', 'zero_shot') == 'supervised' and not plan.get('labelColumn'): raise ValueError('supervised 需要明确 labelColumn')
-    if plan.get('device', 'cpu') != 'cpu' and not __import__('re').fullmatch(r'cuda:[0-9]+', plan['device']): raise ValueError('device 必须为 cpu 或 cuda:非负编号')
+    if plan.get('device', 'cpu') not in {'cpu', 'auto'} and not __import__('re').fullmatch(r'cuda:[0-9]+', plan['device']): raise ValueError('device 必须为 auto、cpu 或 cuda:非负编号')
     if plan['modelId'] == 'etm' and params.get('trainer.use_pretrained_embeddings') is False and any(key.startswith('word2vec.') for key in params): raise ValueError('不使用预训练词向量时不能同时设置 Word2Vec 训练参数')
     if params.get('embedding.normalize') is False and params.get('embedding_provider', 'local') in {'local', 'qwen'}: raise ValueError('本地 Qwen 实现固定归一化，normalize=False 仅适用于云嵌入')
     provider = params.get('embedding_provider', 'local')

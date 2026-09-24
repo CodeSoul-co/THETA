@@ -77,7 +77,7 @@
   year = {2026},
   howpublished = {GitHub repository},
   url = {https://github.com/CodeSoul-co/THETA},
-  note = {Version 0.3.4}
+  note = {Version 0.3.5}
 }
 ```
 

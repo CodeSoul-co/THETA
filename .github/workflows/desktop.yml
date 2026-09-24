@@ -23,7 +23,7 @@ jobs:
           - { os: macos-14, platform: macos, arch: arm64 }
           - { os: windows-latest, platform: windows, arch: x64 }
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
       NEXT_TELEMETRY_DISABLED: '1'
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
@@ -50,6 +50,11 @@ jobs:
           npm --prefix frontend ci
           npm --prefix desktop ci
           npm --prefix desktop run prepare:python
+          if [ "$RUNNER_OS" = 'Windows' ]; then
+            PYTHONPATH='agent;trainning' desktop/runtime/python/python.exe -m unittest workers.tests.test_compute_device workers.tests.test_execution_policy workers.tests.test_training_progress
+          else
+            PYTHONPATH=agent:trainning desktop/runtime/python/bin/python3 -m unittest workers.tests.test_compute_device workers.tests.test_execution_policy workers.tests.test_training_progress
+          fi
           npm --prefix desktop run prepare:runtime
           npm --prefix desktop test
           npm --prefix desktop run smoke
@@ -73,14 +78,14 @@ jobs:
         run: ./desktop/scripts/check-windows-upgrade.ps1 -Phase download
       - name: Install previous Windows version
         if: ${{ runner.os == 'Windows' && (!inputs.target || inputs.target == 'all' || inputs.target == matrix.platform) }}
-        timeout-minutes: 12
+        timeout-minutes: 25
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: ./desktop/scripts/check-windows-upgrade.ps1 -Phase baseline
       - name: Verify Windows upgrade and data retention
         if: ${{ runner.os == 'Windows' && (!inputs.target || inputs.target == 'all' || inputs.target == matrix.platform) }}
-        timeout-minutes: 12
+        timeout-minutes: 25
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}

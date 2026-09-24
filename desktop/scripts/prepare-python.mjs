@@ -6,10 +6,8 @@ const desktop = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const runtime = path.join(desktop, 'runtime');
 const pythonHome = path.join(runtime, 'python');
 const python = path.join(pythonHome, process.platform === 'win32' ? 'python.exe' : 'bin/python3');
-const packageIndexes = process.platform === 'win32'
-  ? ['--index', 'https://download.pytorch.org/whl/cpu', '--index-strategy', 'unsafe-best-match'] : [];
 function run(command, args, env = {}) {
-  const result = spawnSync(command, args, { cwd: desktop, stdio: 'inherit', env: { ...process.env, ...env } });
+  const result = spawnSync(command, args, { cwd: desktop, stdio: 'inherit', env: { ...process.env, ...(process.platform === 'win32' ? { UV_NO_CACHE: '1' } : {}), ...env } });
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(`${command} exited ${result.status}`);
 }
@@ -22,12 +20,13 @@ if (!existsSync(python)) {
   renameSync(path.join(staging, installation), pythonHome);
   rmSync(staging, { recursive: true, force: true });
 }
-const lock = path.join(desktop, `requirements-${process.platform}-${process.arch}.txt`);
+const lock = path.join(desktop, `requirements-${process.platform}-${process.arch}${process.platform === 'win32' ? '-cu128' : ''}.txt`);
 if (!existsSync(lock)) {
   run('uv', ['pip', 'compile', 'requirements.in', '--python', python, '--output-file', lock, '--custom-compile-command', 'npm run prepare:python',
-    ...packageIndexes]);
+    ...(process.platform === 'win32' ? ['--constraint', 'requirements-windows-gpu.in'] : [])]);
 }
-run('uv', ['pip', 'install', '--python', python, '--system', '--break-system-packages', '--link-mode', 'copy', '-r', lock, ...packageIndexes]);
+run('uv', ['pip', 'install', '--python', python, '--system', '--break-system-packages', '--link-mode', 'copy', '-r', lock]);
+if (process.platform === 'win32') run(python, ['-I', '-c', 'import torch; assert torch.version.cuda == "12.8", "Windows package must include CUDA-enabled PyTorch"; print("Bundled CUDA:", torch.version.cuda)']);
 if (process.platform === 'darwin') run('uvx', ['--from', 'delocate', 'python', 'scripts/repair-macos.py', pythonHome]);
 run(python, ['-I', '-c', 'import sys, ssl, sqlite3, numpy, pandas, scipy, torch, sklearn, gensim, jieba, nltk, transformers; print("Bundled Python:", sys.version, sys.prefix)']);
 const inventory = spawnSync('uv', ['pip', 'freeze', '--python', python], { encoding: 'utf8' });

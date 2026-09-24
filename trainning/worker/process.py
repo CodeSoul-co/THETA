@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Mapping, Sequence, TextIO
 
-from .errors import JobCancelled, RetryableJobError
+from .errors import JobCancelled, RetryableJobError, ProcessExecutionError
 
 
 @dataclass(frozen=True)
@@ -98,7 +98,7 @@ class ProcessRunner:
 
             elapsed = time.monotonic() - start
             if process.returncode != 0:
-                raise RetryableJobError(
+                raise ProcessExecutionError(
                     f"训练进程异常退出（代码 {process.returncode}），请查看执行日志中的具体原因"
                 )
             return ProcessResult(process.returncode, elapsed)

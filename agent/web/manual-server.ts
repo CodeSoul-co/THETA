@@ -254,7 +254,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
           delete params['text.stopwords'];
           if (stopwords) params['text.stopwords'] = stopwords.join('\n');
           if (model === 'theta') Object.assign(params, { mode: input.mode ?? 'zero_shot', model_size: input.model_size ?? '0.6B', embedding_provider: embeddingProvider });
-          const plan: TrainingPlan = { modelId: model, textColumn, params, timeoutSeconds: 43200, device: 'cpu', rationale: '用户在手动工作台明确提交的参数', ...(model === 'theta' && cloud ? { externalRequestLimit } : {}), ...(input.time_column ? { timeColumn: input.time_column } : {}), ...(input.label_column ? { labelColumn: input.label_column } : {}), ...(model === 'stm' ? { covariates: input.meta_columns ?? [] } : {}) };
+          const plan: TrainingPlan = { modelId: model, textColumn, params, timeoutSeconds: 43200, device: process.platform === 'win32' ? 'auto' : 'cpu', rationale: '用户在手动工作台明确提交的参数', ...(model === 'theta' && cloud ? { externalRequestLimit } : {}), ...(input.time_column ? { timeColumn: input.time_column } : {}), ...(input.label_column ? { labelColumn: input.label_column } : {}), ...(model === 'stm' ? { covariates: input.meta_columns ?? [] } : {}) };
           const preview = await worker.call<{ execution: Record<string, unknown>; readiness: { ready: boolean; missing?: unknown } }>('compute.preview', { dataset: file.dataset, plan });
           if (!preview.readiness.ready) throw new HttpError(400, `${model.toUpperCase()} 的本地运行环境或模型权重未就绪，请先配置计算环境。`);
           if ((preview.execution.embedding as RecordValue)?.mode !== (model === 'theta' && cloud ? 'cloud' : 'local')) throw new HttpError(400, '实际嵌入策略与用户选择不一致，请重新确认');

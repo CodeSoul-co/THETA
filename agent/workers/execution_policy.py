@@ -13,6 +13,7 @@ import sys
 import time
 from urllib.parse import urlsplit
 from . import runtime_environments
+from .compute_device import requested_device
 
 
 def embedding_settings(params=None):
@@ -32,8 +33,8 @@ def embedding_settings(params=None):
 
 def execution_policy(plan: dict) -> dict:
     selected = str(plan['params'].get('embedding_provider', 'local'))
-    device = plan.get('device', 'cpu')
-    if device != 'cpu' and not re.fullmatch(r'cuda:[0-9]+', device): raise ValueError('device 必须为 cpu 或 cuda:非负编号')
+    device = requested_device(plan)
+    if device not in {'cpu', 'auto'} and not re.fullmatch(r'cuda:[0-9]+', device): raise ValueError('device 必须为 auto、cpu 或 cuda:非负编号')
     assets = {}
     if plan['params'].get('embedding.model_path'):
         key = ('QWEN_MODEL_' + str(plan['params'].get('model_size', '0.6B')).replace('.', '_')) if plan['modelId'] == 'theta' else 'SBERT_MODEL_PATH'

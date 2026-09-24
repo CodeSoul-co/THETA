@@ -53,7 +53,7 @@ def observe(home, job, updated, now=None):
             for record in records[:-1]:
                 try:
                     event = json.loads(record)
-                    if isinstance(event, dict) and event.get('kind') in {'epoch', 'iteration', 'batch', 'early_stop', 'command', 'visualizing', 'embedding'}:
+                    if isinstance(event, dict) and event.get('kind') in {'epoch', 'iteration', 'batch', 'early_stop', 'command', 'visualizing', 'embedding', 'device'}:
                         events.append(event)
                 except (ValueError, UnicodeDecodeError):
                     pass
@@ -68,6 +68,9 @@ def observe(home, job, updated, now=None):
     result['events'] = events[-200:]
     for event in events:
         kind = event['kind']
+        if kind == 'device':
+            result['computeDevice'] = event['device']
+            continue
         if kind in {'command', 'visualizing'}:
             result.update(iteration=None, detail=None, activity='visualizing' if kind == 'visualizing' and phase == 'training' else None)
         elif phase == 'training' or active and (kind == 'embedding' or kind == 'batch' and event.get('activity')):

@@ -253,7 +253,7 @@ export class LocalProductTools implements ProductToolExecutor {
       ? `\n外部 embedding：${embedding.endpoint}\n外部模型：${embedding.model}\n将发送：选定文本列的全文与派生词表（${preview.rowCount} 行输入）。\n最多 ${preview.execution.maxExternalRequests} 次 HTTP 请求，包括失败请求；没有自动重试。\n费用按供应商计费，当前没有可靠金额报价。`
       : '\nEmbedding 使用本地资源；本操作不授权外部 embedding 或模型下载。';
     return { request, readiness: preview.readiness, ready: remote || preview.readiness.ready,
-      summary: `允许执行这次${remote ? '远端' : `本地 ${run.plan.device ?? 'cpu'}`}计算？\n${this.planSummary(run, dataset)}${remote ? `\n计算端点：${this.backend}\n远端运行资源/费用以已登记 runtime 为准；确认包含该任务的状态查询和结果链接读取。` : ''}${environment}${external}\n这是一次具体操作授权，不授权后续新实验。` };
+      summary: `允许执行这次${remote ? '远端' : `本地 ${run.plan.device ?? (process.platform === 'win32' ? 'auto' : 'cpu')}`}计算？\n${this.planSummary(run, dataset)}${remote ? `\n计算端点：${this.backend}\n远端运行资源/费用以已登记 runtime 为准；确认包含该任务的状态查询和结果链接读取。` : ''}${environment}${external}\n这是一次具体操作授权，不授权后续新实验。` };
   }
   private requestEffect(session: ProductSession, run: ResearchRun, action: string, payload: unknown, summary: string): unknown {
     const approval = this.approvals.request(session.id, { action, target: this.backend, payload, summary });
@@ -420,7 +420,7 @@ export class LocalProductTools implements ProductToolExecutor {
     const durationText = [[Math.floor(seconds / 3600), '小时'], [Math.floor(seconds % 3600 / 60), '分钟'], [seconds % 60, '秒']]
       .filter(([value]) => value).map(([value, unit]) => `${value} ${unit}`).join(' ');
     const duration = remote ? `请求时长：${durationText}；现有远端 API 不接受此上限，实际时限由已登记 runtime 决定。` : `最长运行：${durationText}（上限，不是预计耗时）`;
-    return `研究目标：${run.goal}\n数据：${dataset.fileName}\n模型：${plan.modelId}\n文本列：${plan.textColumn}${plan.timeColumn ? `\n时间列：${plan.timeColumn}` : ''}${plan.labelColumn ? `\n标签列：${plan.labelColumn}` : ''}\n设备：${plan.device ?? 'cpu'}${plan.covariates?.length ? `\n协变量：${plan.covariates.join('、')}` : ''}\n参数：${JSON.stringify(plan.params)}\n理由：${plan.rationale}\n${duration}\n输入将规范化为独立 UTF-8 CSV，原文件保留。`;
+    return `研究目标：${run.goal}\n数据：${dataset.fileName}\n模型：${plan.modelId}\n文本列：${plan.textColumn}${plan.timeColumn ? `\n时间列：${plan.timeColumn}` : ''}${plan.labelColumn ? `\n标签列：${plan.labelColumn}` : ''}\n设备：${plan.device ?? (process.platform === 'win32' ? 'auto' : 'cpu')}${plan.covariates?.length ? `\n协变量：${plan.covariates.join('、')}` : ''}\n参数：${JSON.stringify(plan.params)}\n理由：${plan.rationale}\n${duration}\n输入将规范化为独立 UTF-8 CSV，原文件保留。`;
   }
   /** Read-only observation can run while the conversation holds a session lease. */
   async observeTraining(session: ProductSession) {

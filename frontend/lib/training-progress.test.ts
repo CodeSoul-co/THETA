@@ -15,3 +15,9 @@ test('renders actual epoch and batch values without treating a running batch as 
 test('embedding counts show completed texts, chunks, and batches separately', () => {
   assert.equal(trainingEventText({ id: 1, at: 0, kind: 'embedding', source: 'cloud', scope: 'documents', current: 1, total: 4, chunks: 3, chunkTotal: 8, completedBatches: 2, totalBatches: 5 }), '云端嵌入 · 已完成文本 1/4 · 25% · 已编码文本块 3/8 · 已完成批次 2/5')
 })
+
+test('device events explain automatic CPU fallback', () => {
+  assert.match(trainingEventText({ id: 1, at: 0, kind: 'device', device: 'cuda:0', status: 'selected' }), /NVIDIA GPU/)
+  assert.match(trainingEventText({ id: 2, at: 1, kind: 'device', device: 'cpu', status: 'unavailable' }), /自动使用 CPU/)
+  assert.match(trainingEventText({ id: 3, at: 2, kind: 'device', device: 'cpu', status: 'fallback' }), /回退到 CPU 重新执行/)
+})

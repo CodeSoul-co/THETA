@@ -15,6 +15,17 @@ METRICS = {'loss': 'loss', 'train': 'train_loss', 'train_loss': 'train_loss',
 
 def parse_progress(line):
     line = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', line).strip()
+    if line.startswith('THETA_DEVICE '):
+        try:
+            payload = json.loads(line[len('THETA_DEVICE '):])
+            if payload.get('status') not in {'selected', 'cpu_model', 'unavailable', 'fallback'}:
+                return None
+            device = payload.get('device', '')
+            if device != 'cpu' and not re.fullmatch(r'cuda:[0-9]+', device):
+                return None
+            return {'kind': 'device', 'device': device, 'status': payload['status']}
+        except (ValueError, TypeError, AttributeError):
+            return None
     if line.startswith('THETA_EMBEDDING '):
         try:
             payload = json.loads(line[len('THETA_EMBEDDING '):])

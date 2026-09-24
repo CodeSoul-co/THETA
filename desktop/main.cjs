@@ -283,8 +283,9 @@ async function runSmoke(services) {
   assert.equal(preprocessing.status, 200);
   assert.equal((await preprocessing.json()).managed_by_training, true);
   assert.equal((await get(origin, '/api/backend/api/projects', { headers: { ...headers, origin: 'https://evil.example' } })).status, 403);
-  const inventory = await pythonCall(['-I', '-c', 'import json,sys,sqlite3,ssl,numpy,pandas,scipy,torch,sklearn,gensim,transformers; print(json.dumps({"executable":sys.executable,"prefix":sys.prefix,"version":sys.version.split()[0]}))']);
+  const inventory = await pythonCall(['-I', '-c', 'import json,sys,sqlite3,ssl,numpy,pandas,scipy,torch,sklearn,gensim,transformers; assert (torch.ones((2,2)) @ torch.ones((2,2))).sum().item() == 8; print(json.dumps({"executable":sys.executable,"prefix":sys.prefix,"version":sys.version.split()[0],"cuda":torch.version.cuda}))']);
   const parsed = JSON.parse(inventory);
+  if (process.platform === 'win32') assert.equal(parsed.cuda, '12.8', 'Windows installer must include CUDA support');
   assert.equal(path.resolve(parsed.prefix), path.resolve(runtime, 'python'));
   const model = await get(origin, '/api/backend/api/models/lda');
   assert.equal(model.status, 200);

@@ -3,7 +3,8 @@ export interface TrainingEvent {
   completedBatches?: number; totalBatches?: number; chunks?: number; chunkTotal?: number;
   id: string | number
   at: number | null
-  kind: 'epoch' | 'iteration' | 'batch' | 'embedding' | 'early_stop' | 'command' | 'visualizing'
+  device?: string; status?: string
+  kind: 'device' | 'epoch' | 'iteration' | 'batch' | 'embedding' | 'early_stop' | 'command' | 'visualizing'
   current?: number
   total?: number | null
   stage?: string | null
@@ -13,6 +14,7 @@ export interface TrainingEvent {
 }
 export interface TrainingWorkerState {
   id: string; status: string; phase: string; percent: number
+  computeDevice?: string; gpuFallback?: boolean
   phaseHistory?: { phase: string; at: number }[]
   telemetry?: {
     elapsedSeconds: number | null
@@ -25,6 +27,12 @@ export interface TrainingWorkerState {
 const metricLabels: Record<string, string> = { loss: '损失', train_loss: '训练损失', val_loss: '验证损失', recon_loss: '重构损失', kl_loss: 'KL 损失', perplexity: '困惑度', ce_loss: '分类损失', contrastive_loss: '对比损失' }
 const activityLabels: Record<string, string> = { 'Generating embeddings': '生成嵌入', 'Embedding vocabulary': '词表嵌入', 'Cleaning text': '清理正文', Tokenizing: '分词', BOW: '生成词袋', Batches: '生成嵌入' }
 export function trainingEventText(event: TrainingEvent): string {
+  if (event.kind === 'device') {
+    if (event.status === 'fallback') return 'GPU 计算失败，已回退到 CPU 重新执行；耗时可能增加'
+    if (event.status === 'unavailable') return '未检测到可用的 GPU 计算环境，自动使用 CPU'
+    if (event.status === 'cpu_model') return '当前模型使用 CPU 计算'
+    return event.device?.startsWith('cuda:') ? `使用 NVIDIA GPU（${event.device}）加速计算` : '使用 CPU 计算'
+  }
   const parts: string[] = []
   if (event.kind === 'embedding') {
     parts.push(`${event.source === 'cloud' ? '云端' : '本地'}嵌入`)

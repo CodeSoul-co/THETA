@@ -11,6 +11,7 @@ import json
 import os
 from pathlib import Path
 import sqlite3
+import shutil
 import subprocess
 import sys
 import time
@@ -24,6 +25,7 @@ from .execution_policy import assert_authorized, training_environment
 from .diagnostics import failure_diagnostics
 from .job_observation import observe
 from .progress_events import ProgressRecorder
+from .compute_device import requested_device, resolve_device, device_event
 
 
 @contextmanager
@@ -172,7 +174,7 @@ def run(home: str, job_id: str) -> None:
         from worker.protocol import ExecutionSpec
         from worker.storage import FilesystemObjectStorage
         from worker.errors import JobCancelled
-        from worker.process import ProcessRunner
+        from .gpu_fallback import GPUAwareProcessRunner, GPUExecutionError
 
         plan = payload["plan"]
         root = Path(home).resolve() / "compute" / job_id
@@ -184,7 +186,13 @@ def run(home: str, job_id: str) -> None:
         params = {**plan["params"]}
         if plan["modelId"] == "theta":
             params.setdefault("embedding_provider", "local")
-        gpu = plan.get('device', 'cpu').startswith('cuda:')
+        selected_device, device_status = resolve_device(plan)
+        gpu = selected_device.startswith('cuda:')
+        recorder = ProgressRecorder(root / 'progress.jsonl')
+        recorder(device_event(selected_device, device_status))
+        update(home, job_id, computeDevice=selected_device)
+        if cancelled(home, job_id):
+            raise JobCancelled('用户已取消训练')
         spec = ExecutionSpec.from_dict({
             "schema_version": 2, "type": "job.ready", "event_id": job_id,
             "task_id": int(job_id[4:16], 16) + 1, "attempt": 1, "task_version": 1,
@@ -199,12 +207,13 @@ def run(home: str, job_id: str) -> None:
             "output_prefix": job_id + "/", "created_at": datetime.now(timezone.utc).isoformat(),
         })
         config = replace(WorkerConfig.load(), project_root=engine_root(), job_root=root / "jobs",
-                         python_executable=sys.executable, resource_class="gpu" if plan.get("device", "cpu").startswith("cuda:") else "cpu", gpu_id=int(plan["device"].split(":")[1]) if plan.get("device", "cpu").startswith("cuda:") else None,
+                         python_executable=sys.executable, resource_class="gpu" if gpu else "cpu", gpu_id=int(selected_device.split(":")[1]) if gpu else None,
                          keep_job_dir=True, heartbeat_interval_seconds=2)
-        environment = training_environment(payload['execution'])
+        environment = training_environment({**payload['execution'], 'device': selected_device})
+        environment['THETA_COMPUTE_DEVICE'] = selected_device
         environment.update({'THETA_PROJECT_ROOT': str(engine_root()), 'THETA_COMPUTE_DATABASE': str(Path(home).resolve() / 'compute.sqlite'), 'THETA_COMPUTE_JOB_ID': job_id})
 
-        class ApprovedProcessRunner(ProcessRunner):
+        class ApprovedProcessRunner(GPUAwareProcessRunner):
             def run(self, **kwargs):
                 command = list(kwargs['command'])
                 kwargs['command'] = [command[0], str(Path(__file__).with_name('engine_entry.py')), *command[1:]]
@@ -220,17 +229,39 @@ def run(home: str, job_id: str) -> None:
                 kwargs['env'] = child_env
                 return super().run(**kwargs)
 
-        pipeline = AgentThetaPipeline(config, FilesystemObjectStorage(objects), ApprovedProcessRunner(on_output=ProgressRecorder(root / "progress.jsonl")))
-        pipeline.plan = plan
-        result = pipeline.execute(spec, lambda: cancelled(home, job_id),
-                                  lambda phase, percent, message: update(home, job_id, phase=phase, percent=percent, message=message))
+        started = time.monotonic()
+        deadline = started + plan['timeoutSeconds']
+        progress = lambda phase, percent, message: update(home, job_id, phase=phase, percent=percent, message=message)
+        for attempt in range(2):
+            pipeline = AgentThetaPipeline(config, FilesystemObjectStorage(objects), ApprovedProcessRunner(on_output=recorder))
+            pipeline.plan = plan
+            try:
+                result = pipeline.execute(spec, lambda: cancelled(home, job_id), progress)
+                break
+            except GPUExecutionError as exc:
+                # Explicit CUDA requests, data errors, timeouts and cancellation are never retried.
+                if attempt or requested_device(plan) != 'auto' or not gpu or cancelled(home, job_id):
+                    raise
+                remaining = int(deadline - time.monotonic())
+                if remaining <= 0:
+                    raise
+                # Recreate only this job's disposable workspace. Keep the failed log and
+                # progress journal, and keep the original approval/request budget unchanged.
+                shutil.copy2(exc.log_path, root / 'gpu-attempt.log')
+                recorder(device_event('cpu', 'fallback'))
+                update(home, job_id, computeDevice='cpu', gpuFallback=True,
+                       message='GPU 计算失败，正在使用 CPU 重新执行；耗时可能增加')
+                gpu = False
+                config = replace(config, resource_class='cpu', gpu_id=None)
+                spec = replace(spec, resources=replace(spec.resources, accelerator='none', gpu_count=0, timeout_seconds=remaining))
+                environment.update({'CUDA_VISIBLE_DEVICES': '', 'THETA_COMPUTE_DEVICE': 'cpu'})
         if cancelled(home, job_id):
             raise JobCancelled("用户已取消训练")
         digest = tree_hash(result.result_dir)
         update(home, job_id, status="completed", phase="completed", percent=100,
                resultDir=str(result.result_dir), resultHash=digest,
                sourceHash=payload["dataset"]["sha256"], preparedHash=spec.dataset.sha256,
-               plan=plan, elapsedSeconds=result.elapsed_seconds)
+               plan=plan, elapsedSeconds=time.monotonic() - started)
     except Exception as exc:
         is_cancel = cancelled(home, job_id)
         reason = str(exc)[-3000:]

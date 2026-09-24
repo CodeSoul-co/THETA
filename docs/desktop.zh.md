@@ -2,11 +2,19 @@
 
 [English](desktop.md) | **中文**
 
-桌面版复用 CLI Agent、网页工作台与 Python 计算引擎，提供对话和手动两种模式。安装包内置 Python 3.12 与 CPU 计算依赖，用户无需安装 Python、Node.js 或 Conda。模型权重不在安装包内。
+桌面版复用 CLI Agent、网页工作台与 Python 计算引擎，提供对话和手动两种模式。安装包内置 Python 3.12 与计算依赖，用户无需安装 Python、Node.js 或 Conda。模型权重不在安装包内。
+
+## Windows 显卡加速
+
+Windows 的本地训练与嵌入默认自动选择计算设备。安装包内置支持 CUDA 12.8 的 PyTorch；兼容的 NVIDIA 显卡及驱动可启用加速，无需另装 Python 或 CUDA Toolkit。本版本中 AMD、Intel 显卡及不兼容的 NVIDIA 设备使用 CPU；macOS 继续使用 CPU。
+
+训练前会实际测试 GPU 分配和运算，测试失败则直接使用 CPU。自动模式下，如果 GPU 运行时出现 CUDA 错误（包括显存不足），会保留失败日志，清理本任务的临时结果，并在 CPU 上重新执行一次。原有时间上限、取消请求和云端请求预算仍然有效；数据错误及超时不会触发重跑。执行日志会显示所用设备和回退情况，重新执行可能需要更长时间。
+
+LDA、BTM、HDP、STM 继续使用已有 CPU 实现。CLI Agent 方案支持 `device: "auto"`、`"cpu"` 或 `"cuda:0"`，显式指定的设备会被保留。GPU 支持会增加 Windows 安装体积；神经模型权重仍需另行提供。
 
 ## 使用
 
-首版构建目标为 **macOS Apple Silicon（arm64）** 和 **Windows x64**。从 [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.4) 下载：Mac 使用 `THETA-0.3.4-mac-arm64.dmg`，Windows 使用 `THETA-0.3.4-win-x64.exe`。Mac 打开 DMG 后将 THETA 拖入「应用程序」；Windows 运行 EXE 安装程序。当前为未正式签名／公证的预览版，系统可能显示安全提示。暂不提供 Intel Mac 或 Windows ARM 原生版本。
+首版构建目标为 **macOS Apple Silicon（arm64）** 和 **Windows x64**。从 [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.5) 下载：Mac 使用 `THETA-0.3.5-mac-arm64.dmg`，Windows 使用 `THETA-0.3.5-win-x64.exe`。Mac 打开 DMG 后将 THETA 拖入「应用程序」；Windows 运行 EXE 安装程序。当前为未正式签名／公证的预览版，系统可能显示安全提示。暂不提供 Intel Mac 或 Windows ARM 原生版本。
 
 发行页提供 `SHA256SUMS.txt`，用于核对下载文件完整性。macOS 可运行 `shasum -a 256 文件名.dmg`；Windows PowerShell 可运行 `Get-FileHash 文件名.exe -Algorithm SHA256`，与校验文件对应行比较。
 
@@ -53,7 +61,7 @@ npm --prefix desktop run start
 npm --prefix desktop run dist
 ```
 
-`prepare:python` 下载独立 Python，生成／使用平台依赖锁并安装全部 CPU 计算依赖；macOS 会检查和修复原生库路径。不会下载模型权重。安装环境需要数 GB 磁盘空间，构建机还需预留打包临时空间。
+`prepare:python` 下载独立 Python，生成／使用平台依赖锁并安装平台计算依赖；macOS 会检查和修复原生库路径。不会下载模型权重。安装环境需要数 GB 磁盘空间，构建机还需预留打包临时空间。
 
 `prepare:runtime` 编译 Agent 与 Next.js standalone，并只复制运行需要的引擎、配置模板及技能。不会复制本地私密环境文件、上传数据、训练结果或模型目录。
 

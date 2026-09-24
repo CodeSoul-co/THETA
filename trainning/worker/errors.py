@@ -10,6 +10,10 @@ class RetryableJobError(WorkerError):
     """The task may succeed when retried on another attempt or Worker."""
 
 
+class ProcessExecutionError(RetryableJobError):
+    """A child finished with a nonzero exit code (not a timeout or cancellation)."""
+
+
 class JobCancelled(WorkerError):
     """The control plane requested cancellation."""
 

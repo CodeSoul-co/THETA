@@ -2,6 +2,7 @@
 import functools
 import importlib
 import inspect
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -52,7 +53,7 @@ def install(plan, script, root):
         values = scoped(params, 'trainer')
         if values: setattr(trainer.BaselineTrainer, method, override(getattr(trainer.BaselineTrainer, method), values))
         # CUDA_VISIBLE_DEVICES maps the requested physical GPU to local cuda:0.
-        trainer.BaselineTrainer.__init__ = override(trainer.BaselineTrainer.__init__, {'device': 'cuda:0' if plan.get('device', 'cpu').startswith('cuda:') else 'cpu'})
+        trainer.BaselineTrainer.__init__ = override(trainer.BaselineTrainer.__init__, {'device': 'cuda:0' if os.environ.get('THETA_COMPUTE_DEVICE', plan.get('device', 'cpu')).startswith('cuda:') else 'cpu'})
         values = scoped(params, 'word2vec')
         if values: trainer.train_word2vec_embeddings = override(trainer.train_word2vec_embeddings, values)
     if script.name == 'main.py':
@@ -61,6 +62,9 @@ def install(plan, script, root):
         @functools.wraps(original)
         def configure(args):
             result = original(args)
+            effective_device = os.environ.get('THETA_COMPUTE_DEVICE')
+            if effective_device:
+                result.device = 'cuda' if effective_device.startswith('cuda:') else 'cpu'
             if 'pipeline.seed' in params: result.seed = params['pipeline.seed']
             for name, value in scoped(params, 'config').items(): setattr(result.model, name, value)
             # Preserve explicitly approved zero values despite the legacy parser's `or default` resolution.

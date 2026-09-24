@@ -2,16 +2,24 @@
 
 **English** | [中文](desktop.zh.md)
 
-The desktop app combines the CLI Agent, Web workbench, and Python compute engine. It offers conversation and manual modes. Python 3.12 and CPU compute dependencies are bundled; Python, Node.js, and Conda do not need to be installed separately. Model weights are not included.
+The desktop app combines the CLI Agent, Web workbench, and Python compute engine. It offers conversation and manual modes. Python 3.12 and compute dependencies are bundled; Python, Node.js, and Conda do not need to be installed separately. Model weights are not included.
+
+## Windows GPU acceleration
+
+Windows defaults to automatic device selection for local training and embeddings. The installer includes CUDA 12.8-enabled PyTorch; a compatible NVIDIA GPU and driver are required for acceleration. A separate Python or CUDA Toolkit installation is not required. AMD/Intel GPUs and incompatible NVIDIA devices use CPU in this version. macOS continues to use CPU.
+
+THETA tests a real GPU allocation and operation before training. If the probe fails, it uses CPU immediately. If a CUDA error occurs during an automatic GPU run (including insufficient GPU memory), THETA preserves the failed log and restarts the analysis once on CPU in a clean workspace. The original time limit, cancellation and cloud request budget remain in force. Data errors and timeouts are not retried. Execution logs show the selected device and any fallback; a restarted analysis can take longer.
+
+LDA, BTM, HDP and STM use their existing CPU implementations. CLI Agent plans accept `device: "auto"`, `"cpu"`, or `"cuda:0"`; an explicit selection is respected. GPU support increases the Windows installation size. Neural model weights still need to be provided separately.
 
 ## Download and install
 
-Download from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.4):
+Download from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.5):
 
 | Platform | Installer | Installation |
 | --- | --- | --- |
-| macOS Apple Silicon | `THETA-0.3.4-mac-arm64.dmg` | Open the DMG and drag THETA into Applications |
-| Windows x64 | `THETA-0.3.4-win-x64.exe` | Run the installer |
+| macOS Apple Silicon | `THETA-0.3.5-mac-arm64.dmg` | Open the DMG and drag THETA into Applications |
+| Windows x64 | `THETA-0.3.5-win-x64.exe` | Run the installer |
 
 This is an unsigned preview without macOS notarization. Your operating system may show a security warning. Native Intel Mac and Windows ARM installers are not provided.
 
@@ -62,7 +70,7 @@ npm --prefix desktop run start
 npm --prefix desktop run dist
 ```
 
-`prepare:python` installs standalone Python and CPU dependencies from platform locks. On macOS it repairs native-library paths. It does not download model weights. Allow several GB for the environment and additional space for packaging.
+`prepare:python` installs standalone Python and platform compute dependencies from platform locks. On macOS it repairs native-library paths. It does not download model weights. Allow several GB for the environment and additional space for packaging.
 
 `prepare:runtime` compiles the Agent and Next.js standalone app, copying only required engine files, templates, and skills. Private configuration, user data, training results, and model directories are excluded.
 
