@@ -5,18 +5,14 @@ import { OPEN_SOURCE_EDITION } from '@/lib/edition'
 import type React from "react"
 import { toast } from "sonner"
 import { useState, useEffect, useCallback, useRef } from "react"
-import dynamic from "next/dynamic"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
   Play,
-  Sparkles,
   BrainCircuit,
   MessageSquare,
-  Paperclip,
-  Send,
   CheckCircle2,
   Eye,
   EyeOff,
@@ -24,17 +20,11 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
-  FileSpreadsheet,
-  MessageCircle,
-  BarChart3,
-  FileDown,
   Shield,
   Globe,
   FileText,
   Minus,
   Plus,
-  Infinity,
-  Zap,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -44,44 +34,10 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/contexts/auth-context"
-import { ETMAgentAPI } from "@/lib/api/etm-agent"
-import type { ChatMessage } from "@/components/chat/ai-sidebar"
-import { TypingMessage } from "@/components/typing-message"
 import { useCyclingTypewriter } from "@/hooks/use-cycling-typewriter"
+import { ProductScreenshot } from "@/components/landing/product-screenshot"
 import { ParticlesBg } from "@/components/particles-bg"
 import { isThetaPasswordValid, normalizeThetaPasswordInput, THETA_PASSWORD_POLICY_MESSAGE } from "@/lib/auth/password-policy"
-
-const LandingTrendChart = dynamic(
-  () => import("@/components/landing/landing-trend-chart").then((module) => module.LandingTrendChart),
-  {
-    ssr: false,
-    loading: () => <div className="h-full w-full animate-pulse rounded-lg bg-slate-100" aria-hidden />,
-  },
-)
-
-function getTimestamp() {
-  return new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })
-}
-function generateId() {
-  return `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-}
-
-function formatFileSize(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
-}
-
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result || ""))
-    reader.onerror = () => reject(reader.error)
-    reader.readAsDataURL(file)
-  })
-}
-
-const LANDING_GREETING = "您好！我已经准备好分析您的数据。请上传文件或直接提问。"
 
 /** 首页标题下打字机循环展示的平台功能文案（每条不同，轮流出现） */
 const HERO_TYPEWRITER_PHRASES = [
@@ -95,32 +51,12 @@ const HERO_TYPEWRITER_PHRASES = [
   "深度主题发现与词云展示",
 ]
 
-/** 使用教程四步：图+文同步切换 */
+/** 产品实拍：从数据导入到结果导出。 */
 const HOW_IT_WORKS_STEPS = [
-  {
-    title: "多源数据，一键清洗",
-    titleEn: "Data Ingestion",
-    text: "支持拖拽上传 Excel、CSV、PDF 及 JSONL 等多格式文件。系统将自动识别字段并完成智能清洗，让繁琐的数据预处理一步到位。",
-    icon: FileSpreadsheet,
-  },
-  {
-    title: "自然语言，对话分析",
-    titleEn: "Interactive Analysis",
-    text: "无需编程，对话即分析。只需用自然语言提问（如「分析近三个月负面情绪的主题」），AI 即可实时解析数据并生成可视化的深度洞察。",
-    icon: MessageCircle,
-  },
-  {
-    title: "图表交互，深挖归因",
-    titleEn: "Drill-down Insight",
-    text: "图表即入口，点击即可追溯原因。发现数据异常或波峰？直接点击图表上的关键点，AI 将自动定位原始文本，并解读数据波动背后的具体成因。",
-    icon: BarChart3,
-  },
-  {
-    title: "学术级报告，一键导出",
-    titleEn: "Export & Reporting",
-    text: "支持下载高清矢量图与完整分析文档。输出格式符合学术出版标准，无缝衔接您的论文撰写或行业研报制作。",
-    icon: FileDown,
-  },
+  { title: "导入数据，确认分析内容", text: "上传表格后选择正文与元数据列；文本、PDF 和 Word 文档直接读取正文。开始前先预览数据，确认本次分析的内容。", image: "data", alt: "数据预览与分析列选择" },
+  { title: "选择模型，设置分析参数", text: "在手动模式中选择主题模型、主题数和训练参数。需要嵌入的模型可配置本地模型，或使用自己填写的云端接口。", image: "models", alt: "主题模型与训练参数配置" },
+  { title: "查看结果，继续追问", text: "查看主题关键词、分布和可视化结果。将图表引用到右侧猫咪科学家，配置自己的模型 API 后继续咨询与解读。", image: "results", alt: "主题模型的真实可视化结果" },
+  { title: "导出图表与研究产物", text: "下载当前模型的完整结果包，也可按需导出图表、绘图数据与训练产物，继续完成论文或研究报告。", image: "export", alt: "模型结果与文件导出" },
 ]
 
 /** 场景化分析实验室：上三下二 */
@@ -159,13 +95,6 @@ const SCENARIO_LAB_ROW2 = [
   },
 ]
 
-/** 价格方案：三档（占位，可按需改价格） */
-const PRICING_PLANS = [
-  { name: "入门", desc: "个人课程作业", priceMonth: 0, priceYear: 0, features: ["小规模数据", "基础分析"], recommended: false },
-  { name: "专业", desc: "科研与项目", priceMonth: 99, priceYear: 999, features: ["大规模数据", "完整功能", "优先支持"], recommended: true },
-  { name: "企业", desc: "团队与定制", priceMonth: 299, priceYear: 2999, features: ["私有部署", "定制模型", "专属客服"], recommended: false },
-]
-
 /** FAQ 问答 */
 const FAQ_ITEMS = [
   {
@@ -174,7 +103,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "我的数据安全吗？会被用于训练 AI 吗？",
-    a: "这是我们最重视的原则。我们遵循严格的数据隐私协议（GDPR Compliant）。您上传的数据经过加密处理，仅供您当次分析使用，分析结束后数据支持一键销毁。我们承诺：绝不会将您的私有数据用于训练公共模型或分享给第三方。",
+    a: "本地版将项目数据与结果保存在你的电脑上。使用本地模型时，计算在本机完成；使用云端嵌入或对话 API 时，相关内容会发送给你配置的服务，请按数据要求选择使用方式。",
   },
   {
     q: "生成图表可以直接用于论文发表吗？",
@@ -241,14 +170,7 @@ export default function LandingPage() {
       return () => clearTimeout(timer)
     }
   }, [resetCountdown])
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
-  const [chatInputValue, setChatInputValue] = useState("")
-  const [landingAttachments, setLandingAttachments] = useState<File[]>([])
-  const [isAiLoading, setIsAiLoading] = useState(false)
-  const chatCardRef = useRef<HTMLDivElement>(null)
-  const landingFileInputRef = useRef<HTMLInputElement>(null)
   const [howItWorksStep, setHowItWorksStep] = useState(0)
-  const [pricingMode, setPricingMode] = useState<"per-use" | "monthly" | "yearly">("per-use")
   const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(null)
   const [showCiteModal, setShowCiteModal] = useState(false)
   const mouseGlowRef = useRef<HTMLDivElement>(null)
@@ -266,7 +188,6 @@ export default function LandingPage() {
   }, [])
 
   const howItWorksCurrent = HOW_IT_WORKS_STEPS[howItWorksStep]
-  const HowItWorksStepIcon = howItWorksCurrent.icon
 
   const { displayedText: typewriterText } = useCyclingTypewriter({
     phrases: HERO_TYPEWRITER_PHRASES,
@@ -537,150 +458,6 @@ export default function LandingPage() {
     }
   }
 
-  const handleLandingFileInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || [])
-    if (files.length > 0) {
-      setLandingAttachments((prev) => [...prev, ...files])
-    }
-    event.target.value = ""
-  }, [])
-
-  const removeLandingAttachment = useCallback((index: number) => {
-    setLandingAttachments((prev) => prev.filter((_, i) => i !== index))
-  }, [])
-
-  // 与 dashboard 一致的对话：真实 Qwen 接口 + 流式打字机效果
-  const handleLandingChatSend = useCallback(async (content: string) => {
-    const attachments = landingAttachments
-    const trimmedContent = content.trim()
-    if ((!trimmedContent && attachments.length === 0) || isAiLoading) return
-
-    const attachmentSummary = attachments
-      .map((file) => `- ${file.name} (${formatFileSize(file.size)})`)
-      .join("\n")
-    const messageContent = `${trimmedContent || "请分析我上传的文件"}${attachmentSummary ? `\n\n已附加文件：\n${attachmentSummary}` : ""}`
-    const userMessage: ChatMessage = {
-      id: generateId(),
-      role: "user",
-      content: messageContent,
-      type: "text",
-      timestamp: getTimestamp(),
-    }
-    setChatHistory((prev) => [...prev, userMessage])
-    setChatInputValue("")
-    setLandingAttachments([])
-    setIsAiLoading(true)
-
-    // 创建空的 AI 消息，准备流式接收
-    const aiMessageId = generateId()
-    const aiMessage: ChatMessage = {
-      id: aiMessageId,
-      role: "ai",
-      content: "",
-      type: "text",
-      timestamp: getTimestamp(),
-    }
-    setChatHistory((prev) => [...prev, aiMessage])
-
-    try {
-      const payloads = await Promise.all(
-        attachments.map(async (file) => ({
-          name: file.name,
-          mimeType: file.type || "application/octet-stream",
-          size: file.size,
-          dataUrl: await fileToDataUrl(file),
-        }))
-      )
-      const images = payloads.filter((file) => file.mimeType.startsWith("image/"))
-      const files = payloads.filter((file) => !file.mimeType.startsWith("image/"))
-
-      // 使用流式 API 逐步接收
-      let fullText = ""
-      for await (const chunk of ETMAgentAPI.chatStream(messageContent, "landing-session", {
-        current_page: "landing",
-        current_view_name: "首页",
-        current_view: "landing",
-        app_state: "idle",
-        datasets_count: 0,
-        datasets: [],
-      }, images, files)) {
-        if (chunk.type === "content" && chunk.content) {
-          fullText += chunk.content
-          // 更新消息内容，TypingMessage 会自动逐字显示
-          setChatHistory((prev) =>
-            prev.map(msg =>
-              msg.id === aiMessageId
-                ? { ...msg, content: fullText }
-                : msg
-            )
-          )
-        }
-      }
-      if (!fullText.trim()) {
-        const response = await ETMAgentAPI.chat(messageContent, {
-          current_page: "landing",
-          current_view_name: "首页",
-          current_view: "landing",
-          app_state: "idle",
-          datasets_count: 0,
-          datasets: [],
-        }, { sessionId: "landing-session", images, files })
-        const text = response.message ?? (response as { response?: string }).response ?? "暂时无法连接 AI 服务，请稍后再试。"
-        setChatHistory((prev) =>
-          prev.map(msg =>
-            msg.id === aiMessageId
-              ? { ...msg, content: text }
-              : msg
-          )
-        )
-      }
-    } catch {
-      // 流式失败，回退到完整请求
-      try {
-        const payloads = await Promise.all(
-          attachments.map(async (file) => ({
-            name: file.name,
-            mimeType: file.type || "application/octet-stream",
-            size: file.size,
-            dataUrl: await fileToDataUrl(file),
-          }))
-        )
-        const images = payloads.filter((file) => file.mimeType.startsWith("image/"))
-        const files = payloads.filter((file) => !file.mimeType.startsWith("image/"))
-        const response = await ETMAgentAPI.chat(messageContent, {
-          current_page: "landing",
-          current_view_name: "首页",
-          current_view: "landing",
-          app_state: "idle",
-          datasets_count: 0,
-          datasets: [],
-        }, { sessionId: "landing-session", images, files })
-        const text = response.message ?? (response as { response?: string }).response ?? ""
-        setChatHistory((prev) =>
-          prev.map(msg =>
-            msg.id === aiMessageId
-              ? { ...msg, content: text }
-              : msg
-          )
-        )
-      } catch {
-        setChatHistory((prev) =>
-          prev.map(msg =>
-            msg.id === aiMessageId
-              ? { ...msg, content: "无法连接服务，请稍后重试或登录后使用完整功能。" }
-              : msg
-          )
-        )
-      }
-    } finally {
-      setIsAiLoading(false)
-    }
-  }, [isAiLoading, landingAttachments])
-
-  const lastAiMessageId = chatHistory.length > 0
-    ? [...chatHistory].reverse().find((m) => m.role === "ai")?.id
-    : undefined
-
   return (
     <div
       className="min-h-screen relative"
@@ -858,16 +635,17 @@ export default function LandingPage() {
                   variant="outline"
                   size="lg"
                   className="border-slate-200 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/50 px-6 sm:px-8 py-3.5 sm:py-4 text-sm font-medium rounded-xl bg-white/80"
+                  onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
                 >
                   <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  观看演示
+                  查看使用流程
                 </Button>
               </div>
               <div className="flex items-center gap-8 sm:gap-10 mt-6 pt-5 border-t border-slate-200/80">
                 {[
-                  { value: "10K+", label: "研究者信赖" },
-                  { value: "500+", label: "分析模型" },
-                  { value: "99.2%", label: "准确率" },
+                  { value: "Web", label: "浏览器工作台" },
+                  { value: "CLI", label: "命令行 Agent" },
+                  { value: "桌面端", label: "macOS 与 Windows" },
                 ].map((stat) => (
                   <div key={stat.label}>
                     <p className="stat-value text-lg sm:text-xl text-blue-600">{stat.value}</p>
@@ -877,203 +655,9 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            {/* Right Column - AI 对话框：固定宽高，发消息前后窗口尺寸不变 */}
-            <motion.div
-              ref={chatCardRef}
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative flex justify-end items-center min-h-0"
-            >
-              <div className="w-[560px] h-[540px] shrink-0 flex flex-col bg-white rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-200/90 overflow-hidden max-w-[calc(100vw-2rem)] max-h-[min(540px,65vh)]">
-                  {/* Chat Header */}
-                  <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 bg-slate-50/60 shrink-0">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl overflow-hidden shadow-sm flex items-center justify-center bg-slate-100/50">
-                        <img src="/ai-avatar.png" alt="猫咪科学家" className="w-[180%] h-[180%] object-contain scale-75" />
-                      </div>
-                      <span className="font-semibold text-slate-800 tracking-tight">猫咪科学家</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-xs text-slate-500 font-medium">在线</span>
-                    </div>
-                  </div>
-
-                  {/* Chat Body - 填满剩余高度，内容可滚动 */}
-                  <div className="p-3 space-y-2 bg-white flex-1 min-h-0 overflow-y-auto">
-                    {chatHistory.length === 0 ? (
-                      <>
-                        {/* 使用样例：AI 欢迎语 */}
-                        <div className="flex gap-3">
-                          <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-slate-100/50">
-                            <img src="/ai-avatar.png" alt="" className="w-[140%] h-[140%] object-contain scale-75" aria-hidden />
-                          </div>
-                          <div className="bg-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%]">
-                            <p className="text-sm text-slate-700 leading-relaxed">{LANDING_GREETING}</p>
-                          </div>
-                        </div>
-                        {/* 使用样例：用户提问 */}
-                        <div className="flex justify-end">
-                          <div className="bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%]">
-                            <p className="text-sm leading-relaxed">
-                              帮我分析一下近三个月用户评论的情绪趋势，重点关注负面反馈。
-                            </p>
-                          </div>
-                        </div>
-                        {/* 使用样例：AI 回复（含情绪趋势图） */}
-                        <div className="flex gap-3">
-                          <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-slate-100/50">
-                            <img src="/ai-avatar.png" alt="" className="w-[140%] h-[140%] object-contain scale-75" aria-hidden />
-                          </div>
-                          <div className="bg-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] space-y-3">
-                            <p className="text-xs text-slate-500 flex items-center gap-2">
-                              <CheckCircle2 className="w-3 h-3 text-green-500" />
-                              {"正在分析 '2024Q1_评论数据.csv'..."}
-                            </p>
-                            <p className="text-sm text-slate-700 leading-relaxed">
-                              分析完成。数据显示，3月份负面情绪略有上升（环比+4.2%），主要集中在"物流配送"和"售后响应"两个主题上。
-                            </p>
-                            <div className="bg-white rounded-xl p-2 border border-slate-200">
-                              <p className="text-xs font-medium text-slate-600 mb-1">情绪趋势分析</p>
-                              <div className="h-20">
-                                <LandingTrendChart />
-                              </div>
-                              <div className="flex items-center justify-center gap-3 mt-1">
-                                <span className="flex items-center gap-1.5 text-xs text-slate-500">
-                                  <span className="w-2 h-2 rounded-full bg-green-500" />
-                                  正面情绪
-                                </span>
-                                <span className="flex items-center gap-1.5 text-xs text-slate-500">
-                                  <span className="w-2 h-2 rounded-full bg-red-500" />
-                                  负面情绪
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      chatHistory.map((msg) => {
-                        const isUser = msg.role === "user"
-                        const isLatestAi = msg.role === "ai" && msg.id === lastAiMessageId && msg.type === "text"
-                        return (
-                          <div
-                            key={msg.id}
-                            className={isUser ? "flex justify-end" : "flex gap-3"}
-                          >
-                            {!isUser && (
-                              <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-slate-100/50">
-                                <img src="/ai-avatar.png" alt="" className="w-[140%] h-[140%] object-contain scale-75" aria-hidden />
-                              </div>
-                            )}
-                            <div
-                              className={
-                                isUser
-                                  ? "bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%]"
-                                  : "bg-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%]"
-                              }
-                            >
-                              {isLatestAi ? (
-                                <TypingMessage
-                                  content={msg.content}
-                                  isLatest={true}
-                                  className="text-slate-700 text-sm"
-                                  speed={40}
-                                />
-                              ) : (
-                                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>
-                              )}
-                            </div>
-                          </div>
-                        )
-                      })
-                    )}
-                    {isAiLoading && (
-                      <div className="flex gap-3">
-                        <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-slate-100/50">
-                          <img src="/ai-avatar.png" alt="" className="w-[140%] h-[140%] object-contain scale-75" aria-hidden />
-                        </div>
-                        <div className="bg-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] flex items-center gap-2">
-                          <Loader2 className="w-4 h-4 animate-spin text-slate-500" />
-                          <span className="text-sm text-slate-500">正在思考...</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Chat Input Footer - 真实输入与发送 */}
-                  <div className="px-3 py-2 border-t border-slate-100 bg-slate-50/50 shrink-0">
-                    {landingAttachments.length > 0 && (
-                      <div className="mb-2 flex flex-wrap gap-1.5">
-                        {landingAttachments.map((file, index) => (
-                          <span
-                            key={`${file.name}-${file.size}-${index}`}
-                            className="inline-flex max-w-full items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2 py-1 text-xs text-blue-700"
-                          >
-                            <FileText className="h-3 w-3 shrink-0" />
-                            <span className="max-w-[160px] truncate">{file.name}</span>
-                            <button
-                              type="button"
-                              onClick={() => removeLandingAttachment(index)}
-                              className="ml-1 rounded-full px-1 text-blue-500 hover:bg-blue-100 hover:text-blue-700"
-                              aria-label={`移除 ${file.name}`}
-                              disabled={isAiLoading}
-                            >
-                              ×
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-blue-200 focus-within:border-blue-300">
-                      <input
-                        ref={landingFileInputRef}
-                        type="file"
-                        multiple
-                        className="hidden"
-                        accept=".csv,.txt,.md,.json,.jsonl,.doc,.docx,.pdf,.xls,.xlsx,.png,.jpg,.jpeg,.webp"
-                        onChange={handleLandingFileInputChange}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => landingFileInputRef.current?.click()}
-                        disabled={isAiLoading}
-                        className="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
-                        title="添加文件"
-                        aria-label="添加文件"
-                      >
-                        <Paperclip className="w-4 h-4" />
-                      </button>
-                      <input
-                        type="text"
-                        value={chatInputValue}
-                        onChange={(e) => setChatInputValue(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault()
-                            handleLandingChatSend(chatInputValue)
-                          }
-                        }}
-                        placeholder="输入您的分析指令..."
-                        className="flex-1 min-w-0 bg-transparent text-sm text-slate-900 placeholder:text-slate-400 outline-none"
-                        disabled={isAiLoading}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleLandingChatSend(chatInputValue)}
-                        disabled={(!chatInputValue.trim() && landingAttachments.length === 0) || isAiLoading}
-                        className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-                      >
-                        <Send className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-              {/* Floating decoration */}
-              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-blue-100/50 rounded-full blur-2xl -z-10" />
-              <div className="absolute -top-4 -left-4 w-16 h-16 bg-indigo-100/50 rounded-full blur-xl -z-10" />
+            <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="min-w-0 self-center">
+              <ProductScreenshot name="results" alt="THETA 手动工作台 · 城市公共服务反馈分析" priority />
+              <p className="mt-4 text-center text-xs text-slate-500">真实产品界面 · 从主题发现到图表导出</p>
             </motion.div>
           </div>
         </div>
@@ -1105,7 +689,7 @@ export default function LandingPage() {
           </p>
         </motion.div>
 
-        {/* 模块一：全栈式主题建模 - 左文案 | 右概念图 */}
+        {/* 模块一：全栈式主题建模 - 左文案 | 右实拍 */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -1117,44 +701,28 @@ export default function LandingPage() {
             <p className="text-slate-600 leading-[1.7] mb-4">
               不再受限于单一模型。Theta 集成了从经典统计学到最新深度学习的完整算法库，灵活适配短文本、长文档及动态演化数据，满足多元化的研究目标。
             </p>
-            <p className="text-xs text-slate-500">LDA · ETM · CTM · DTM · <strong className="text-blue-600">BERTopic</strong> · <strong className="text-blue-600">LLM-Topic</strong></p>
+            <p className="text-xs text-slate-500">LDA · ETM · CTM · DTM · <strong className="text-blue-600">BERTopic</strong> · <strong className="text-blue-600">THETA</strong></p>
           </div>
-          <div className="relative rounded-2xl border border-slate-200/90 bg-gradient-to-br from-slate-50 to-blue-50/30 aspect-video overflow-hidden min-h-[200px]">
-            <Image
-              src="/1.png"
-              alt="全栈式主题建模"
-              fill
-              sizes="(min-width: 1024px) 50vw, 100vw"
-              className="object-cover"
-            />
-          </div>
+          <div><ProductScreenshot name="models" alt="主题模型与参数配置" /></div>
         </motion.div>
 
-        {/* 模块二：云端即时数据处理 - 左概念图 | 右文案 */}
+        {/* 模块二：本地分析，进度可见 - 左实拍 | 右文案 */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center mb-16 sm:mb-20"
         >
-          <div className="relative order-2 lg:order-1 rounded-2xl border border-slate-200/90 bg-gradient-to-br from-blue-50/50 to-slate-50 aspect-video overflow-hidden min-h-[200px]">
-            <Image
-              src="/2.png"
-              alt="云端即时数据处理"
-              fill
-              sizes="(min-width: 1024px) 50vw, 100vw"
-              className="object-cover"
-            />
-          </div>
+          <div className="order-2 lg:order-1"><ProductScreenshot name="training" alt="训练执行日志与实时进度" /></div>
           <div className="order-1 lg:order-2">
-            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-4">云端即时数据处理</h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-4">本地分析，进度可见</h3>
             <p className="text-slate-600 leading-[1.7] mb-4">
-              告别繁琐的本地环境配置、Python 库依赖与算力瓶颈。
+              桌面端内置 Python 运行环境，上传的数据在本地处理。训练轮次、嵌入批次和损失值随实际执行持续更新。
             </p>
             <ul className="space-y-2 text-slate-600">
-              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" /> 零配置快速上手</li>
-              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" /> 在线交互式处理</li>
-              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" /> 安全云端算力</li>
+              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" /> 桌面端内置运行环境</li>
+              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" /> 训练与嵌入进度实时可见</li>
+              <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" /> 任务与结果保存在本机</li>
             </ul>
           </div>
         </motion.div>
@@ -1169,7 +737,7 @@ export default function LandingPage() {
           <div>
             <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-4">交互式 AI 科学家</h3>
             <p className="text-slate-600 leading-[1.7] mb-4">
-              它不仅是一个图表生成器，更是一位深谙学术规范的虚拟合作者。猫咪科学家拒绝千篇一律的模板化描述，而是提供定制化的深度解读。
+              在对话模式中讨论研究问题，或在手动模式中引用图表继续追问。填写自己的模型 API 后，即可围绕数据、方法和结果与猫咪科学家交流。
             </p>
             <ul className="space-y-2 text-slate-600">
               <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" /> 非模板化深度解读</li>
@@ -1177,15 +745,7 @@ export default function LandingPage() {
               <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" /> 研究假设辅助验证</li>
             </ul>
           </div>
-          <div className="relative rounded-2xl border border-slate-200/90 bg-gradient-to-br from-slate-50 to-indigo-50/20 aspect-video overflow-hidden min-h-[200px]">
-            <Image
-              src="/3.png"
-              alt="交互式 AI 科学家"
-              fill
-              sizes="(min-width: 1024px) 50vw, 100vw"
-              className="object-cover"
-            />
-          </div>
+          <div><ProductScreenshot name="assistant" alt="猫咪科学家对话工作台" /></div>
         </motion.div>
       </section>
 
@@ -1211,7 +771,7 @@ export default function LandingPage() {
           {/* 左侧：当前步骤文案 */}
           <div className="order-2 lg:order-1">
             <p className="text-xs sm:text-sm text-blue-600 font-semibold tracking-wide mb-2">
-              步骤 {howItWorksStep + 1} / 4 · {HOW_IT_WORKS_STEPS[howItWorksStep].titleEn}
+              步骤 {howItWorksStep + 1} / {HOW_IT_WORKS_STEPS.length}
             </p>
             <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-4 tracking-tight">
               {HOW_IT_WORKS_STEPS[howItWorksStep].title}
@@ -1220,31 +780,13 @@ export default function LandingPage() {
               {HOW_IT_WORKS_STEPS[howItWorksStep].text}
             </p>
           </div>
-          {/* 右侧：GIF 占位 + 左右翻页 */}
-          <div className="order-1 lg:order-2 flex flex-col items-center">
-            <div className="relative w-full max-w-lg aspect-video rounded-2xl overflow-hidden border border-slate-200/90 bg-white shadow-lg">
-              {/* 占位：后续替换为真实 GIF */}
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-50 to-slate-100">
-                <HowItWorksStepIcon className="w-20 h-20 sm:w-24 sm:h-24 text-blue-400/70" />
-              </div>
-              <button
-                type="button"
-                onClick={() => setHowItWorksStep((s) => (s === 0 ? 3 : s - 1))}
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 shadow-md flex items-center justify-center text-slate-600 hover:bg-white hover:text-blue-600 transition-colors"
-                aria-label="上一步"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setHowItWorksStep((s) => (s === 3 ? 0 : s + 1))}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 shadow-md flex items-center justify-center text-slate-600 hover:bg-white hover:text-blue-600 transition-colors"
-                aria-label="下一步"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
+          <div className="order-1 lg:order-2 min-w-0">
+            <ProductScreenshot key={howItWorksCurrent.image} name={howItWorksCurrent.image} alt={howItWorksCurrent.alt} />
+            <div className="mt-4 flex items-center justify-between gap-4">
+              <button type="button" onClick={() => setHowItWorksStep(s => (s + 3) % 4)} className="rounded-full border border-slate-200 bg-white p-2 text-slate-600 hover:border-blue-300 hover:text-blue-600" aria-label="上一步"><ChevronLeft className="size-5" /></button>
+              <div className="flex gap-2">{HOW_IT_WORKS_STEPS.map((step, index) => <button key={step.image} type="button" onClick={() => setHowItWorksStep(index)} aria-label={`第 ${index + 1} 步：${step.title}`} aria-pressed={howItWorksStep === index} className={`h-2.5 rounded-full transition-all ${howItWorksStep === index ? 'w-7 bg-blue-600' : 'w-2.5 bg-slate-300 hover:bg-blue-400'}`} />)}</div>
+              <button type="button" onClick={() => setHowItWorksStep(s => (s + 1) % 4)} className="rounded-full border border-slate-200 bg-white p-2 text-slate-600 hover:border-blue-300 hover:text-blue-600" aria-label="下一步"><ChevronRight className="size-5" /></button>
             </div>
-            <p className="text-xs text-slate-400 mt-3">左右切换查看各步骤（动图占位，可替换为真实 GIF）</p>
           </div>
         </motion.div>
       </section>
@@ -1342,141 +884,6 @@ export default function LandingPage() {
             ))}
           </motion.div>
         </div>
-      </section>
-
-      {/* 五、价格方案 Pricing */}
-      <section id="pricing" className="max-w-7xl mx-auto px-5 sm:px-6 py-20 sm:py-24 bg-slate-50/50">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
-          <h2 className="section-heading text-2xl sm:text-3xl md:text-[1.75rem] mb-3">匹配您研究需求的灵活方案</h2>
-          <p className="text-slate-600 max-w-xl mx-auto text-[15px] sm:text-base leading-relaxed mb-8">
-            无论是个人课程作业，还是大规模科研项目，我们都有适合您的算力支持。
-          </p>
-          <div className="inline-flex items-center gap-3 p-1.5 rounded-full bg-slate-200/60">
-            <button
-              type="button"
-              onClick={() => setPricingMode("per-use")}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${pricingMode === "per-use" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
-            >
-              按次付费
-            </button>
-            <button
-              type="button"
-              onClick={() => setPricingMode("monthly")}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${pricingMode === "monthly" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
-            >
-              按月付费
-            </button>
-            <button
-              type="button"
-              onClick={() => setPricingMode("yearly")}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${pricingMode === "yearly" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
-            >
-              按年付费 <span className="text-green-600 text-xs">省 17%</span>
-            </button>
-          </div>
-        </motion.div>
-        {pricingMode === "per-use" ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
-          >
-            {[
-              { size: "500M", price: 29, desc: "适合小规模数据", recommended: false },
-              { size: "20G", price: 299, desc: "适合大规模项目", recommended: true },
-              { size: "100G", price: 999, desc: "上限封顶，超值选择", recommended: false },
-            ].map((plan) => (
-              <Card
-                key={plan.size}
-                className={`relative border rounded-2xl p-6 flex flex-col ${plan.recommended ? "border-blue-300 shadow-lg shadow-blue-100/40 scale-105 md:scale-105" : "border-slate-200/90 bg-white"}`}
-              >
-                {plan.recommended && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-blue-600 text-white text-xs font-semibold">
-                    热门推荐
-                  </span>
-                )}
-                <h3 className="text-lg font-bold text-slate-900 mb-1">{plan.size}</h3>
-                <p className="text-sm text-slate-500 mb-4">{plan.desc}</p>
-                <div className="mb-6">
-                  <span className="text-3xl font-bold text-slate-900">
-                    ¥{plan.price}
-                  </span>
-                  <span className="text-slate-500 text-sm ml-1">/ 次</span>
-                </div>
-                <ul className="space-y-2 mb-6 flex-1">
-                  <li className="text-sm text-slate-600 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
-                    按上传数据大小计费
-                  </li>
-                  <li className="text-sm text-slate-600 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
-                    {plan.size === "100G" ? "100G 为上限，超出不再收费" : `单次处理 ${plan.size} 数据`}
-                  </li>
-                  <li className="text-sm text-slate-600 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
-                    永久有效，无时间限制
-                  </li>
-                </ul>
-                <Button
-                  className={plan.recommended ? "bg-blue-600 hover:bg-blue-700" : "border-slate-200"}
-                  variant={plan.recommended ? "default" : "outline"}
-                  onClick={handleStartAnalysis}
-                >
-                  立即开始
-                </Button>
-              </Card>
-            ))}
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
-          >
-            {PRICING_PLANS.map((plan, index) => (
-              <Card
-                key={plan.name}
-                className={`relative border rounded-2xl p-6 flex flex-col ${plan.recommended ? "border-blue-300 shadow-lg shadow-blue-100/40 scale-105 md:scale-105" : "border-slate-200/90 bg-white"}`}
-              >
-                {plan.recommended && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-blue-600 text-white text-xs font-semibold">
-                    热门推荐
-                  </span>
-                )}
-                <h3 className="text-lg font-bold text-slate-900 mb-1">{plan.name}</h3>
-                <p className="text-sm text-slate-500 mb-4">{plan.desc}</p>
-                <div className="mb-6">
-                  <span className="text-3xl font-bold text-slate-900">
-                    ¥{pricingMode === "yearly" ? plan.priceYear : plan.priceMonth}
-                  </span>
-                  <span className="text-slate-500 text-sm ml-1">/ {pricingMode === "yearly" ? "年" : "月"}</span>
-                </div>
-                <ul className="space-y-2 mb-6 flex-1">
-                  {plan.features.map((f) => (
-                    <li key={f} className="text-sm text-slate-600 flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  className={plan.recommended ? "bg-blue-600 hover:bg-blue-700" : "border-slate-200"}
-                  variant={plan.recommended ? "default" : "outline"}
-                  onClick={handleStartAnalysis}
-                >
-                  立即开始
-                </Button>
-              </Card>
-            ))}
-          </motion.div>
-        )}
       </section>
 
       {/* 六、常见问题 FAQ */}
