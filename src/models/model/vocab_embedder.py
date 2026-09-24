@@ -132,7 +132,7 @@ class VocabEmbedder:
         iterator = range(0, len(vocab_list), self.batch_size)
         if show_progress:
             from tqdm import tqdm
-            iterator = tqdm(iterator, desc="Embedding vocabulary", total=len(vocab_list)//self.batch_size + 1)
+            iterator = tqdm(iterator, desc="Embedding vocabulary", total=(len(vocab_list) + self.batch_size - 1)//self.batch_size)
         
         with torch.no_grad():
             for i in iterator:

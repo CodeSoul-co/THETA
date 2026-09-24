@@ -23,6 +23,7 @@ from .results_reader import tree_hash, read_result_evidence, file_hash
 from .execution_policy import assert_authorized, training_environment
 from .diagnostics import failure_diagnostics
 from .job_observation import observe
+from .progress_events import ProgressRecorder
 
 
 @contextmanager
@@ -219,7 +220,7 @@ def run(home: str, job_id: str) -> None:
                 kwargs['env'] = child_env
                 return super().run(**kwargs)
 
-        pipeline = AgentThetaPipeline(config, FilesystemObjectStorage(objects), ApprovedProcessRunner())
+        pipeline = AgentThetaPipeline(config, FilesystemObjectStorage(objects), ApprovedProcessRunner(on_output=ProgressRecorder(root / "progress.jsonl")))
         pipeline.plan = plan
         result = pipeline.execute(spec, lambda: cancelled(home, job_id),
                                   lambda phase, percent, message: update(home, job_id, phase=phase, percent=percent, message=message))

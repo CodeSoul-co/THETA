@@ -6,6 +6,14 @@ This guide covers training THETA and baseline models with various configurations
 
 ---
 
+## Live Execution Logs
+
+In manual mode, the execution log refreshes approximately every 2.5 seconds. It displays the epoch, batch or iteration, loss values, and early stopping when the selected model emits those signals. Available metrics depend on the model; the stage percentage is not an estimate of remaining time.
+
+Embedding progress includes completed documents or vocabulary batches. Local and cloud document encoding also report encoded chunks; a long document counts as complete only after all its chunks succeed. Failed cloud requests do not advance the count.
+
+Turn off **Follow latest** to inspect earlier entries. After training, open **Execution logs** on the results page to review the selected model’s recent history. Complete training logs remain in the local task directory.
+
 ## THETA Model Training
 
 ### Basic Training

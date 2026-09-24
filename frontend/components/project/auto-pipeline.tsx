@@ -4,6 +4,8 @@ import { ComputationNotice, SetupError } from '@/components/theta-workbench/pane
 import { useEffect, useRef, useState } from "react"
 import { AlertCircle, Check, Loader2, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ExecutionLog } from "./execution-log"
+import type { TrainingWorkerState } from "@/lib/training-progress"
 import { Progress } from "@/components/ui/progress"
 import { BackendAPI, SimpleETMAPI, type TrainStatusResponse } from "@/lib/api/backend"
 import { isUploadedFileId, uploadManualFiles } from "@/lib/manual-upload"
@@ -31,10 +33,9 @@ interface AutoPipelineProps {
   onDlcStarted?: () => void
   onViewResults?: () => void
 }
-type JobState = TrainStatusResponse & { queued_models?: string[]; states?: { id: string; status: string; phase: string; percent: number; phaseHistory?: { phase: string; at: number }[] }[]; workers?: { id: string; model: string }[] }
+type JobState = TrainStatusResponse & { queued_models?: string[]; states?: TrainingWorkerState[]; workers?: { id: string; model: string }[] }
 const phases = ["上传数据", "数据预处理", "模型训练", "模型评估", "生成可视化"]
 const phaseIndex = (phase?: string) => ({ preparing: 1, preparing_data: 1, preprocessing: 1, training: 2, evaluating: 3, evaluation: 3, visualizing: 4, visualization: 4, publishing: 4, uploading: 4 }[phase ?? ""] ?? 1)
-const executionPhaseLabel = (phase: string) => phase === 'uploading' ? '整理模型与图表产物' : phase === 'downloading' ? '读取已上传的数据' : systemText(phase)
 
 /** Independent manual lifecycle; every progress update comes from a real job. */
 export function AutoPipeline(props: AutoPipelineProps) {
@@ -191,7 +192,6 @@ export function AutoPipeline(props: AutoPipelineProps) {
       {done || (index === 0 && fileId) || (running && index < current) ? <Check className="size-4" /> : running && current === index ? <Loader2 className="size-4 animate-spin" /> : <span>{index + 1}</span>}{phase}</li>)}</ol>
     {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700"><p className="flex items-center gap-2"><AlertCircle className="size-4" /></p><SetupError error={error} />{!running && fileId && <Button variant="outline" className="mt-3" onClick={() => { setTaskId(null); setTask(null); setError(null); textInput ? changeConfigOpen(true) : changeColumnsOpen(true) }}>调整配置后重试</Button>}</div>}
     {pollError && <p role="status" className="text-sm text-amber-700">{pollError}</p>}
-    {task?.states?.some(state => state.phaseHistory?.length) && <details className="rounded-xl border bg-white p-4" open><summary className="cursor-pointer text-sm font-medium">已保存的实际执行阶段</summary><div className="mt-3 space-y-3">{task.states.map(state => <div key={state.id} className="text-xs leading-6 text-slate-600"><strong>{task.workers?.find(item => item.id === state.id)?.model.toUpperCase()}</strong>{state.phaseHistory?.map((entry, index) => <p key={index}>{new Date(entry.at * 1000).toLocaleTimeString('zh-CN')} · {executionPhaseLabel(entry.phase)}</p>)}</div>)}</div></details>}
     {!!task?.queued_models?.length && <p className="text-sm text-slate-600">排队模型：{task.queued_models.map(model => model.toUpperCase()).join('、')}。按顺序执行，关闭页面不会中断队列。</p>}
     {running && <Button variant="outline" onClick={async () => { try { const cancelled = await BackendAPI.cancelTraining(Number(taskId)); setTask(cancelled); setError(cancelled.status === 'cancelled' ? '任务已取消，可以调整数据与参数后重新开始。' : null) } catch (e) { setError(e instanceof Error ? e.message : '取消失败，请重试') } }}>取消本次训练</Button>}
     {(running || submitting) && <div role="status" className="space-y-4 rounded-2xl border bg-white p-6"><p className="flex items-center gap-2 text-sm font-medium"><Loader2 className="size-4 animate-spin" />{submitting ? '正在保存分析任务…' : systemText(task?.message || '正在检查数据与运行环境…')}</p><Progress value={task?.progress ?? 0} /><p className="text-xs leading-5 text-slate-500">{task?.progress ?? 0}% 为 worker 阶段进度，不是剩余时间估算。可以离开页面，返回后恢复真实任务状态。</p>{task?.states?.map(state => <p key={state.id} className="text-xs text-slate-600">{task.workers?.find(item => item.id === state.id)?.model.toUpperCase()} · {statusLabel(state.status)} · {systemText(state.phase)} · {state.percent}%</p>)}</div>}
@@ -202,7 +202,7 @@ export function AutoPipeline(props: AutoPipelineProps) {
         {previewError ? <p role="alert" className="text-sm text-red-700">{previewError}<button className="ml-2 underline" onClick={() => setPreviewAttempt(value => value + 1)}>重新读取</button></p> : !textPreview ? <p role="status" className="text-sm">正在读取正文…</p> : <><p className="text-xs text-slate-500">共 {textPreview.totalRecords ?? textPreview.rows.length} 条正文记录，预览前 5 条</p><div className="max-h-72 space-y-3 overflow-y-auto">{(textPreview.segments ?? textPreview.rows.map(row => ({ text: row[0] }))).map((segment, index) => <article key={index} className="rounded-lg bg-white p-3"><p className="mb-2 text-xs text-slate-400">{'page' in segment ? `第 ${segment.page} 页` : 'paragraph' in segment ? `第 ${segment.paragraph} 段` : `正文 ${index + 1}`}</p><p className="whitespace-pre-wrap text-sm leading-6 [overflow-wrap:anywhere]">{segment.text}</p></article>)}</div></>}
       </div> : <Button variant="outline" onClick={() => changeColumnsOpen(true)}>选择数据列</Button>}{selection && <Button className="ml-2" onClick={() => changeConfigOpen(true)}>配置分析参数</Button>}</>}
     </section>}
-    <details className="rounded-xl border bg-white p-4"><summary className="cursor-pointer text-sm font-medium">执行日志</summary><pre className="mt-3 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-950 p-4 text-xs leading-6 text-slate-200">{logs.join('\n') || '暂无执行记录'}</pre></details>
+    <ExecutionLog states={task?.states} workers={task?.workers} logs={logs} running={running || submitting} />
     {!textInput && <ColumnSelectPanel key={fileId} projectKey={props.projectKey} open={columnsOpen} onOpenChange={changeColumnsOpen} datasetName={dataset} jobId={fileId} onConfirm={value => { setSelection(value); setColumnsOpen(false); setConfigOpen(true); setDraft({ fileId, selection: value, columnsOpen: false, configOpen: true }) }} />}
     <AnalysisConfigPanel datasetSizeBytes={uploads.find(file => file.fileId === fileId)?.size} projectKey={props.projectKey} open={configOpen} onOpenChange={changeConfigOpen} datasetName={dataset} error={error} onConfirm={start} />
   </div>

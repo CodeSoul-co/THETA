@@ -13,13 +13,21 @@ export interface ResearchRun {
   plan?: TrainingPlan; planHash?: string; revision?: number;
   jobs: string[]; activeJob?: string; lastObservedJob?: { id: string; status: ComputeJob['status']; percent: number; phase?: string; telemetry?: JobTelemetry; resultDir?: string; resultWarning?: string }; notes: string[];
 }
+export interface TrainingEvent {
+  source?: 'local' | 'cloud'; scope?: 'documents' | 'vocabulary';
+  completedBatches?: number; totalBatches?: number; chunks?: number; chunkTotal?: number;
+  id: number | string; at: number | null; kind: 'command' | 'visualizing' | 'iteration' | 'epoch' | 'batch' | 'embedding' | 'early_stop';
+  current?: number; total?: number | null; stage?: string | null; activity?: string;
+  batch?: { current: number; total: number }; metrics?: Record<string, number>;
+}
 export interface JobTelemetry {
   schemaVersion: 'theta.job-observation.v1'; observedAt: number; percentKind: 'stage_marker';
   health: 'waiting' | 'responding' | 'unresponsive' | 'finished';
   heartbeatAgeSeconds: number | null; elapsedSeconds: number | null; phaseElapsedSeconds: number | null;
   lastLogAgeSeconds: number | null;
+  events?: TrainingEvent[]; detail?: TrainingEvent | null;
   iteration: { current: number; total: number; source: string; meaning: string } | null;
-  activity: 'fitting' | 'visualizing' | null; limitation: string;
+  activity: 'fitting' | 'embedding' | 'visualizing' | null; limitation: string;
 }
 export interface ComputeJob {
   id: string; status: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';

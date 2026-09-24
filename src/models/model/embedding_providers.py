@@ -16,7 +16,6 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-from tqdm import tqdm
 
 
 LOCAL_PROVIDERS = {"local", "qwen"}
@@ -227,6 +226,7 @@ class OpenAICompatibleEmbeddingProvider:
         show_progress: bool = True,
         desc: str = "Generating cloud embeddings",
     ) -> np.ndarray:
+        from utils.embedding_progress import report_embedding
         if not texts:
             return np.empty((0, 0), dtype=np.float32)
 
@@ -245,13 +245,20 @@ class OpenAICompatibleEmbeddingProvider:
             print(f'云端嵌入：{len(texts)} 条文本，共 {len(chunks)} 个文本块，预计 {(len(chunks) + batch_size - 1) // batch_size} 次请求（不含重试）', flush=True)
         embeddings: List[np.ndarray] = []
         iterator = range(0, len(chunks), batch_size)
+        scope = 'vocabulary' if desc == 'Embedding vocabulary' else 'documents'
+        total_batches = (len(chunks) + batch_size - 1) // batch_size
         if show_progress:
-            iterator = tqdm(iterator, desc=desc, total=(len(chunks) + batch_size - 1) // batch_size)
+            report_embedding('cloud', scope, 0, len(texts), 0, chunks=0, chunk_total=len(chunks), batch_total=total_batches)
 
         for start in iterator:
             batch_texts = chunks[start:start + batch_size]
             batch_embeddings = self._embed_batch(batch_texts)
             embeddings.extend(batch_embeddings)
+            end = start + len(batch_texts)
+            completed = owners[end - 1] + int(end == len(chunks) or owners[end] != owners[end - 1])
+            if show_progress:
+                report_embedding('cloud', scope, completed, len(texts), start // batch_size + 1,
+                                 chunks=end, chunk_total=len(chunks), batch_total=total_batches)
 
         matrix = np.zeros((len(texts), len(embeddings[0])), dtype=np.float32)
         total_weights = np.zeros(len(texts), dtype=np.float32)

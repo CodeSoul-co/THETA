@@ -620,8 +620,7 @@ class BaselineTrainer:
             avg_loss = epoch_loss / num_batches
             training_history.append({'epoch': epoch + 1, 'loss': avg_loss})
             
-            if (epoch + 1) % 10 == 0:
-                print(f"Epoch {epoch+1}/{epochs} - Loss: {avg_loss:.4f}")
+            print(f"Epoch {epoch+1}/{epochs} - Loss: {avg_loss:.4f}")
             
             # Early stopping
             if avg_loss < best_loss:
@@ -853,8 +852,7 @@ class BaselineTrainer:
                 'kl_loss': avg_kl
             })
             
-            if (epoch + 1) % 10 == 0:
-                print(f"Epoch {epoch+1}/{epochs} - Loss: {avg_loss:.4f}, Recon: {avg_recon:.4f}, KL: {avg_kl:.4f}")
+            print(f"Epoch {epoch+1}/{epochs} - Loss: {avg_loss:.4f}, Recon: {avg_recon:.4f}, KL: {avg_kl:.4f}")
             
             # Early stopping
             if avg_loss < best_loss:
@@ -1145,6 +1143,7 @@ class BaselineTrainer:
                 'val_ppl': val_ppl
             })
             
+            print(f"  Epoch {epoch+1}/{epochs}: train_loss={train_loss:.4f}, val_loss={val_loss:.4f}")
             if val_loss < best_loss:
                 best_loss = val_loss
                 best_model_state = {key: value.detach().clone() for key, value in model.state_dict().items()}
@@ -1155,8 +1154,6 @@ class BaselineTrainer:
                     print(f"  Early stopping at epoch {epoch + 1}")
                     break
             
-            if (epoch + 1) % 10 == 0:
-                print(f"  Epoch {epoch+1}/{epochs}: train_loss={train_loss:.4f}, val_loss={val_loss:.4f}")
         
         train_time = time.time() - start_time
         
@@ -1560,6 +1557,7 @@ class BaselineTrainer:
                 'kl_loss': avg_kl
             })
             
+            print(f"Epoch {epoch+1}/{epochs} | Loss: {avg_loss:.4f} | Recon: {avg_recon:.4f} | KL: {avg_kl:.4f}")
             if avg_loss < best_loss:
                 best_loss = avg_loss
                 best_model_state = {key: value.detach().clone() for key, value in model.state_dict().items()}
@@ -1570,8 +1568,6 @@ class BaselineTrainer:
                     print(f"Early stopping at epoch {epoch + 1}")
                     break
             
-            if (epoch + 1) % 10 == 0:
-                print(f"Epoch {epoch+1}/{epochs} | Loss: {avg_loss:.4f} | Recon: {avg_recon:.4f} | KL: {avg_kl:.4f}")
         
         train_time = time.time() - start_time
 

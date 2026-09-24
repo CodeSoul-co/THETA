@@ -1,4 +1,7 @@
 import unittest
+import io
+import json
+from contextlib import redirect_stdout
 from types import SimpleNamespace
 import numpy as np
 import torch
@@ -36,7 +39,13 @@ class LocalEmbeddingTests(unittest.TestCase):
 
     def test_batches_preserve_all_windows_and_document_order(self):
         model = Model()
-        actual = encode_documents(['29', '3', '17'], Tokenizer(), model, 'cpu', 16, 2)
+        output = io.StringIO()
+        with redirect_stdout(output):
+            actual = encode_documents(['29', '3', '17'], Tokenizer(), model, 'cpu', 16, 2)
+        events = [json.loads(line.removeprefix('THETA_EMBEDDING ')) for line in output.getvalue().splitlines()]
+        self.assertEqual([event['current'] for event in events], [0, 0, 2, 3])
+        self.assertEqual(events[-1]['chunks'], 6)
+        self.assertEqual(events[-1]['completedBatches'], 3)
         np.testing.assert_allclose(actual[:, 0], [(16 + 24 + 29) / 3, 3, (16 + 17) / 2])
         self.assertEqual(model.batch_sizes, [2, 2, 2])
 

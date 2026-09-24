@@ -46,13 +46,23 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
   const compute = new LocalComputeGateway(home, worker);
   const approvals = new EffectApprovals(new ResearchStore(home));
   const observations = new Map<number, { at: number; pending: Promise<RecordValue> }>();
-  const statusCheckedAt = new Map<string, number>();
-  const readStatus = async (id: string): Promise<ComputeJob> => {
+  const detailedStates = new Map<string, { at: number; value: ComputeJob }>();
+  const statusReads = new Map<string, Promise<ComputeJob>>();
+  const readStatus = async (id: string, includeTelemetry = true): Promise<ComputeJob> => {
     const cached = compute.cachedStatus(id);
-    if (cached && (['completed', 'failed', 'cancelled'].includes(cached.status) || Date.now() - (statusCheckedAt.get(id) ?? 0) < 15_000)) return cached;
-    const status = await compute.status(id);
-    statusCheckedAt.set(id, Date.now());
-    return status;
+    const observed = detailedStates.get(id);
+    if (cached && !includeTelemetry && (['completed', 'failed', 'cancelled'].includes(cached.status) ||
+        observed && Date.now() - observed.at < 15_000)) return cached;
+    if (observed && (!cached || cached.status === observed.value.status) &&
+        (['completed', 'failed', 'cancelled'].includes(observed.value.status) || Date.now() - observed.at < 2_000)) return observed.value;
+    const pending = statusReads.get(id);
+    if (pending) return pending;
+    const read = compute.status(id).then(value => {
+      detailedStates.set(id, { at: Date.now(), value });
+      return value;
+    }).finally(() => statusReads.delete(id));
+    statusReads.set(id, read);
+    return read;
   };
   const dispatching = new Map<number, Promise<void>>();
   const preparing = new Set<Promise<void>>();
@@ -68,7 +78,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
     const work = (async () => {
       let job = get('job', id);
       if (closing || job.cancel_requested || !job.queue?.length) return;
-      const states: ComputeJob[] = await Promise.all(job.workers.map((item: RecordValue) => readStatus(item.id)));
+      const states: ComputeJob[] = await Promise.all(job.workers.map((item: RecordValue) => readStatus(item.id, false)));
       if (states.some(state => ['running', 'queued'].includes(state.status))) return;
       job = get('job', id);
       if (closing || job.cancel_requested || !job.queue?.length) return;
@@ -89,11 +99,11 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
     dispatching.set(id, work);
     return work;
   };
-  const observe = (job: RecordValue): Promise<RecordValue> => {
+  const observe = (job: RecordValue, includeTelemetry = true): Promise<RecordValue> => {
     const cached = observations.get(job.id);
-    if (cached && Date.now() - cached.at < 1500) return cached.pending;
+    if (includeTelemetry && cached && Date.now() - cached.at < 1500) return cached.pending;
     const pending = (async () => {
-      const states: ComputeJob[] = await Promise.all((job.workers as { id: string }[]).map(item => readStatus(item.id)));
+      const states: ComputeJob[] = await Promise.all((job.workers as { id: string }[]).map(item => readStatus(item.id, includeTelemetry)));
       // A submission or cancellation may have updated this row while we waited.
       job = get('job', job.id);
       const failed = states.find(state => state.status === 'failed' || state.status === 'cancelled');
@@ -110,7 +120,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
       const { queue, ...publicJob } = job;
       return { ...publicJob, queued_models: (queue ?? []).map((item: RecordValue) => item.model), job_id: job.id, task_id: String(job.id), dataset: job.dataset_name, current_step: active?.phase, message: status === 'cancelling' ? '正在停止计算进程' : failed?.error ?? (done ? '训练与结果生成完成' : active ? active.message ?? (active.phase.includes('prepar') ? '正在预处理数据' : '本地模型训练中') : job.error_message ?? '等待执行') };
     })();
-    observations.set(job.id, { at: Date.now(), pending }); return pending;
+    if (includeTelemetry) observations.set(job.id, { at: Date.now(), pending }); return pending;
   };
   const latest = async (dataset: string, model?: string) => {
     for (const job of list('job').filter(j => j.dataset_name === dataset)) {
@@ -271,7 +281,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
         void preflight.finally(() => preparing.delete(preflight));
         return json(res, { id: job.id, status: 'pending', created_at: job.created_at }, 201);
       }
-      if (url.pathname === '/api/train/jobs') return json(res, await Promise.all(list('job').map(observe)));
+      if (url.pathname === '/api/train/jobs') return json(res, await Promise.all(list('job').map(job => observe(job, false))));
       if (parts[1] === 'train' && parts[3] === 'cancel' && parts.length === 4 && method === 'POST') {
         const job = get('job', parts[2]);
         if (!['pending', 'running', 'cancelling', 'cancelled'].includes(job.status)) throw new HttpError(409, '任务已结束');
@@ -313,6 +323,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
               }) : [];
               results.push({ jobId: state.id, runId: String(job.id), modelId, status: state.status, phase: state.phase, percent: state.percent, selected: false,
                 reportStatus: entries.length ? 'ready' : 'not_requested',
+                execution: { id: state.id, status: state.status, phase: state.phase, percent: state.percent, phaseHistory: state.phaseHistory, telemetry: state.telemetry },
                 ...(entries.length ? { artifacts: { reportUrl: entries.find(file => /(?:^|\/)index\.html$/u.test(file.name))?.url ?? '', archiveUrl: `${base}/archive?${query}`, fileCount: entries.length, figureCount: entries.filter(file => file.kind === 'figure').length, tableCount: entries.filter(file => file.kind === 'table').length, matrixCount: entries.filter(file => file.kind === 'matrix').length, files: entries } } : {}),
               });
             }

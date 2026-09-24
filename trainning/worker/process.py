@@ -24,8 +24,9 @@ Heartbeat = Callable[[], None]
 
 
 class ProcessRunner:
-    def __init__(self, poll_seconds: float = 0.5):
+    def __init__(self, poll_seconds: float = 0.5, on_output: Callable[[str], None] | None = None):
         self.poll_seconds = poll_seconds
+        self.on_output = on_output
 
     def run(
         self,
@@ -111,8 +112,7 @@ class ProcessRunner:
         finally:
             lines.put(None)
 
-    @staticmethod
-    def _drain(lines: queue.Queue[str | None], log: TextIO) -> None:
+    def _drain(self, lines: queue.Queue[str | None], log: TextIO) -> None:
         wrote = False
         while True:
             try:
@@ -122,15 +122,18 @@ class ProcessRunner:
             if line is None:
                 continue
             log.write(line)
+            if self.on_output:
+                self.on_output(line)
             wrote = True
         if wrote:
             log.flush()
 
-    @staticmethod
-    def _write_command(log: TextIO, command: Sequence[str]) -> None:
+    def _write_command(self, log: TextIO, command: Sequence[str]) -> None:
         # The command contains only validated task values, but use repr to keep logs unambiguous.
         log.write("COMMAND: " + " ".join(repr(part) for part in command) + "\n")
         log.flush()
+        if self.on_output:
+            self.on_output("COMMAND:")
 
     @staticmethod
     def _terminate(process: subprocess.Popen[str], grace_seconds: int) -> None:

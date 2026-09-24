@@ -1,6 +1,7 @@
 """Bounded, batched long-document encoding for decoder embedding models."""
 import numpy as np
 import torch
+from .embedding_progress import report_embedding
 
 
 def last_token_pool(hidden, attention_mask):
@@ -20,11 +21,12 @@ def encode_documents(texts, tokenizer, model, device, max_length=512, batch_size
         raise ValueError('编码长度或批大小无效')
     stride = max(1, max_length // 2)
     sums, counts = [None] * len(texts), np.zeros(len(texts), dtype=np.int64)
-    pending, owners = [], []
-    completed_windows = 0
+    pending, owners, endings = [], [], []
+    completed_windows = completed_documents = completed_batches = 0
+    report_embedding("local", "documents", 0, len(texts), 0, chunks=0)
 
     def flush():
-        nonlocal completed_windows
+        nonlocal completed_windows, completed_documents, completed_batches
         if not pending:
             return
         inputs = tokenizer.pad(pending, padding=True, return_tensors='pt').to(device)
@@ -35,9 +37,12 @@ def encode_documents(texts, tokenizer, model, device, max_length=512, batch_size
             sums[owner] = vector.copy() if sums[owner] is None else sums[owner] + vector
             counts[owner] += 1
         completed_windows += len(pending)
-        print(f'  本地嵌入：已编码 {completed_windows} 个文本块，当前文档 {owners[-1] + 1}/{len(texts)}', flush=True)
+        completed_documents += sum(endings)
+        completed_batches += 1
+        report_embedding("local", "documents", completed_documents, len(texts), completed_batches, chunks=completed_windows)
         pending.clear()
         owners.clear()
+        endings.clear()
 
     with torch.inference_mode():
         for owner, text in enumerate(texts):
@@ -47,6 +52,7 @@ def encode_documents(texts, tokenizer, model, device, max_length=512, batch_size
                 chunk = tokens[start:end]
                 pending.append(tokenizer.prepare_for_model(chunk, add_special_tokens=True, return_attention_mask=True))
                 owners.append(owner)
+                endings.append(end >= len(tokens))
                 if len(pending) >= batch_size:
                     flush()
                 if end >= len(tokens):

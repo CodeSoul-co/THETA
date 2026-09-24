@@ -1,4 +1,6 @@
 import os
+import json
+from contextlib import redirect_stdout
 import http.client
 import io
 from pathlib import Path
@@ -51,3 +53,23 @@ class CloudChunkingTests(unittest.TestCase):
         for data in [[], [{'index': 0, 'embedding': [1]}], [{'index': 0, 'embedding': [1]}, {'index': 0, 'embedding': [2]}], [{'index': 0, 'embedding': [float('nan')]}, {'index': 1, 'embedding': [1]}]]:
             with self.assertRaises(ValueError):
                 OpenAICompatibleEmbeddingProvider._parse_embeddings({'data': data}, 2)
+
+    def test_progress_counts_only_successful_chunks_and_complete_documents(self):
+        with patch.dict(os.environ, {'EMBEDDING_API_KEY': 'unit-test-not-a-secret'}):
+            provider = OpenAICompatibleEmbeddingProvider(EmbeddingProviderSettings(provider='cloud', cloud_provider='zhipu', api_base='https://unit.invalid', api_key_env='EMBEDDING_API_KEY', model='embedding-3', normalize=False))
+            output = io.StringIO()
+            def fake(texts):
+                return [np.array([1., 2.]) for text in texts]
+            with patch.object(provider, '_embed_batch', side_effect=fake), redirect_stdout(output):
+                provider.embed(['中' * 3000, 'English'], batch_size=1)
+            events = [json.loads(line.removeprefix('THETA_EMBEDDING ')) for line in output.getvalue().splitlines() if line.startswith('THETA_EMBEDDING ')]
+            self.assertEqual([event['current'] for event in events], [0, 0, 0, 1, 2])
+            self.assertEqual(events[-1]['chunks'], events[-1]['chunkTotal'])
+            self.assertEqual(events[-1]['completedBatches'], 4)
+            output = io.StringIO()
+            with patch.object(provider, '_embed_batch', side_effect=RuntimeError('failed')), redirect_stdout(output):
+                with self.assertRaises(RuntimeError):
+                    provider.embed(['private corpus'], batch_size=1)
+            self.assertNotIn('private corpus', output.getvalue())
+            events = [json.loads(line.removeprefix('THETA_EMBEDDING ')) for line in output.getvalue().splitlines() if line.startswith('THETA_EMBEDDING ')]
+            self.assertEqual([event['current'] for event in events], [0])

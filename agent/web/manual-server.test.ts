@@ -307,3 +307,47 @@ test('本机免登录、上传回执、列预览及训练失败边界；不创�
     rmSync(home, { recursive: true, force: true });
   }
 });
+
+test('训练状态在轮次变化时刷新细节，并在完成与服务重启后保留日志', async t => {
+  const home = mkdtempSync(path.join(os.tmpdir(), 'theta-manual-telemetry-'));
+  const manual = new DatabaseSync(path.join(home, 'manual.sqlite'));
+  manual.exec('CREATE TABLE records (id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT NOT NULL, value TEXT NOT NULL)');
+  manual.prepare('INSERT INTO records(kind,value) VALUES (?,?)').run('job', JSON.stringify({ dataset_name: 'fixture', models: ['prodlda'], status: 'running', workers: [{ id: 'progress-job', model: 'prodlda' }] }));
+  manual.close();
+  const compute = new DatabaseSync(path.join(home, 'compute.sqlite'));
+  compute.exec('CREATE TABLE jobs (id TEXT PRIMARY KEY, state TEXT, value TEXT)');
+  let epoch = 1;
+  let calls = 0;
+  let state = 'running';
+  const snapshot = () => ({ id: 'progress-job', status: state, phase: state === 'running' ? 'training' : 'completed', percent: state === 'running' ? 60 : 100 });
+  const persist = () => compute.prepare('INSERT OR REPLACE INTO jobs VALUES (?,?,?)').run('progress-job', state, JSON.stringify(snapshot()));
+  persist();
+  let now = Date.now();
+  t.mock.method(Date, 'now', () => now);
+  const worker: CapabilityWorker = { async call<T>(operation: string): Promise<T> {
+    assert.equal(operation, 'compute.status'); calls++;
+    return { ...snapshot(), telemetry: { events: [{ id: epoch, at: 1, kind: 'epoch', current: epoch, total: 2, metrics: { loss: 1 / epoch } }] } } as T;
+  } };
+  let server = createManualServer(home, worker);
+  const listen = async () => { await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve)); return `http://127.0.0.1:${(server.address() as AddressInfo).port}`; };
+  let base = await listen();
+  const read = async () => (await (await fetch(base + '/api/train/1/status')).json()) as any;
+  try {
+    assert.equal((await read()).states[0].telemetry.events[0].current, 1);
+    await fetch(base + '/api/train/jobs');
+    assert.equal(calls, 1, '列表读取不重复采集详细日志');
+    epoch = 2; now += 2500;
+    assert.equal((await read()).states[0].telemetry.events[0].current, 2);
+    assert.equal(calls, 2, '阶段百分比不变时仍刷新 epoch');
+    state = 'completed'; persist(); now += 2500;
+    assert.equal((await read()).status, 'succeeded');
+    await new Promise<void>(resolve => server.close(() => resolve()));
+    server = createManualServer(home, worker); base = await listen();
+    assert.equal((await read()).states[0].telemetry.events[0].current, 2, '已完成任务不能用缺少日志的 SQLite 快照替代详细状态');
+    const catalog = await (await fetch(base + '/api/results/fixture/catalog')).json() as any;
+    assert.equal(catalog.results[0].execution.telemetry.events[0].current, 2, '结果页可恢复当前模型的执行日志');
+  } finally {
+    await new Promise<void>(resolve => server.close(() => resolve()));
+    compute.close(); rmSync(home, { recursive: true, force: true });
+  }
+});

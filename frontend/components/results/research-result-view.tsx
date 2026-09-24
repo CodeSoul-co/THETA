@@ -1,5 +1,7 @@
 "use client"
 
+import { ExecutionLog } from "@/components/project/execution-log"
+
 import { useProjectDraft } from "@/lib/use-project-draft"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -401,10 +403,12 @@ export function ResearchResultView({ source, initialDestination, onOpenAssistant
         {readinessNotice && <p role="status" className="mt-4 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm leading-6 text-blue-800">{readinessNotice}</p>}
 
         <div className="mt-5 flex flex-wrap gap-1.5 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm">
-          {[["overview", "结果概览"], ["topics", "主题结果"], ["metrics", "评估指标"], ["visualizations", "可视化"], ["files", "导出文件"]].map(([key, label]) => (
+          {[["overview", "结果概览"], ["topics", "主题结果"], ["metrics", "评估指标"], ["visualizations", "可视化"], ["files", "导出文件"], ...(source.kind === "dataset" ? [["logs", "执行日志"]] : [])].map(([key, label]) => (
             <button key={key} type="button" aria-pressed={activeTab === key} onClick={() => setActiveTab(key)} className={"rounded-xl px-4 py-2.5 text-sm transition " + (activeTab === key ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-50")}>{label}</button>
           ))}
         </div>
+
+        {activeTab === "logs" && <div className="mt-4"><ExecutionLog states={selected.execution ? [selected.execution] : []} workers={[{ id: selected.jobId, model: selected.modelId }]} logs={[]} running={selected.status === "running" || selected.status === "queued"} /></div>}
 
         {activeTab === "overview" && (
           <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">

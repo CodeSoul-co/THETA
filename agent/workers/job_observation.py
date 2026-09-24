@@ -1,8 +1,10 @@
 """Read bounded progress signals from a job's own log; never estimate overall completion."""
 import os
+import json
 from pathlib import Path
 import re
 import time
+from .progress_events import parse_progress
 
 
 def observe(home, job, updated, now=None):
@@ -15,6 +17,7 @@ def observe(home, job, updated, now=None):
               'health': ('waiting' if job['status'] == 'queued' else 'responding') if active and heartbeat_age <= 30 else 'unresponsive' if active else 'finished',
               'elapsedSeconds': None, 'phaseElapsedSeconds': None,
               'lastLogAgeSeconds': None, 'iteration': None, 'activity': None,
+              'events': [], 'detail': None,
               'limitation': '阶段百分比不是实际完成比例；心跳只证明worker仍响应，不证明算法推进或模型质量。'}
     end = job.get('finishedAt', now)
     if job.get('startedAt') is not None:
@@ -38,13 +41,38 @@ def observe(home, job, updated, now=None):
     except OSError:
         return result
     # Only expose recognized signals, never raw dataset text, paths or credentials.
-    for line in text.replace('\r', '\n').splitlines():
-        if line.startswith('COMMAND:'):
-            result.update(iteration=None, activity=None)
-        match = re.fullmatch(r'\s*iteration:\s*(\d+)\s+of max_iter:\s*(\d+)\s*', line)
-        if phase == 'training' and match and 0 < int(match[1]) <= int(match[2]):
-            result['iteration'] = {'current': int(match[1]), 'total': int(match[2]), 'source': 'worker_log', 'meaning': 'reported_iteration_not_completed_count'}
-            result['activity'] = 'fitting'
-        if phase == 'training' and re.search(r'Running Visualizations|Generating visualizations|Additional Visualizations|Covariate Visualizations', line):
-            result.update(activity='visualizing', iteration=None)
+    events = []
+    journal = root / 'progress.jsonl'
+    if journal.is_file() and journal.resolve() == journal:
+        try:
+            with os.fdopen(os.open(journal, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0)), 'rb') as handle:
+                size = handle.seek(0, os.SEEK_END)
+                handle.seek(max(0, size - 262144))
+                records = handle.read(262144).split(b'\n')
+            # The final record can still be in flight. Keep only complete JSON lines.
+            for record in records[:-1]:
+                try:
+                    event = json.loads(record)
+                    if isinstance(event, dict) and event.get('kind') in {'epoch', 'iteration', 'batch', 'early_stop', 'command', 'visualizing', 'embedding'}:
+                        events.append(event)
+                except (ValueError, UnicodeDecodeError):
+                    pass
+        except OSError:
+            pass
+    if not events:
+        # Compatibility for jobs launched before structured recording was introduced.
+        for index, line in enumerate(text.replace('\r', '\n').splitlines()):
+            event = parse_progress(line)
+            if event:
+                events.append({**event, 'id': f'legacy-{index}', 'at': None})
+    result['events'] = events[-200:]
+    for event in events:
+        kind = event['kind']
+        if kind in {'command', 'visualizing'}:
+            result.update(iteration=None, detail=None, activity='visualizing' if kind == 'visualizing' and phase == 'training' else None)
+        elif phase == 'training' or active and (kind == 'embedding' or kind == 'batch' and event.get('activity')):
+            result['detail'] = event
+            result['activity'] = 'embedding' if kind == 'embedding' else 'fitting'
+            if kind == 'iteration':
+                result['iteration'] = {'current': event['current'], 'total': event['total'], 'source': 'worker_log', 'meaning': 'reported_iteration_not_completed_count'}
     return result
