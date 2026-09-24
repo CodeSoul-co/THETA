@@ -590,7 +590,7 @@ const v3Path = (runId: string, suffix = ''): string =>
 const v3Checkpoint = async (runId: string): Promise<V3Checkpoint | null> =>
   request<V3Checkpoint | null>(v3Path(runId, '/checkpoint'));
 
-export interface TrainingEditorData { datasetSizeBytes?: number; plans: EditorTrainingPlan[]; datasetName: string; columns: string[]; goal: string; stopwords?: { id: string; name: string; count: number } }
+export interface TrainingEditorData { inputKind?: 'text' | 'table'; datasetSizeBytes?: number; plans: EditorTrainingPlan[]; datasetName: string; columns: string[]; goal: string; stopwords?: { id: string; name: string; count: number } }
 export const getTrainingEditor = (runId: string) => request<TrainingEditorData>(v3Path(runId, '/training-configuration'))
 export const submitTrainingEditor = (runId: string, value: { checkpointId: string; expectedContentHash: string; plans: EditorTrainingPlan[]; cloudConfirmed: boolean; cloudSelection?: { provider: string; endpoint: string; model: string }; stopwordsId?: string | number }) =>
   request(v3Path(runId, '/training-configuration'), { method: 'POST', body: JSON.stringify(value) })

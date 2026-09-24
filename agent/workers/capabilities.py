@@ -145,7 +145,16 @@ def dataset_preview(payload: dict) -> dict:
     """Explicit manual-workbench preview, never exposed as an Agent tool."""
     file = verify_dataset(payload['dataset'])
     table = load_dataset(file, profile_limit=5)
-    return {'columns': table.columns, 'rows': [[str(row.get(column) or '') for column in table.columns] for row in table.rows[:5]]}
+    text_input = file.suffix.lower() in {'.txt', '.md', '.pdf', '.docx'}
+    # Preview the beginning, not the reservoir sample used for profiling large files.
+    rows = table.head_rows[:5]
+    result = {'columns': table.columns, 'rows': [[str(row.get(column) if row.get(column) is not None else '') for column in table.columns] for row in rows],
+              'inputKind': 'text' if text_input else 'table', 'totalRecords': table.row_count}
+    if text_input:
+        if not table.row_count:
+            raise ValueError('未读取到可分析的正文。扫描版 PDF 请先完成文字识别，或上传含文字的 TXT、Word 文件。')
+        result.update(textColumn='text', segments=[{key: row[key] for key in ['text', 'page', 'paragraph'] if key in row} for row in rows])
+    return result
 
 
 def dataset_profile(payload: dict) -> dict:

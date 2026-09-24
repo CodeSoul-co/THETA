@@ -129,7 +129,7 @@ export function NewProjectDialog({
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold">2</span>
-                <span>上传完成后<strong>选择数据列与参数</strong>，点击开始分析后执行预处理、训练、评估与可视化</span>
+                <span>上传完成后<strong>确认正文与分析参数</strong>，点击开始分析后执行预处理、训练、评估与可视化</span>
               </div>
             </div>
           </div>

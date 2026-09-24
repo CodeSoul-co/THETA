@@ -8,17 +8,21 @@ const { pathToFileURL } = require('node:url');
 const { readSettings, saveInference, saveEmbedding, embeddingSettings } = require('./settings.cjs');
 const smoke = process.argv.includes('--smoke-test');
 app.setName('THETA');
-app.setPath('userData', smoke
-  ? path.resolve(process.env.THETA_DESKTOP_TEST_HOME || path.join(__dirname, '.smoke-home'))
-  : path.join(app.getPath('appData'), 'THETA'));
-const home = app.getPath('userData');
+const { prepareDataHome, readDataLocation, saveDataLocation, clearUpgradeCaches } = require('./data-home.cjs');
+const locationFile = path.join(app.getPath('home'), '.theta-desktop-location.json');
+const requestedDataHome = process.argv.find(argument => argument.startsWith('--data-dir='))?.slice('--data-dir='.length);
+let home, settingsFile, startupError;
+try {
+  home = smoke ? path.resolve(process.env.THETA_DESKTOP_TEST_HOME || path.join(__dirname, '.smoke-home'))
+    : requestedDataHome || readDataLocation(locationFile, path.join(app.getPath('appData'), 'THETA'));
+  home = prepareDataHome(home);
+  app.setPath('userData', home);
+  app.setPath('sessionData', home);
+} catch (error) { startupError = error; }
 const runtime = app.isPackaged ? path.join(process.resourcesPath, 'runtime') : path.join(__dirname, 'runtime');
-const settingsFile = path.join(home, 'settings.json');
 const python = path.join(runtime, 'python', process.platform === 'win32' ? 'python.exe' : 'bin/python3');
 let providerSpecs = [];
 let window, service, origin, token, serviceEnv, stopped = false, restarting = false, quitting = false;
-const single = app.requestSingleInstanceLock();
-if (!single) app.quit();
 app.on('second-instance', () => { window?.restore(); window?.focus(); });
 
 function pythonCall(args, options = {}) {
@@ -59,6 +63,8 @@ function environment(port) {
     DATA_DIR: path.join(home, 'data'), RESULT_DIR: path.join(home, 'results'), WORKSPACE_DIR: path.join(home, 'workspace'),
     HF_HOME: path.join(home, 'cache/huggingface'), MPLCONFIGDIR: path.join(home, 'cache/matplotlib'),
     NUMBA_CACHE_DIR: path.join(home, 'cache/numba'), XDG_CACHE_HOME: path.join(home, 'cache'),
+    TMPDIR: path.join(home, 'tmp'), TMP: path.join(home, 'tmp'), TEMP: path.join(home, 'tmp'),
+    WORKER_JOB_ROOT: path.join(home, 'workspace', 'jobs'), OBJECT_STORAGE_FILESYSTEM_ROOT: path.join(home, 'workspace', 'objects'),
     // Desktop model downloads are explicit. Point settings at a complete local model.
     HF_HUB_OFFLINE: '1', TRANSFORMERS_OFFLINE: '1', TOKENIZERS_PARALLELISM: 'false',
     OMP_NUM_THREADS: '2', OPENBLAS_NUM_THREADS: '2',
@@ -250,6 +256,15 @@ async function runSmoke(services) {
   assert.equal(preview.status, 200, JSON.stringify(table));
   assert.deepEqual(table.columns, ['正文', '时间', '标签']);
   assert.deepEqual(table.rows[0], ['本地列预览测试', '2026-09-23', '测试']);
+  const textUpload = await get(origin, '/api/backend/api/upload?' + new URLSearchParams({ filename: '正文.txt', dataset_name: project.dataset_name }), {
+    method: 'POST', headers: { ...headers, 'content-type': 'application/octet-stream' }, body: '第一条正文\n第二条正文',
+  });
+  assert.equal(textUpload.status, 201);
+  const textFile = await textUpload.json();
+  const textPreview = await (await get(origin, `/api/backend/api/datasets/${encodeURIComponent(project.dataset_name)}/preview?file_id=${textFile.id}`)).json();
+  assert.equal(textPreview.inputKind, 'text');
+  assert.equal(textPreview.textColumn, 'text');
+  assert.deepEqual(textPreview.segments.map(segment => segment.text), ['第一条正文', '第二条正文']);
   const preprocessing = await get(origin, `/api/backend/api/preprocessing/check/${encodeURIComponent(project.dataset_name)}`);
   assert.equal(preprocessing.status, 200);
   assert.equal((await preprocessing.json()).managed_by_training, true);
@@ -262,7 +277,31 @@ async function runSmoke(services) {
   assert.equal((await model.json()).modelId, 'lda');
   console.log(JSON.stringify({ ok: true, app: app.getVersion(), node: process.versions.node, electron: process.versions.electron, python: parsed, checks: ['production UI', 'agent API', 'manual API', 'project write', 'XLSX upload and column preview through frontend proxy', 'local preprocessing status', 'desktop authentication', 'origin rejection', 'sandboxed settings bridge', 'live GLM embedding configuration', 'bundled Python imports', 'Python model inspection'] }, null, 2));
 }
-if (single) app.whenReady().then(async () => {
+app.whenReady().then(async () => {
+  if (startupError) {
+    if (smoke) throw startupError;
+    while (true) {
+      const answer = await dialog.showMessageBox({ type: 'warning', title: 'THETA 数据目录不可写',
+        message: '无法在当前数据目录保存文件，请选择有写入权限的文件夹。',
+        detail: `${home || ''}\n${startupError.message}\n\n可选择 D 盘等位置的专用文件夹。原项目与配置不会删除；选择已有的 THETA 数据目录可继续使用原数据。`,
+        buttons: ['选择数据目录', '退出'], cancelId: 1 });
+      if (answer.response !== 0) { app.quit(); return; }
+      const chosen = await dialog.showOpenDialog({ title: '选择 THETA 数据目录', properties: ['openDirectory', 'createDirectory'] });
+      if (chosen.canceled || !chosen.filePaths[0]) continue;
+      try { home = prepareDataHome(chosen.filePaths[0]); break; }
+      catch (error) { startupError = error; }
+    }
+    // Chromium's storage path must be chosen before ready; restart with the selected location.
+    app.relaunch({ args: [...process.argv.slice(1).filter(argument => !argument.startsWith('--data-dir=')), `--data-dir=${home}`] });
+    app.exit(0); return;
+  }
+  if (!app.requestSingleInstanceLock()) { app.quit(); return; }
+  clearUpgradeCaches(home, app.getVersion());
+  settingsFile = path.join(home, 'settings.json');
+  if (!smoke && requestedDataHome) {
+    try { saveDataLocation(locationFile, home); }
+    catch { await dialog.showMessageBox({ type: 'warning', message: '本次已使用所选数据目录，但无法记住该位置。', detail: `下次请使用 --data-dir="${home}" 启动 THETA。` }); }
+  }
   if (process.platform === 'darwin') app.dock.setIcon(path.join(__dirname, 'ui/icon.png'));
   mkdirSync(path.join(home, 'logs'), { recursive: true });
   providerSpecs = (await import(pathToFileURL(path.join(runtime, 'agent/dist/src/providers/provider-registry.js')).href)).inferenceProviderSpecs;

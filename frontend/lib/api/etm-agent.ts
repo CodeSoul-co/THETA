@@ -4,6 +4,7 @@
  */
 
 import { apiFetch, API_BASE, AGENT_BASE } from './config';
+import type { DatasetPreview } from '../dataset-input';
 import { ApiError } from './api-error';
 import { SimpleETMAPI, BackendAPI, type TrainStatusResponse } from './backend';
 
@@ -697,7 +698,7 @@ export const ETMAgentAPI = {
     }
   },
 
-  async getDatasetPreview(dataset: string, jobId?: string): Promise<{ columns: string[]; rows: string[][] }> {
+  async getDatasetPreview(dataset: string, jobId?: string): Promise<DatasetPreview> {
     return apiFetch(API_BASE, `/api/datasets/${encodeURIComponent(dataset)}/preview${jobId ? `?file_id=${encodeURIComponent(jobId)}` : ''}`);
   },
 

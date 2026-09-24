@@ -8,7 +8,7 @@ THETA 是面向文本研究的本地主題建模与分析工具，提供网页�
 
 | 入口 | 使用说明 |
 | --- | --- |
-| 桌面应用 | [下载 Mac / Windows 安装包](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.2)，内置 Python |
+| 桌面应用 | [下载 Mac / Windows 安装包](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.3)，内置 Python |
 | 网页工作台 | [源码安装与启动](https://github.com/CodeSoul-co/THETA/blob/main/frontend/README_zh.md)，在本机浏览器中使用 |
 | CLI Agent | [终端安装与使用](https://github.com/CodeSoul-co/THETA/blob/main/agent/README_zh.md)，通过自然语言操作 |
 
@@ -32,7 +32,7 @@ THETA 是面向文本研究的本地主題建模与分析工具，提供网页�
   year = {2026},
   howpublished = {GitHub repository},
   url = {https://github.com/CodeSoul-co/THETA},
-  note = {Version 0.3.2}
+  note = {Version 0.3.3}
 }
 ```
 

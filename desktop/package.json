@@ -1,7 +1,7 @@
 {
   "name": "theta-desktop",
   "productName": "THETA",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "description": "THETA local research workbench with bundled Python",
   "author": "CodeSoul",
@@ -30,11 +30,11 @@
     "asar": true,
     "npmRebuild": false,
     "directories": { "output": "release" },
-    "files": ["main.cjs", "preload.cjs", "services.mjs", "settings.cjs", "ui/icon.png", "package.json"],
+    "files": ["main.cjs", "preload.cjs", "services.mjs", "settings.cjs", "data-home.cjs", "ui/icon.png", "package.json"],
     "extraResources": [{ "from": "runtime", "to": "runtime", "filter": ["**/*", "!**/__pycache__/**", "!**/*.pyc", "!**/.env", "!**/.env.*", "!**/settings.json", "!**/credentials.json", "!**/.smoke-home/**"] }],
     "artifactName": "THETA-${version}-${os}-${arch}.${ext}",
     "mac": { "target": ["dmg", "zip"], "category": "public.app-category.education", "icon": "ui/icon.png" },
     "win": { "target": ["nsis"], "icon": "ui/icon.png" },
-    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "deleteAppDataOnUninstall": false, "shortcutName": "THETA", "uninstallDisplayName": "THETA" }
+    "nsis": { "oneClick": false, "perMachine": false, "include": "installer.nsh", "allowToChangeInstallationDirectory": true, "deleteAppDataOnUninstall": false, "shortcutName": "THETA", "uninstallDisplayName": "THETA" }
   }
 }

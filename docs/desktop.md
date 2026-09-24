@@ -6,12 +6,12 @@ The desktop app combines the CLI Agent, Web workbench, and Python compute engine
 
 ## Download and install
 
-Download from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.2):
+Download from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.3):
 
 | Platform | Installer | Installation |
 | --- | --- | --- |
-| macOS Apple Silicon | `THETA-0.3.2-mac-arm64.dmg` | Open the DMG and drag THETA into Applications |
-| Windows x64 | `THETA-0.3.2-win-x64.exe` | Run the installer |
+| macOS Apple Silicon | `THETA-0.3.3-mac-arm64.dmg` | Open the DMG and drag THETA into Applications |
+| Windows x64 | `THETA-0.3.3-win-x64.exe` | Run the installer |
 
 This is an unsigned preview without macOS notarization. Your operating system may show a security warning. Native Intel Mac and Windows ARM installers are not provided.
 
@@ -38,7 +38,11 @@ Use the application menu to open data and logs or restart local services.
 - macOS: `~/Library/Application Support/THETA`
 - Windows: `%APPDATA%/THETA`
 
-Settings, projects, uploads, results, and caches are separate from the application installation. Updating or uninstalling does not actively delete these directories. Desktop storage is independent of the source installation's `.theta_agent` and `.local/manual-workbench` directories.
+Settings, projects, uploads, results, and model weights are separate from the application installation and retained during upgrades. The Windows installer replaces registered older versions and removes their program files. The first launch of a new version clears disposable interface caches. Desktop storage is independent of the source installation's `.theta_agent` and `.local/manual-workbench` directories.
+
+Windows installs for the current user by default. Data is not written to the root of C: or the installation directory. If the data directory is not writable, the app asks you to choose a dedicated folder, such as `D:\THETA-data`, and remembers it. You can also start `THETA.exe --data-dir="D:\THETA-data"`. Choosing a new folder does not migrate existing data; select an existing THETA data directory to reopen its projects.
+
+TXT, Markdown, PDF, and Word uploads open a text preview directly, without column selection. Structured files retain text, time, and label column selection. Scanned PDFs require text recognition first.
 
 Services listen only on loopback and use a per-launch access token. The preferred workbench port is 14320; another available port is selected if needed. Quitting closes the app's services. Submitted training follows the existing worker lifecycle and is not resubmitted automatically.
 

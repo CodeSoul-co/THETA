@@ -10,6 +10,8 @@ import { isUploadedFileId, uploadManualFiles } from "@/lib/manual-upload"
 import { statusLabel, systemText } from "@/lib/presentation"
 import { AnalysisConfigPanel, type AnalysisConfig } from "./analysis-config-panel"
 import { ColumnSelectPanel, type ColumnSelection } from "./column-select-panel"
+import { ETMAgentAPI } from "@/lib/api/etm-agent"
+import { isTextDocument, type DatasetPreview } from "@/lib/dataset-input"
 import { useProjectDraft } from "@/lib/use-project-draft"
 
 interface PipelineResult { success: boolean; taskId?: string; dataset?: string; metrics?: Record<string, number>; topicWords?: Record<string, string[]>; duration: number }
@@ -87,6 +89,25 @@ export function AutoPipeline(props: AutoPipelineProps) {
     }
   }, [recovering])
 
+  const selectedUpload = uploads.find(file => file.fileId === fileId)
+  const textInput = isTextDocument(selectedUpload?.name ?? '')
+  const [textPreview, setTextPreview] = useState<DatasetPreview>()
+  const [previewError, setPreviewError] = useState('')
+  const [previewAttempt, setPreviewAttempt] = useState(0)
+  useEffect(() => {
+    setTextPreview(undefined); setPreviewError('')
+    if (recovering || !fileId || !textInput) return
+    let cancelled = false
+    setSelection(null); setColumnsOpen(false)
+    void ETMAgentAPI.getDatasetPreview(dataset, fileId).then(preview => {
+      if (cancelled) return
+      const value = { textColumn: preview.textColumn || 'text', metaColumns: [] }
+      setTextPreview(preview); setSelection(value)
+      setDraft(prev => ({ ...prev, fileId, selection: value, columnsOpen: false }))
+    }).catch(error => { if (!cancelled) setPreviewError(error instanceof Error ? error.message : '正文读取失败，请重试') })
+    return () => { cancelled = true }
+  }, [dataset, fileId, textInput, recovering, previewAttempt])
+
   const changeColumnsOpen = (open: boolean) => { setColumnsOpen(open); setDraft(prev => ({ ...prev, fileId, columnsOpen: open })) }
   const changeConfigOpen = (open: boolean) => { setConfigOpen(open); setDraft(prev => ({ ...prev, fileId, configOpen: open })) }
 
@@ -125,19 +146,20 @@ export function AutoPipeline(props: AutoPipelineProps) {
       log(`开始上传 ${files.length} 个文件`)
       const receipts = await uploadManualFiles(files, (file, progress) => SimpleETMAPI.uploadDataset(file, dataset, progress), setUploadProgress)
       setUploads(receipts); setFileId(receipts[0].fileId)
-      setDraft({ fileId: receipts[0].fileId, selection: null, columnsOpen: receipts.length === 1, configOpen: false })
+      setSelection(null)
+      setDraft({ fileId: receipts[0].fileId, selection: null, columnsOpen: receipts.length === 1 && !isTextDocument(receipts[0].name), configOpen: false })
       callbacks.current.onUploadComplete?.(dataset)
-      log('上传成功，请选择本次分析的文本列与元数据。')
-      if (receipts.length === 1) setColumnsOpen(true)
+      log(isTextDocument(receipts[0].name) ? '上传成功，正在直接读取正文，无需选择数据列。' : '上传成功，请选择本次分析的文本列与元数据。')
+      setColumnsOpen(receipts.length === 1 && !isTextDocument(receipts[0].name))
     } catch (e) { const message = e instanceof Error ? e.message : '上传失败'; setError(message); log(message) }
     finally { busy.current = false; setUploading(false) }
   }
 
   const start = (config: AnalysisConfig) => {
-    if (busy.current || !fileId || !selection?.textColumn) { setError('请先成功上传数据并选择正文列。'); return false }
-    if (config.models.includes('dtm') && !selection.timeColumn) { setError('DTM 需要真实时间列，请返回列选择。'); return false }
-    if (config.models.includes('stm') && !selection.metaColumns.length) { setError('STM 需要选择至少一个元数据列作为协变量。'); return false }
-    if (config.mode === 'supervised' && !selection.labelColumn) { setError('有监督嵌入需要标签列，请返回列选择。'); return false }
+    if (busy.current || !fileId || !selection?.textColumn) { setError('请先上传数据，等待读取正文或选择表格中的正文列。'); return false }
+    if (config.models.includes('dtm') && !selection.timeColumn) { setError('DTM 需要真实时间列，请上传包含正文和时间列的表格。'); return false }
+    if (config.models.includes('stm') && !selection.metaColumns.length) { setError('STM 需要元数据列作为协变量，请上传包含正文和元数据的表格。'); return false }
+    if (config.mode === 'supervised' && !selection.labelColumn) { setError('有监督嵌入需要标签列，请上传包含正文和标签列的表格。'); return false }
     busy.current = true; setSubmitting(true); setError(null)
     callbacks.current.onConfigConfirmed?.(config)
     void (async () => {
@@ -167,18 +189,21 @@ export function AutoPipeline(props: AutoPipelineProps) {
       <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">{recovering ? '正在恢复项目' : done ? '已完成' : error ? '需要处理' : running ? '分析中' : fileId ? '待配置' : '请上传数据'}</span></div>
     <ol className="flex flex-wrap gap-3 rounded-xl border bg-white p-4 text-sm">{phases.map((phase, index) => <li key={phase} className={`flex items-center gap-2 rounded-lg px-3 py-2 ${done || (index === 0 && fileId) || (running && index < current) ? 'bg-emerald-50 text-emerald-700' : running && current === index ? 'bg-blue-50 text-blue-700' : 'text-slate-400'}`}>
       {done || (index === 0 && fileId) || (running && index < current) ? <Check className="size-4" /> : running && current === index ? <Loader2 className="size-4 animate-spin" /> : <span>{index + 1}</span>}{phase}</li>)}</ol>
-    {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700"><p className="flex items-center gap-2"><AlertCircle className="size-4" /></p><SetupError error={error} />{!running && fileId && <Button variant="outline" className="mt-3" onClick={() => { setTaskId(null); setTask(null); setError(null); changeColumnsOpen(true) }}>调整配置后重试</Button>}</div>}
+    {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700"><p className="flex items-center gap-2"><AlertCircle className="size-4" /></p><SetupError error={error} />{!running && fileId && <Button variant="outline" className="mt-3" onClick={() => { setTaskId(null); setTask(null); setError(null); textInput ? changeConfigOpen(true) : changeColumnsOpen(true) }}>调整配置后重试</Button>}</div>}
     {pollError && <p role="status" className="text-sm text-amber-700">{pollError}</p>}
     {task?.states?.some(state => state.phaseHistory?.length) && <details className="rounded-xl border bg-white p-4" open><summary className="cursor-pointer text-sm font-medium">已保存的实际执行阶段</summary><div className="mt-3 space-y-3">{task.states.map(state => <div key={state.id} className="text-xs leading-6 text-slate-600"><strong>{task.workers?.find(item => item.id === state.id)?.model.toUpperCase()}</strong>{state.phaseHistory?.map((entry, index) => <p key={index}>{new Date(entry.at * 1000).toLocaleTimeString('zh-CN')} · {executionPhaseLabel(entry.phase)}</p>)}</div>)}</div></details>}
     {!!task?.queued_models?.length && <p className="text-sm text-slate-600">排队模型：{task.queued_models.map(model => model.toUpperCase()).join('、')}。按顺序执行，关闭页面不会中断队列。</p>}
     {running && <Button variant="outline" onClick={async () => { try { const cancelled = await BackendAPI.cancelTraining(Number(taskId)); setTask(cancelled); setError(cancelled.status === 'cancelled' ? '任务已取消，可以调整数据与参数后重新开始。' : null) } catch (e) { setError(e instanceof Error ? e.message : '取消失败，请重试') } }}>取消本次训练</Button>}
     {(running || submitting) && <div role="status" className="space-y-4 rounded-2xl border bg-white p-6"><p className="flex items-center gap-2 text-sm font-medium"><Loader2 className="size-4 animate-spin" />{submitting ? '正在保存分析任务…' : systemText(task?.message || '正在检查数据与运行环境…')}</p><Progress value={task?.progress ?? 0} /><p className="text-xs leading-5 text-slate-500">{task?.progress ?? 0}% 为 worker 阶段进度，不是剩余时间估算。可以离开页面，返回后恢复真实任务状态。</p>{task?.states?.map(state => <p key={state.id} className="text-xs text-slate-600">{task.workers?.find(item => item.id === state.id)?.model.toUpperCase()} · {statusLabel(state.status)} · {systemText(state.phase)} · {state.percent}%</p>)}</div>}
     {!recovering && !running && !done && !submitting && <section className="space-y-4 rounded-2xl border bg-white p-6"><h2 className="font-semibold">{fileId ? '选择数据与分析参数' : '上传数据'}</h2>
-      {!fileId && <><p className="text-sm text-slate-500">支持 Excel、CSV、TXT、PDF、DOCX、JSON 等格式。上传后选择正文列，无需手动转换 CSV。</p><label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed p-8 text-sm text-blue-700"><Upload className="size-5" />选择文件<input className="sr-only" aria-label="选择文件" type="file" multiple accept=".csv,.tsv,.txt,.md,.xlsx,.xls,.json,.jsonl,.ndjson,.parquet,.pdf,.docx" disabled={uploading} onChange={e => setFiles(Array.from(e.target.files || []))} /></label><ComputationNotice sizeBytes={files.reduce((sum, file) => sum + file.size, 0)} />{files.map((file, index) => <p key={`${file.name}-${index}`} className="text-sm text-slate-600">{file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB</p>)}{uploading ? <><Progress value={uploadProgress} /><p className="text-sm">正在上传 · {uploadProgress}%</p></> : <Button disabled={!files.length} onClick={() => void upload()}>上传并配置分析</Button>}</>}
-      {fileId && <><label className="block space-y-2 text-sm">本次分析文件<select aria-label="本次分析文件" className="block w-full rounded-lg border p-2" value={fileId} onChange={e => { setFileId(e.target.value); setSelection(null); setDraft({ fileId: e.target.value, selection: null, columnsOpen: false, configOpen: false }) }}>{uploads.map(file => <option key={file.fileId} value={file.fileId}>{file.name}</option>)}</select></label><p className="text-xs text-slate-500">每个任务分析一个文件。多文件上传后，请明确选择本次文件。</p><Button variant="outline" onClick={() => changeColumnsOpen(true)}>选择数据列</Button>{selection && <Button className="ml-2" onClick={() => changeConfigOpen(true)}>配置分析参数</Button>}</>}
+      {!fileId && <><p className="text-sm text-slate-500">支持 Excel、CSV、TXT、PDF、DOCX、JSON 等格式。表格选择正文列；TXT、Markdown、PDF、Word 直接读取正文，无需选择数据列。</p><label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed p-8 text-sm text-blue-700"><Upload className="size-5" />选择文件<input className="sr-only" aria-label="选择文件" type="file" multiple accept=".csv,.tsv,.txt,.md,.xlsx,.xls,.json,.jsonl,.ndjson,.parquet,.pdf,.docx" disabled={uploading} onChange={e => setFiles(Array.from(e.target.files || []))} /></label><ComputationNotice sizeBytes={files.reduce((sum, file) => sum + file.size, 0)} />{files.map((file, index) => <p key={`${file.name}-${index}`} className="text-sm text-slate-600">{file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB</p>)}{uploading ? <><Progress value={uploadProgress} /><p className="text-sm">正在上传 · {uploadProgress}%</p></> : <Button disabled={!files.length} onClick={() => void upload()}>上传并配置分析</Button>}</>}
+      {fileId && <><label className="block space-y-2 text-sm">本次分析文件<select aria-label="本次分析文件" className="block w-full rounded-lg border p-2" value={fileId} onChange={e => { setFileId(e.target.value); setSelection(null); setDraft({ fileId: e.target.value, selection: null, columnsOpen: false, configOpen: false }) }}>{uploads.map(file => <option key={file.fileId} value={file.fileId}>{file.name}</option>)}</select></label><p className="text-xs text-slate-500">每个任务分析一个文件。多文件上传后，请明确选择本次文件。</p>{textInput ? <div className="space-y-3 rounded-xl border bg-slate-50 p-4">
+        <h3 className="text-sm font-semibold">正文预览</h3><p className="text-xs text-slate-500">直接读取文本，无需选择数据列。按非空行、PDF 页面或 Word 段落生成分析记录。</p>
+        {previewError ? <p role="alert" className="text-sm text-red-700">{previewError}<button className="ml-2 underline" onClick={() => setPreviewAttempt(value => value + 1)}>重新读取</button></p> : !textPreview ? <p role="status" className="text-sm">正在读取正文…</p> : <><p className="text-xs text-slate-500">共 {textPreview.totalRecords ?? textPreview.rows.length} 条正文记录，预览前 5 条</p><div className="max-h-72 space-y-3 overflow-y-auto">{(textPreview.segments ?? textPreview.rows.map(row => ({ text: row[0] }))).map((segment, index) => <article key={index} className="rounded-lg bg-white p-3"><p className="mb-2 text-xs text-slate-400">{'page' in segment ? `第 ${segment.page} 页` : 'paragraph' in segment ? `第 ${segment.paragraph} 段` : `正文 ${index + 1}`}</p><p className="whitespace-pre-wrap text-sm leading-6 [overflow-wrap:anywhere]">{segment.text}</p></article>)}</div></>}
+      </div> : <Button variant="outline" onClick={() => changeColumnsOpen(true)}>选择数据列</Button>}{selection && <Button className="ml-2" onClick={() => changeConfigOpen(true)}>配置分析参数</Button>}</>}
     </section>}
     <details className="rounded-xl border bg-white p-4"><summary className="cursor-pointer text-sm font-medium">执行日志</summary><pre className="mt-3 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-950 p-4 text-xs leading-6 text-slate-200">{logs.join('\n') || '暂无执行记录'}</pre></details>
-    <ColumnSelectPanel key={fileId} projectKey={props.projectKey} open={columnsOpen} onOpenChange={changeColumnsOpen} datasetName={dataset} jobId={fileId} onConfirm={value => { setSelection(value); setColumnsOpen(false); setConfigOpen(true); setDraft({ fileId, selection: value, columnsOpen: false, configOpen: true }) }} />
+    {!textInput && <ColumnSelectPanel key={fileId} projectKey={props.projectKey} open={columnsOpen} onOpenChange={changeColumnsOpen} datasetName={dataset} jobId={fileId} onConfirm={value => { setSelection(value); setColumnsOpen(false); setConfigOpen(true); setDraft({ fileId, selection: value, columnsOpen: false, configOpen: true }) }} />}
     <AnalysisConfigPanel datasetSizeBytes={uploads.find(file => file.fileId === fileId)?.size} projectKey={props.projectKey} open={configOpen} onOpenChange={changeConfigOpen} datasetName={dataset} error={error} onConfirm={start} />
   </div>
 }

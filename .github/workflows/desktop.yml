@@ -64,6 +64,12 @@ jobs:
           else
             desktop/release/win-unpacked/THETA.exe --smoke-test
           fi
+      - name: Verify Windows upgrade preserves data and removes old program files
+        if: ${{ runner.os == 'Windows' && (!inputs.target || inputs.target == 'all' || inputs.target == matrix.platform) }}
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./desktop/scripts/check-windows-upgrade.ps1
       - uses: actions/upload-artifact@v4
         if: ${{ success() && (!inputs.target || inputs.target == 'all' || inputs.target == matrix.platform) }}
         with:

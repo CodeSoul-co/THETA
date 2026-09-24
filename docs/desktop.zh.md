@@ -6,7 +6,7 @@
 
 ## 使用
 
-首版构建目标为 **macOS Apple Silicon（arm64）** 和 **Windows x64**。从 [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.2) 下载：Mac 使用 `THETA-0.3.2-mac-arm64.dmg`，Windows 使用 `THETA-0.3.2-win-x64.exe`。Mac 打开 DMG 后将 THETA 拖入「应用程序」；Windows 运行 EXE 安装程序。当前为未正式签名／公证的预览版，系统可能显示安全提示。暂不提供 Intel Mac 或 Windows ARM 原生版本。
+首版构建目标为 **macOS Apple Silicon（arm64）** 和 **Windows x64**。从 [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.3) 下载：Mac 使用 `THETA-0.3.3-mac-arm64.dmg`，Windows 使用 `THETA-0.3.3-win-x64.exe`。Mac 打开 DMG 后将 THETA 拖入「应用程序」；Windows 运行 EXE 安装程序。当前为未正式签名／公证的预览版，系统可能显示安全提示。暂不提供 Intel Mac 或 Windows ARM 原生版本。
 
 发行页提供 `SHA256SUMS.txt`，用于核对下载文件完整性。macOS 可运行 `shasum -a 256 文件名.dmg`；Windows PowerShell 可运行 `Get-FileHash 文件名.exe -Algorithm SHA256`，与校验文件对应行比较。
 
@@ -29,7 +29,11 @@
 - macOS：`~/Library/Application Support/THETA`
 - Windows：`%APPDATA%/THETA`
 
-配置、项目、上传文件、结果和缓存与安装目录分离。重新打包、升级或卸载不会主动删除这些数据。桌面版使用独立数据目录，不自动迁移源码版的 `.theta_agent` 或 `.local/manual-workbench`。
+配置、项目、上传文件、结果和模型权重与安装目录分离，升级会保留这些数据。Windows 安装程序会替换已登记的旧版本并清理旧程序文件；首次运行新版时清理可重新生成的界面缓存。桌面版使用独立数据目录，不自动迁移源码版的 `.theta_agent` 或 `.local/manual-workbench`。
+
+Windows 默认安装到当前用户目录，数据不写入 C 盘根目录或程序安装目录。数据目录不可写时，应用会提示另选专用文件夹，例如 `D:\THETA-data`，并记住该位置。也可使用 `THETA.exe --data-dir="D:\THETA-data"` 指定目录。选择新目录不会搬迁原有数据；选择已有 THETA 数据目录可继续使用原项目。
+
+上传 TXT、Markdown、PDF 或 Word 文件后，直接读取正文并显示文本预览，无需选择数据列。表格文件仍可选择文本、时间和标签等列。扫描版 PDF 需要先完成文字识别。
 
 本地服务只监听 loopback，使用每次启动生成的访问令牌，默认工作台端口 14320（冲突时自动选择空闲端口）。退出应用关闭其自身服务；已提交的训练遵循原有 Worker 生命周期，不会重复提交。
 

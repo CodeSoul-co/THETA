@@ -286,7 +286,7 @@ export class LocalProductTools implements ProductToolExecutor {
       stopwords = { id, name: 'Agent 预填停用词表', count: words.length };
       this.records.put('training-stopwords', id, { sessionId: session.id, words, name: stopwords.name });
     }
-    return { ...configuration, datasetSizeBytes: this.dataset(session).sizeBytes, columns: profile.columns, runtime, stopwords };
+    return { ...configuration, inputKind: ['.txt', '.md', '.pdf', '.docx'].includes(path.extname(this.dataset(session).fileName).toLowerCase()) ? 'text' : 'table', datasetSizeBytes: this.dataset(session).sizeBytes, columns: profile.columns, runtime, stopwords };
   }
   private async proposeTrainingConfiguration(context: ProductToolContext, plans: TrainingPlan[]): Promise<unknown> {
     if (new Set(plans.map(plan => plan.modelId)).size !== plans.length) throw new Error('每个模型只需配置一次。');
