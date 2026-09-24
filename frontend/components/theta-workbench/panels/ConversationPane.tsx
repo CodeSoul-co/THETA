@@ -556,8 +556,8 @@ export const ConversationPane = ({
       ...attachments.filter((attachment) => attachment.kind !== 'dataset'),
       ...datasets.slice(0, 1).map((dataset): WebAttachment => ({ kind: 'dataset', id: dataset.datasetRef, label: dataset.name })),
     ]
-    onAttachmentsChange(nextAttachments)
-    await onDatasetReady?.(datasets.slice(0, 1))
+    if (onDatasetReady) await onDatasetReady(datasets.slice(0, 1))
+    else onAttachmentsChange(nextAttachments)
   }
 
   const { dragging: draggingFiles, dropProps } = useFileDrop(files => { void addFiles(files) }, controlsDisabled, setUploadError)

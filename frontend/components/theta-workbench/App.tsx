@@ -1783,7 +1783,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
   const datasetReady = async (datasets: WebDataset[]): Promise<void> => {
     const dataset = datasets[0]
     if (!dataset) return
-    const projectId = await ensureProject(dataset.name.replace(/\.[^.]+$/u, '') || '数据分析项目')
+    const projectId = dataset.projectId ?? await ensureProject(dataset.name.replace(/\.[^.]+$/u, '') || '数据分析项目')
 
     // An existing run retains its original dataset and approvals. Replacement starts
     // a fresh conversation inside the same project, leaving its history/results intact.
@@ -1796,7 +1796,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
       const previous = current[projectId] ?? { messages: messagesRef.current, attachments: [] }
       return { ...current, [projectId]: { ...previous, ...(replacing ? { messages: [], selectedRunId: undefined, workspaceSessionId: undefined } : {}), attachments: datasetAttachments } }
     })
-    setDetailOpen(true)
+    if (activeProjectIdRef.current === projectId) setDetailOpen(true)
   }
 
   const uploadDatasetFromDrawer = async (files: File[]): Promise<void> => {

@@ -283,6 +283,7 @@ export interface WebPostMessageResult {
 }
 
 export interface WebDataset {
+  projectId?: string;
   datasetRef: string;
   name: string;
   sizeBytes: number;
@@ -850,7 +851,7 @@ export const listDatasets = async (projectId: string): Promise<{ datasets: WebDa
   const data = await request<{ datasets: Array<Omit<WebDataset, 'name'> & { displayName: string }> }>(
     `/api/v3/datasets?projectId=${encodeURIComponent(projectId)}`,
   );
-  return { datasets: data.datasets.map(({ displayName, ...dataset }) => ({ ...dataset, name: displayName })) };
+  return { datasets: data.datasets.map(({ displayName, ...dataset }) => ({ ...dataset, name: displayName, projectId })) };
 };
 
 export const uploadDataset = async (projectId: string, file: File): Promise<WebDataset> => {
@@ -861,7 +862,7 @@ export const uploadDataset = async (projectId: string, file: File): Promise<WebD
     `/api/v3/datasets/upload?projectId=${encodeURIComponent(projectId)}`,
     { method: 'POST', body },
   );
-  return { ...dataset, name: displayName };
+  return { ...dataset, name: displayName, projectId };
 };
 
 export const uploadDatasetFiles = async (projectId: string, files: File[], locale = 'zh-CN'): Promise<WebDataset> => {
@@ -874,7 +875,7 @@ export const uploadDatasetFiles = async (projectId: string, files: File[], local
   const { displayName, ...dataset } = await request<Omit<WebDataset, 'name'> & { displayName: string }>('/api/v3/datasets/combine', {
     method: 'POST', body: JSON.stringify({ projectId, datasetRefs: uploaded.map(item => item.datasetRef), sourceNames: files.map(file => file.webkitRelativePath || file.name) }),
   })
-  return { ...dataset, name: displayName }
+  return { ...dataset, name: displayName, projectId }
 }
 
 export const listProjects = async (): Promise<{ projects: WebProject[] }> =>

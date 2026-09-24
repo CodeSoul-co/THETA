@@ -1,7 +1,7 @@
 'use client'
 
 import { droppedFiles } from './dataset-files'
-import { useRef, useState, type DragEvent } from 'react'
+import { useEffect, useRef, useState, type DragEvent } from 'react'
 
 /** Handle file drags only. Stop bubbling so nested upload areas cannot upload twice. */
 export function useFileDrop(onFiles: (files: File[]) => void, disabled = false, onError: (message: string) => void = () => {}) {
@@ -10,6 +10,13 @@ export function useFileDrop(onFiles: (files: File[]) => void, disabled = false, 
   unavailable.current = disabled
   const depth = useRef(0)
   const [dragging, setDragging] = useState(false)
+  useEffect(() => {
+    const clear = () => { depth.current = 0; setDragging(false) }
+    // A nested drop zone owns the upload, but every ancestor must clear its highlight.
+    window.addEventListener('drop', clear, true)
+    window.addEventListener('dragend', clear, true)
+    return () => { window.removeEventListener('drop', clear, true); window.removeEventListener('dragend', clear, true) }
+  }, [])
   const isFile = (event: DragEvent) => Array.from(event.dataTransfer.types).includes('Files')
   const reset = () => { depth.current = 0; setDragging(false) }
   return {
