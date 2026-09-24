@@ -396,9 +396,15 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
     for (const job of list('job')) if (job.queue?.length && !job.cancel_requested) void advance(job.id);
   }, 3000);
   queueTimer.unref();
-  server.on('close', () => {
+  let resourcesClosed: Promise<void> = Promise.resolve();
+  server.once('close', () => {
     closing = true; clearInterval(queueTimer);
-    void Promise.allSettled([...preparing, ...dispatching.values(), ...[...observations.values()].map(item => item.pending)]).then(() => db.close());
+    resourcesClosed = Promise.allSettled([...preparing, ...dispatching.values(), ...[...observations.values()].map(item => item.pending)]).then(() => db.close());
+  });
+  const closeHttp = server.close.bind(server);
+  // HTTP close alone does not wait for background work or release SQLite's Windows lock.
+  server.close = (callback) => closeHttp(error => {
+    void resourcesClosed.then(() => callback?.(error), cause => callback?.(cause));
   });
   return server;
 }

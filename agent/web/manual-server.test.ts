@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import os from 'node:os';
 import path from 'node:path';
@@ -54,6 +54,7 @@ test('统一结果目录保留真实任务身份、文件分类及下载隔离�
     assert.deepEqual((await (await fetch(base + '/api/results/empty/catalog')).json() as any).results, []);
   } finally {
     await new Promise<void>(resolve => server.close(() => resolve()));
+    assert.equal(existsSync(path.join(home, 'manual.sqlite-wal')), false, '关闭回调必须等待数据库释放，Windows 才能移动或清理数据目录');
     rmSync(home, { recursive: true, force: true });
   }
 });
