@@ -6,7 +6,7 @@ $newFolder = Join-Path $env:RUNNER_TEMP 'THETA-current'
 $baselineFolder = Join-Path $env:RUNNER_TEMP 'theta-upgrade-baseline'
 if ($Phase -eq 'download') {
   New-Item -ItemType Directory -Force $baselineFolder | Out-Null
-  & gh release download desktop-v0.3.4 --repo CodeSoul-co/THETA --pattern 'THETA-0.3.4-win-x64.exe' --dir $baselineFolder
+  & gh release download desktop-v0.3.5 --repo CodeSoul-co/THETA --pattern 'THETA-0.3.5-win-x64.exe' --dir $baselineFolder
   if ($LASTEXITCODE -ne 0) { throw 'Could not download upgrade baseline' }
   return
 }
@@ -30,7 +30,7 @@ $obsolete = Join-Path $oldFolder 'obsolete-version-test.txt'
 $userData = Join-Path ([Environment]::GetFolderPath('ApplicationData')) 'THETA'
 $keep = Join-Path $userData 'upgrade-data-retention-test.txt'
 if ($Phase -eq 'baseline') {
-  Install-Theta (Join-Path $baselineFolder 'THETA-0.3.4-win-x64.exe') $oldFolder
+  Install-Theta (Join-Path $baselineFolder 'THETA-0.3.5-win-x64.exe') $oldFolder
   Set-Content -Path $obsolete -Value 'old application payload'
   New-Item -ItemType Directory -Force $userData | Out-Null
   Set-Content -Path $keep -Value 'preserve user data'
@@ -47,7 +47,7 @@ if ($entries.Count -ne 1 -or $entries[0].DisplayVersion -ne $version) { throw 'U
 Write-Output 'Upgrade verified: previous program removed, one current install entry, user data retained.'
 return
 }
-$env:THETA_DESKTOP_TEST_HOME = Join-Path $env:RUNNER_TEMP 'theta-installed-smoke'
+$env:THETA_DESKTOP_TEST_HOME = Join-Path $newFolder 'THETA-data\中文路径'
 $process = Start-Process -FilePath (Join-Path $newFolder 'THETA.exe') -ArgumentList '--smoke-test' -PassThru -RedirectStandardOutput (Join-Path $env:RUNNER_TEMP 'theta-installed-smoke.log') -RedirectStandardError (Join-Path $env:RUNNER_TEMP 'theta-installed-smoke-error.log')
 try { Wait-ThetaProcess $process 240000 'Installed application smoke test' }
 finally {
@@ -55,3 +55,16 @@ finally {
   Get-Content (Join-Path $env:RUNNER_TEMP 'theta-installed-smoke-error.log') -ErrorAction SilentlyContinue
 }
 Write-Output 'Upgrade verified: previous program removed, one current install entry, user data retained, installed app starts.'
+
+# Uninstall must remove program payload while retaining installation-local user data.
+$localData = Join-Path $newFolder 'THETA-data\keep.txt'
+Set-Content -Path $localData -Value 'preserve installation data'
+$uninstaller = Get-ChildItem $newFolder -Filter '*Uninstall*.exe' | Select-Object -First 1
+if (!$uninstaller) { throw 'Uninstaller missing' }
+$temporaryUninstaller = Join-Path $env:RUNNER_TEMP 'theta-uninstall-check.exe'
+Copy-Item $uninstaller.FullName $temporaryUninstaller -Force
+$uninstallProcess = Start-Process -FilePath $temporaryUninstaller -ArgumentList @('/S', '/currentuser', "_?=$newFolder") -PassThru
+Wait-ThetaProcess $uninstallProcess 600000 'Data-preserving uninstall'
+if ((Get-Content $localData) -ne 'preserve installation data') { throw 'Uninstall removed installation-local data' }
+if (Test-Path (Join-Path $newFolder 'resources')) { throw 'Uninstall left program payload' }
+Write-Output 'Uninstall verified: installation-local THETA-data retained.'

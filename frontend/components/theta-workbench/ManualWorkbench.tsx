@@ -706,11 +706,12 @@ export function ManualWorkbench() {
             }
           }}
           onUploadComplete={async (datasetName) => {
-            setProjects(prev => prev.map(p => p.id === currentProject.id ? { ...p, datasetName, status: "draft", pipelineStatus: "draft" } : p))
+            setProjects(prev => prev.map(p => p.id === currentProject.id ? { ...p, datasetName, taskId: null, status: "draft", pipelineStatus: "draft" } : p))
             if (currentProject.dbProjectId) {
               try {
                 await ETMAgentAPI.updateProject(currentProject.dbProjectId, {
                   dataset_name: datasetName,
+                  task_id: null,
                   status: "draft",
                   pipeline_status: "draft",
                 })

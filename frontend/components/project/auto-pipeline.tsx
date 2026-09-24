@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { ExecutionLog } from "./execution-log"
 import type { TrainingWorkerState } from "@/lib/training-progress"
 import { Progress } from "@/components/ui/progress"
+import { apiFetch, API_BASE } from '@/lib/api/config'
 import { BackendAPI, SimpleETMAPI, type TrainStatusResponse } from "@/lib/api/backend"
 import { isUploadedFileId, uploadManualFiles } from "@/lib/manual-upload"
 import { statusLabel, systemText } from "@/lib/presentation"
@@ -14,6 +15,8 @@ import { AnalysisConfigPanel, type AnalysisConfig } from "./analysis-config-pane
 import { ColumnSelectPanel, type ColumnSelection } from "./column-select-panel"
 import { ETMAgentAPI } from "@/lib/api/etm-agent"
 import { isTextDocument, type DatasetPreview } from "@/lib/dataset-input"
+import { DATASET_ACCEPT, datasetFilesError, documentCollectionError, isDocumentCollection } from '@/lib/dataset-files'
+import { useFileDrop } from '@/lib/use-file-drop'
 import { useProjectDraft } from "@/lib/use-project-draft"
 
 interface PipelineResult { success: boolean; taskId?: string; dataset?: string; metrics?: Record<string, number>; topicWords?: Record<string, string[]>; duration: number }
@@ -42,8 +45,11 @@ export function AutoPipeline(props: AutoPipelineProps) {
   const dataset = props.datasetName || props.projectName.trim().replace(/\s+/g, "_").replace(/[^\w\u4e00-\u9fa5-]/g, "").toLowerCase() || "dataset"
   const callbacks = useRef(props)
   callbacks.current = props
+  const folderInput = useRef<HTMLInputElement>(null)
+  useEffect(() => { folderInput.current?.setAttribute("webkitdirectory", ""); folderInput.current?.setAttribute("directory", "") })
   const [files, setFiles] = useState<File[]>([])
-  const [uploads, setUploads] = useState<{ name: string; fileId: string; size: number }[]>([])
+  const [replacing, setReplacing] = useState(false)
+  const [uploads, setUploads] = useState<{ name: string; fileId: string; size: number; inputKind?: string }[]>([])
   const [fileId, setFileId] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -70,7 +76,7 @@ export function AutoPipeline(props: AutoPipelineProps) {
         const [knownFiles, jobs] = await Promise.all([BackendAPI.getFiles(), BackendAPI.getTrainJobs()])
         if (cancelled) return
         const matching = knownFiles.filter(file => file.dataset_name === dataset && isUploadedFileId(file.id))
-        setUploads(matching.map(file => ({ name: file.filename, fileId: String(file.id), size: Number(file.size) || 0 })))
+        setUploads(matching.map(file => ({ name: file.filename, fileId: String(file.id), size: Number(file.size) || 0, inputKind: file.input_kind })))
         if (matching[0]) { setFileId(String(matching[0].id)); setUploadProgress(100) }
         if (props.initialTaskId) { setTaskId(props.initialTaskId); return }
         // Recover a task whose HTTP response was lost instead of duplicating it.
@@ -80,7 +86,7 @@ export function AutoPipeline(props: AutoPipelineProps) {
       finally { if (!cancelled) setRecovering(false) }
     })()
     return () => { cancelled = true }
-  }, [dataset, props.initialTaskId])
+  }, [dataset])
 
   useEffect(() => {
     if (recovering) return
@@ -91,7 +97,7 @@ export function AutoPipeline(props: AutoPipelineProps) {
   }, [recovering])
 
   const selectedUpload = uploads.find(file => file.fileId === fileId)
-  const textInput = isTextDocument(selectedUpload?.name ?? '')
+  const textInput = selectedUpload?.inputKind === 'text' || isTextDocument(selectedUpload?.name ?? '')
   const [textPreview, setTextPreview] = useState<DatasetPreview>()
   const [previewError, setPreviewError] = useState('')
   const [previewAttempt, setPreviewAttempt] = useState(0)
@@ -140,18 +146,36 @@ export function AutoPipeline(props: AutoPipelineProps) {
     return () => { cancelled = true; if (timer) clearTimeout(timer) }
   }, [taskId, dataset])
 
+  const selectFiles = (next: File[]) => {
+    if (busy.current) return
+    const fromFolder = next.some(file => !!file.webkitRelativePath)
+    const problem = (fromFolder || next.length > 1 && next.every(file => isTextDocument(file.name))) ? documentCollectionError(next) : datasetFilesError(next)
+    if (problem) { setError(problem); return }
+    setFiles(next); setError(null); setUploadProgress(0)
+  }
+  const { dragging, dropProps } = useFileDrop(selectFiles, uploading, setError)
+
   const upload = async () => {
     if (busy.current || !files.length) return
     busy.current = true; setUploading(true); setError(null)
     try {
       log(`开始上传 ${files.length} 个文件`)
-      const receipts = await uploadManualFiles(files, (file, progress) => SimpleETMAPI.uploadDataset(file, dataset, progress), setUploadProgress)
-      setUploads(receipts); setFileId(receipts[0].fileId)
+      let receipts: { name: string; fileId: string; size: number; inputKind?: string }[] = await uploadManualFiles(files, (file, progress) => SimpleETMAPI.uploadDataset(file, dataset, progress), setUploadProgress)
+      if (isDocumentCollection(files) && files.every(file => isTextDocument(file.name))) {
+        const combined = await apiFetch<{ file_id: number; name: string; size: number; inputKind: string }>(API_BASE, `/api/datasets/${encodeURIComponent(dataset)}/combine`, {
+          method: 'POST', body: JSON.stringify({ fileIds: receipts.map(file => file.fileId), sourceNames: files.map(file => file.webkitRelativePath || file.name) }), timeoutMs: 300_000,
+        })
+        receipts = [{ ...combined, fileId: String(combined.file_id) }, ...receipts]
+      }
+      const directText = receipts[0].inputKind === 'text' || isTextDocument(receipts[0].name)
+      setUploads(previous => [...receipts, ...previous.filter(file => !receipts.some(next => next.fileId === file.fileId))]); setFileId(receipts[0].fileId)
+      setTaskId(null); setTask(null); setPollError(null); completed.current = null; lastObservation.current = ''
+      setReplacing(false); setFiles([]); setConfigOpen(false)
       setSelection(null)
-      setDraft({ fileId: receipts[0].fileId, selection: null, columnsOpen: receipts.length === 1 && !isTextDocument(receipts[0].name), configOpen: false })
+      setDraft({ fileId: receipts[0].fileId, selection: null, columnsOpen: receipts.length === 1 && !directText, configOpen: false })
       callbacks.current.onUploadComplete?.(dataset)
-      log(isTextDocument(receipts[0].name) ? '上传成功，正在直接读取正文，无需选择数据列。' : '上传成功，请选择本次分析的文本列与元数据。')
-      setColumnsOpen(receipts.length === 1 && !isTextDocument(receipts[0].name))
+      log(directText ? '上传成功，正在直接读取正文，无需选择数据列。' : '上传成功，请选择本次分析的文本列与元数据。')
+      setColumnsOpen(receipts.length === 1 && !directText)
     } catch (e) { const message = e instanceof Error ? e.message : '上传失败'; setError(message); log(message) }
     finally { busy.current = false; setUploading(false) }
   }
@@ -196,14 +220,14 @@ export function AutoPipeline(props: AutoPipelineProps) {
     {running && <Button variant="outline" onClick={async () => { try { const cancelled = await BackendAPI.cancelTraining(Number(taskId)); setTask(cancelled); setError(cancelled.status === 'cancelled' ? '任务已取消，可以调整数据与参数后重新开始。' : null) } catch (e) { setError(e instanceof Error ? e.message : '取消失败，请重试') } }}>取消本次训练</Button>}
     {(running || submitting) && <div role="status" className="space-y-4 rounded-2xl border bg-white p-6"><p className="flex items-center gap-2 text-sm font-medium"><Loader2 className="size-4 animate-spin" />{submitting ? '正在保存分析任务…' : systemText(task?.message || '正在检查数据与运行环境…')}</p><Progress value={task?.progress ?? 0} /><p className="text-xs leading-5 text-slate-500">{task?.progress ?? 0}% 为 worker 阶段进度，不是剩余时间估算。可以离开页面，返回后恢复真实任务状态。</p>{task?.states?.map(state => <p key={state.id} className="text-xs text-slate-600">{task.workers?.find(item => item.id === state.id)?.model.toUpperCase()} · {statusLabel(state.status)} · {systemText(state.phase)} · {state.percent}%</p>)}</div>}
     {!recovering && !running && !done && !submitting && <section className="space-y-4 rounded-2xl border bg-white p-6"><h2 className="font-semibold">{fileId ? '选择数据与分析参数' : '上传数据'}</h2>
-      {!fileId && <><p className="text-sm text-slate-500">支持 Excel、CSV、TXT、PDF、DOCX、JSON 等格式。表格选择正文列；TXT、Markdown、PDF、Word 直接读取正文，无需选择数据列。</p><label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed p-8 text-sm text-blue-700"><Upload className="size-5" />选择文件<input className="sr-only" aria-label="选择文件" type="file" multiple accept=".csv,.tsv,.txt,.md,.xlsx,.xls,.json,.jsonl,.ndjson,.parquet,.pdf,.docx" disabled={uploading} onChange={e => setFiles(Array.from(e.target.files || []))} /></label><ComputationNotice sizeBytes={files.reduce((sum, file) => sum + file.size, 0)} />{files.map((file, index) => <p key={`${file.name}-${index}`} className="text-sm text-slate-600">{file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB</p>)}{uploading ? <><Progress value={uploadProgress} /><p className="text-sm">正在上传 · {uploadProgress}%</p></> : <Button disabled={!files.length} onClick={() => void upload()}>上传并配置分析</Button>}</>}
-      {fileId && <><label className="block space-y-2 text-sm">本次分析文件<select aria-label="本次分析文件" className="block w-full rounded-lg border p-2" value={fileId} onChange={e => { setFileId(e.target.value); setSelection(null); setDraft({ fileId: e.target.value, selection: null, columnsOpen: false, configOpen: false }) }}>{uploads.map(file => <option key={file.fileId} value={file.fileId}>{file.name}</option>)}</select></label><p className="text-xs text-slate-500">每个任务分析一个文件。多文件上传后，请明确选择本次文件。</p>{textInput ? <div className="space-y-3 rounded-xl border bg-slate-50 p-4">
+      {(!fileId || replacing) && <><p className="text-sm text-slate-500">支持 Excel、CSV、TXT、PDF、DOCX、JSON 等格式。表格选择正文列；TXT、Markdown、PDF、Word 直接读取正文，无需选择数据列。</p><label {...dropProps} aria-busy={uploading} className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 text-sm text-blue-700 transition-colors focus-within:ring-2 focus-within:ring-blue-500 ${dragging ? "border-blue-500 bg-blue-50" : "border-slate-200"}`}><Upload className="size-5" />{dragging ? "松开即可添加文件" : "拖拽文件到这里，或点击选择文件"}<input className="sr-only" aria-label="选择文件" type="file" multiple accept={DATASET_ACCEPT} disabled={uploading} onChange={e => { selectFiles(Array.from(e.target.files || [])); e.target.value = "" }} /></label><input ref={folderInput} type="file" className="sr-only" aria-label="选择文件夹" disabled={uploading} onChange={event => { selectFiles(Array.from(event.target.files || []).filter(file => !file.webkitRelativePath.split("/").some(part => part.startsWith(".")))); event.target.value = "" }} /><Button variant="outline" disabled={uploading} onClick={() => folderInput.current?.click()}>选择文件夹（按内容合并文档）</Button>{replacing && <Button variant="outline" disabled={uploading} onClick={() => { setReplacing(false); setFiles([]); setError(null) }}>取消更换，保留原数据</Button>}<ComputationNotice sizeBytes={files.reduce((sum, file) => sum + file.size, 0)} />{files.map((file, index) => <p key={`${file.name}-${index}`} className="text-sm text-slate-600">{file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB</p>)}{uploading ? <><Progress value={uploadProgress} /><p className="text-sm">正在上传 · {uploadProgress}%</p></> : <Button disabled={!files.length} onClick={() => void upload()}>上传并配置分析</Button>}</>}
+      {fileId && !replacing && <><Button variant="outline" onClick={() => { setReplacing(true); setColumnsOpen(false); setConfigOpen(false); setError(null) }}>重新上传 / 更换数据</Button><p className="text-xs text-slate-500">新文件上传成功后切换，原始数据与已有结果保留。</p><label className="block space-y-2 text-sm">本次分析文件<select aria-label="本次分析文件" className="block w-full rounded-lg border p-2" value={fileId} onChange={e => { setFileId(e.target.value); setSelection(null); setDraft({ fileId: e.target.value, selection: null, columnsOpen: false, configOpen: false }) }}>{uploads.map(file => <option key={file.fileId} value={file.fileId}>{file.name}</option>)}</select></label><p className="text-xs text-slate-500">每个任务分析一个文件。多文件上传后，请明确选择本次文件。</p>{textInput ? <div className="space-y-3 rounded-xl border bg-slate-50 p-4">
         <h3 className="text-sm font-semibold">正文预览</h3><p className="text-xs text-slate-500">直接读取文本，无需选择数据列。按非空行、PDF 页面或 Word 段落生成分析记录。</p>
-        {previewError ? <p role="alert" className="text-sm text-red-700">{previewError}<button className="ml-2 underline" onClick={() => setPreviewAttempt(value => value + 1)}>重新读取</button></p> : !textPreview ? <p role="status" className="text-sm">正在读取正文…</p> : <><p className="text-xs text-slate-500">共 {textPreview.totalRecords ?? textPreview.rows.length} 条正文记录，预览前 5 条</p><div className="max-h-72 space-y-3 overflow-y-auto">{(textPreview.segments ?? textPreview.rows.map(row => ({ text: row[0] }))).map((segment, index) => <article key={index} className="rounded-lg bg-white p-3"><p className="mb-2 text-xs text-slate-400">{'page' in segment ? `第 ${segment.page} 页` : 'paragraph' in segment ? `第 ${segment.paragraph} 段` : `正文 ${index + 1}`}</p><p className="whitespace-pre-wrap text-sm leading-6 [overflow-wrap:anywhere]">{segment.text}</p></article>)}</div></>}
+        {previewError ? <p role="alert" className="text-sm text-red-700">{previewError}<button className="ml-2 underline" onClick={() => setPreviewAttempt(value => value + 1)}>重新读取</button></p> : !textPreview ? <p role="status" className="text-sm">正在读取正文…</p> : <><p className="text-xs text-slate-500">共 {textPreview.totalRecords ?? textPreview.rows.length} 条正文记录，预览前 5 条</p><div className="max-h-72 space-y-3 overflow-y-auto">{(textPreview.segments ?? textPreview.rows.map(row => ({ text: row[0] }))).map((segment, index) => <article key={index} className="rounded-lg bg-white p-3"><p className="mb-2 text-xs text-slate-400">{'source_file' in segment && <span>{String(segment.source_file)} · </span>}{'page' in segment ? `第 ${segment.page} 页` : 'paragraph' in segment ? `第 ${segment.paragraph} 段` : `正文 ${index + 1}`}</p><p className="whitespace-pre-wrap text-sm leading-6 [overflow-wrap:anywhere]">{segment.text}</p></article>)}</div></>}
       </div> : <Button variant="outline" onClick={() => changeColumnsOpen(true)}>选择数据列</Button>}{selection && <Button className="ml-2" onClick={() => changeConfigOpen(true)}>配置分析参数</Button>}</>}
     </section>}
     <ExecutionLog states={task?.states} workers={task?.workers} logs={logs} running={running || submitting} />
-    {!textInput && <ColumnSelectPanel key={fileId} projectKey={props.projectKey} open={columnsOpen} onOpenChange={changeColumnsOpen} datasetName={dataset} jobId={fileId} onConfirm={value => { setSelection(value); setColumnsOpen(false); setConfigOpen(true); setDraft({ fileId, selection: value, columnsOpen: false, configOpen: true }) }} />}
+    {!textInput && <ColumnSelectPanel key={fileId} projectKey={props.projectKey} open={columnsOpen} onReplace={() => { setReplacing(true); setConfigOpen(false); setError(null) }} onOpenChange={changeColumnsOpen} datasetName={dataset} jobId={fileId} onConfirm={value => { setSelection(value); setColumnsOpen(false); setConfigOpen(true); setDraft({ fileId, selection: value, columnsOpen: false, configOpen: true }) }} />}
     <AnalysisConfigPanel datasetSizeBytes={uploads.find(file => file.fileId === fileId)?.size} projectKey={props.projectKey} open={configOpen} onOpenChange={changeConfigOpen} datasetName={dataset} error={error} onConfirm={start} />
   </div>
 }

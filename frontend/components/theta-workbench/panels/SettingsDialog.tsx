@@ -43,6 +43,7 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange, initialTab 
   const [message, setMessage] = useState<string>()
   const [messageType, setMessageType] = useState<'error' | 'success'>('success')
   const [embedding, setEmbedding] = useState<DesktopEmbedding>()
+  const [dataHome, setDataHome] = useState('')
   const [embeddingKey, setEmbeddingKey] = useState('')
   const [clearEmbeddingKey, setClearEmbeddingKey] = useState(false)
 
@@ -50,7 +51,7 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange, initialTab 
     if (!open || !window.thetaDesktop) return
     let active = true
     void window.thetaDesktop.read().then(value => {
-      if (active) { setEmbedding(value.embedding); setEmbeddingKey(''); setClearEmbeddingKey(false) }
+      if (active) { setEmbedding(value.embedding); setDataHome(value.home); setEmbeddingKey(''); setClearEmbeddingKey(false) }
     }).catch(error => { if (active) { setMessageType('error'); setMessage(String(error)) } })
     return () => { active = false }
   }, [open])
@@ -332,7 +333,7 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange, initialTab 
                 <p className={css.fieldDescription}>云端 Embedding 当前用于 THETA zero-shot。执行时会发送文本到所选服务，仍需确认具体任务与请求预算；微调和其他模型使用本地权重。密钥加密保存在本机。</p>
               </>
             )}
-            <div className={css.actionRow}><Button variant="outline" disabled={saving} onClick={() => void saveEmbeddingSettings()}>{saving ? '保存中…' : '保存 Embedding 配置'}</Button><Button variant="ghost" onClick={() => void window.thetaDesktop?.openData()}>打开数据目录</Button></div>
+            <p className="break-all text-sm text-slate-500">数据与结果保存位置：{dataHome}</p><div className={css.actionRow}><Button variant="outline" disabled={saving} onClick={() => void saveEmbeddingSettings()}>{saving ? '保存中…' : '保存 Embedding 配置'}</Button><Button variant="ghost" onClick={() => void window.thetaDesktop?.openData()}>打开数据目录</Button></div>
             {message && <p className={css.inlineMessage} data-type={messageType}>{message}</p>}
           </section>
         )}

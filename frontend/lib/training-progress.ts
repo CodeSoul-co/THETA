@@ -14,6 +14,8 @@ export interface TrainingEvent {
 }
 export interface TrainingWorkerState {
   id: string; status: string; phase: string; percent: number
+  error?: string
+  diagnostics?: { available: boolean; message?: string; stage?: string; category?: string; reason?: string }
   computeDevice?: string; gpuFallback?: boolean
   phaseHistory?: { phase: string; at: number }[]
   telemetry?: {

@@ -1,6 +1,8 @@
+import { DATASET_ACCEPT, datasetFilesError, documentCollectionError, isDocumentCollection } from '@/lib/dataset-files'
+import { useFileDrop } from '@/lib/use-file-drop'
 import { ComputationNotice } from './WorkbenchNotice'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { listDatasets, uploadDataset, type WebAgentInteraction, type WebDataset } from '../api/client.ts'
+import { listDatasets, uploadDatasetFiles, type WebAgentInteraction, type WebDataset } from '../api/client.ts'
 import {
   Button,
   IconCheckOutline16,
@@ -11,6 +13,7 @@ import { usePreferences } from '../preferences.tsx'
 import css from '../styles/app.module.css'
 
 interface DatasetIntakeCardProps {
+  disabled?: boolean
   interaction: WebAgentInteraction
   storageScope: string
   legacyStorageScope?: string
@@ -19,8 +22,6 @@ interface DatasetIntakeCardProps {
   onDatasetsReady: (datasets: WebDataset[]) => void | Promise<void>
 }
 
-const ACCEPTED_DATASET = /\.(csv|tsv|json|jsonl|ndjson|txt|md|xlsx|xls|parquet|pdf|docx)$/iu
-const MAX_FILE_BYTES = 200 * 1024 * 1024
 const PROJECT_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu
 
 const readableBytes = (value: number): string => {
@@ -44,7 +45,7 @@ const readStoredDatasets = (scope: string): WebDataset[] => {
   }
 }
 
-export const DatasetIntakeCard = ({ interaction, storageScope, legacyStorageScope, knownDatasetRefs = [], onEnsureProject, onDatasetsReady }: DatasetIntakeCardProps): React.ReactElement => {
+export const DatasetIntakeCard = ({ disabled = false, interaction, storageScope, legacyStorageScope, knownDatasetRefs = [], onEnsureProject, onDatasetsReady }: DatasetIntakeCardProps): React.ReactElement => {
   const { locale } = usePreferences()
   const initialDatasetsRef = useRef<WebDataset[] | undefined>(undefined)
   if (initialDatasetsRef.current == null) {
@@ -61,7 +62,8 @@ export const DatasetIntakeCard = ({ interaction, storageScope, legacyStorageScop
   const [datasetRef, setDatasetRef] = useState(() => initialDatasetsRef.current?.[0]?.datasetRef ?? '')
   const [processing, setProcessing] = useState(false)
   const [processed, setProcessed] = useState(() => (initialDatasetsRef.current?.length ?? 0) > 0)
-  const [dragging, setDragging] = useState(false)
+  const [replacing, setReplacing] = useState(false)
+  const previousSelection = useRef(datasetRef)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string>()
   const [pendingFiles, setPendingFiles] = useState<Array<{ datasetRef: string; file: File }>>([])
@@ -83,7 +85,7 @@ export const DatasetIntakeCard = ({ interaction, storageScope, legacyStorageScop
           ...current.filter((dataset) => dataset.datasetRef.startsWith('pending-')),
           ...storedDatasets,
         ])
-        setDatasetRef((current) => storedDatasets.some((dataset) => dataset.datasetRef === current)
+        setDatasetRef((current) => current.startsWith('pending-') || storedDatasets.some((dataset) => dataset.datasetRef === current)
           ? current
           : storedDatasets[0]?.datasetRef ?? '')
         setProcessed(true)
@@ -98,17 +100,10 @@ export const DatasetIntakeCard = ({ interaction, storageScope, legacyStorageScop
   )
 
   const selectFiles = (files: File[]): void => {
-    if (datasets.length > 0 || processing || processed) return
-    const oversized = files.find((file) => file.size > MAX_FILE_BYTES)
-    if (oversized) {
-      setError(locale === 'zh-CN' ? `${oversized.name} 超过单文件 200 MiB 限制。` : `${oversized.name} exceeds the 200 MiB limit.`)
-      return
-    }
-    const accepted = files.filter((file) => ACCEPTED_DATASET.test(file.name)).slice(0, 1)
-    if (accepted.length === 0) {
-      setError(locale === 'zh-CN' ? '请选择 CSV、TSV、TXT、Markdown、JSON/JSONL、Excel、Parquet、PDF 或 DOCX 文件。' : 'Choose a supported dataset file.')
-      return
-    }
+    if (processing || disabled) return
+    const problem = isDocumentCollection(files) ? documentCollectionError(files, locale) : datasetFilesError(files, locale)
+    if (problem) { setError(problem); return }
+    const accepted = files
     const createdAt = new Date().toISOString()
     const selectedFiles = accepted.map((file) => ({ datasetRef: `pending-${crypto.randomUUID()}`, file }))
     const selectedDatasets = selectedFiles.map(({ datasetRef: pendingRef, file }): WebDataset => ({
@@ -119,24 +114,26 @@ export const DatasetIntakeCard = ({ interaction, storageScope, legacyStorageScop
       createdAt,
     }))
     setPendingFiles(selectedFiles)
-    setDatasets(selectedDatasets)
+    setDatasets(current => [...selectedDatasets, ...current.filter(item => !item.datasetRef.startsWith('pending-'))])
     setDatasetRef(selectedDatasets[0]?.datasetRef ?? '')
     setProcessed(false)
     setError(undefined)
   }
 
+  const { dragging, dropProps } = useFileDrop(selectFiles, processing || disabled, setError)
+
   const startProcessing = async (): Promise<void> => {
-    if (!selected || processing) return
+    if (!selected || processing || disabled) return
     setProcessing(true)
     setProcessed(false)
     setError(undefined)
     try {
       const filesToUpload = pendingFiles.filter((item) =>
-        datasets.some((dataset) => dataset.datasetRef === item.datasetRef),
+        selected.datasetRef.startsWith('pending-') && datasets.some(dataset => dataset.datasetRef === item.datasetRef),
       )
       const uploaded: WebDataset[] = []
       const projectId = await onEnsureProject(selected.name.replace(/\.[^.]+$/u, '') || '数据分析项目')
-      for (const item of filesToUpload) uploaded.push(await uploadDataset(projectId, item.file))
+      if (filesToUpload.length) uploaded.push(await uploadDatasetFiles(projectId, filesToUpload.map(item => item.file), locale))
       const ready = uploaded.length > 0 ? uploaded : [selected]
       setDatasets((current) => [
         ...ready,
@@ -147,8 +144,8 @@ export const DatasetIntakeCard = ({ interaction, storageScope, legacyStorageScop
       ])
       setDatasetRef(ready[0]?.datasetRef ?? '')
       setPendingFiles([])
-      setProcessed(true)
       await onDatasetsReady(ready)
+      setProcessed(true); setReplacing(false)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause))
     } finally {
@@ -164,48 +161,44 @@ export const DatasetIntakeCard = ({ interaction, storageScope, legacyStorageScop
   }
 
   return (
-    <section className={`${css.datasetIntakePanel} ${processed ? css.datasetIntakePanelCompleted : ''} ${dragging ? css.contextCardDragging : ''}`} aria-label={interaction.card?.title ?? '上传本地数据集'} aria-disabled={processed}>
+    <section className={`${css.datasetIntakePanel} ${processed ? css.datasetIntakePanelCompleted : ''} ${dragging ? css.contextCardDragging : ''}`} aria-label={interaction.card?.title ?? '上传本地数据集'} aria-busy={processing}>
       <ComputationNotice sizeBytes={selected?.sizeBytes} locale={locale} />
-      {processed ? (
+      {processed && !replacing ? (
         <div className={css.datasetUploadedSummary} role="status">
           <span><IconCheckOutline16 /></span>
           <div>
             <strong>{locale === 'zh-CN' ? '数据集已上传' : 'Dataset uploaded'}</strong>
             <small>{selected != null ? `${selected.name} · ${readableBytes(selected.sizeBytes)}` : (locale === 'zh-CN' ? '已绑定到当前项目' : 'Attached to this project')}</small>
           </div>
+          <Button size="sm" disabled={disabled} onClick={() => { previousSelection.current = datasetRef; setReplacing(true); setError(undefined) }}>{locale === 'zh-CN' ? '重新上传 / 更换数据' : 'Replace dataset'}</Button>
         </div>
       ) : (
         <>
           <p className={css.datasetIntro}>好的，您可以上传本地数据集文件，系统将协助您完成<br />数据的处理、预览与管理。</p>
           <div
-            className={`${css.contextDropzone} ${datasets.length > 0 ? css.contextDropzoneLocked : ''}`}
-            aria-disabled={datasets.length > 0 || processing}
-            onDragEnter={(event) => { event.preventDefault(); if (datasets.length === 0 && !processing) setDragging(true) }}
-            onDragOver={(event) => event.preventDefault()}
-            onDragLeave={() => setDragging(false)}
-            onDrop={(event) => {
-              event.preventDefault()
-              setDragging(false)
-              if (datasets.length === 0 && !processing) selectFiles(Array.from(event.dataTransfer.files))
-            }}
+            className={`${css.contextDropzone} ${dragging ? css.contextCardDragging : ''}`}
+            aria-disabled={processing || disabled}
+            {...dropProps}
           >
-            <Button size="sm" variant="primary" disabled={datasets.length > 0 || processing} onClick={() => fileInput.current?.click()}>
+            <Button size="sm" variant="primary" disabled={processing || disabled} onClick={() => fileInput.current?.click()}>
               <IconShareOutline16 />{locale === 'zh-CN' ? '从本地选择文件' : 'Choose local files'}
             </Button>
+            <strong>{locale === 'zh-CN' ? (dragging ? '松开即可添加文件' : '拖拽文件到这里，也可点击选择') : (dragging ? 'Drop your file here' : 'Drag a file here, or choose a file')}</strong>
             <span>{locale === 'zh-CN' ? '支持 CSV、Excel、JSON、Parquet、PDF、DOCX、TXT 等格式' : 'CSV, Excel, JSON, Parquet, PDF, DOCX and text supported'}</span>
-            <small>{locale === 'zh-CN' ? '单个文件最大 200 MiB' : 'Up to 200 MiB per file'}</small>
+            <small>{locale === 'zh-CN' ? '单文件或文档文件夹最大 200 MiB；按正文段落切分' : 'Up to 200 MiB per file'}</small>
             <input
               ref={fileInput}
               type="file"
               hidden
-              disabled={datasets.length > 0 || processing}
-              accept=".csv,.tsv,.json,.jsonl,.ndjson,.txt,.md,.xlsx,.xls,.parquet,.pdf,.docx"
+              disabled={processing || disabled}
+              accept={DATASET_ACCEPT}
               onChange={(event) => {
                 selectFiles(Array.from(event.target.files ?? []))
                 event.target.value = ''
               }}
             />
           </div>
+          {replacing && <Button size="sm" disabled={processing} onClick={() => { setDatasetRef(previousSelection.current); setDatasets(current => current.filter(item => !item.datasetRef.startsWith('pending-'))); setPendingFiles([]); setProcessed(true); setReplacing(false); setError(undefined) }}>{locale === 'zh-CN' ? '取消更换，保留原数据' : 'Cancel replacement'}</Button>}
           {datasets.length > 0 && (
             <div className={css.contextCardActions}>
               <select value={datasetRef} aria-label={locale === 'zh-CN' ? '选择数据集' : 'Select dataset'} onChange={(event) => { setDatasetRef(event.target.value); setProcessed(false) }}>
@@ -214,7 +207,7 @@ export const DatasetIntakeCard = ({ interaction, storageScope, legacyStorageScop
                 ))}
               </select>
               {selected != null && <small>{selected.suffix.toUpperCase()} · {selected.datasetRef.startsWith('pending-') ? (locale === 'zh-CN' ? '等待上传' : 'waiting to upload') : (locale === 'zh-CN' ? '已上传到后端' : 'uploaded to backend')}</small>}
-              <Button size="sm" variant="primary" disabled={!selected || processing} onClick={() => void startProcessing()}>
+              <Button size="sm" variant="primary" disabled={!selected || processing || disabled} onClick={() => void startProcessing()}>
                 {processing ? (locale === 'zh-CN' ? '处理中…' : 'Processing…') : (locale === 'zh-CN' ? '开始处理' : 'Start processing')}
               </Button>
             </div>

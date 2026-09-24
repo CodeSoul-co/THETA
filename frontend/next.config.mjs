@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Leave room for the 200 MiB dataset plus multipart framing; proxy otherwise truncates at 10 MiB.
+  experimental: { proxyClientMaxBodySize: '202mb' },
   typescript: {
     ignoreBuildErrors: false,
   },

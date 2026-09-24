@@ -20,6 +20,15 @@ export function computationNotice(sizeBytes = 0, models: string[] = [], locale =
 /** Classify known setup failures only; retain unrelated errors for diagnosis. */
 export function errorGuidance(raw: string, locale = 'zh-CN'): { message: string; settingsTab?: SetupTab } {
   const zh = locale === 'zh-CN'
+  if (/BOW vocabulary is empty|没有可用词语|empty vocabulary/iu.test(raw)) return { message: zh
+    ? '失败原因：正文分词后没有可用词语。可能是正文列选错、内容太少、只有数字或停用词过滤过多。请检查正文预览和停用词，增加有效文本后重新分析。'
+    : 'No usable words remain after tokenization. Check the text column, document contents and stopwords, and add meaningful text before retrying.' }
+  if (/File is not a zip file|Package not found at|文件不完整|文件压缩内容损坏/iu.test(raw)) return { message: zh
+    ? '失败原因：Office 文件内容不完整或格式无法识别。可能是旧版上传截断、原文件损坏、加密，或只修改了扩展名。请确认原文件能正常打开，另存为标准 XLSX / DOCX，再使用“重新上传 / 更换数据”。'
+    : 'The Office file is incomplete or unrecognized. It may be truncated, damaged, encrypted, or incorrectly renamed. Open and save the original as XLSX or DOCX, then upload it again.' }
+  if (/PermissionError|EACCES|EPERM|Permission denied|访问权限/iu.test(raw)) return { message: zh
+    ? '失败原因：无法读写文件。请关闭占用文件的程序，检查磁盘剩余空间及数据目录权限；可在应用设置中查看实际数据保存位置。'
+    : 'The file cannot be read or written. Close apps holding the file and check disk space and data-folder permissions. Settings shows the active data location.' }
   if (/modelAssetsReady["']?\s*:\s*false|(?:模型|model|embedding|嵌入).{0,45}(?:未下载|未找到|不存在|尚未准备好|not found|weights.*missing)|(?:QWEN_MODEL|SBERT_MODEL_PATH).{0,40}(?:未配置|missing|not set)/iu.test(raw)) {
     return { settingsTab: 'embedding', message: zh
       ? '本地嵌入模型尚未准备好。请到「设置 → 嵌入模型」下载兼容模型，并选择包含配置、分词器和权重的完整目录。安装包不包含模型权重；THETA 零样本分析也可改用已配置的云端嵌入。'

@@ -14,12 +14,12 @@ LDA, BTM, HDP and STM use their existing CPU implementations. CLI Agent plans ac
 
 ## Download and install
 
-Download from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.5):
+Download from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.6):
 
 | Platform | Installer | Installation |
 | --- | --- | --- |
-| macOS Apple Silicon | `THETA-0.3.5-mac-arm64.dmg` | Open the DMG and drag THETA into Applications |
-| Windows x64 | `THETA-0.3.5-win-x64.exe` | Run the installer |
+| macOS Apple Silicon | `THETA-0.3.6-mac-arm64.dmg` | Open the DMG and drag THETA into Applications |
+| Windows x64 | `THETA-0.3.6-win-x64.exe` | Run the installer |
 
 This is an unsigned preview without macOS notarization. Your operating system may show a security warning. Native Intel Mac and Windows ARM installers are not provided.
 
@@ -44,15 +44,23 @@ Installers contain no API keys or personal configuration. Settings retained afte
 Use the application menu to open data and logs or restart local services.
 
 - macOS: `~/Library/Application Support/THETA`
-- Windows: `%APPDATA%/THETA`
+- Windows: new installations prefer `THETA-data` inside the installation directory, falling back to `%APPDATA%/THETA` when that directory is not writable. Upgrades keep the existing data location. Settings shows the active path.
 
-Settings, projects, uploads, results, and model weights are separate from the application installation and retained during upgrades. The Windows installer replaces registered older versions and removes their program files. The first launch of a new version clears disposable interface caches. Desktop storage is independent of the source installation's `.theta_agent` and `.local/manual-workbench` directories.
+Settings, projects, uploads, results, and model weights live in a dedicated data directory and are retained during upgrades. Installation-local `THETA-data` is also retained on uninstall. The Windows installer replaces registered older versions and removes their program files. The first launch of a new version clears disposable interface caches. Desktop storage is independent of the source installation's `.theta_agent` and `.local/manual-workbench` directories.
 
-Windows installs for the current user by default. Data is not written to the root of C: or the installation directory. If the data directory is not writable, the app asks you to choose a dedicated folder, such as `D:\THETA-data`, and remembers it. You can also start `THETA.exe --data-dir="D:\THETA-data"`. Choosing a new folder does not migrate existing data; select an existing THETA data directory to reopen its projects.
+Windows installs for the current user by default. Data is not written to the drive root; the dedicated `THETA-data` folder is managed separately from program files. If the data directory is not writable, the app asks you to choose a dedicated folder, such as `D:\THETA-data`, and remembers it. You can also start `THETA.exe --data-dir="D:\THETA-data"`. Choosing a new folder does not migrate existing data; select an existing THETA data directory to reopen its projects.
 
 TXT, Markdown, PDF, and Word uploads open a text preview directly, without column selection. Structured files retain text, time, and label column selection. Scanned PDFs require text recognition first.
 
 Services listen only on loopback and use a per-launch access token. The preferred workbench port is 14320; another available port is selected if needed. Quitting closes the app's services. Submitted training follows the existing worker lifecycle and is not resubmitted automatically.
+
+## Upload and replace data
+
+Drag files or folders into an upload area, or use the file picker. “Replace dataset” keeps the current project and switches only after a successful upload. Original data and historical results are retained. Conversation mode starts a fresh conversation within the same project when data changes, so previous task settings and approvals are not reused.
+
+Text, Markdown, PDF and Word documents are split by actual paragraphs. Long paragraphs are split at sentence boundaries, and Word table rows are included. Document folders recursively combine TXT, Markdown, PDF and DOCX files while retaining source filenames, pages and paragraph positions. A collection supports up to 500 files and 200 MiB in total. Upload tables separately to choose their text columns; scanned PDFs require text recognition first.
+
+Individual files support up to 200 MiB. Files larger than 10 MiB uploaded with older versions may have been truncated; upload the originals again. Invalid formats, encryption, incomplete transfers and permission errors receive actionable messages. Training logs show specific failure details. Corpora with fewer than 10 records use small-sample word-frequency defaults; use these results only to verify the workflow and add independent records for substantive analysis.
 
 ## Build from source
 

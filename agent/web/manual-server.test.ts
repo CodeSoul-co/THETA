@@ -351,3 +351,29 @@ test('训练状态在轮次变化时刷新细节，并在完成与服务重启�
     compute.close(); rmSync(home, { recursive: true, force: true });
   }
 });
+
+test('truncated uploads are rejected and document collections cannot include another project', async t => {
+  const home = mkdtempSync(path.join(os.tmpdir(), 'theta-upload-'));
+  const calls: string[] = [];
+  const worker: CapabilityWorker = { async call<T>(operation: string, input: any): Promise<T> {
+    calls.push(operation);
+    if (operation === 'dataset.import') return { fileName: 'source.txt', sizeBytes: 4, datasetRef: 'd', sha256: 'hash', managedPath: input.filePath } as T;
+    if (operation === 'dataset.combine') return { fileName: '文档合集.jsonl', sizeBytes: 20, datasetRef: 'combined', inputKind: 'text' } as T;
+    throw new Error(operation);
+  } };
+  const server = createManualServer(home, worker);
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(async () => { server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve())); rmSync(home, {recursive:true, force:true}); });
+  const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  const upload = (dataset: string, size: string) => fetch(`${base}/api/upload?filename=source.txt&dataset_name=${dataset}`, { method: 'POST', headers: {'x-theta-file-size': size}, body:'text' });
+  assert.equal((await upload('one', '100')).status, 400);
+  assert.equal(calls.length, 0);
+  const file = await (await upload('one', '4')).json() as any;
+  const combine = (dataset: string) => fetch(`${base}/api/datasets/${dataset}/combine`, {method:'POST',body:JSON.stringify({fileIds:[file.id]})});
+  assert.equal((await combine('two')).status, 400);
+  assert.equal(calls.filter(call => call === 'dataset.combine').length, 0);
+  const merged = await combine('one'); assert.equal(merged.status, 201);
+  assert.equal((await merged.json() as any).inputKind, 'text');
+  const files = await (await fetch(base + '/api/files')).json() as any[];
+  assert.equal(files.length, 2, 'Original upload stays available after combining');
+});

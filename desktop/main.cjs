@@ -8,13 +8,13 @@ const { pathToFileURL } = require('node:url');
 const { readSettings, saveInference, saveEmbedding, embeddingSettings } = require('./settings.cjs');
 const smoke = process.argv.includes('--smoke-test');
 app.setName('THETA');
-const { prepareDataHome, readDataLocation, saveDataLocation, clearUpgradeCaches } = require('./data-home.cjs');
+const { prepareDataHome, selectDataHome, saveDataLocation, clearUpgradeCaches } = require('./data-home.cjs');
 const locationFile = path.join(app.getPath('home'), '.theta-desktop-location.json');
 const requestedDataHome = process.argv.find(argument => argument.startsWith('--data-dir='))?.slice('--data-dir='.length);
 let home, settingsFile, startupError;
 try {
   home = smoke ? path.resolve(process.env.THETA_DESKTOP_TEST_HOME || path.join(__dirname, '.smoke-home'))
-    : requestedDataHome || readDataLocation(locationFile, path.join(app.getPath('appData'), 'THETA'));
+    : selectDataHome({ requested: requestedDataHome, locationFile, legacyHome: path.join(app.getPath('appData'), 'THETA'), installDirectory: path.dirname(app.getPath('exe')) });
   home = prepareDataHome(home);
   app.setPath('userData', home);
   app.setPath('sessionData', home);
@@ -30,6 +30,7 @@ function pythonCall(args, options = {}) {
     const child = spawn(python, args, { cwd: path.join(runtime, 'agent'), env: serviceEnv, windowsHide: true, ...options });
     let stdout = '', stderr = '';
     const timer = setTimeout(() => { child.kill(); reject(new Error('Python check timed out')); }, 120000);
+    child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
     child.stdout.on('data', data => { stdout += data; }); child.stderr.on('data', data => { stderr = (stderr + data).slice(-4000); });
     child.once('error', error => { clearTimeout(timer); reject(error); });
     child.once('exit', code => { clearTimeout(timer); code === 0 ? resolve(stdout) : reject(new Error(stderr || `Python exited ${code}`)); });
@@ -259,7 +260,7 @@ async function runSmoke(services) {
   assert.equal(manual.status, 201);
   const project = await manual.json();
   // Reproduce column selection through the production frontend proxy, not just the backend.
-  const fixture = await pythonCall(['-I', '-c', 'import io,base64; from openpyxl import Workbook; w=Workbook(); s=w.active; s.append(["正文","时间","标签"]); s.append(["本地列预览测试","2026-09-23","测试"]); b=io.BytesIO(); w.save(b); print(base64.b64encode(b.getvalue()).decode())']);
+  const fixture = await pythonCall(['-I', '-c', 'import io,base64; from openpyxl import Workbook; w=Workbook(); s=w.active; s.append(["正文","时间","标签"]); s.append(["本地列预览测试","2026-09-23","测试"]); b=io.BytesIO(); w.save(b); import zipfile; z=zipfile.ZipFile(b, "a"); z.writestr("theta-padding.bin", b"x" * (12 * 1024 * 1024), compress_type=zipfile.ZIP_STORED); z.close(); print(base64.b64encode(b.getvalue()).decode())']);
   const upload = await get(origin, '/api/backend/api/upload?' + new URLSearchParams({ filename: '列预览测试.xlsx', dataset_name: project.dataset_name }), {
     method: 'POST', headers: { ...headers, 'content-type': 'application/octet-stream' }, body: Buffer.from(fixture.trim(), 'base64'),
   });
@@ -270,6 +271,15 @@ async function runSmoke(services) {
   assert.equal(preview.status, 200, JSON.stringify(table));
   assert.deepEqual(table.columns, ['正文', '时间', '标签']);
   assert.deepEqual(table.rows[0], ['本地列预览测试', '2026-09-23', '测试']);
+  const wordFixture = await pythonCall(['-I', '-c', 'import io,base64,zipfile; from docx import Document; d=Document(); d.add_paragraph("中文路径和大文件正文测试"); b=io.BytesIO(); d.save(b); z=zipfile.ZipFile(b, "a"); z.writestr("theta-padding.bin", b"x" * (12 * 1024 * 1024), compress_type=zipfile.ZIP_STORED); z.close(); print(base64.b64encode(b.getvalue()).decode())']);
+  const wordBytes = Buffer.from(wordFixture.trim(), 'base64');
+  const wordUpload = await get(origin, '/api/backend/api/upload?' + new URLSearchParams({ filename: '中文 Word 大文件.docx', dataset_name: project.dataset_name }), {
+    method: 'POST', headers: { ...headers, 'content-type': 'application/octet-stream', 'x-theta-file-size': String(wordBytes.length) }, body: wordBytes,
+  });
+  const wordFile = await wordUpload.json(); assert.equal(wordUpload.status, 201, JSON.stringify(wordFile));
+  const wordPreview = await get(origin, `/api/backend/api/datasets/${encodeURIComponent(project.dataset_name)}/preview?file_id=${wordFile.id}`);
+  const wordData = await wordPreview.json(); assert.equal(wordPreview.status, 200, JSON.stringify(wordData));
+  assert.equal(wordData.segments[0].text, '中文路径和大文件正文测试');
   const textUpload = await get(origin, '/api/backend/api/upload?' + new URLSearchParams({ filename: '正文.txt', dataset_name: project.dataset_name }), {
     method: 'POST', headers: { ...headers, 'content-type': 'application/octet-stream' }, body: '第一条正文\n第二条正文',
   });
@@ -313,7 +323,7 @@ app.whenReady().then(async () => {
   if (!app.requestSingleInstanceLock()) { app.quit(); return; }
   clearUpgradeCaches(home, app.getVersion());
   settingsFile = path.join(home, 'settings.json');
-  if (!smoke && requestedDataHome) {
+  if (!smoke) {
     try { saveDataLocation(locationFile, home); }
     catch { await dialog.showMessageBox({ type: 'warning', message: '本次已使用所选数据目录，但无法记住该位置。', detail: `下次请使用 --data-dir="${home}" 启动 THETA。` }); }
   }

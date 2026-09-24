@@ -11,5 +11,6 @@ export function ComputationNotice({ sizeBytes, models, locale }: { sizeBytes?: n
 
 export function SetupError({ error, locale = 'zh-CN' }: { error: string; locale?: string }) {
   const guidance = errorGuidance(error, locale)
-  return <div role="alert" className="text-sm leading-6"><p>{guidance.message}</p>{guidance.settingsTab && <button type="button" className="mt-2 underline underline-offset-4" onClick={() => openSetup(guidance.settingsTab!)}>{locale === 'zh-CN' ? '打开设置' : 'Open settings'}</button>}</div>
+  const detail = error.replace(/(api[_-]?key|authorization|token|secret)([\s=:]+)\S+/gi, '$1$2[隐藏]').replace(/\bsk-[A-Za-z0-9_-]+/g, '[隐藏]')
+  return <div role="alert" className="text-sm leading-6"><p>{guidance.message}</p>{guidance.message !== error && <details className="mt-2"><summary className="cursor-pointer">{locale === "zh-CN" ? "查看原始错误详情" : "Technical details"}</summary><pre className="mt-2 whitespace-pre-wrap break-words text-xs">{detail}</pre></details>}{guidance.settingsTab && <button type="button" className="mt-2 underline underline-offset-4" onClick={() => openSetup(guidance.settingsTab!)}>{locale === 'zh-CN' ? '打开设置' : 'Open settings'}</button>}</div>
 }

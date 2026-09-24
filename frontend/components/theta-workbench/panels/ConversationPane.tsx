@@ -1,3 +1,5 @@
+import { DATASET_ACCEPT, datasetFilesError, documentCollectionError, isDocumentCollection } from '@/lib/dataset-files'
+import { useFileDrop } from '@/lib/use-file-drop'
 import { ComputationNotice, SetupError } from './WorkbenchNotice'
 import { openSetup, errorGuidance } from '@/lib/workbench-guidance'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
@@ -14,7 +16,7 @@ import type {
   WebRunStatus,
   WebTokenUsage,
 } from '../api/client.ts'
-import { uploadDataset } from '../api/client.ts'
+import { uploadDatasetFiles } from '../api/client.ts'
 import {
   Button,
   IconCopyOutline16,
@@ -45,7 +47,6 @@ import { useProjectDraft } from '@/lib/use-project-draft'
 const WORKBENCH_PREFILL_KEY = 'theta.workspace.landing-prefill.v1'
 const STARTER_TITLE = '今天想和我研究什么？'
 const STARTER_DESCRIPTION = '告诉我研究问题，我会陪你理解数据、选择方法并验证结果。'
-const SUPPORTED_DATASET_SUFFIXES = new Set(['.csv', '.tsv', '.txt', '.md', '.json', '.jsonl', '.ndjson', '.xlsx', '.xls', '.parquet', '.pdf', '.docx'])
 
 const analysisModeEntries = (locale: string): MenuEntry[] => [
   {
@@ -57,11 +58,6 @@ const analysisModeEntries = (locale: string): MenuEntry[] => [
     label: locale === 'zh-CN' ? '自由分析' : 'Free analysis',
   },
 ]
-
-const fileSuffix = (filename: string): string => {
-  const dotIndex = filename.lastIndexOf('.')
-  return dotIndex >= 0 ? filename.slice(dotIndex).toLowerCase() : ''
-}
 
 const readLandingPrefill = (): string => {
   const value = localStorage.getItem(WORKBENCH_PREFILL_KEY) ?? ''
@@ -379,7 +375,6 @@ export const ConversationPane = ({
   const dismissDatasetReferences = () => setDismissedDatasets([...new Set([...dismissedDatasets, ...attachments.filter(item => item.kind === 'dataset').map(item => item.id)])])
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string>()
-  const [draggingFiles, setDraggingFiles] = useState(false)
   const [addMenuOpen, setAddMenuOpen] = useState(false)
   const [analysisMenuOpen, setAnalysisMenuOpen] = useState(false)
   const threadRef = useRef<HTMLDivElement>(null)
@@ -532,28 +527,17 @@ export const ConversationPane = ({
   }
 
   const addFiles = async (files: FileList | File[]): Promise<void> => {
-    if (files.length === 0 || uploading || controlsDisabled || attachments.some((attachment) => attachment.kind === 'dataset')) return
+    if (files.length === 0 || uploading || controlsDisabled) return
     const file = Array.from(files)[0]
-    if (!file || !SUPPORTED_DATASET_SUFFIXES.has(fileSuffix(file.name))) {
-      setUploadError(locale === 'zh-CN'
-        ? `暂不支持“${file?.name ?? '该文件'}”。当前可上传 CSV、TSV、TXT、Markdown、JSON/JSONL、Excel、Parquet、PDF 或 DOCX 数据集。`
-        : `“${file?.name ?? 'This file'}” is not supported. Upload CSV, TSV, text, Markdown, JSON/JSONL, Excel, Parquet, PDF, or DOCX.`)
-      return
-    }
+    const problem = isDocumentCollection(Array.from(files)) ? documentCollectionError(Array.from(files), locale) : datasetFilesError(Array.from(files), locale)
+    if (problem) { setUploadError(problem); return }
     setUploadSize(file.size)
     setUploading(true)
     setUploadError(undefined)
     try {
-      const uploaded: WebAttachment[] = []
-      const uploadedDatasets: WebDataset[] = []
-      for (const file of Array.from(files).slice(0, 1)) {
-        const projectId = await onEnsureProject(file.name.replace(/\.[^.]+$/u, '') || '数据分析项目')
-        const dataset = await uploadDataset(projectId, file)
-        uploadedDatasets.push(dataset)
-        uploaded.push({ kind: 'dataset', id: dataset.datasetRef, label: file.name })
-      }
-      onAttachmentsChange([...attachments, ...uploaded].filter((item, index, all) => all.findIndex((entry) => entry.id === item.id) === index).slice(-12))
-      await onDatasetReady?.(uploadedDatasets)
+      const projectId = await onEnsureProject(file.name.replace(/\.[^.]+$/u, '') || '数据分析项目')
+      const dataset = await uploadDatasetFiles(projectId, Array.from(files), locale)
+      await datasetsReady([dataset])
       textareaRef.current?.focus()
     } catch (cause) {
       const detail = cause instanceof Error ? cause.message : String(cause)
@@ -576,9 +560,11 @@ export const ConversationPane = ({
     await onDatasetReady?.(datasets.slice(0, 1))
   }
 
+  const { dragging: draggingFiles, dropProps } = useFileDrop(files => { void addFiles(files) }, controlsDisabled, setUploadError)
+
   const dropAttachment = (event: React.DragEvent): void => {
+    if (Array.from(event.dataTransfer.types).includes('Files')) { dropProps.onDrop(event); return }
     event.preventDefault()
-    setDraggingFiles(false)
     if (controlsDisabled) return
     const encoded = event.dataTransfer.getData('application/x-theta-artifact')
     if (!encoded && event.dataTransfer.files.length > 0) {
@@ -635,9 +621,8 @@ export const ConversationPane = ({
   return (
     <div
       className={`${css.conversation} ${compact ? css.conversationCompact : ''} ${draggingFiles ? css.conversationDragging : ''}`}
-      onDragEnter={(event) => { event.preventDefault(); if (event.dataTransfer.types.includes('Files')) setDraggingFiles(true) }}
-      onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDraggingFiles(false) }}
-      onDragOver={(event) => event.preventDefault()}
+      {...dropProps}
+      onDragOver={event => { dropProps.onDragOver(event); if (event.dataTransfer.types.includes('application/x-theta-artifact')) event.preventDefault() }}
       onDrop={dropAttachment}
     >
       {!showStarter && !compact && onOpenTrainingPanel && (
@@ -765,6 +750,7 @@ export const ConversationPane = ({
               <div key={message.messageId} className={`${css.interactionReply} ${css.datasetChatTurn}`}>
                 <AgentTurnHeader createdAt={message.createdAt} locale={locale} />
                 <DatasetIntakeCard
+                  disabled={controlsDisabled}
                   key={`${message.messageId}:${projectStorageScope ?? projectName}`}
                   interaction={LOCAL_DATASET_UPLOAD_INTERACTION}
                   storageScope={projectStorageScope ?? projectName}
@@ -864,6 +850,7 @@ export const ConversationPane = ({
           <div className={`${css.interactionReply} ${css.datasetChatTurn}`}>
             <AgentTurnHeader createdAt={new Date().toISOString()} locale={locale} />
             <DatasetIntakeCard
+                  disabled={controlsDisabled}
               interaction={activeInteraction}
               storageScope={projectStorageScope ?? projectName}
               legacyStorageScope={projectStorageScope == null ? undefined : projectName}
@@ -881,32 +868,33 @@ export const ConversationPane = ({
       <div
         className={`${css.composerWrap} ${showStarter ? css.startComposerWrap : ''} ${draggingFiles ? css.composerWrapDragging : ''}`}
       >
+        {draggingFiles && <p role="status">{locale === 'zh-CN' ? '松开即可上传文件或文件夹；更换数据将在当前项目中开始新对话，历史结果保留。' : 'Drop to upload and replace the current dataset. Existing results are kept.'}</p>}
         {uploading && <p role="status">{locale === 'zh-CN' ? '正在上传文件。上传后不会自动发送，你可以继续补充要求。' : 'Uploading your file. It will not be sent automatically, so you can keep adding instructions.'}</p>}
         <div className={`${css.composer} ${generationRunning ? css.composerBusy : ''}`} aria-busy={generationRunning || uploading}>
           <input
             ref={fileInputRef}
             className={css.visuallyHidden}
             type="file"
-            disabled={controlsDisabled || attachments.some((attachment) => attachment.kind === 'dataset')}
-            accept=".csv,.tsv,.txt,.md,.json,.jsonl,.ndjson,.xlsx,.xls,.parquet,.pdf,.docx"
-            onChange={(event) => { if (event.target.files) void addFiles(event.target.files); event.target.value = '' }}
+            disabled={controlsDisabled}
+            accept={DATASET_ACCEPT}
+            onChange={(event) => { if (event.target.files) void addFiles(Array.from(event.target.files).filter(file => !file.webkitRelativePath.split("/").some(part => part.startsWith(".")))); event.target.value = '' }}
           />
           <input
             ref={folderInputRef}
             className={css.visuallyHidden}
             type="file"
-            disabled={controlsDisabled || attachments.some((attachment) => attachment.kind === 'dataset')}
-            accept=".csv,.tsv,.txt,.md,.json,.jsonl,.ndjson,.xlsx,.xls,.parquet,.pdf,.docx"
-            onChange={(event) => { if (event.target.files) void addFiles(event.target.files); event.target.value = '' }}
+            disabled={controlsDisabled}
+            accept={DATASET_ACCEPT}
+            onChange={(event) => { if (event.target.files) void addFiles(Array.from(event.target.files).filter(file => !file.webkitRelativePath.split("/").some(part => part.startsWith(".")))); event.target.value = '' }}
           />
           <div className={css.composerContextRow}>
             <div className={css.addMenu}>
-              <button className={css.addButton} type="button" disabled={uploading || controlsDisabled || attachments.some((attachment) => attachment.kind === 'dataset')} onClick={() => setAddMenuOpen((current) => !current)} aria-expanded={addMenuOpen} title={locale === 'zh-CN' ? '添加文件或文件夹' : 'Add files or a folder'}>
+              <button className={css.addButton} type="button" disabled={uploading || controlsDisabled} onClick={() => setAddMenuOpen((current) => !current)} aria-expanded={addMenuOpen} title={locale === 'zh-CN' ? '添加文件或文件夹' : 'Add files or a folder'}>
                 {uploading ? <span className={css.activitySpinner} /> : <IconPlusOutline16 />}
               </button>
               {addMenuOpen && (
                 <div className={css.addMenuPopover}>
-                  <button type="button" onClick={() => { setAddMenuOpen(false); fileInputRef.current?.click() }}>{locale === 'zh-CN' ? '选择文件' : 'Choose files'}</button>
+                  <button type="button" onClick={() => { setAddMenuOpen(false); fileInputRef.current?.click() }}>{locale === 'zh-CN' ? attachments.some(item => item.kind === 'dataset') ? '重新上传 / 更换数据' : '选择文件' : attachments.some(item => item.kind === 'dataset') ? 'Replace dataset' : 'Choose file'}</button>
                   <button type="button" onClick={() => { setAddMenuOpen(false); folderInputRef.current?.click() }}>{locale === 'zh-CN' ? '选择文件夹' : 'Choose folder'}</button>
                 </div>
               )}

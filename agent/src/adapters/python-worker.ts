@@ -12,7 +12,8 @@ export const pythonExecutable = (): string => {
 export class PythonCapabilityWorker implements CapabilityWorker {
   async call<T>(operation: string, input: unknown, signal?: AbortSignal): Promise<T> {
     return new Promise((resolve, reject) => {
-      const child = spawn(pythonExecutable(), ['-m', 'workers', operation], { cwd: packageRoot, env: { ...process.env, THETA_PROJECT_ROOT: repositoryRoot(), THETA_WORKER_CONTROL_PYTHON: pythonExecutable(), PYTHONNOUSERSITE: '1' }, stdio: ['pipe', 'pipe', 'pipe'] });
+      const child = spawn(pythonExecutable(), ['-m', 'workers', operation], { cwd: packageRoot, env: { ...process.env, THETA_PROJECT_ROOT: repositoryRoot(), THETA_WORKER_CONTROL_PYTHON: pythonExecutable(), PYTHONNOUSERSITE: '1', PYTHONUTF8: '1' }, stdio: ['pipe', 'pipe', 'pipe'] });
+      child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
       let stdout = ''; let stderr = ''; let failure: Error | undefined;
       let forcedStop: ReturnType<typeof setTimeout> | undefined;
       const stop = (error: Error): void => {

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import queue
+import re
 import signal
 import subprocess
 import threading
@@ -98,9 +99,21 @@ class ProcessRunner:
 
             elapsed = time.monotonic() - start
             if process.returncode != 0:
-                raise ProcessExecutionError(
-                    f"训练进程异常退出（代码 {process.returncode}），请查看执行日志中的具体原因"
-                )
+                with log_path.open('rb') as output:
+                    output.seek(max(0, log_path.stat().st_size - 16384))
+                    tail = output.read().decode('utf-8', errors='replace')
+                causes = re.findall(r'^(?:[\w.]*Error|Exception):[^\r\n]+', tail, re.MULTILINE)
+                reason = causes[-1][:1000] if causes else '未捕获具体异常，请查看任务目录中的 worker.log'
+                if 'BOW vocabulary is empty' in reason:
+                    reason = '正文分词后没有可用词语。请检查正文列、停用词设置，并增加有效文本记录。'
+                elif 'Expected more than 1 value per channel' in reason:
+                    reason = '有效训练样本不足，当前模型每批至少需要 2 条文本。请增加独立文本记录后重试。'
+                for key, value in env.items():
+                    if len(value) >= 8 and any(word in key.upper() for word in ('KEY', 'TOKEN', 'SECRET', 'PASSWORD')):
+                        reason = reason.replace(value, '[已隐藏]')
+                reason = re.sub(r'(?i)(api[_-]?key|authorization|token|secret)([\s=:]+)\S+', r'\1\2[已隐藏]', reason)
+                reason = re.sub(r'\bsk-[A-Za-z0-9_-]+', '[已隐藏]', reason)
+                raise ProcessExecutionError(f"训练进程异常退出（代码 {process.returncode}）：{reason}")
             return ProcessResult(process.returncode, elapsed)
 
     @staticmethod

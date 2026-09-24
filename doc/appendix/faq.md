@@ -75,7 +75,7 @@ A: Traditional models can run on CPU. Local neural embeddings can be slow on CPU
   year = {2026},
   howpublished = {GitHub repository},
   url = {https://github.com/CodeSoul-co/THETA},
-  note = {Version 0.3.5}
+  note = {Version 0.3.6}
 }
 ```
 

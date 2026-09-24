@@ -6,5 +6,5 @@ export interface DatasetPreview {
   inputKind?: 'table' | 'text'
   textColumn?: string
   totalRecords?: number
-  segments?: { text: string; page?: number; paragraph?: number }[]
+  segments?: { text: string; page?: number; paragraph?: number; chunk?: number; source_file?: string; table?: number; row?: number }[]
 }

@@ -27,7 +27,7 @@ async function body(req: IncomingMessage, limit = 1024 * 1024) {
   for await (const chunk of req) { const bytes = Buffer.from(chunk); size += bytes.length; if (size > limit) throw new HttpError(413, '文件超过大小限制'); chunks.push(bytes); }
   return Buffer.concat(chunks);
 }
-const safeName = (name: string) => { if (typeof name !== 'string' || !name.trim() || name.length > 160 || /[/\\\x00-\x1f]/u.test(name) || name.trim() === '..' || name.trim() === '.') throw new HttpError(400, '名称包含不允许的字符'); return name.trim(); };
+const safeName = (name: string, maxLength = 160) => { if (typeof name !== 'string' || !name.trim() || name.length > maxLength || /[/\\\x00-\x1f]/u.test(name) || name.trim() === '..' || name.trim() === '.') throw new HttpError(400, '名称包含不允许的字符'); return name.trim(); };
 const projectNameKey = (name: string) => name.trim().normalize('NFC').toLowerCase();
 
 export function createManualServer(home: string, worker: CapabilityWorker = new PythonCapabilityWorker(), options: { localToken?: string } = {}) {
@@ -207,14 +207,25 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
         return json(res, { id: record.id, name, count: words.length }, 201);
       }
       if (url.pathname === '/api/upload' && method === 'POST') {
-        const name = safeName(url.searchParams.get('filename') ?? ''); const datasetName = safeName(url.searchParams.get('dataset_name') ?? '');
+        const name = safeName(url.searchParams.get('filename') ?? '', 255); const datasetName = safeName(url.searchParams.get('dataset_name') ?? '');
         if (!/\.(csv|tsv|txt|md|json|jsonl|ndjson|xlsx|xls|parquet|pdf|docx)$/iu.test(name)) throw new HttpError(400, '暂不支持此文件类型');
         const bytes = await body(req, 200 * 1024 * 1024); if (!bytes.length) throw new HttpError(400, '不能上传空文件');
+        const expectedSize = req.headers['x-theta-file-size'];
+        if (expectedSize !== undefined && (!/^\d+$/.test(String(expectedSize)) || Number(expectedSize) !== bytes.length)) throw new HttpError(400, '文件传输不完整，请重新上传原始文件。');
         const folder = path.join(home, 'incoming', randomUUID()); mkdirSync(folder, { recursive: true });
-        const source = path.join(folder, name); writeFileSync(source, bytes, { flag: 'wx', mode: 0o600 });
-        const dataset = await worker.call<Dataset>('dataset.import', { filePath: source, uploadDir: path.join(home, 'uploads') });
+        const source = path.join(folder, 'data' + path.extname(name).toLowerCase()); writeFileSync(source, bytes, { flag: 'wx', mode: 0o600 });
+        const dataset = { ...await worker.call<Dataset>('dataset.import', { filePath: source, uploadDir: path.join(home, 'uploads') }), fileName: name };
         const file = insert('file', { filename: name, dataset_name: datasetName, dataset, file_path: name, size: bytes.length, created_at: new Date().toISOString() });
         return json(res, { id: file.id, filename: name, dataset_name: datasetName, file_path: name }, 201);
+      }
+      if (parts[1] === 'datasets' && parts[3] === 'combine' && method === 'POST') {
+        const input = JSON.parse((await body(req)).toString());
+        if (!Array.isArray(input.fileIds) || !input.fileIds.length || input.fileIds.length > 500) throw new HttpError(400, '请选择 1–500 个正文文件');
+        const files = input.fileIds.map((id: unknown) => get('file', String(id)));
+        if (files.some((file: RecordValue) => !file || file.dataset_name !== parts[2])) throw new HttpError(400, '文件不属于当前项目');
+        const dataset = await worker.call<Dataset>('dataset.combine', { datasets: files.map((file: RecordValue, index: number) => ({ ...file.dataset, ...(typeof input.sourceNames?.[index] === 'string' ? { fileName: input.sourceNames[index].slice(0, 512) } : {}) })), uploadDir: path.join(home, 'uploads') });
+        const file = insert('file', { filename: dataset.fileName, dataset_name: parts[2], dataset, input_kind: 'text', file_path: dataset.fileName, size: dataset.sizeBytes, created_at: new Date().toISOString() });
+        return json(res, { file_id: file.id, name: dataset.fileName, size: dataset.sizeBytes, inputKind: 'text' }, 201);
       }
       if (parts[1] === 'datasets' && parts[3] === 'preview') {
         const file = url.searchParams.get('file_id') ? get('file', url.searchParams.get('file_id')!) : list('file').find(file => file.dataset_name === parts[2]);

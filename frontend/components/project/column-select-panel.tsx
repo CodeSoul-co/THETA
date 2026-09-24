@@ -30,6 +30,7 @@ interface ColumnSelectPanelProps {
   onOpenChange: (open: boolean) => void
   onConfirm: (selection: ColumnSelection) => void
   onSkip?: () => void
+  onReplace?: () => void
   datasetName: string
   /** 本地上传返回的文件 ID，确保预览用户当前选择的文件。 */
   jobId?: string | null
@@ -40,6 +41,7 @@ export function ColumnSelectPanel({
   onOpenChange,
   onConfirm,
   onSkip,
+  onReplace,
   datasetName,
   jobId,
   projectKey,
@@ -53,25 +55,27 @@ export function ColumnSelectPanel({
   const setTimeColumn = (timeColumn: string) => setSelection(prev => ({ ...prev, timeColumn }))
   const setLabelColumn = (labelColumn: string) => setSelection(prev => ({ ...prev, labelColumn }))
   const [error, setError] = useState('')
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     if (!open || !datasetName) return
     let cancelled = false
     setLoading(true)
-    setError('')
+    setError(''); setColumns([]); setRows([])
     ETMAgentAPI.getDatasetPreview(datasetName, jobId ?? undefined)
       .then(({ columns: c, rows: r }) => {
         if (cancelled) return
+        if (!c.length) { setError('未读取到数据列，请检查文件是否有表头和数据，或重新上传。'); return }
         setColumns(c)
         setRows(r)
       })
       .catch(error => { if (!cancelled) { setColumns([]); setError(error.message || '数据预览失败，请重试') } })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [open, datasetName, jobId])
+  }, [open, datasetName, jobId, attempt])
 
   const handleConfirm = () => {
-    if (loading || !columns.includes(textColumn)) return
+    if (loading || error || !columns.includes(textColumn)) return
     onConfirm({
       textColumn,
       metaColumns,
@@ -100,7 +104,7 @@ export function ColumnSelectPanel({
             <Loader2 className="w-5 h-5 animate-spin" />
             <span>加载预览...</span>
           </div>
-        ) : (
+        ) : error ? <div role="alert" className="space-y-4 p-6 text-sm"><p className="text-red-700">{error}</p><div className="flex gap-3"><Button variant="outline" onClick={() => setAttempt(value => value + 1)}>重新读取</Button>{onReplace && <Button onClick={() => { onOpenChange(false); onReplace() }}>重新上传 / 更换文件</Button>}</div></div> : (
           <div className="min-h-0 min-w-0 flex-1 space-y-6 overflow-y-auto px-5 py-5 sm:px-6">
             <div>
               <Label>文本列（必选）</Label>
@@ -183,9 +187,8 @@ export function ColumnSelectPanel({
         )}
 
         <DialogFooter className="shrink-0 border-t bg-slate-50 px-5 py-4 sm:px-6">
-          {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
           <Button variant="outline" onClick={() => onOpenChange(false)}>稍后继续</Button>
-          <Button onClick={handleConfirm} disabled={loading || !columns.includes(textColumn)} className="bg-blue-600">
+          <Button onClick={handleConfirm} disabled={loading || !!error || !columns.includes(textColumn)} className="bg-blue-600">
             确认并继续
           </Button>
         </DialogFooter>

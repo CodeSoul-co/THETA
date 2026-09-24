@@ -1,3 +1,4 @@
+import { datasetFilesError, documentCollectionError, isDocumentCollection } from '@/lib/dataset-files'
 /**
  * Typed client for the THETA 2.0 API (apps/api). All shapes mirror
  * agent/src/api/contracts.ts so the web UI and the API stay in sync.
@@ -862,6 +863,19 @@ export const uploadDataset = async (projectId: string, file: File): Promise<WebD
   );
   return { ...dataset, name: displayName };
 };
+
+export const uploadDatasetFiles = async (projectId: string, files: File[], locale = 'zh-CN'): Promise<WebDataset> => {
+  const collection = isDocumentCollection(files)
+  const problem = collection ? documentCollectionError(files, locale) : datasetFilesError(files, locale)
+  if (problem) throw new Error(problem)
+  const uploaded: WebDataset[] = []
+  for (const file of files) uploaded.push(await uploadDataset(projectId, file))
+  if (!collection) return uploaded[0]
+  const { displayName, ...dataset } = await request<Omit<WebDataset, 'name'> & { displayName: string }>('/api/v3/datasets/combine', {
+    method: 'POST', body: JSON.stringify({ projectId, datasetRefs: uploaded.map(item => item.datasetRef), sourceNames: files.map(file => file.webkitRelativePath || file.name) }),
+  })
+  return { ...dataset, name: displayName }
+}
 
 export const listProjects = async (): Promise<{ projects: WebProject[] }> =>
   request('/api/v3/projects');

@@ -4,7 +4,7 @@
 
 <h1>THETA (θ)</h1>
 
-[![Desktop](https://img.shields.io/badge/Desktop-macOS%20%7C%20Windows-blue?style=flat-square)](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.5)
+[![Desktop](https://img.shields.io/badge/Desktop-macOS%20%7C%20Windows-blue?style=flat-square)](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.6)
 [![CLI Agent + Web](https://img.shields.io/badge/CLI%20Agent%20%2B%20Web-local-green?style=flat-square)](agent/README.md)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-CodeSoulco%2FTHETA-yellow?style=flat-square)](https://huggingface.co/CodeSoulco/THETA)
 
@@ -20,13 +20,13 @@ Use **the Web workbench, CLI Agent, or desktop app**, with an optional Skill for
 
 | Entry point | Best for | Get started |
 | --- | --- | --- |
-| **Desktop · Mac / Windows** | Installing and using THETA without setting up a development environment | [Download an installer](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.5); Python and compute dependencies are bundled. No separate Python, Node.js, or Conda installation is needed |
+| **Desktop · Mac / Windows** | Installing and using THETA without setting up a development environment | [Download an installer](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.6); Python and compute dependencies are bundled. No separate Python, Node.js, or Conda installation is needed |
 | **Web workbench** | Conversation and manual analysis in your browser | Complete the [source environment setup](agent/README.md), run `./theta-web start`, and open the local workbench |
 | **CLI Agent** | Conversational data analysis in your terminal | Complete the [Agent setup](agent/README.md), then run `./theta` |
 
 You can also use the [THETA Workflow Skill](skills/theta-workflow/SKILL.md) with a compatible agent to guide research and training.
 
-### Desktop downloads · 0.3.5 preview
+### Desktop downloads · 0.3.6 preview
 
 Windows automatically uses compatible NVIDIA GPUs, with CPU fallback. The first accelerated task downloads a verified GPU component (about 2.6 GiB); CPU-only computers do not need it. See the [GPU setup details](docs/desktop.md#windows-gpu-acceleration).
 
@@ -34,12 +34,12 @@ The desktop app bundles its own homepage and does not update automatically. To g
 
 | System | Installer |
 | --- | --- |
-| macOS · Apple Silicon (M-series) | [Download DMG](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.5/THETA-0.3.5-mac-arm64.dmg) |
-| Windows · x64 | [Download EXE installer](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.5/THETA-0.3.5-win-x64.exe) |
+| macOS · Apple Silicon (M-series) | [Download DMG](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.6/THETA-0.3.6-mac-arm64.dmg) |
+| Windows · x64 | [Download EXE installer](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.6/THETA-0.3.6-win-x64.exe) |
 
 On Mac, open the DMG and drag **THETA** into Applications. On Windows, run the EXE installer. Open Settings in the app to enter your model API endpoint and key, and choose local or cloud embeddings. **No user credentials or model weights are bundled.** The default local embedding model is Qwen3-Embedding-0.6B; the cloud preset is GLM embedding-3. Traditional models such as LDA do not require neural model weights.
 
-This desktop release is a preview without official signing/notarization, so the operating system may show a security warning. Native Intel Mac and Windows ARM installers are not provided. See the [desktop guide](docs/desktop.md) and [release notes with SHA-256 checksums](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.5).
+This desktop release is a preview without official signing/notarization, so the operating system may show a security warning. Native Intel Mac and Windows ARM installers are not provided. See the [desktop guide](docs/desktop.md) and [release notes with SHA-256 checksums](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.6).
 
 ## Start the Web Workbench (Conversation / Manual)
 
@@ -729,7 +729,7 @@ If you find **THETA** useful in your research, please cite this repository:
   year = {2026},
   howpublished = {GitHub repository},
   url = {https://github.com/CodeSoul-co/THETA},
-  note = {Version 0.3.5}
+  note = {Version 0.3.6}
 }
 ```
 

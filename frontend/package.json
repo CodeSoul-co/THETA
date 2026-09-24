@@ -8,7 +8,7 @@
     "dev": "next dev -H 127.0.0.1 -p 4320",
     "lint": "eslint .",
     "test:presentation": "node --experimental-strip-types --test lib/presentation.test.ts lib/chart-data.test.ts lib/chart-reference.test.ts lib/workbench-draft.test.ts lib/workbench-guidance.test.ts lib/result-readiness.test.ts lib/analysis-config.test.ts lib/consultation-history.test.ts lib/training-progress.test.ts",
-    "test:manual-upload": "node --experimental-strip-types --test lib/manual-upload.test.ts lib/local-backend-session.test.ts lib/project-identity.test.ts",
+    "test:manual-upload": "node --experimental-strip-types --test lib/manual-upload.test.ts lib/dataset-files.test.ts lib/local-backend-session.test.ts lib/project-identity.test.ts",
     "start": "next start"
   },
   "dependencies": {

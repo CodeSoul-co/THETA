@@ -63,6 +63,7 @@ async function proxy(request: NextRequest, context: RouteContext) {
   for (const name of [
     'accept',
     'content-type',
+    'x-theta-file-size',
     'range',
     'user-agent',
     'x-forwarded-for',

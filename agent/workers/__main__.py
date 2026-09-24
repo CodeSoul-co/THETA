@@ -29,7 +29,7 @@ configure_numba_cache()
 from . import capabilities, local_compute
 from . import execution_policy, runtime_environments
 from . import remote_report, figure_tools
-from .dataset import catalog, business
+from .dataset import catalog, business, collection
 from .dataset.preprocess import preprocess
 
 def statistics_call(name, payload):
@@ -53,6 +53,7 @@ HANDLERS = {
     "runtime.config": execution_policy.configuration_summary,
     "compute.preview": execution_policy.preview,
     "dataset.import": capabilities.dataset_import,
+    "dataset.combine": collection.combine,
     "dataset.discover": catalog.discover,
     "dataset.use": catalog.use,
     "dataset.understand": business.understand,

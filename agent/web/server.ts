@@ -614,6 +614,19 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
         const project = { id: previous?.id ?? randomUUID(), ownerId: principal.id, name: String(body.name ?? previous?.name ?? '新项目').slice(0, 120), createdAt: previous?.createdAt ?? new Date().toISOString(), updatedAt: new Date().toISOString(), pinned: body.pinned ?? previous?.pinned ?? false, archived: method === 'DELETE' };
         records.put('web-project', project.id, project); return json(res, { ...project, ownerId: undefined, runIds: metas(principal).filter(m => m.projectId === project.id).map(m => m.id) });
       }
+      if (url.pathname === '/api/v3/datasets/combine' && method === 'POST') {
+        const input = JSON.parse((await readBody(req)).toString());
+        projectFor(input.projectId, principal);
+        if (!Array.isArray(input.datasetRefs) || !input.datasetRefs.length || input.datasetRefs.length > 500) throw new HttpError(400, '请选择 1–500 个正文文件');
+        for (const ref of input.datasetRefs) {
+          assertDatasetOwner(ref, principal);
+          if (!datasetAssignedToProject(ref, input.projectId, principal)) throw new HttpError(400, '文件不属于当前项目');
+        }
+        const dataset = await capabilityWorker.call<Dataset>('dataset.combine', { datasets: input.datasetRefs.map((ref: string, index: number) => ({ ...records.get<Dataset>('dataset', ref), ...(typeof input.sourceNames?.[index] === 'string' ? { fileName: input.sourceNames[index].slice(0, 512) } : {}) })), uploadDir: path.join(home, 'uploads') });
+        records.put('dataset', dataset.datasetRef, dataset);
+        records.put('web-dataset-owner', dataset.datasetRef, { datasetRef: dataset.datasetRef, ownerId: principal.id, projectIds: [input.projectId] });
+        return json(res, { datasetRef: dataset.datasetRef, displayName: dataset.fileName, sizeBytes: dataset.sizeBytes, suffix: '.jsonl', createdAt: new Date().toISOString() });
+      }
       if (parts[2] === 'datasets') {
         const view = (d: Dataset) => ({ datasetRef: d.datasetRef, displayName: d.fileName, sizeBytes: d.sizeBytes, suffix: path.extname(d.fileName), createdAt: new Date().toISOString() });
         const projectId = url.searchParams.get('projectId')?.trim();
@@ -629,11 +642,13 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
         const file = form.get('file');
         if (!(file instanceof File) || !file.size || file.size > MAX_UPLOAD) throw new HttpError(400, '请选择非空且不超过 200 MiB 的数据文件。');
         const tempDir = path.join(home, 'incoming', randomUUID()); mkdirSync(tempDir, { recursive: true });
-        const filePath = path.join(tempDir, path.basename(file.name));
+        const filePath = path.join(tempDir, 'data' + path.extname(file.name).toLowerCase());
         try {
           writeFileSync(filePath, Buffer.from(await file.arrayBuffer()), { mode: 0o600 });
           const scratch: ProductSession = { id: `upload-${randomUUID()}`, title: '', datasetRefs: [], messages: [], updatedAt: new Date().toISOString() };
           const receipt = await tools.attach(filePath, scratch) as { datasetRef: string };
+          const imported = records.get<Dataset>('dataset', receipt.datasetRef);
+          records.put('dataset', receipt.datasetRef, { ...imported, fileName: path.basename(file.name) });
           const previousOwner = datasetOwner(receipt.datasetRef);
           records.put('web-dataset-owner', receipt.datasetRef, {
             datasetRef: receipt.datasetRef,

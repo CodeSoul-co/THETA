@@ -647,10 +647,13 @@ def generate_bow(texts: List[str], vocab_size: int, output_dir: Path) -> Tuple[s
     
     print(f"\n[Generating BOW] vocab_size={vocab_size}")
     
+    small_corpus = len(texts) < 10
+    if small_corpus:
+        print(f"[数据提示] 当前仅 {len(texts)} 条正文，使用小样本词频阈值；结果仅适合流程验证，建议增加独立文本记录。", flush=True)
     vocab_config = VocabConfig(
         max_vocab_size=vocab_size,
-        min_df=5,
-        max_df_ratio=0.7
+        min_df=1 if small_corpus else 5,
+        max_df_ratio=1.0 if small_corpus else 0.7
     )
     vocab_builder = VocabBuilder(config=vocab_config)
     vocab_builder.add_documents(texts, dataset_name="dataset")

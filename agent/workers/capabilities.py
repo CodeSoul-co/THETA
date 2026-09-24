@@ -116,6 +116,8 @@ def dataset_import(payload: dict) -> dict:
         raise ValueError("请选择支持的数据文件")
     if source.stat().st_size > 200 * 1024 * 1024:
         raise ValueError("本地导入限制为 200 MiB；更大数据请使用数据服务")
+    from .dataset.readers import validate_document_container
+    validate_document_container(source)
     digest = file_hash(source)
     target = Path(payload["uploadDir"]).resolve() / digest / ("data" + source.suffix.lower())
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -145,7 +147,7 @@ def dataset_preview(payload: dict) -> dict:
     """Explicit manual-workbench preview, never exposed as an Agent tool."""
     file = verify_dataset(payload['dataset'])
     table = load_dataset(file, profile_limit=5)
-    text_input = file.suffix.lower() in {'.txt', '.md', '.pdf', '.docx'}
+    text_input = payload['dataset'].get('inputKind') == 'text' or file.suffix.lower() in {'.txt', '.md', '.pdf', '.docx'}
     # Preview the beginning, not the reservoir sample used for profiling large files.
     rows = table.head_rows[:5]
     result = {'columns': table.columns, 'rows': [[str(row.get(column) if row.get(column) is not None else '') for column in table.columns] for row in rows],
@@ -153,7 +155,7 @@ def dataset_preview(payload: dict) -> dict:
     if text_input:
         if not table.row_count:
             raise ValueError('未读取到可分析的正文。扫描版 PDF 请先完成文字识别，或上传含文字的 TXT、Word 文件。')
-        result.update(textColumn='text', segments=[{key: row[key] for key in ['text', 'page', 'paragraph'] if key in row} for row in rows])
+        result.update(textColumn='text', segments=[{key: row[key] for key in ['text', 'page', 'paragraph', 'table', 'row', 'chunk', 'source_file'] if key in row} for row in rows])
     return result
 
 

@@ -88,3 +88,18 @@ class TrainingProgressTests(unittest.TestCase):
             state = observe(folder, dict(id=root.name, status='running', phase='preprocessing'), 1, now=2)
             self.assertEqual(state['detail']['current'], 2)
             self.assertEqual(state['activity'], 'embedding')
+
+    def test_failed_process_exposes_specific_cause_without_credentials(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'trainning'))
+        from worker.process import ProcessRunner
+        from worker.errors import ProcessExecutionError
+        with tempfile.TemporaryDirectory() as folder:
+            for source, expected in [
+                ("raise ValueError('BOW vocabulary is empty after tokenization')", '没有可用词语'),
+                ("raise RuntimeError('api_key=sk-private-example bad configuration')", '[已隐藏]'),
+            ]:
+                with self.assertRaises(ProcessExecutionError) as raised:
+                    ProcessRunner(poll_seconds=.01).run(command=[sys.executable, '-c', source], cwd=Path(folder), env=os.environ,
+                        log_path=Path(folder) / 'worker.log', timeout_seconds=10, is_cancelled=lambda: False, heartbeat=lambda: None, shutdown_grace_seconds=1)
+                self.assertIn(expected, str(raised.exception))
+                self.assertNotIn('sk-private-example', str(raised.exception))

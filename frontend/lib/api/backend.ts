@@ -344,7 +344,7 @@ export const SimpleETMAPI = {
       onProgress?.(5);
       const result = await sharedApiFetch<UploadCompleteResponse>(API_BASE,
         `/api/upload?dataset_name=${encodeURIComponent(datasetName)}&filename=${encodeURIComponent(file.name)}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: file, timeoutMs: 300_000 });
+        { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', 'x-theta-file-size': String(file.size) }, body: file, timeoutMs: 300_000 });
       onProgress?.(100);
       return { file_id: result.id, dataset_name: datasetName, oss_path: result.file_path };
     }

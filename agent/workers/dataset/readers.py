@@ -5,7 +5,9 @@ import codecs
 import hashlib
 import json
 import random
+import re
 import unicodedata
+import zipfile
 from dataclasses import dataclass
 from datetime import date, datetime, time
 from decimal import Decimal
@@ -15,7 +17,7 @@ from typing import Any, Iterable, Iterator
 
 SUPPORTED_SUFFIXES = {'.csv', '.tsv', '.txt', '.md', '.json', '.jsonl', '.ndjson', '.xlsx', '.xls', '.parquet', '.pdf', '.docx'}
 DEFAULT_PROFILE_LIMIT = 5000
-READER_VERSION = '2.0.0'
+READER_VERSION = '2.1.0'
 
 
 @dataclass
@@ -34,7 +36,51 @@ class DatasetReader:
     warnings: list[str]
 
 
-def load_dataset(
+def content_segments(text: str, limit: int = 1600) -> Iterator[str]:
+    """Keep real paragraphs; only split long paragraphs at sentence/word boundaries."""
+    for paragraph in re.split(r'\n\s*\n|\r?\n', text):
+        paragraph = paragraph.strip()
+        while len(paragraph) > limit:
+            candidates = [m.end() for m in re.finditer(r'[。！？!?；;]|[.]\s|\s+', paragraph[:limit]) if m.end() >= limit // 2]
+            cut = candidates[-1] if candidates else limit
+            yield paragraph[:cut].strip()
+            paragraph = paragraph[cut:].strip()
+        if paragraph:
+            yield paragraph
+
+
+def validate_document_container(path: Path) -> None:
+    """Validate Office containers before recording a successful import."""
+    if path.suffix.lower() not in {'.xlsx', '.docx'}:
+        return
+    kind = 'Excel' if path.suffix.lower() == '.xlsx' else 'Word'
+    with path.open('rb') as handle:
+        signature = handle.read(8)
+        handle.seek(0)
+        if signature == b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1':
+            raise ValueError(f'{kind} 文件可能已加密或使用旧版格式。请在办公软件中打开，移除密码后另存为 {path.suffix.lower()}，再重新上传；不要直接修改扩展名。')
+        try:
+            with zipfile.ZipFile(handle) as archive:
+                required = 'xl/workbook.xml' if path.suffix.lower() == '.xlsx' else 'word/document.xml'
+                if required not in archive.namelist() or '[Content_Types].xml' not in archive.namelist():
+                    raise ValueError(f'文件内容与 {path.suffix.lower()} 格式不匹配。请打开原始文件并另存为标准 {kind} 文件，再重新上传。')
+        except zipfile.BadZipFile as exc:
+            raise ValueError(f'{kind} 文件不完整、已损坏或扩展名不匹配。请确认原始文件可以正常打开，再使用“重新上传 / 更换数据”；仅修改文件名不能转换格式。') from exc
+
+
+def load_dataset(path: Path, **options) -> DatasetReader:
+    try:
+        validate_document_container(path)
+        return _load_dataset(path, **options)
+    except FileNotFoundError as exc:
+        raise ValueError('找不到已上传的数据文件，可能已被移动或清理。请重新上传原始文件。') from exc
+    except PermissionError as exc:
+        raise ValueError('无法读取数据文件，请检查数据目录的访问权限，关闭占用文件的程序后重新上传。') from exc
+    except zipfile.BadZipFile as exc:
+        raise ValueError('文件压缩内容损坏或上传不完整，请重新上传可正常打开的原始文件。') from exc
+
+
+def _load_dataset(
     path: Path,
     *,
     seed: str = 'theta-dataset-profile',
@@ -90,23 +136,38 @@ def load_dataset(
             from PyPDF2 import PdfReader
         except ImportError as exc:
             raise RuntimeError('Reading .pdf requires the optional PyPDF2 adapter.') from exc
-        records = (
-            {'text': text, 'page': index}
-            for index, page in enumerate(PdfReader(str(path)).pages, start=1)
-            if (text := (page.extract_text() or '').strip())
-        )
-        return _bounded_reader(path, suffix, ['text', 'page'], 'binary', None, records, seed, profile_limit)
+        def pdf_records():
+            with path.open('rb') as handle:
+                for index, page in enumerate(PdfReader(handle).pages, start=1):
+                    for chunk, text in enumerate(content_segments(page.extract_text() or ''), start=1):
+                        yield {'text': text, 'page': index, 'chunk': chunk}
+        return _bounded_reader(path, suffix, ['text', 'page', 'chunk'], 'binary', None, pdf_records(), seed, profile_limit)
+
     if suffix == '.docx':
         try:
             from docx import Document
         except ImportError as exc:
             raise RuntimeError('Reading .docx requires the optional python-docx adapter.') from exc
-        records = (
-            {'text': text, 'paragraph': index}
-            for index, paragraph in enumerate(Document(str(path)).paragraphs, start=1)
-            if (text := paragraph.text.strip())
-        )
-        return _bounded_reader(path, suffix, ['text', 'paragraph'], 'binary', None, records, seed, profile_limit)
+        with path.open('rb') as handle:
+            document = Document(handle)
+        from docx.text.paragraph import Paragraph
+        from docx.table import Table
+        def word_records():
+            paragraph_index = 0
+            table_index = 0
+            for element in document.element.body:
+                if element.tag.endswith('}p'):
+                    paragraph_index += 1
+                    parts = list(content_segments(Paragraph(element, document).text))
+                    for chunk, text in enumerate(parts, start=1):
+                        yield {'text': text, 'paragraph': paragraph_index, **({'chunk': chunk} if len(parts) > 1 else {})}
+                elif element.tag.endswith('}tbl'):
+                    table_index += 1
+                    for row_index, row in enumerate(Table(element, document).rows, start=1):
+                        value = '；'.join(cell.text.strip() for cell in row.cells if cell.text.strip())
+                        for chunk, text in enumerate(content_segments(value), start=1):
+                            yield {'text': text, 'table': table_index, 'row': row_index, 'chunk': chunk}
+        return _bounded_reader(path, suffix, ['text', 'paragraph'], 'binary', None, word_records(), seed, profile_limit)
 
     encoding = _detect_encoding(path)
 
@@ -115,7 +176,9 @@ def load_dataset(
             for line in handle:
                 value = line.strip()
                 if value:
-                    yield {'text': value}
+                    parts = list(content_segments(value))
+                    for chunk, text in enumerate(parts, start=1):
+                        yield {'text': text, **({'chunk': chunk} if len(parts) > 1 else {})}
 
     return _bounded_reader(path, suffix, ['text'], encoding, None, text_records(), seed, profile_limit)
 

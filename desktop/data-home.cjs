@@ -40,3 +40,16 @@ function clearUpgradeCaches(home, version) {
   fs.writeFileSync(marker, version);
 }
 module.exports.clearUpgradeCaches = clearUpgradeCaches;
+
+function selectDataHome({ requested, locationFile, legacyHome, installDirectory, platform = process.platform }) {
+  // A recorded/existing home wins so upgrades never appear to lose projects or keys.
+  if (requested) return prepareDataHome(requested);
+  if (fs.existsSync(locationFile)) return prepareDataHome(readDataLocation(locationFile));
+  if (fs.existsSync(legacyHome)) return prepareDataHome(legacyHome);
+  if (platform === 'win32') {
+    try { return prepareDataHome(path.join(installDirectory, 'THETA-data')); }
+    catch { /* Program Files may be read-only for a standard user. */ }
+  }
+  return prepareDataHome(legacyHome);
+}
+module.exports.selectDataHome = selectDataHome;

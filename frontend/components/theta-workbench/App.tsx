@@ -31,7 +31,7 @@ import {
   stopRunGeneration,
   pinProject as pinProjectRequest,
   renameProject as renameProjectRequest,
-  uploadDataset,
+  uploadDatasetFiles,
   type WebAgentInteraction,
   type WebAttachment,
   type WebConversationMemory,
@@ -345,6 +345,14 @@ const boundedMemories = (memories: Record<string, { messages?: unknown[]; attach
 
 export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React.ReactElement => {
   const { locale, t } = usePreferences()
+  useEffect(() => {
+    const preventFileNavigation = (event: DragEvent) => {
+      if (Array.from(event.dataTransfer?.types ?? []).includes('Files')) event.preventDefault()
+    }
+    window.addEventListener('dragover', preventFileNavigation)
+    window.addEventListener('drop', preventFileNavigation)
+    return () => { window.removeEventListener('dragover', preventFileNavigation); window.removeEventListener('drop', preventFileNavigation) }
+  }, [])
   const router = useRouter()
   const { user, loading: authLoading, logout } = useAuth()
   const accountScope = user?.id ?? 'anonymous'
@@ -1777,19 +1785,23 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
     if (!dataset) return
     const projectId = await ensureProject(dataset.name.replace(/\.[^.]+$/u, '') || '数据分析项目')
 
+    // An existing run retains its original dataset and approvals. Replacement starts
+    // a fresh conversation inside the same project, leaving its history/results intact.
+    const replacing = !!(selectedRunId || workspaceSessionId) && !attachments.some(item => item.kind === 'dataset' && item.id === dataset.datasetRef)
+    if (replacing && activeProjectIdRef.current === projectId) startNewConversation(projectId)
     setDatasetSizes(current => ({ ...current, [projectId]: dataset.sizeBytes }))
     const datasetAttachments: WebAttachment[] = [{ kind: 'dataset', id: dataset.datasetRef, label: dataset.name }]
     if (activeProjectIdRef.current === projectId) setAttachments(datasetAttachments)
     setProjectMemories((current) => {
       const previous = current[projectId] ?? { messages: messagesRef.current, attachments: [] }
-      return { ...current, [projectId]: { ...previous, attachments: datasetAttachments } }
+      return { ...current, [projectId]: { ...previous, ...(replacing ? { messages: [], selectedRunId: undefined, workspaceSessionId: undefined } : {}), attachments: datasetAttachments } }
     })
     setDetailOpen(true)
   }
 
-  const uploadDatasetFromDrawer = async (file: File): Promise<void> => {
-    const projectId = await ensureProject(file.name.replace(/\.[^.]+$/u, '') || '数据分析项目')
-    const dataset = await uploadDataset(projectId, file)
+  const uploadDatasetFromDrawer = async (files: File[]): Promise<void> => {
+    const projectId = await ensureProject(files[0].name.replace(/\.[^.]+$/u, '') || '数据分析项目')
+    const dataset = await uploadDatasetFiles(projectId, files, locale)
     await datasetReady([dataset])
   }
 

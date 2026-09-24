@@ -1,3 +1,5 @@
+import { DATASET_ACCEPT, datasetFilesError, documentCollectionError, isDocumentCollection } from '@/lib/dataset-files'
+import { useFileDrop } from '@/lib/use-file-drop'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { artifactLabel, fieldLabel, modeLabel, systemText } from "@/lib/presentation"
 import type { ReactNode } from 'react'
@@ -23,7 +25,7 @@ interface DetailPaneProps {
   onCollapse: () => void
   onOpenResults: (destination: 'results' | 'interpretation') => void
   onAttach: (attachment: WebAttachment) => void
-  onUploadDataset: (file: File) => Promise<void>
+  onUploadDataset: (files: File[]) => Promise<void>
 }
 
 interface ParameterEntry { label: string; value: string }
@@ -59,7 +61,6 @@ const parameterEntries = (value: unknown): ParameterEntry[] => {
 }
 
 const trainingEvent = (event: WebRunEvent): boolean => /training|train|训练/iu.test(`${event.type} ${systemText(event.title, "训练状态更新")} ${event.detail ?? ''}`)
-const SUPPORTED_DATASET_SUFFIXES = new Set(['csv', 'tsv', 'txt', 'md', 'json', 'jsonl', 'ndjson', 'xlsx', 'xls', 'parquet', 'pdf', 'docx'])
 
 export const DetailPane = ({
   runId, status, events, results, resultCatalog, plan, attachments, initialSection,
@@ -110,17 +111,14 @@ export const DetailPane = ({
   const recentEvents = events.filter(trainingEvent).slice(-4).reverse()
   const statusLabel = ({ queued: zh ? '等待执行' : 'Queued', running: zh ? '训练中' : 'Training', completed: zh ? '已完成' : 'Completed', failed: zh ? '执行失败' : 'Failed', cancelled: zh ? '已取消' : 'Cancelled' } as Record<string, string>)[trainingState ?? ''] ?? (zh ? '尚未开始' : 'Not started')
 
-  const chooseDataset = async (file?: File): Promise<void> => {
-    if (!file || uploading) return
-    const extension = file.name.split('.').at(-1)?.toLowerCase() ?? ''
-    if (!SUPPORTED_DATASET_SUFFIXES.has(extension)) {
-      setUploadError(zh ? '请选择 CSV、Excel、JSON、Parquet、PDF、DOCX 或文本数据集。' : 'Choose a CSV, Excel, JSON, Parquet, PDF, DOCX, or text dataset.')
-      return
-    }
+  const chooseDataset = async (files: File[]): Promise<void> => {
+    if (!files.length || uploading) return
+    const problem = isDocumentCollection(files) ? documentCollectionError(files, locale) : datasetFilesError(files, locale)
+    if (problem) { setUploadError(problem); return }
     setUploading(true)
     setUploadError(undefined)
     try {
-      await onUploadDataset(file)
+      await onUploadDataset(files)
     } catch (cause) {
       setUploadError(cause instanceof Error ? cause.message : String(cause))
     } finally {
@@ -128,6 +126,8 @@ export const DetailPane = ({
       if (uploadInputRef.current) uploadInputRef.current.value = ''
     }
   }
+
+  const { dragging, dropProps } = useFileDrop(files => { void chooseDataset(files) }, uploading, setUploadError)
 
   const header = (section: DrawerSection, icon: ReactNode, title: string, meta?: string | number): React.ReactElement => (
     <button type="button" className={css.drawerSectionHeader} aria-expanded={openSections.has(section)} onClick={() => toggle(section)}>
@@ -153,8 +153,8 @@ export const DetailPane = ({
               ref={uploadInputRef}
               className={css.visuallyHidden}
               type="file"
-              accept=".csv,.tsv,.txt,.md,.json,.jsonl,.ndjson,.xlsx,.xls,.parquet,.pdf,.docx"
-              onChange={(event) => void chooseDataset(event.target.files?.[0])}
+              accept={DATASET_ACCEPT}
+              onChange={(event) => void chooseDataset(Array.from(event.target.files ?? []))}
             />
             {datasets.length > 0 ? datasets.map((dataset) => (
               <div className={css.drawerDatasetCard} key={dataset.id}>
@@ -163,9 +163,9 @@ export const DetailPane = ({
                 <span>{zh ? '已就绪' : 'Ready'}</span>
               </div>
             )) : <p className={css.inspectorEmpty}>{zh ? '还没有研究数据。你可以先上传，之后发送消息时 Agent 会自动带上它。' : 'No research data yet. Upload it now and the Agent will receive it with your next message.'}</p>}
-            <button type="button" className={css.drawerUploadButton} disabled={uploading} onClick={() => uploadInputRef.current?.click()}>
+            <button {...dropProps} type="button" className={`${css.drawerUploadButton} ${dragging ? css.contextCardDragging : ""}`} disabled={uploading} onClick={() => uploadInputRef.current?.click()}>
               <UploadCloud size={17} aria-hidden="true" />
-              <span><strong>{uploading ? (zh ? '正在上传…' : 'Uploading…') : datasets.length ? (zh ? '更换数据集' : 'Replace dataset') : (zh ? '上传数据集' : 'Upload dataset')}</strong><small>{zh ? '支持 Excel、CSV、JSON、Parquet、PDF、DOCX 与文本格式' : 'Excel, CSV, JSON, Parquet, PDF, DOCX, and text'}</small></span>
+              <span><strong>{uploading ? (zh ? '正在上传…' : 'Uploading…') : datasets.length ? (zh ? '更换数据集' : 'Replace dataset') : (zh ? '上传数据集' : 'Upload dataset')}</strong><small>{zh ? (dragging ? '松开即可上传' : '拖拽文件到这里，或点击选择文件') : (dragging ? 'Drop to upload' : 'Drag a file here, or click to choose')}</small></span>
             </button>
             {uploadError && <p className={css.drawerUploadError} role="alert">{uploadError}</p>}
           </div>}

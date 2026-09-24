@@ -14,7 +14,7 @@ LDA、BTM、HDP、STM 继续使用已有 CPU 实现。CLI Agent 方案支持 `de
 
 ## 使用
 
-首版构建目标为 **macOS Apple Silicon（arm64）** 和 **Windows x64**。从 [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.5) 下载：Mac 使用 `THETA-0.3.5-mac-arm64.dmg`，Windows 使用 `THETA-0.3.5-win-x64.exe`。Mac 打开 DMG 后将 THETA 拖入「应用程序」；Windows 运行 EXE 安装程序。当前为未正式签名／公证的预览版，系统可能显示安全提示。暂不提供 Intel Mac 或 Windows ARM 原生版本。
+首版构建目标为 **macOS Apple Silicon（arm64）** 和 **Windows x64**。从 [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.6) 下载：Mac 使用 `THETA-0.3.6-mac-arm64.dmg`，Windows 使用 `THETA-0.3.6-win-x64.exe`。Mac 打开 DMG 后将 THETA 拖入「应用程序」；Windows 运行 EXE 安装程序。当前为未正式签名／公证的预览版，系统可能显示安全提示。暂不提供 Intel Mac 或 Windows ARM 原生版本。
 
 发行页提供 `SHA256SUMS.txt`，用于核对下载文件完整性。macOS 可运行 `shasum -a 256 文件名.dmg`；Windows PowerShell 可运行 `Get-FileHash 文件名.exe -Algorithm SHA256`，与校验文件对应行比较。
 
@@ -35,13 +35,17 @@ LDA、BTM、HDP、STM 继续使用已有 CPU 实现。CLI Agent 方案支持 `de
 应用菜单可打开数据和日志目录，也可重新启动本地服务。
 
 - macOS：`~/Library/Application Support/THETA`
-- Windows：`%APPDATA%/THETA`
+- Windows：首次安装优先使用安装目录下的 `THETA-data`；安装目录不可写时使用 `%APPDATA%/THETA`。升级继续使用已有数据位置，设置中显示实际路径。
 
-配置、项目、上传文件、结果和模型权重与安装目录分离，升级会保留这些数据。Windows 安装程序会替换已登记的旧版本并清理旧程序文件；首次运行新版时清理可重新生成的界面缓存。桌面版使用独立数据目录，不自动迁移源码版的 `.theta_agent` 或 `.local/manual-workbench`。
+配置、项目、上传文件、结果和模型权重保存在专用数据目录，升级会保留这些数据。安装目录中的 `THETA-data` 在卸载时也会保留。Windows 安装程序会替换已登记的旧版本并清理旧程序文件；首次运行新版时清理可重新生成的界面缓存。桌面版使用独立数据目录，不自动迁移源码版的 `.theta_agent` 或 `.local/manual-workbench`。
 
-Windows 默认安装到当前用户目录，数据不写入 C 盘根目录或程序安装目录。数据目录不可写时，应用会提示另选专用文件夹，例如 `D:\THETA-data`，并记住该位置。也可使用 `THETA.exe --data-dir="D:\THETA-data"` 指定目录。选择新目录不会搬迁原有数据；选择已有 THETA 数据目录可继续使用原项目。
+Windows 默认安装到当前用户目录，数据不写入磁盘根目录；程序文件与 `THETA-data` 分开管理。数据目录不可写时，应用会提示另选专用文件夹，例如 `D:\THETA-data`，并记住该位置。也可使用 `THETA.exe --data-dir="D:\THETA-data"` 指定目录。选择新目录不会搬迁原有数据；选择已有 THETA 数据目录可继续使用原项目。
 
-上传 TXT、Markdown、PDF 或 Word 文件后，直接读取正文并显示文本预览，无需选择数据列。表格文件仍可选择文本、时间和标签等列。扫描版 PDF 需要先完成文字识别。
+可拖拽文件或文件夹，也可点击选择。当前项目中使用“重新上传 / 更换数据”切换资料；新文件成功上传后才替换，原始数据与历史结果保留。对话模式更换数据会在同一项目中开始新对话，避免沿用旧任务的配置与确认。
+
+TXT、Markdown、PDF 和 Word 自动读取正文，无需选择数据列。按实际段落切分，长段落按句子边界继续切分；Word 表格也纳入正文。文档文件夹递归读取 TXT、Markdown、PDF、DOCX，合并时保留来源文件与段落、页码等信息，最多 500 个文件、总大小不超过 200 MiB。表格文件请单独上传并选择文本、时间和标签等列。扫描版 PDF 需先完成文字识别。
+
+上传支持单文件最大 200 MiB。旧版中超过 10 MiB 的文件可能已被截断，请重新上传原始文件。格式损坏、加密、扩展名不符、权限不足等会显示具体提示。训练日志显示失败原因；小于 10 条正文时自动使用小样本词频阈值，结果仅适合流程验证，建议增加独立文本记录。
 
 本地服务只监听 loopback，使用每次启动生成的访问令牌，默认工作台端口 14320（冲突时自动选择空闲端口）。退出应用关闭其自身服务；已提交的训练遵循原有 Worker 生命周期，不会重复提交。
 

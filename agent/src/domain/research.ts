@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 
 export interface Dataset {
+  inputKind?: "text" | "table"; documentCount?: number; recordCount?: number;
   datasetRef: string; sha256: string; fileName: string; managedPath: string; sizeBytes: number;
 }
 export interface TrainingPlan {

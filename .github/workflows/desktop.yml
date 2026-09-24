@@ -26,8 +26,9 @@ jobs:
     timeout-minutes: 90
     env:
       NEXT_TELEMETRY_DISABLED: '1'
+      PYTHONUTF8: '1'
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-      THETA_DESKTOP_TEST_HOME: ${{ github.workspace }}/desktop/.smoke-home
+      THETA_DESKTOP_TEST_HOME: ${{ github.workspace }}/desktop/.smoke-home/中文路径
     steps:
       - uses: actions/checkout@v4
         if: ${{ !inputs.target || inputs.target == 'all' || inputs.target == matrix.platform }}
@@ -51,14 +52,16 @@ jobs:
           npm --prefix desktop ci
           npm --prefix desktop run prepare:python
           if [ "$RUNNER_OS" = 'Windows' ]; then
-            PYTHONPATH='agent;trainning' desktop/runtime/python/python.exe -m unittest workers.tests.test_compute_device workers.tests.test_cuda_runtime workers.tests.test_execution_policy workers.tests.test_training_progress
+            PYTHONPATH='agent;trainning' desktop/runtime/python/python.exe -m unittest workers.tests.test_compute_device workers.tests.test_cuda_runtime workers.tests.test_execution_policy workers.tests.test_training_progress workers.tests.test_dataset_preview workers.tests.test_small_corpus
           else
-            PYTHONPATH=agent:trainning desktop/runtime/python/bin/python3 -m unittest workers.tests.test_compute_device workers.tests.test_cuda_runtime workers.tests.test_execution_policy workers.tests.test_training_progress
+            PYTHONPATH=agent:trainning desktop/runtime/python/bin/python3 -m unittest workers.tests.test_compute_device workers.tests.test_cuda_runtime workers.tests.test_execution_policy workers.tests.test_training_progress workers.tests.test_dataset_preview workers.tests.test_small_corpus
           fi
           if [ "$RUNNER_OS" = 'Windows' ]; then
             desktop/runtime/python/python.exe desktop/scripts/check-cuda-component.py
           fi
           npm --prefix desktop run prepare:runtime
+          npm --prefix frontend run test:manual-upload
+          node --test agent/dist/web/manual-server.test.js
           npm --prefix desktop test
           npm --prefix desktop run smoke
           npm --prefix desktop run dist
@@ -115,7 +118,7 @@ jobs:
         if: failure()
         with:
           name: desktop-logs-${{ matrix.platform }}
-          path: desktop/.smoke-home/logs/
+          path: desktop/.smoke-home/中文路径/logs/
 
   release:
     if: startsWith(github.ref, 'refs/tags/desktop-v')
