@@ -1,0 +1,74 @@
+name: Publish verified desktop artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing desktop release tag
+        required: true
+      macos_run:
+        description: Run containing the successful macOS build
+        required: true
+      windows_run:
+        description: Run containing the successful Windows build and upgrade checks
+        required: true
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ inputs.tag }}
+      MACOS_RUN: ${{ inputs.macos_run }}
+      WINDOWS_RUN: ${{ inputs.windows_run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify build results and application source
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^desktop-v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$MACOS_RUN" =~ ^[0-9]+$ && "$WINDOWS_RUN" =~ ^[0-9]+$ ]]
+          version=$(git show "$RELEASE_TAG:desktop/package.json" | node -p 'JSON.parse(require("fs").readFileSync(0,"utf8")).version')
+          test "$RELEASE_TAG" = "desktop-v$version"
+          for platform in macos windows; do
+            if [ "$platform" = macos ]; then run_id="$MACOS_RUN"; else run_id="$WINDOWS_RUN"; fi
+            gh run view "$run_id" --json jobs > jobs.json
+            jq -e --arg platform "$platform" '.jobs[] | select(.name | contains(", " + $platform + ",")) | .conclusion == "success"' jobs.json
+            build_sha=$(gh run view "$run_id" --json headSha --jq .headSha)
+            # Validation-only workflow changes may follow the application release commit.
+            git diff --exit-code "$RELEASE_TAG" "$build_sha" -- . ':!.github' ':!desktop/scripts/check-windows-upgrade.ps1'
+          done
+      - name: Download verified installers
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh run download "$MACOS_RUN" --name THETA-macos-arm64 --dir artifacts/macos
+          gh run download "$WINDOWS_RUN" --name THETA-windows-x64 --dir artifacts/windows
+      - name: Publish installers and checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${RELEASE_TAG#desktop-v}"
+          mkdir publish
+          find artifacts -type f \( -name '*.dmg' -o -name '*.exe' -o -name '*.zip' \) -exec cp {} publish/ \;
+          test -s "publish/THETA-$version-mac-arm64.dmg"
+          test -s "publish/THETA-$version-mac-arm64.zip"
+          test -s "publish/THETA-$version-win-x64.exe"
+          git show "$RELEASE_TAG:docs/releases/$RELEASE_TAG.md" > release-notes.md
+          if gh release view "$RELEASE_TAG" --json isDraft > release.json; then
+            jq -e '.isDraft == true' release.json
+          else
+            gh release create "$RELEASE_TAG" --verify-tag --draft --prerelease --title "THETA $version — Web, CLI Agent & Desktop (Preview)" --notes-file release-notes.md
+          fi
+          (cd publish && sha256sum THETA-* > SHA256SUMS.txt)
+          gh release upload "$RELEASE_TAG" publish/* --clobber
+          gh release edit "$RELEASE_TAG" --notes-file release-notes.md --draft=false
