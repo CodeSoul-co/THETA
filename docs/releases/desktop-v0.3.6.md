@@ -22,6 +22,7 @@ Python 3.12 and compute dependencies are bundled. You do not need a separate Pyt
 - Fixed a shared macOS/Windows proxy limit that could truncate uploads larger than 10 MiB. The complete upload path now supports 200 MiB and checks transfer completeness.
 - Clearer file-format, permissions and training errors, with retry and replacement controls. Small corpora no longer lose every word to the default document-frequency threshold.
 - New Windows installations prefer an installation-local `THETA-data` folder, with writable-user-directory fallback. Existing data locations remain unchanged; upgrades and uninstall preserve the dedicated data folder.
+- Fixed abrupt Windows exits when cleaning caches or upload temporary files under Unicode data paths. Service shutdown also waits for database handles to be released.
 
 Python and compute dependencies remain bundled. Windows GPU acceleration and automatic CPU fallback are retained. Quit THETA before upgrading. Updates are installed manually.
 
