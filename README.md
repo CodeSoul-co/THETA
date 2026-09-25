@@ -737,8 +737,7 @@ If you find **THETA** useful in your research, please cite this repository:
 
 ## Contact
 
-For questions, please contact:
-- duanzhenke@code-soul.com
+If you encounter a problem, please email [duanzhenke@code-soul.com](mailto:duanzhenke@code-soul.com).
 
 ---
 

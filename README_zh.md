@@ -742,9 +742,7 @@ kill -9 <PID>
 
 ## 联系我们
 
-如有问题，请联系：
-- duanzhenke@code-soul.com
-- lixin@code-soul.com
+如有问题，请发送邮件至 [duanzhenke@code-soul.com](mailto:duanzhenke@code-soul.com)。
 
 ---
 
