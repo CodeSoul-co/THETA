@@ -1,7 +1,7 @@
 {
   "name": "theta-desktop",
   "productName": "THETA",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "private": true,
   "description": "THETA local research workbench with bundled Python",
   "author": "CodeSoul",
@@ -30,12 +30,67 @@
     "asar": true,
     "compression": "maximum",
     "npmRebuild": false,
-    "directories": { "output": "release" },
-    "files": ["main.cjs", "preload.cjs", "services.mjs", "settings.cjs", "data-home.cjs", "ui/icon.png", "package.json"],
-    "extraResources": [{ "from": "runtime", "to": "runtime", "filter": ["**/*", "!**/__pycache__/**", "!**/*.pyc", "!**/.env", "!**/.env.*", "!**/settings.json", "!**/credentials.json", "!**/.smoke-home/**"] }],
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "services.mjs",
+      "settings.cjs",
+      "data-home.cjs",
+      "ui/icon.png",
+      "package.json",
+      "updates.cjs"
+    ],
+    "extraResources": [
+      {
+        "from": "runtime",
+        "to": "runtime",
+        "filter": [
+          "**/*",
+          "!**/__pycache__/**",
+          "!**/*.pyc",
+          "!**/.env",
+          "!**/.env.*",
+          "!**/settings.json",
+          "!**/credentials.json",
+          "!**/.smoke-home/**"
+        ]
+      }
+    ],
     "artifactName": "THETA-${version}-${os}-${arch}.${ext}",
-    "mac": { "target": ["dmg", "zip"], "category": "public.app-category.education", "icon": "ui/icon.png" },
-    "win": { "target": ["nsis"], "icon": "ui/icon.png" },
-    "nsis": { "oneClick": false, "perMachine": false, "include": "installer.nsh", "allowToChangeInstallationDirectory": true, "deleteAppDataOnUninstall": false, "shortcutName": "THETA", "uninstallDisplayName": "THETA" }
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.education",
+      "icon": "ui/icon.png"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "ui/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "include": "installer.nsh",
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false,
+      "shortcutName": "THETA",
+      "uninstallDisplayName": "THETA"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "CodeSoul-co",
+      "repo": "THETA",
+      "releaseType": "prerelease"
+    }
+  },
+  "dependencies": {
+    "electron-updater": "6.8.9"
   }
 }

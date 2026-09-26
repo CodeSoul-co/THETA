@@ -15,6 +15,15 @@ export interface DesktopConfiguration {
   home: string
   python: string
 }
+export interface DesktopUpdateState {
+  status: 'disabled' | 'idle' | 'checking' | 'current' | 'available' | 'downloading' | 'ready' | 'installing' | 'error'
+  currentVersion: string
+  availableVersion?: string
+  automatic: boolean
+  manualInstall: boolean
+  percent: number
+  error?: string
+}
 declare global {
   interface Window {
     thetaDesktop?: {
@@ -25,6 +34,15 @@ declare global {
       selectModel(): Promise<string | null>
       openModels(kind: 'qwen' | 'sbert'): Promise<void>
       openData(): Promise<void>
+      updates: {
+        state(): Promise<DesktopUpdateState>
+        check(): Promise<DesktopUpdateState>
+        download(): Promise<DesktopUpdateState>
+        install(): Promise<void>
+        configure(automatic: boolean): Promise<DesktopUpdateState>
+        subscribe(callback: (state: DesktopUpdateState) => void): () => void
+      }
+      onOpenUpdates(callback: () => void): () => void
       onOpenSettings(callback: () => void): () => void
     }
   }

@@ -14,7 +14,7 @@ LDA、BTM、HDP、STM 继续使用已有 CPU 实现。CLI Agent 方案支持 `de
 
 ## 使用
 
-首版构建目标为 **macOS Apple Silicon（arm64）** 和 **Windows x64**。从 [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.7) 下载：Mac 使用 `THETA-0.3.7-mac-arm64.dmg`，Windows 使用 `THETA-0.3.7-win-x64.exe`。Mac 打开 DMG 后将 THETA 拖入「应用程序」；Windows 运行 EXE 安装程序。当前为未正式签名／公证的预览版，系统可能显示安全提示。暂不提供 Intel Mac 或 Windows ARM 原生版本。
+首版构建目标为 **macOS Apple Silicon（arm64）** 和 **Windows x64**。从 [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.8) 下载：Mac 使用 `THETA-0.3.8-mac-arm64.dmg`，Windows 使用 `THETA-0.3.8-win-x64.exe`。Mac 打开 DMG 后将 THETA 拖入「应用程序」；Windows 运行 EXE 安装程序。当前为未正式签名／公证的预览版，系统可能显示安全提示。暂不提供 Intel Mac 或 Windows ARM 原生版本。
 
 发行页提供 `SHA256SUMS.txt`，用于核对下载文件完整性。macOS 可运行 `shasum -a 256 文件名.dmg`；Windows PowerShell 可运行 `Get-FileHash 文件名.exe -Algorithm SHA256`，与校验文件对应行比较。
 
@@ -73,3 +73,7 @@ npm --prefix desktop run dist
 
 `.github/workflows/desktop.yml` 支持手动选择平台构建；`desktop-v*` 标签构建两种平台。工作流验证源码运行和打包后的应用，再上传安装包。标签构建全部通过后，会发布带 SHA-256 校验文件的 GitHub 预览版 Release；手动构建只上传 Artifacts。应用不自动更新，下载新版安装程序升级即可。
 
+
+## 更新 THETA
+
+从 0.3.8 起，可使用“设置 → 应用更新”或“THETA → 检查更新”。应用在启动后及每六小时自动检查，可关闭自动检查；下载进度与错误直接在应用内显示。Windows 确认后可重启安装。当前未正式签名的 Mac 预览版会直接下载 DMG，打开后退出 THETA，再替换“应用程序”中的旧版；正式签名的 Mac 构建支持原生重启安装。项目与配置会保留，普通退出不会触发安装。0.3.8 之前的版本需要手动安装一次，才能获得此功能。

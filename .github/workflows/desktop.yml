@@ -68,6 +68,7 @@ jobs:
           npm --prefix desktop test
           npm --prefix desktop run smoke
           npm --prefix desktop run dist
+          node desktop/scripts/check-update-feed.cjs
       - name: Verify packaged app
         if: ${{ !inputs.target || inputs.target == 'all' || inputs.target == matrix.platform }}
         shell: bash
@@ -115,6 +116,8 @@ jobs:
             desktop/release/THETA-*.dmg
             desktop/release/THETA-*.zip
             desktop/release/THETA-*.exe
+            desktop/release/THETA-*.blockmap
+            desktop/release/latest*.yml
             desktop/requirements-*.txt
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
@@ -150,12 +153,14 @@ jobs:
           test -f "$notes"
           # upload-artifact preserves the common desktop/ directory structure.
           mkdir -p publish
-          find release-assets -type f \( -name '*.dmg' -o -name '*.exe' -o -name '*.zip' \) -exec cp {} publish/ \;
+          find release-assets -type f \( -name '*.dmg' -o -name '*.exe' -o -name '*.zip' -o -name '*.blockmap' -o -name 'latest*.yml' \) -exec cp {} publish/ \;
           cd publish
           test -s "THETA-$version-mac-arm64.dmg"
           test -s "THETA-$version-win-x64.exe"
+          test -s "latest.yml"
+          test -s "latest-mac.yml"
           sha256sum THETA-* > SHA256SUMS.txt
-          gh release create "$RELEASE_TAG" THETA-* SHA256SUMS.txt \
+          gh release create "$RELEASE_TAG" THETA-* latest*.yml SHA256SUMS.txt \
             --verify-tag --draft --prerelease \
             --title "THETA $version — Web, CLI Agent & Desktop (Preview)" \
             --notes-file "$notes"

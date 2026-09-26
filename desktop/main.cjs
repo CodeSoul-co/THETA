@@ -1,6 +1,6 @@
 const { app, BrowserWindow, Menu, dialog, ipcMain, utilityProcess, session, shell, safeStorage } = require('electron');
 const { existsSync, mkdirSync, createWriteStream, readFileSync, writeFileSync } = require('node:fs');
-const { spawn } = require('node:child_process');
+const { spawn, spawnSync } = require('node:child_process');
 const { randomBytes } = require('node:crypto');
 const { createServer } = require('node:net');
 const path = require('node:path');
@@ -11,7 +11,7 @@ app.setName('THETA');
 const { prepareDataHome, selectDataHome, saveDataLocation, clearUpgradeCaches } = require('./data-home.cjs');
 const locationFile = path.join(app.getPath('home'), '.theta-desktop-location.json');
 const requestedDataHome = process.argv.find(argument => argument.startsWith('--data-dir='))?.slice('--data-dir='.length);
-let home, settingsFile, startupError;
+let home, settingsFile, startupError, updates;
 try {
   home = smoke ? path.resolve(process.env.THETA_DESKTOP_TEST_HOME || path.join(__dirname, '.smoke-home'))
     : selectDataHome({ requested: requestedDataHome, locationFile, legacyHome: path.join(app.getPath('appData'), 'THETA'), installDirectory: path.dirname(app.getPath('exe')) });
@@ -209,6 +209,40 @@ function registerSettings() {
     return shell.openExternal(kind === 'sbert' ? 'https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2' : 'https://huggingface.co/Qwen/Qwen3-Embedding-0.6B');
   });
   ipcMain.handle('settings:open-data', event => { trusted(event); return shell.openPath(home); });
+  for (const [name, action] of Object.entries({ state: () => updates.state(), check: () => updates.check(), download: () => updates.download(), install: () => updates.install(), configure: value => updates.configure(value) })) {
+    ipcMain.handle(`updates:${name}`, (event, value) => { trusted(event); return action(value); });
+  }
+}
+
+function registerUpdates() {
+  const signed = process.platform !== 'darwin' || (app.isPackaged && /Authority=Developer ID Application:/.test(spawnSync('/usr/bin/codesign', ['-dv', '--verbose=4', path.resolve(app.getAppPath(), '../../..')], { encoding: 'utf8', timeout: 5000 }).stderr || ''));
+  updates = require('./updates.cjs').createUpdates({
+    version: app.getVersion(), platform: process.platform, arch: process.arch, home,
+    enabled: app.isPackaged && !smoke, manualMac: process.platform === 'darwin' && !signed,
+    nativeFactory: url => {
+      const { NsisUpdater, MacUpdater } = require('electron-updater');
+      const updater = new (process.platform === 'win32' ? NsisUpdater : MacUpdater)({ provider: 'generic', url });
+      if (process.platform === 'win32') updater.installDirectory = path.dirname(process.execPath);
+      return updater;
+    },
+    emit: state => { if (window && !window.isDestroyed()) { window.webContents.send('desktop:update-state', state); window.setProgressBar(state.status === 'downloading' ? state.percent / 100 : -1); } },
+    notify: async (kind, state) => {
+      if (quitting || !window || window.isDestroyed()) return;
+      const available = kind === 'available';
+      const choice = await dialog.showMessageBox(window, { type: 'info', title: 'THETA 更新',
+        message: available ? `发现 THETA ${state.availableVersion}` : `THETA ${state.availableVersion} 已下载完成`,
+        detail: available ? '可直接在应用内下载更新，下载期间可以继续使用。' : state.manualInstall ? '点击打开安装包，退出 THETA 后将新版拖入“应用程序”替换旧版。项目和配置会保留。' : '请先保存工作并等待分析完成，再重启安装。项目和配置会保留。',
+        buttons: [available ? '下载更新' : state.manualInstall ? '打开安装包' : '查看更新', '稍后'], defaultId: 1, cancelId: 1 });
+      if (choice.response === 0) { if (available) await updates.download(); else if (state.manualInstall) await updates.install(); else { window?.focus(); window?.webContents.send('desktop:open-updates'); } }
+    },
+    prepareInstall: async () => {
+      const choice = await dialog.showMessageBox(window, { type: 'question', title: '安装 THETA 更新', message: '现在退出并安装更新？', detail: '请先保存工作并等待分析任务完成。安装完成后将重新打开 THETA。', buttons: ['稍后', '退出并安装'], defaultId: 0, cancelId: 0 });
+      if (choice.response !== 1) return false;
+      quitting = true; await stopService(); stopped = true; return true;
+    },
+    recoverInstall: async () => { stopped = false; quitting = false; await restart().catch(error => dialog.showErrorBox('启动失败', error.message)); },
+    openPath: file => shell.openPath(file),
+  });
 }
 
 async function runSmoke(services) {
@@ -240,6 +274,11 @@ async function runSmoke(services) {
   await window.loadURL(origin + '/workbench?mode=conversation');
   // Exercise the same sandboxed preload and IPC used by the settings dialog.
   const embedding = await window.webContents.executeJavaScript('window.thetaDesktop.read().then(value => value.embedding)');
+  assert.equal(typeof require('electron-updater').NsisUpdater, 'function');
+  const updateState = await window.webContents.executeJavaScript('window.thetaDesktop.updates.state()');
+  assert.equal(updateState.status, 'disabled');
+  assert.equal(updateState.currentVersion, app.getVersion());
+  assert.equal((await window.webContents.executeJavaScript('window.thetaDesktop.updates.check()')).status, 'disabled');
   const catalog = await window.webContents.executeJavaScript('window.thetaDesktop.catalog()');
   assert.ok(catalog.providers.every(provider => !provider.credentialConfigured));
   assert.equal(embedding.apiKeyConfigured, false);
@@ -343,6 +382,7 @@ app.whenReady().then(async () => {
   mkdirSync(path.join(home, 'logs'), { recursive: true });
   providerSpecs = (await import(pathToFileURL(path.join(runtime, 'agent/dist/src/providers/provider-registry.js')).href)).inferenceProviderSpecs;
   registerSettings();
+  registerUpdates();
   const desktopSession = session.fromPartition(smoke ? 'theta-smoke' : 'persist:theta');
   desktopSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
   desktopSession.setPermissionCheckHandler(() => false);
@@ -352,6 +392,7 @@ app.whenReady().then(async () => {
   });
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     { label: 'THETA', submenu: [{ label: '设置…', accelerator: 'CmdOrCtrl+,', click: openSettings },
+      { label: '检查更新…', click: () => { window?.focus(); window?.webContents.send('desktop:open-updates'); void updates.check(); } },
       { label: '打开数据目录', click: () => shell.openPath(home) }, { label: '打开日志目录', click: () => shell.openPath(path.join(home, 'logs')) },
       { label: '重新启动服务', click: () => restart().catch(error => dialog.showErrorBox('启动失败', error.message)) }, { type: 'separator' }, { role: 'quit' }] },
     { role: 'editMenu' }, { role: 'viewMenu' }, { role: 'windowMenu' },
@@ -366,6 +407,7 @@ app.whenReady().then(async () => {
   });
   window.webContents.on('will-navigate', (event, url) => { if (new URL(url).origin !== origin) event.preventDefault(); });
   await window.loadURL(origin + '/workbench?mode=conversation');
+  updates.start();
   if (smoke) { await runSmoke(services); app.quit(); }
 }).catch(error => {
   console.error(error.stack || error.message);
@@ -374,6 +416,7 @@ app.whenReady().then(async () => {
 });
 app.on('window-all-closed', () => app.quit());
 app.on('before-quit', event => {
+  updates?.stop();
   if (stopped) return;
   event.preventDefault(); quitting = true;
   stopService().finally(() => { stopped = true; app.exit(process.exitCode || 0); });

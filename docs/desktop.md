@@ -14,12 +14,12 @@ LDA, BTM, HDP and STM use their existing CPU implementations. CLI Agent plans ac
 
 ## Download and install
 
-Download from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.7):
+Download from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.8):
 
 | Platform | Installer | Installation |
 | --- | --- | --- |
-| macOS Apple Silicon | `THETA-0.3.7-mac-arm64.dmg` | Open the DMG and drag THETA into Applications |
-| Windows x64 | `THETA-0.3.7-win-x64.exe` | Run the installer |
+| macOS Apple Silicon | `THETA-0.3.8-mac-arm64.dmg` | Open the DMG and drag THETA into Applications |
+| Windows x64 | `THETA-0.3.8-win-x64.exe` | Run the installer |
 
 This is an unsigned preview without macOS notarization. Your operating system may show a security warning. Native Intel Mac and Windows ARM installers are not provided.
 
@@ -83,3 +83,7 @@ npm --prefix desktop run dist
 `prepare:runtime` compiles the Agent and Next.js standalone app, copying only required engine files, templates, and skills. Private configuration, user data, training results, and model directories are excluded.
 
 Output is under `desktop/release`: macOS app, DMG, and ZIP; Windows NSIS EXE. Build artifacts are not committed to Git. The desktop workflow supports manual builds and `desktop-v*` release tags. Tagged builds publish a preview after both platforms pass validation. Updates are installed manually from Releases.
+
+## Updating THETA
+
+From 0.3.8, use **Settings → App updates** or **THETA → Check for updates**. The app checks automatically after launch and every six hours; this can be disabled. Download progress and errors appear in the app. Windows can restart to install after confirmation. The current unsigned Mac preview downloads the DMG directly; open it, quit THETA and replace the app in Applications. Signed Mac builds support native restart-to-install. Projects and settings are retained, and ordinary quitting never starts installation. Versions before 0.3.8 require one manual installation to receive this feature.

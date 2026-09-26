@@ -16,11 +16,12 @@ import { useAuth } from '@/contexts/auth-context'
 import { accountStorageKey } from '../storage-scope.ts'
 import css from './SettingsDialog.module.css'
 import type { WebInferenceSettingsUpdate } from '../api/client.ts'
+import { DesktopUpdates } from './DesktopUpdates'
 import type { DesktopEmbedding } from '@/types/desktop'
 
-interface SettingsDialogProps { initialTab?: 'inference' | 'embedding'; open: boolean; onClose: () => void; onAccountNameChange?: (name: string) => void }
+interface SettingsDialogProps { initialTab?: 'inference' | 'embedding' | 'updates'; open: boolean; onClose: () => void; onAccountNameChange?: (name: string) => void }
 
-type SettingsTab = 'account' | 'appearance' | 'language' | 'inference' | 'embedding'
+type SettingsTab = 'account' | 'appearance' | 'language' | 'inference' | 'embedding' | 'updates'
 
 const ACCOUNT_NAME_KEY = 'theta.frontend.account-name.v1'
 
@@ -196,7 +197,10 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange, initialTab 
           <button type="button" className={tab === 'language' ? css.active : ''} onClick={() => setTab('language')}><IconGlobeOutline14 size={16} />{zh ? '语言' : 'Language'}</button>
           <button type="button" className={tab === 'inference' ? css.active : ''} onClick={() => setTab('inference')}><IconSettingsOutline16 />{zh ? '模型 API' : 'Model API'}</button>
           {embedding && <button type="button" className={tab === 'embedding' ? css.active : ''} onClick={() => { setTab('embedding'); setMessage(undefined) }}><IconSettingsOutline16 />Embedding 模型</button>}
+          {embedding && <button type="button" className={tab === 'updates' ? css.active : ''} onClick={() => setTab('updates')}><IconSettingsOutline16 />{zh ? '应用更新' : 'App updates'}</button>}
         </nav>
+
+        {tab === 'updates' && <DesktopUpdates zh={zh} />}
 
         {tab === 'account' && (
           <section className={css.section} aria-labelledby="account-settings-title">

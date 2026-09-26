@@ -59,10 +59,12 @@ jobs:
           set -euo pipefail
           version="${RELEASE_TAG#desktop-v}"
           mkdir publish
-          find artifacts -type f \( -name '*.dmg' -o -name '*.exe' -o -name '*.zip' \) -exec cp {} publish/ \;
+          find artifacts -type f \( -name '*.dmg' -o -name '*.exe' -o -name '*.zip' -o -name '*.blockmap' -o -name 'latest*.yml' \) -exec cp {} publish/ \;
           test -s "publish/THETA-$version-mac-arm64.dmg"
           test -s "publish/THETA-$version-mac-arm64.zip"
           test -s "publish/THETA-$version-win-x64.exe"
+          test -s "publish/latest.yml"
+          test -s "publish/latest-mac.yml"
           git show "$RELEASE_TAG:docs/releases/$RELEASE_TAG.md" > release-notes.md
           if gh release view "$RELEASE_TAG" --json isDraft > release.json; then
             jq -e '.isDraft == true' release.json

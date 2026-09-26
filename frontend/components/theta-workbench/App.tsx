@@ -430,7 +430,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
   }
   const [datasetSizes, setDatasetSizes] = useState<Record<string, number>>({})
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [settingsTab, setSettingsTab] = useState<'inference' | 'embedding'>()
+  const [settingsTab, setSettingsTab] = useState<'inference' | 'embedding' | 'updates'>()
   useEffect(() => {
     const open = (event: Event) => {
       const tab = (event as CustomEvent).detail
@@ -439,6 +439,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
     window.addEventListener('theta:open-settings', open)
     return () => window.removeEventListener('theta:open-settings', open)
   }, [])
+  useEffect(() => window.thetaDesktop?.onOpenUpdates?.(() => { setSettingsTab('updates'); setSettingsOpen(true) }), [])
   useEffect(() => window.thetaDesktop?.onOpenSettings(() => setSettingsOpen(true)), [])
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
   const [accountName, setAccountName] = useState(() => localStorage.getItem(storageKeys.accountName) || 'user')
