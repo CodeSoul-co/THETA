@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { DATASET_ACCEPT, datasetFilesError, documentCollectionError, isDocumentCollection } from '@/lib/dataset-files'
 import { useFileDrop } from '@/lib/use-file-drop'
 import { ComputationNotice, SetupError } from './WorkbenchNotice'
@@ -538,6 +539,7 @@ export const ConversationPane = ({
       const projectId = await onEnsureProject(file.name.replace(/\.[^.]+$/u, '') || '数据分析项目')
       const dataset = await uploadDatasetFiles(projectId, Array.from(files), locale)
       await datasetsReady([dataset])
+      toast.success(locale === 'zh-CN' ? `已成功上传 ${files.length} 个文件` : `Uploaded ${files.length} file(s) successfully`)
       textareaRef.current?.focus()
     } catch (cause) {
       const detail = cause instanceof Error ? cause.message : String(cause)

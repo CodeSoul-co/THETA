@@ -53,16 +53,18 @@ jobs:
           node desktop/scripts/check-native-paths.cjs
           npm --prefix desktop run prepare:python
           if [ "$RUNNER_OS" = 'Windows' ]; then
-            PYTHONPATH='agent;trainning' desktop/runtime/python/python.exe -m unittest workers.tests.test_compute_device workers.tests.test_cuda_runtime workers.tests.test_execution_policy workers.tests.test_training_progress workers.tests.test_dataset_preview workers.tests.test_small_corpus
+            export THETA_PYTHON="$GITHUB_WORKSPACE/desktop/runtime/python/python.exe"
+            PYTHONPATH='agent;trainning' desktop/runtime/python/python.exe -m unittest workers.tests.test_compute_device workers.tests.test_cuda_runtime workers.tests.test_execution_policy workers.tests.test_training_progress workers.tests.test_dataset_preview workers.tests.test_small_corpus worker.tests.test_pipeline
           else
-            PYTHONPATH=agent:trainning desktop/runtime/python/bin/python3 -m unittest workers.tests.test_compute_device workers.tests.test_cuda_runtime workers.tests.test_execution_policy workers.tests.test_training_progress workers.tests.test_dataset_preview workers.tests.test_small_corpus
+            export THETA_PYTHON="$GITHUB_WORKSPACE/desktop/runtime/python/bin/python3"
+            PYTHONPATH=agent:trainning desktop/runtime/python/bin/python3 -m unittest workers.tests.test_compute_device workers.tests.test_cuda_runtime workers.tests.test_execution_policy workers.tests.test_training_progress workers.tests.test_dataset_preview workers.tests.test_small_corpus worker.tests.test_pipeline
           fi
           if [ "$RUNNER_OS" = 'Windows' ]; then
             desktop/runtime/python/python.exe desktop/scripts/check-cuda-component.py
           fi
           npm --prefix desktop run prepare:runtime
           npm --prefix frontend run test:manual-upload
-          node --test agent/dist/web/manual-server.test.js
+          node --test agent/dist/web/manual-server.test.js agent/dist/web/manual-result-import.test.js
           npm --prefix desktop test
           npm --prefix desktop run smoke
           npm --prefix desktop run dist

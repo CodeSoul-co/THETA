@@ -39,6 +39,10 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
   const get = (kind: string, id: string | number) => { const row = db.prepare('SELECT value FROM records WHERE kind=? AND id=?').get(kind, Number(id)); if (!row) throw new HttpError(404, '记录不存在'); return { ...JSON.parse(String(row.value)), id: Number(id) } as RecordValue; };
   const insert = (kind: string, value: RecordValue): RecordValue => { const id = Number(db.prepare('INSERT INTO records(kind,value) VALUES (?,?)').run(kind, JSON.stringify(value)).lastInsertRowid); return { ...value, id }; };
   const save = (kind: string, value: RecordValue) => db.prepare('UPDATE records SET value=? WHERE kind=? AND id=?').run(JSON.stringify(value), kind, value.id);
+  const visibleRecords = (kind: string) => {
+    const archived = new Set(list('project').filter(project => project.archived).map(project => project.dataset_name));
+    return list(kind).filter(record => !archived.has(record.dataset_name));
+  };
   const assertProjectNameAvailable = (name: string, exceptId?: number) => {
     if (list('project').some(project => !project.archived && project.id !== exceptId && projectNameKey(project.name) === projectNameKey(name))) {
       throw new HttpError(409, '已存在同名项目，请打开已有项目，或使用其他名称。');
@@ -195,7 +199,20 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
         return json(res, project);
       }
       if (parts[1] === 'projects' && parts.length === 3 && method === 'DELETE') { const project = get('project', parts[2]); project.archived = true; save('project', project); return json(res, { message: '项目已归档' }); }
-      if (url.pathname === '/api/files') return json(res, list('file').map(({ dataset, ...file }) => file));
+      if (parts[1] === 'datasets' && parts.length === 3 && method === 'DELETE') {
+        const name = safeName(parts[2]);
+        const projects = list('project').filter(project => project.dataset_name === name);
+        db.exec('BEGIN IMMEDIATE');
+        try {
+          // Legacy dataset-only projects also need a tombstone so retained files
+          // and results cannot recreate their card on the next refresh.
+          if (!projects.length) insert('project', { name, dataset_name: name, archived: true });
+          for (const project of projects) save('project', { ...project, archived: true });
+          db.exec('COMMIT');
+        } catch (error) { db.exec('ROLLBACK'); throw error; }
+        return json(res, { success: true, message: '项目已删除，原始数据与结果保留在本机' });
+      }
+      if (url.pathname === '/api/files') return json(res, visibleRecords('file').map(({ dataset, ...file }) => file));
       if (url.pathname === '/api/stopwords/default' && method === 'GET') {
         res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Content-Disposition': "attachment; filename=THETA-stopwords.txt; filename*=UTF-8''THETA-%E5%86%85%E7%BD%AE%E5%81%9C%E7%94%A8%E8%AF%8D%E8%A1%A8.txt", 'Cache-Control': 'no-store' });
         return res.end(exportBuiltinStopwords(repositoryRoot()));
@@ -293,7 +310,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
         void preflight.finally(() => preparing.delete(preflight));
         return json(res, { id: job.id, status: 'pending', created_at: job.created_at }, 201);
       }
-      if (url.pathname === '/api/train/jobs') return json(res, await Promise.all(list('job').map(job => observe(job, false))));
+      if (url.pathname === '/api/train/jobs') return json(res, await Promise.all(visibleRecords('job').map(job => observe(job, false))));
       if (parts[1] === 'train' && parts[3] === 'cancel' && parts.length === 4 && method === 'POST') {
         const job = get('job', parts[2]);
         if (!['pending', 'running', 'cancelling', 'cancelled'].includes(job.status)) throw new HttpError(409, '任务已结束');
@@ -310,7 +327,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
         if (parts[3] === 'summary') return json(res, { job_id: job.id, summary: { num_topics: job.num_topics, top_words: Object.values(topics(result.root)).map(words => words.map(word => word[0])) } });
       }
       if (url.pathname === '/api/data/oss-datasets') {
-        const names = new Set<string>(); for (const job of list('job')) if ((await observe(job)).states?.some((s: ComputeJob) => s.status === 'completed')) names.add(job.dataset_name);
+        const names = new Set<string>(); for (const job of visibleRecords('job')) if ((await observe(job)).states?.some((s: ComputeJob) => s.status === 'completed')) names.add(job.dataset_name);
         return json(res, { datasets: [...names].map(name => ({ name, chart_count: 0 })), storage: 'local' });
       }
       if (parts[1] === 'results') {

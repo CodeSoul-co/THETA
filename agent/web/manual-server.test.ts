@@ -52,6 +52,10 @@ test('统一结果目录保留真实任务身份、文件分类及下载隔离�
     assert.equal((await fetch(base + '/api/results/foreign/visualizations/file?job_id=compute-old&path=theta.npy')).status, 404);
     assert.equal((await fetch(base + '/api/results/data/visualizations/file?job_id=compute-old&path=../manual.sqlite')).status, 404);
     assert.deepEqual((await (await fetch(base + '/api/results/empty/catalog')).json() as any).results, []);
+    assert.equal((await fetch(base + '/api/datasets/data', { method: 'DELETE' })).status, 200);
+    assert.deepEqual(await (await fetch(base + '/api/train/jobs')).json(), []);
+    assert.deepEqual((await (await fetch(base + '/api/data/oss-datasets')).json() as any).datasets, []);
+    assert.ok(existsSync(path.join(home, 'new', 'theta.npy')), '移除项目不能销毁已有结果');
   } finally {
     await new Promise<void>(resolve => server.close(() => resolve()));
     assert.equal(existsSync(path.join(home, 'manual.sqlite-wal')), false, '关闭回调必须等待数据库释放，Windows 才能移动或清理数据目录');
@@ -93,7 +97,15 @@ test('项目创建拒绝同名和并发重复，重命名受保护，数据集�
     await fetch(base + '/api/upload?dataset_name=orphan&filename=data.csv', { method: 'POST', body: 'text\nold file' });
     const orphan = await (await create('orphan')).json() as any;
     assert.notEqual(orphan.dataset_name, 'orphan', '不得接管已有的无项目上传');
+    await fetch(base + `/api/upload?dataset_name=${encodeURIComponent(original.dataset_name)}&filename=data.csv`, { method: 'POST', body: 'text\noriginal' });
     await fetch(base + `/api/projects/${original.id}`, { method: 'DELETE' });
+    assert.ok(!(await (await fetch(base + '/api/files')).json() as any[]).some(file => file.dataset_name === original.dataset_name));
+    const legacyDelete = await fetch(base + '/api/datasets/orphan', { method: 'DELETE' });
+    assert.equal(legacyDelete.status, 200, '本地旧数据集删除不需要登录令牌');
+    assert.ok(!(await (await fetch(base + '/api/files')).json() as any[]).some(file => file.dataset_name === 'orphan'));
+    await fetch(base + `/api/datasets/${encodeURIComponent(second.dataset_name)}`, { method: 'DELETE' });
+    assert.equal((await create('a_b')).status, 201, '旧删除入口也释放项目名称');
+
     const rebuilt = await (await create('测试', { task_id: 'existing-training', archived: true })).json() as any;
     assert.notEqual(rebuilt.dataset_name, original.dataset_name);
     assert.equal(rebuilt.task_id, undefined);

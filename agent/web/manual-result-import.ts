@@ -49,11 +49,13 @@ async function fileHash(file: string): Promise<string> {
   for await (const chunk of createReadStream(file)) hash.update(chunk);
   return hash.digest('hex');
 }
-async function resultHash(files: Awaited<ReturnType<typeof inventory>>): Promise<string> {
+async function resultHash(files: Awaited<ReturnType<typeof inventory>>, windowsOrder = false): Promise<string> {
   const digest = createHash('sha256');
-  // Match pathlib's component-wise ordering used by the worker's tree_hash.
+  // pathlib sorts Windows paths case-insensitively, unlike POSIX paths.
+  // Accept either exact tree digest so existing results remain portable.
   for (const file of [...files].sort((a, b) => {
-    const left = a.name.split('/'); const right = b.name.split('/');
+    const left = (windowsOrder ? a.name.toLowerCase() : a.name).split('/');
+    const right = (windowsOrder ? b.name.toLowerCase() : b.name).split('/');
     for (let i = 0; i < Math.min(left.length, right.length); i++) {
       const order = Buffer.compare(Buffer.from(left[i]), Buffer.from(right[i]));
       if (order) return order;
@@ -155,7 +157,7 @@ export function manualResultImporter(home: string, manualHome: string, records: 
         runs.push(run);
         computeRows.push({ id: jobId, state, request: { jobId, runId: run.id, dataset: datasets.get(job.request.dataset.datasetRef)!, plan: job.request.plan } });
         const delivered = await inventory(resultDir);
-        if (!delivered.length || await resultHash(delivered) !== job.state.resultHash) {
+        if (!delivered.length || (await resultHash(delivered, process.platform === 'win32') !== job.state.resultHash && await resultHash(delivered, process.platform !== 'win32') !== job.state.resultHash)) {
           throw new ManualImportError(409, '结果文件与训练完成时的校验记录不一致，未创建对话副本。');
         }
         // Editing uses a report-owned copy; compute.results keeps its immutable hash.

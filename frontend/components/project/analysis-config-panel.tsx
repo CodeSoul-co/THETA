@@ -132,8 +132,11 @@ export function AnalysisConfigPanel({
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [valid, setValid] = useState(false)
-  const [activeTab, setActiveTab] = useProjectDraft<string>(`${projectKey}:parameter-tab`, initialConfig.models[0])
-  useEffect(() => { if (!config.models.includes(activeTab)) setActiveTab(config.models[0]) }, [config.models, activeTab])
+  const [activeTab, setActiveTab] = useProjectDraft<string>(`${projectKey}:parameter-tab`, initialConfig.models[0] ?? '')
+  useEffect(() => {
+    const next = config.models.includes(activeTab) ? activeTab : config.models[0] ?? ''
+    if (next !== activeTab) setActiveTab(next)
+  }, [config.models, activeTab])
   const [uploadingStopwords, setUploadingStopwords] = useState(false)
   const [stopwordError, setStopwordError] = useState<string | null>(null)
   const [sharedTopics, setSharedTopics] = useProjectDraft(`${projectKey}:shared-topics`, Number(initialConfig.parameters[initialConfig.models[0]]?.num_topics ?? initialConfig.parameters[initialConfig.models[0]]?.max_topics ?? 20))
@@ -172,17 +175,19 @@ export function AnalysisConfigPanel({
 
   const handleModelToggle = (modelId: string, checked: boolean) => {
     const models = checked ? [...config.models, modelId] : config.models.filter(id => id !== modelId)
-    if (!models.length) return // 至少保留一个模型，避免页签与模型选择脱节。
     setConfig(prev => ({ ...prev, models }))
-    if (!models.includes(activeTab)) setActiveTab(models[0])
+    setSubmitError('')
+    if (!models.includes(activeTab)) { setActiveTab(models[0] ?? ''); setValid(false) }
   }
 
   const handleConfirm = async () => {
-    if (submitting || uploadingStopwords || !valid) return
-    if (config.models.includes("theta") && config.embeddingProvider === "cloud" && (!embedding?.configured || !config.cloudConfirmed || config.mode !== "zero_shot")) return
+    if (submitting || uploadingStopwords) return
     if (config.models.length === 0) {
-      setConfig(prev => ({ ...prev, models: ["theta"] }))
+      setSubmitError('请至少选择一个模型后再继续。')
+      return
     }
+    if (!valid) return
+    if (config.models.includes("theta") && config.embeddingProvider === "cloud" && (!embedding?.configured || !config.cloudConfirmed || config.mode !== "zero_shot")) return
     setSubmitting(true); setSubmitError('')
     try {
       if (await onConfirm({ ...config, cloudSelection: embedding ? { provider: embedding.provider, endpoint: embedding.endpoint, model: embedding.model } : undefined }) !== false) onOpenChange(false)
@@ -432,7 +437,7 @@ export function AnalysisConfigPanel({
             </Button>
             <Button
               onClick={handleConfirm}
-              disabled={submitting || !valid || config.models.length === 0 || uploadingStopwords || (!!columns && !config.textColumn) || (config.models.includes("theta") && config.embeddingProvider === "cloud" && (!embedding?.configured || !config.cloudConfirmed))}
+              disabled={submitting || uploadingStopwords || (config.models.length > 0 && (!valid || (!!columns && !config.textColumn) || (config.models.includes("theta") && config.embeddingProvider === "cloud" && (!embedding?.configured || !config.cloudConfirmed))))}
               className="bg-blue-600 hover:bg-blue-700"
             >
               {submitting ? '正在校验并提交…' : confirmLabel}

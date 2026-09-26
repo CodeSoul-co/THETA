@@ -1,16 +1,48 @@
 from __future__ import annotations
 
 import tempfile
+import shutil
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 
 from worker.errors import PermanentJobError, RetryableJobError
-from worker.pipeline import JobPaths, ThetaPipeline
+from worker.pipeline import JobPaths, ThetaPipeline, filesystem_path
 from worker.storage import FilesystemObjectStorage
 from worker.tests.helpers import execution_spec, worker_config
 
 
 class PipelineCommandTests(unittest.TestCase):
+    def test_model_export_and_reload_under_long_unicode_job_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = filesystem_path(Path(directory))
+            try:
+                root = base / ('研究项目' + 'a' * 90) / ('b' * 80)
+                config = worker_config(root)
+                paths = JobPaths.create(config.job_root, execution_spec('lda'))
+                pipeline = ThetaPipeline(config, FilesystemObjectStorage(root / 'objects'))
+                environment = pipeline._child_environment(paths)
+                result = paths.result_root / 'user_local' / 'dataset_240909878805725' / 'lda' / 'job_240909878805725_a1' / 'delivery'
+                self.assertGreater(len(str(result / 'trained_model.joblib')), 320)
+                engine = Path(__file__).resolve().parents[3] / 'src/models'
+                code = """
+from pathlib import Path
+import numpy as np
+from model_delivery import save_trained_model, load_trained_model
+folder = Path(os.environ['RESULT_DIR']) / 'user_local/dataset_240909878805725/lda/job_240909878805725_a1/delivery'
+save_trained_model({'weights': np.eye(2)}, folder, 'lda', ['苹果', '代码'])
+restored = load_trained_model(folder, trusted=True)
+np.testing.assert_array_equal(restored['weights'], np.eye(2))
+"""
+                completed = subprocess.run([sys.executable, '-c', code], cwd=engine, env=environment,
+                                           capture_output=True, text=True, timeout=60)
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+                self.assertTrue((result / 'trained_model.joblib').is_file())
+                self.assertTrue((result / 'model_delivery.json').is_file())
+            finally:
+                shutil.rmtree(base)
+
     def test_baseline_commands_are_isolated_and_whitelisted(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

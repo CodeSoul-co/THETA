@@ -295,6 +295,10 @@ def results(payload: dict) -> dict:
         raise ValueError("任务尚未成功完成，不能读取成功结果")
     root = Path(job["resultDir"])
     expected = Path(payload["home"]).resolve() / "compute" / job["id"]
+    if os.name == 'nt':
+        sys.path.insert(0, str(engine_root() / 'trainning'))
+        from worker.pipeline import filesystem_path
+        root, expected = filesystem_path(root), filesystem_path(expected)
     root.resolve().relative_to(expected)
     if tree_hash(root) != job["resultHash"]:
         raise ValueError("Result artifact changed after verification")

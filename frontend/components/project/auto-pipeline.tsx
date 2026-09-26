@@ -1,5 +1,6 @@
 "use client"
 
+import { toast } from 'sonner'
 import { ComputationNotice, SetupError } from '@/components/theta-workbench/panels/WorkbenchNotice'
 import { useEffect, useRef, useState } from "react"
 import { AlertCircle, Check, Loader2, Upload } from "lucide-react"
@@ -152,6 +153,7 @@ export function AutoPipeline(props: AutoPipelineProps) {
     const problem = (fromFolder || next.length > 1 && next.every(file => isTextDocument(file.name))) ? documentCollectionError(next) : datasetFilesError(next)
     if (problem) { setError(problem); return }
     setFiles(next); setError(null); setUploadProgress(0)
+    toast.success(`已添加 ${next.length} 个文件，请点击“上传并配置分析”继续`)
   }
   const { dragging, dropProps } = useFileDrop(selectFiles, uploading, setError)
 
@@ -175,12 +177,14 @@ export function AutoPipeline(props: AutoPipelineProps) {
       setDraft({ fileId: receipts[0].fileId, selection: null, columnsOpen: receipts.length === 1 && !directText, configOpen: false })
       callbacks.current.onUploadComplete?.(dataset)
       log(directText ? '上传成功，正在直接读取正文，无需选择数据列。' : '上传成功，请选择本次分析的文本列与元数据。')
+      toast.success(`上传成功，共 ${files.length} 个文件`, { description: directText ? '正在读取正文，随后可配置分析参数' : '请选择本次分析的正文列' })
       setColumnsOpen(receipts.length === 1 && !directText)
     } catch (e) { const message = e instanceof Error ? e.message : '上传失败'; setError(message); log(message) }
     finally { busy.current = false; setUploading(false) }
   }
 
   const start = (config: AnalysisConfig) => {
+    if (!config.models.length) { setError('请至少选择一个模型后再继续。'); return false }
     if (busy.current || !fileId || !selection?.textColumn) { setError('请先上传数据，等待读取正文或选择表格中的正文列。'); return false }
     if (config.models.includes('dtm') && !selection.timeColumn) { setError('DTM 需要真实时间列，请上传包含正文和时间列的表格。'); return false }
     if (config.models.includes('stm') && !selection.metaColumns.length) { setError('STM 需要元数据列作为协变量，请上传包含正文和元数据的表格。'); return false }

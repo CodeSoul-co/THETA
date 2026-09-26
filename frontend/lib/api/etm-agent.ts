@@ -417,24 +417,7 @@ export const ETMAgentAPI = {
   },
 
   async deleteDataset(name: string): Promise<{ success: boolean; message: string }> {
-    const token = localStorage.getItem('access_token');
-    if (!token) return { success: false, message: '未登录' };
-
-    try {
-      const res = await fetch(`${API_BASE}/api/datasets/${encodeURIComponent(name)}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ detail: '删除失败' }));
-        return { success: false, message: err.detail || '删除失败' };
-      }
-      return { success: true, message: '删除成功' };
-    } catch (e) {
-      return { success: false, message: e instanceof Error ? e.message : '网络错误' };
-    }
+    return apiFetch(API_BASE, `/api/datasets/${encodeURIComponent(name)}`, { method: 'DELETE' });
   },
 
   // ========== 任务管理（job_id 体系） ==========

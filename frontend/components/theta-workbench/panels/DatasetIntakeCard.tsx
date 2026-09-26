@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { DATASET_ACCEPT, datasetFilesError, documentCollectionError, isDocumentCollection } from '@/lib/dataset-files'
 import { useFileDrop } from '@/lib/use-file-drop'
 import { ComputationNotice } from './WorkbenchNotice'
@@ -113,6 +114,7 @@ export const DatasetIntakeCard = ({ disabled = false, interaction, storageScope,
       suffix: file.name.split('.').pop()?.toLowerCase() ?? '',
       createdAt,
     }))
+    toast.success(locale === 'zh-CN' ? `已添加 ${files.length} 个文件，请继续上传` : `Added ${files.length} file(s); continue to upload`)
     setPendingFiles(selectedFiles)
     setDatasets(current => [...selectedDatasets, ...current.filter(item => !item.datasetRef.startsWith('pending-'))])
     setDatasetRef(selectedDatasets[0]?.datasetRef ?? '')
@@ -145,6 +147,7 @@ export const DatasetIntakeCard = ({ disabled = false, interaction, storageScope,
       setDatasetRef(ready[0]?.datasetRef ?? '')
       setPendingFiles([])
       await onDatasetsReady(ready)
+      if (filesToUpload.length) toast.success(locale === 'zh-CN' ? '文件上传成功' : 'Files uploaded successfully')
       setProcessed(true); setReplacing(false)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause))

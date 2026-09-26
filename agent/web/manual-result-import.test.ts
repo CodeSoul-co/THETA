@@ -137,3 +137,28 @@ test('copied figures without native plotting provenance cannot be replaced by gu
   assert.equal(readFileSync(path.join(f.home, 'compute', report.jobId, 'results', 'topic_proportions.png'), 'utf8'), 'original-figure');
   assert.ok(!f.sessions.get(imported.runId).reports![0].files.some(file => file.name.startsWith('adjustments/')));
 });
+
+
+test('imports verified Windows trees with mixed-case and nested names, but rejects changed bytes', async t => {
+  const f = fixture(t);
+  const sha = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
+  const db = new DatabaseSync(path.join(f.manualHome, 'compute.sqlite'));
+  for (const id of f.ids.slice(0, 2)) {
+    const row = db.prepare('SELECT value FROM jobs WHERE id=?').get(id)!;
+    const job = JSON.parse(String(row.value));
+    const entries = ['topic_words.json', 'topic_proportions.csv', 'topic_proportions.png', 'README.md', 'zh/overview.csv', 'zh.index.html'];
+    mkdirSync(path.join(job.resultDir, 'zh'));
+    for (const name of entries.slice(3)) writeFileSync(path.join(job.resultDir, name), 'verified original');
+    // Equivalent to Python sorted(PureWindowsPath(...)): directory components
+    // are compared case-insensitively, but the hashed names retain their case.
+    const ordered = ['README.md', 'topic_proportions.csv', 'topic_proportions.png', 'topic_words.json', 'zh/overview.csv', 'zh.index.html'];
+    job.resultHash = sha(ordered.map(name => `${name}\0${sha(readFileSync(path.join(job.resultDir, name)))}\n`).join(''));
+    db.prepare('UPDATE jobs SET value=? WHERE id=?').run(JSON.stringify(job), id);
+  }
+  db.close();
+  const imported = await f.importer({ projectId: 1 }, 'local');
+  assert.equal(imported.copiedJobs, 2);
+  assert.ok(f.sessions.get(imported.runId).reports![0].files.some(file => file.name === 'README.md'));
+  writeFileSync(path.join(f.manualHome, 'compute', f.ids[0], 'results', 'README.md'), 'changed bytes');
+  await assert.rejects(f.importer({ projectId: 1 }, 'another-owner'), /校验/);
+});

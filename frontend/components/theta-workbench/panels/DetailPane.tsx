@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import { DATASET_ACCEPT, datasetFilesError, documentCollectionError, isDocumentCollection } from '@/lib/dataset-files'
 import { useFileDrop } from '@/lib/use-file-drop'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -119,6 +120,7 @@ export const DetailPane = ({
     setUploadError(undefined)
     try {
       await onUploadDataset(files)
+      toast.success(zh ? `已成功上传 ${files.length} 个文件` : `Uploaded ${files.length} file(s) successfully`)
     } catch (cause) {
       setUploadError(cause instanceof Error ? cause.message : String(cause))
     } finally {

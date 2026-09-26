@@ -50,8 +50,8 @@ export interface Project {
 interface ProjectHubProps {
   onProjectSelect: (projectId: string) => void
   onNewProject: () => void
-  onDeleteProject?: (projectId: string) => void
-  onBatchDelete?: (projectIds: string[]) => void
+  onDeleteProject?: (projectId: string) => Promise<boolean>
+  onBatchDelete?: (projectIds: string[]) => Promise<string[]>
   onRefresh?: () => void
   projects?: Project[]
   isLoading?: boolean
@@ -176,23 +176,26 @@ export function ProjectHub({ onProjectSelect, onNewProject, onDeleteProject, onB
     else setSelectedIds(new Set())
   }
 
-  const handleConfirmDelete = () => {
-    if (deleteTargetId) {
+  const [deleting, setDeleting] = useState(false)
+  const handleConfirmDelete = async () => {
+    if (deleteTargetId && onDeleteProject && !deleting) {
       const target = projects.find((p) => p.id === deleteTargetId)
-      onDeleteProject?.(deleteTargetId)
+      setDeleting(true)
+      const deleted = await onDeleteProject(deleteTargetId).finally(() => setDeleting(false))
       setDeleteTargetId(null)
       // 触发删除成功弹窗
-      if (target) {
+      if (target && deleted) {
         setDeleteSuccess({ open: true, name: target.name, isBatch: false })
       }
     }
   }
 
-  const handleConfirmBatchDelete = () => {
-    if (selectedCount > 0 && onBatchDelete) {
-      onBatchDelete(Array.from(selectedIds))
-      setDeleteSuccess({ open: true, name: "", isBatch: true, count: selectedCount })
-      setSelectedIds(new Set())
+  const handleConfirmBatchDelete = async () => {
+    if (selectedCount > 0 && onBatchDelete && !deleting) {
+      setDeleting(true)
+      const deleted = await onBatchDelete(Array.from(selectedIds)).finally(() => setDeleting(false))
+      if (deleted.length) setDeleteSuccess({ open: true, name: "", isBatch: true, count: deleted.length })
+      setSelectedIds(previous => new Set([...previous].filter(id => !deleted.includes(id))))
       setBatchDeleteConfirm(false)
       setBatchMode(false)
     }
@@ -457,13 +460,13 @@ export function ProjectHub({ onProjectSelect, onNewProject, onDeleteProject, onB
             <AlertDialogTitle>确认删除项目</AlertDialogTitle>
             <AlertDialogDescription>
               {deleteTarget
-                ? `删除「${deleteTarget.name}」后，其数据集与结果将一并移除，且无法恢复。确定要删除吗？`
+                ? `删除「${deleteTarget.name}」后，项目将从列表移除，名称可重新使用；原始数据与结果保留在本机。确定要删除吗？`
                 : "确定要删除该项目吗？"}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction onClick={handleConfirmDelete} disabled={deleting} className="bg-red-600 hover:bg-red-700">
               删除
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -476,12 +479,12 @@ export function ProjectHub({ onProjectSelect, onNewProject, onDeleteProject, onB
           <AlertDialogHeader>
             <AlertDialogTitle>确认批量删除</AlertDialogTitle>
             <AlertDialogDescription>
-              将删除已选的 {selectedCount} 个项目，其数据集与结果将一并移除，且无法恢复。确定要删除吗？
+              将从列表移除已选的 {selectedCount} 个项目，名称可重新使用；原始数据与结果保留在本机。确定要删除吗？
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmBatchDelete} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction onClick={handleConfirmBatchDelete} disabled={deleting} className="bg-red-600 hover:bg-red-700">
               批量删除
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -500,8 +503,8 @@ export function ProjectHub({ onProjectSelect, onNewProject, onDeleteProject, onB
             </AlertDialogTitle>
             <AlertDialogDescription>
               {deleteSuccess.isBatch
-                ? `已成功删除 ${deleteSuccess.count ?? 0} 个项目，相关数据集与结果已从 OSS 中同步移除。`
-                : `「${deleteSuccess.name}」已成功删除，相关数据集与结果已从 OSS 中同步移除。`}
+                ? `已成功删除 ${deleteSuccess.count ?? 0} 个项目，可以重新使用这些名称；原始数据与结果仍保留在本机。`
+                : `「${deleteSuccess.name}」已成功删除，可以重新使用此名称；原始数据与结果仍保留在本机。`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

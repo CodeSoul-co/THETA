@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect, useRef } from "react"
+import { toast } from "sonner"
 import { AppShell, type Tab } from "@/components/layout/app-shell"
 import { ProjectHub, type Project } from "@/components/dashboard/project-hub"
 import { NewProjectDialog, type NewProjectData } from "@/components/dashboard/new-project-dialog"
@@ -23,6 +24,14 @@ interface WorkspaceProject extends Project {
   pipelineStatus?: "running" | "completed" | "error" | "draft"
   dbProjectId?: number  // 数据库项目 ID，用于更新/删除
   taskId?: string | null  // 关联的训练任务 ID
+}
+
+async function deleteStoredProject(project: WorkspaceProject) {
+  if (project.dbProjectId != null) await ETMAgentAPI.deleteProject(project.dbProjectId)
+  else {
+    const datasetName = project.datasetName || project.name
+    await ETMAgentAPI.deleteDataset(datasetName)
+  }
 }
 
 const STORAGE_KEYS = {
@@ -553,55 +562,34 @@ export function ManualWorkbench() {
     }
   }
 
-  // 删除项目：删除 OSS 数据集目录
+
   const handleDeleteProject = useCallback(async (projectId: string) => {
-    const project = projects.find((p) => p.id === projectId)
-    if (!project) return
-
-    const datasetName = project.datasetName || (projectId.startsWith("proj-") && !projectId.startsWith("proj-db-") ? projectId.replace(/^proj-/, "") : null)
-    if (datasetName) {
-      try {
-        await ETMAgentAPI.deleteDataset(datasetName)
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error)
-        if (!msg.includes("404") && !msg.includes("not found")) {
-          console.error("删除数据集失败:", error)
-        }
-      }
+    const project = projects.find(p => p.id === projectId)
+    if (!project) return false
+    try {
+      await deleteStoredProject(project)
+      setProjects(previous => previous.filter(p => p.id !== projectId))
+      setTabs(previous => previous.filter(tab => tab.id !== projectId))
+      if (activeTabId === projectId) setActiveTabId("hub")
+      return true
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '删除失败，请重试')
+      return false
     }
+  }, [projects, activeTabId])
 
-    setProjects((prev) => prev.filter((p) => p.id !== projectId))
-    const newTabs = tabs.filter((t) => t.id !== projectId)
-    setTabs(newTabs)
-    if (activeTabId === projectId) {
-      setActiveTabId("hub")
-    }
-  }, [projects, tabs, activeTabId])
-
-  // 批量删除：并发执行，部分失败不阻断其他项目
   const handleBatchDelete = useCallback(async (projectIds: string[]) => {
-    const results = await Promise.allSettled(
-      projectIds.map(async (projectId) => {
-        const project = projects.find((p) => p.id === projectId)
-        if (!project) return
-        const datasetName = project.datasetName || (projectId.startsWith("proj-") && !projectId.startsWith("proj-db-") ? projectId.replace(/^proj-/, "") : null)
-        if (datasetName) {
-          try {
-            await ETMAgentAPI.deleteDataset(datasetName)
-          } catch (error) {
-            const msg = error instanceof Error ? error.message : String(error)
-            if (!msg.includes("404") && !msg.includes("not found")) throw error
-          }
-        }
-      })
-    )
-    const deletedIds = new Set(
-      projectIds.filter((_, i) => results[i].status === "fulfilled")
-    )
-    if (deletedIds.size === 0) return
-    setProjects((prev) => prev.filter((p) => !deletedIds.has(p.id)))
-    setTabs((prev) => prev.filter((t) => !deletedIds.has(t.id)))
+    const results = await Promise.allSettled(projectIds.map(async projectId => {
+      const project = projects.find(p => p.id === projectId)
+      if (project) await deleteStoredProject(project)
+    }))
+    const deletedIds = new Set(projectIds.filter((_, i) => results[i].status === 'fulfilled'))
+    setProjects(previous => previous.filter(p => !deletedIds.has(p.id)))
+    setTabs(previous => previous.filter(tab => !deletedIds.has(tab.id)))
     if (deletedIds.has(activeTabId)) setActiveTabId("hub")
+    const failures = results.filter(result => result.status === 'rejected')
+    if (failures.length) toast.error(`${failures.length} 个项目删除失败：${failures[0].reason instanceof Error ? failures[0].reason.message : '请重试'}`)
+    return [...deletedIds]
   }, [projects, activeTabId])
 
   const currentProject = projects.find(project => project.id === activeTabId)
@@ -675,7 +663,7 @@ export function ManualWorkbench() {
                     ...p,
                     mode: config.mode,
                     numTopics: configuredTopics,
-                    models: config.models.length > 0 ? config.models : ["theta"],
+                    models: config.models,
                   }
                 : p
             ))

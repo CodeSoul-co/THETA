@@ -300,7 +300,14 @@ async function runSmoke(services) {
   const model = await get(origin, '/api/backend/api/models/lda');
   assert.equal(model.status, 200);
   assert.equal((await model.json()).modelId, 'lda');
-  console.log(JSON.stringify({ ok: true, app: app.getVersion(), node: process.versions.node, electron: process.versions.electron, python: parsed, checks: ['production UI', 'authenticated homepage screenshots', 'agent API', 'manual API', 'project write', 'XLSX upload and column preview through frontend proxy', 'local preprocessing status', 'desktop authentication', 'origin rejection', 'sandboxed settings bridge', 'live GLM embedding configuration', 'bundled Python imports', 'Python model inspection'] }, null, 2));
+  const deleted = await get(origin, `/api/backend/api/projects/${project.id}`, { method: 'DELETE' });
+  assert.equal(deleted.status, 200);
+  const remainingFiles = await (await get(origin, '/api/backend/api/files')).json();
+  assert.ok(!remainingFiles.some(file => file.dataset_name === project.dataset_name));
+  const recreated = await get(origin, '/api/backend/api/projects', { method: 'POST', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify({ name: project.name }) });
+  assert.equal(recreated.status, 201);
+  assert.notEqual((await recreated.json()).dataset_name, project.dataset_name);
+  console.log(JSON.stringify({ ok: true, app: app.getVersion(), node: process.versions.node, electron: process.versions.electron, python: parsed, checks: ['production UI', 'authenticated homepage screenshots', 'agent API', 'manual API', 'project write/delete/recreate', 'XLSX upload and column preview through frontend proxy', 'local preprocessing status', 'desktop authentication', 'origin rejection', 'sandboxed settings bridge', 'live GLM embedding configuration', 'bundled Python imports', 'Python model inspection'] }, null, 2));
 }
 app.whenReady().then(async () => {
   if (startupError) {

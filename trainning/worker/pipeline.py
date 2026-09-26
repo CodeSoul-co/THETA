@@ -21,6 +21,15 @@ ProgressCallback = Callable[[str, int, str], None]
 CancelCheck = Callable[[], bool]
 
 
+def filesystem_path(value: Path) -> Path:
+    """Use Windows' extended-length namespace without requiring registry edits."""
+    resolved = value.resolve()
+    if os.name != 'nt' or str(resolved).startswith('\\\\?\\'):
+        return resolved
+    text = str(resolved)
+    return Path('\\\\?\\UNC\\' + text[2:] if text.startswith('\\\\') else '\\\\?\\' + text)
+
+
 PARAM_FLAGS = {
     "num_topics": "--num_topics",
     "vocab_size": "--vocab_size",
@@ -79,7 +88,7 @@ class JobPaths:
 
     @classmethod
     def create(cls, job_root: Path, spec: ExecutionSpec) -> "JobPaths":
-        root_base = job_root.resolve()
+        root_base = filesystem_path(job_root)
         root_base.mkdir(parents=True, exist_ok=True)
         root = (root_base / f"task-{spec.task_id}-attempt-{spec.attempt}").resolve()
         try:
