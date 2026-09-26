@@ -27,6 +27,7 @@ class PipelineCommandTests(unittest.TestCase):
                 self.assertGreater(len(str(result / 'trained_model.joblib')), 320)
                 engine = Path(__file__).resolve().parents[3] / 'src/models'
                 code = """
+import os
 from pathlib import Path
 import numpy as np
 from model_delivery import save_trained_model, load_trained_model
