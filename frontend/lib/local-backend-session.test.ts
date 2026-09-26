@@ -36,10 +36,10 @@ test('桌面生产入口需要服务端密钥、显式开关以及本机前后�
 })
 
 test('开源手动工作台开放数据接口，账号、管理和路径穿越保持禁用', () => {
-  for (const route of ['config', 'health', 'api/projects', 'api/upload', 'api/train/jobs', 'api/results/data/catalog', 'api/runtime/config', 'api/stopwords/default', 'api/datasets/测试/preview', 'api/preprocessing/check/测试']) {
+  for (const route of ['config', 'health', 'api/projects', 'api/upload', 'api/train/jobs', 'api/results/data/catalog', 'api/runtime/config', 'api/stopwords/default', 'api/datasets/测试', 'api/datasets/测试/preview', 'api/preprocessing/check/测试']) {
     assert.equal(isManualWorkspacePath(route.split('/')), true, route)
   }
-  for (const route of ['api/auth/me', 'api/auth/login', 'api/admin/users', 'api/oss/sts-token', 'api/projects/../auth', 'api/projects/%2e%2e', 'api//projects', 'api/datasets/test', 'api/datasets/test/preview/extra', 'api/preprocessing/start']) {
+  for (const route of ['api/auth/me', 'api/auth/login', 'api/admin/users', 'api/oss/sts-token', 'api/projects/../auth', 'api/projects/%2e%2e', 'api//projects', 'api/datasets/test/preview/extra', 'api/preprocessing/start']) {
     assert.equal(isManualWorkspacePath(route.split('/')), false, route)
   }
   assert.equal(isManualWorkspacePath(['api', 'projects', '../auth']), false)

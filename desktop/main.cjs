@@ -306,7 +306,12 @@ async function runSmoke(services) {
   assert.ok(!remainingFiles.some(file => file.dataset_name === project.dataset_name));
   const recreated = await get(origin, '/api/backend/api/projects', { method: 'POST', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify({ name: project.name }) });
   assert.equal(recreated.status, 201);
-  assert.notEqual((await recreated.json()).dataset_name, project.dataset_name);
+  const recreatedProject = await recreated.json();
+  assert.notEqual(recreatedProject.dataset_name, project.dataset_name);
+  const legacyDeleted = await get(origin, `/api/backend/api/datasets/${encodeURIComponent(recreatedProject.dataset_name)}`, { method: 'DELETE' });
+  assert.equal(legacyDeleted.status, 200);
+  const visibleProjects = await (await get(origin, '/api/backend/api/projects')).json();
+  assert.ok(!visibleProjects.some(item => item.id === recreatedProject.id));
   console.log(JSON.stringify({ ok: true, app: app.getVersion(), node: process.versions.node, electron: process.versions.electron, python: parsed, checks: ['production UI', 'authenticated homepage screenshots', 'agent API', 'manual API', 'project write/delete/recreate', 'XLSX upload and column preview through frontend proxy', 'local preprocessing status', 'desktop authentication', 'origin rejection', 'sandboxed settings bridge', 'live GLM embedding configuration', 'bundled Python imports', 'Python model inspection'] }, null, 2));
 }
 app.whenReady().then(async () => {

@@ -26,7 +26,7 @@ export function isManualWorkspacePath(parts: string[]) {
   if (parts.some(part => !part || part === '.' || part === '..' || /[/\\%]/u.test(part))) return false
   if (parts.length === 1) return parts[0] === 'config' || parts[0] === 'health'
   if (parts[0] !== 'api') return false
-  if (parts[1] === 'datasets') return parts.length === 4 && ['preview', 'combine'].includes(parts[3])
+  if (parts[1] === 'datasets') return parts.length === 3 || parts.length === 4 && ['preview', 'combine'].includes(parts[3])
   if (parts[1] === 'preprocessing') return parts.length === 4 && parts[2] === 'check'
   return parts[0] === 'api' && ['projects', 'files', 'upload', 'train', 'results', 'data', 'models', 'runtime', 'stopwords'].includes(parts[1])
 }
