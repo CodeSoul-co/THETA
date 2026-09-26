@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain, utilityProcess, session, shell, safeStorage } = require('electron');
+const { app, BrowserWindow, Menu, dialog, ipcMain, utilityProcess, session, shell, safeStorage, net } = require('electron');
 const { existsSync, mkdirSync, createWriteStream, readFileSync, writeFileSync } = require('node:fs');
 const { spawn, spawnSync } = require('node:child_process');
 const { randomBytes } = require('node:crypto');
@@ -219,6 +219,7 @@ function registerUpdates() {
   updates = require('./updates.cjs').createUpdates({
     version: app.getVersion(), platform: process.platform, arch: process.arch, home,
     enabled: app.isPackaged && !smoke, manualMac: process.platform === 'darwin' && !signed,
+    fetcher: (url, options) => net.fetch(url, options),
     nativeFactory: url => {
       const { NsisUpdater, MacUpdater } = require('electron-updater');
       const updater = new (process.platform === 'win32' ? NsisUpdater : MacUpdater)({ provider: 'generic', url });
@@ -253,6 +254,7 @@ async function runSmoke(services) {
   assert.equal((await fetch(services.agentUrl + '/api/v3/health')).status, 403);
   assert.equal((await fetch(services.manualUrl + '/health')).status, 403);
   assert.equal((await get(origin, '/api/v3/health')).status, 200);
+  assert.equal((await net.fetch(origin + '/api/v3/health', { headers })).status, 200);
   assert.equal((await get(origin, '/api/backend/health')).status, 200);
   assert.equal((await get(origin, '/api/backend/api/projects')).status, 200);
   assert.equal((await get(origin, '/api/backend/api/auth/me')).status, 404);
