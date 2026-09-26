@@ -104,11 +104,17 @@ test('does not follow symlinks outside the source workspace', async t => {
 });
 
 test('HTTP copy exposes durable conversation, dataset and result downloads without inference or retraining', async t => {
+  let server: ReturnType<typeof createAgentServer> | undefined;
+  // after hooks run in registration order; close SQLite before removing the fixture on Windows.
+  t.after(async () => {
+    if (!server) return;
+    server.closeAllConnections();
+    await new Promise<void>(resolve => server!.close(() => resolve()));
+  });
   const f = fixture(t);
   let inference = 0;
-  const server = createAgentServer(f.home, () => { inference++; return undefined; }, { manualHome: f.manualHome });
+  server = createAgentServer(f.home, () => { inference++; return undefined; }, { manualHome: f.manualHome });
   server.listen(0, '127.0.0.1'); await once(server, 'listening');
-  t.after(async () => { server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve())); });
   const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
   const response = await fetch(base + '/api/v3/projects/import-manual-results', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: 1 }) });
   assert.equal(response.status, 200);
