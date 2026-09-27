@@ -22,7 +22,7 @@ export interface EditorTrainingPlan {
   rationale: string; timeoutSeconds: number; device?: string; externalRequestLimit?: number
 }
 export const DEFAULT_ANALYSIS_CONFIG: AnalysisConfig = {
-  plotLanguage: 'zh', models: ['theta'], vocabSize: 5000, modelSize: '0.6B',
+  plotLanguage: 'zh', models: ['lda'], vocabSize: 5000, modelSize: '0.6B',
   embeddingProvider: 'local', cloudConfirmed: false, externalRequestLimit: 200,
   mode: 'zero_shot', parameters: {},
 }

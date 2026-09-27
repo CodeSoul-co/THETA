@@ -71,7 +71,12 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
   };
   const dispatching = new Map<number, Promise<void>>();
   const preparing = new Set<Promise<void>>();
+  const reportWork = new Map<string, Promise<void>>();
+  const reportFor = (id: string) => list('result-report').find(item => item.jobId === id);
   let closing = false;
+  for (const record of list('result-report')) {
+    if (record.status === 'generating') save('result-report', { ...record, status: 'failed', error: '应用重启中断了图表生成，请重新生成。' });
+  }
   for (const job of list('job')) {
     if (job.preflightIncomplete && !job.queue && ['pending', 'running'].includes(job.status)) {
       save('job', { ...job, status: 'failed', submission_error: true, error_message: '服务重启中断了任务检查，请重新提交。' });
@@ -367,14 +372,17 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
               const base = `/api/backend/api/results/${encodeURIComponent(dataset)}`;
               const query = `model=${encodeURIComponent(modelId)}&job_id=${encodeURIComponent(state.id)}`;
               const resultRoot = state.status === 'completed' && state.resultDir ? realpathSync.native(state.resultDir) : undefined;
-              const entries = resultRoot ? files(resultRoot).map(file => {
+              const reportRecord = reportFor(state.id);
+              const reportFiles = reportRecord?.report?.files as Array<{ name: string; path: string; kind: string }> | undefined;
+              const entries = reportFiles ? reportFiles.map(file => ({ name: file.name, kind: file.kind, url: `${base}/visualizations/file?${query}&path=${encodeURIComponent(file.name)}` })) : resultRoot ? files(resultRoot).map(file => {
                 const name = path.relative(resultRoot, file).split(path.sep).join('/');
                 const ext = path.extname(file).toLowerCase();
                 const kind = /\.(png|jpe?g|svg|pdf|webp)$/u.test(ext) ? 'figure' : /\.(csv|tsv)$/u.test(ext) ? 'table' : ext === '.npy' ? 'matrix' : ext === '.html' ? 'report' : 'artifact';
                 return { name, kind, url: `${base}/visualizations/file?${query}&path=${encodeURIComponent(name)}` };
               }) : [];
               results.push({ jobId: state.id, runId: String(job.id), modelId, status: state.status, phase: state.phase, percent: state.percent, selected: false,
-                reportStatus: entries.length ? 'ready' : 'not_requested',
+                reportStatus: reportRecord?.status === 'generating' ? 'generating' : reportRecord?.status === 'failed' ? 'incomplete' : entries.length ? 'ready' : 'not_requested',
+                reportError: reportRecord?.error,
                 execution: { id: state.id, status: state.status, phase: state.phase, percent: state.percent, phaseHistory: state.phaseHistory, telemetry: state.telemetry },
                 ...(entries.length ? { artifacts: { reportUrl: entries.find(file => /(?:^|\/)index\.html$/u.test(file.name))?.url ?? '', archiveUrl: `${base}/archive?${query}`, fileCount: entries.length, figureCount: entries.filter(file => file.kind === 'figure').length, tableCount: entries.filter(file => file.kind === 'table').length, matrixCount: entries.filter(file => file.kind === 'matrix').length, files: entries } } : {}),
               });
@@ -393,13 +401,31 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
         const selectedState = owner ? ((await observe(owner)).states as ComputeJob[]).find(state => state.id === selectedJobId && state.status === 'completed') : undefined;
         if (selectedJobId && !selectedState?.resultDir) throw new HttpError(404, '该训练结果尚未完成');
         const result = selectedState?.resultDir ? { root: realpathSync.native(selectedState.resultDir), model: owner!.workers.find((item: RecordValue) => item.id === selectedJobId).model } : await latest(dataset, model);
+        if (parts[3] === 'regenerate' && method === 'POST') {
+          if (!selectedJobId || !selectedState) throw new HttpError(400, '请选择已完成的具体任务');
+          if (!reportWork.has(selectedJobId)) {
+            const record = reportFor(selectedJobId) ?? insert('result-report', { jobId: selectedJobId });
+            save('result-report', { ...record, status: 'generating', error: undefined });
+            const work = compute.results(selectedJobId, 'report').then(report => {
+              const incomplete = (report as { reportStatus?: string }).reportStatus === 'incomplete';
+              save('result-report', { ...record, status: incomplete ? 'failed' : 'ready', report,
+                ...(incomplete ? { error: '部分图表未能生成，请查看导出文件中的 visualization.log 后重试。' } : {}) });
+            }).catch(error => {
+              save('result-report', { ...record, status: 'failed', error: error instanceof Error ? error.message : String(error) });
+            }).finally(() => reportWork.delete(selectedJobId));
+            reportWork.set(selectedJobId, work);
+          }
+          return json(res, { status: 'generating' }, 202);
+        }
+        const currentReport = selectedJobId ? reportFor(selectedJobId)?.report : undefined;
+        const deliveryFiles: Array<{ name: string; path: string }> = currentReport?.files ?? files(result.root).map(file => ({ name: path.relative(result.root, file).split(path.sep).join('/'), path: file }));
         if (parts[3] === 'archive' && method === 'GET') {
           const stage = path.join(home, 'incoming', `delivery-${randomUUID()}`);
           const archive = stage + '.zip';
           mkdirSync(stage, { recursive: true });
           const cleanup = () => Promise.allSettled([rm(stage, { recursive: true, force: true }), rm(archive, { force: true })]);
           try {
-            stageDelivery(stage, files(result.root).map(file => ({ path: file, name: '训练结果/' + path.relative(result.root, file).split(path.sep).join('/') })));
+            stageDelivery(stage, deliveryFiles.map(file => ({ path: file.path, name: '训练结果/' + file.name })));
             await createDeliveryZip(stage, archive);
             res.writeHead(200, { 'Content-Type': 'application/zip', 'Content-Disposition': `attachment; filename="THETA-${result.model}-complete.zip"`, 'Cache-Control': 'no-store' });
             const stream = createReadStream(archive);
@@ -414,8 +440,8 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
         if (parts[3] === 'visualizations') {
           const artifacts = files(result.root);
           if (parts[4] === 'file') {
-            const relative = url.searchParams.get('path') ?? ''; const file = path.resolve(result.root, relative);
-            if (!artifacts.includes(file) || !realpathSync.native(file).startsWith(result.root + path.sep)) throw new HttpError(404, '结果文件不存在');
+            const relative = url.searchParams.get('path') ?? ''; const file = deliveryFiles.find(item => item.name === relative)?.path;
+            if (!file || !realpathSync.native(file).startsWith(realpathSync.native(home) + path.sep)) throw new HttpError(404, '结果文件不存在');
             const mime: Record<string, string> = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml', '.html': 'text/html', '.csv': 'text/csv; charset=utf-8', '.json': 'application/json', '.pdf': 'application/pdf', '.txt': 'text/plain; charset=utf-8' };
             res.writeHead(200, { 'Content-Type': mime[path.extname(file)] ?? 'application/octet-stream', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "sandbox allow-scripts; default-src 'self' data: https: 'unsafe-inline'" });
             const stream = createReadStream(file);
@@ -441,7 +467,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
   let resourcesClosed: Promise<void> = Promise.resolve();
   server.once('close', () => {
     closing = true; clearInterval(queueTimer);
-    resourcesClosed = Promise.allSettled([...preparing, ...dispatching.values(), ...[...observations.values()].map(item => item.pending)]).then(() => db.close());
+    resourcesClosed = Promise.allSettled([...reportWork.values(), ...preparing, ...dispatching.values(), ...[...observations.values()].map(item => item.pending)]).then(() => db.close());
   });
   const closeHttp = server.close.bind(server);
   // HTTP close alone does not wait for background work or release SQLite's Windows lock.

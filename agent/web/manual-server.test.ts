@@ -420,3 +420,38 @@ test('独立划分使用本项目上传回执与各自列选择，拒绝跨项�
     rmSync(home, { recursive: true, force: true });
   }
 });
+
+test('explicit chart regeneration preserves training files and scopes new downloads to the owning task', async t => {
+  const home = mkdtempSync(path.join(os.tmpdir(), 'theta-report-regenerate-'));
+  const root = path.join(home, 'compute', 'saved'); mkdirSync(root, { recursive: true });
+  writeFileSync(path.join(root, 'theta.npy'), 'original');
+  const db = new DatabaseSync(path.join(home, 'manual.sqlite'));
+  db.exec('CREATE TABLE records (id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT NOT NULL, value TEXT NOT NULL)');
+  db.prepare('INSERT INTO records(kind,value) VALUES (?,?)').run('job', JSON.stringify({ dataset_name: 'data', models: ['lda'], status: 'succeeded', workers: [{ id: 'saved', model: 'lda' }] })); db.close();
+  let calls = 0, finish!: (value: unknown) => void;
+  const pending = new Promise(resolve => { finish = resolve; });
+  const worker: CapabilityWorker = { async call<T>(operation: string, input: any): Promise<T> {
+    if (operation === 'compute.status') return { id: 'saved', status: 'completed', resultDir: root } as T;
+    assert.equal(operation, 'compute.results'); assert.equal(input.view, 'report'); calls++;
+    return await pending as T;
+  } };
+  const server = createManualServer(home, worker);
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  t.after(async () => { finish({ files: [] }); await new Promise<void>(resolve => server.close(() => resolve())); rmSync(home, { recursive: true, force: true }); });
+  const route = '/api/results/data/regenerate?job_id=saved&model=lda';
+  assert.equal((await fetch(base + route, { method: 'POST' })).status, 202);
+  assert.equal((await fetch(base + route, { method: 'POST' })).status, 202); assert.equal(calls, 1);
+  let catalog = await (await fetch(base + '/api/results/data/catalog')).json() as any;
+  assert.equal(catalog.results[0].reportStatus, 'generating');
+  const file = path.join(home, 'reports', 'validation.csv'); mkdirSync(path.dirname(file), { recursive: true }); writeFileSync(file, 'validation-only');
+  finish({ files: [{ name: 'native/splits/validation/global/topic_proportions.csv', path: file, kind: 'table' }] });
+  await new Promise(resolve => setImmediate(resolve));
+  catalog = await (await fetch(base + '/api/results/data/catalog')).json() as any;
+  assert.equal(catalog.results[0].reportStatus, 'ready');
+  const url = catalog.results[0].artifacts.files[0].url.replace('/api/backend', '');
+  assert.equal(await (await fetch(base + url)).text(), 'validation-only');
+  assert.equal((await fetch(base + url.replace('/data/', '/other/'))).status, 404);
+  assert.equal((await fetch(base + '/api/results/other/regenerate?job_id=saved', { method: 'POST' })).status, 404);
+  assert.equal(existsSync(path.join(root, 'theta.npy')), true);
+});

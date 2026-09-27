@@ -108,7 +108,9 @@ Characteristics:
 
 **zero_shot Mode**
 
-Standard unsupervised topic modeling:
+Topic modeling with frozen embeddings (Beta):
+- The embedding provider is not fine-tuned; the topic encoder and decoder are trained
+- The objective uses BOW reconstruction loss and KL regularization; earlier zero-loss results require retraining
 - No label information used
 - Topics emerge purely from text patterns
 - Default choice when labels are unavailable

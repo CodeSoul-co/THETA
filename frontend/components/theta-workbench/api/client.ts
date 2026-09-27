@@ -204,7 +204,8 @@ export interface WebResultSummary {
   phase?: string;
   percent?: number;
   selected: boolean;
-  reportStatus: 'not_requested' | 'ready' | 'incomplete';
+  reportStatus: 'not_requested' | 'ready' | 'incomplete' | 'generating';
+  reportError?: string;
   artifacts?: {
     reportUrl: string;
     fileCount: number;

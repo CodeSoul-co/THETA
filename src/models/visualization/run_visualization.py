@@ -258,6 +258,7 @@ def load_visualization_data(
     theta_file = find_latest_file(model_dir, theta_pattern, fixed_name=theta_fixed)
     if theta_file:
         data['theta'] = np.load(theta_file)
+        data['matrix_dir'] = Path(theta_file).parent
         print(f"✓ Loaded theta: {data['theta'].shape} from {Path(theta_file).name}")
     else:
         raise FileNotFoundError(f"theta not found in {model_dir}, expected: {theta_fixed or theta_pattern}")
@@ -366,6 +367,8 @@ def load_visualization_data(
     
     print(f"{'='*60}\n")
     
+    from visualization.dataset_views import attach_split_report
+    attach_split_report(data)
     return data
 
 
@@ -476,6 +479,11 @@ def run_all_visualizations(
     print(f"Output: {output_dir}")
     print(f"{'='*60}\n")
     
+    from visualization.dataset_views import render_split_views
+    render_split_views(data, output_dir, lambda view, target: run_all_visualizations(
+        result_dir, dataset, mode, model_size=model_size, model_exp=model_exp,
+        model_type=model_type, num_topics=num_topics, data=view,
+        output_dir=target, language=language, dpi=dpi, formats=formats))
     return output_dir
 
 
@@ -841,6 +849,8 @@ def load_baseline_data(result_dir, dataset, model, num_topics=20, workspace_dir=
             data['covariate_names'] = data['covariate_info'].get('covariate_names', [])
 
     print(f"{'='*60}\n")
+    from visualization.dataset_views import attach_split_report
+    attach_split_report(data)
     return data
 
 
@@ -1243,6 +1253,10 @@ def run_baseline_visualization(
         with (output_dir / 'README.md').open('a', encoding='utf-8') as file:
             file.write('\n\n## Plot scope\n' + data['plot_scope'] + '\n')
             file.write('pyLDAvis requires generative probabilities with a single aligned beta; it is not applicable to c-TF-IDF or a time-varying beta.\n')
+    from visualization.dataset_views import render_split_views
+    render_split_views(data, output_dir, lambda view, target: run_baseline_visualization(
+        result_dir, dataset, model, num_topics=num_topics, workspace_dir=workspace_dir,
+        data=view, output_dir=target, language=language, dpi=dpi, formats=formats))
     return output_dir
 
 
@@ -1330,6 +1344,8 @@ def attach_source_metadata(data, source_file, training_data, text_column, time_c
         'timeColumn': time_column, 'groupColumn': group_column, 'rows': len(raw),
         'grouping': '8 largest groups by document count; all remaining groups combined',
         'missingTimeRows': int(pd.isna(data.get('timestamps', [])).sum())}
+    from visualization.dataset_views import attach_split_report
+    attach_split_report(data)
     return data
 
 

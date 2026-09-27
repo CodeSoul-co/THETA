@@ -81,7 +81,8 @@ export const ApprovalPanel = ({
   }
 
   if (card.kind === 'model_selection') {
-    const choices = reasoning?.modelChoices ?? []
+    const rank = (id: string) => id === 'lda' ? -1 : id === 'theta' ? 1 : 0
+    const choices = [...(reasoning?.modelChoices ?? [])].sort((a, b) => rank(a.modelId) - rank(b.modelId))
     return (
       <section className={`${css.approvalBar} ${css.modelSelectionBar} ${appearance === 'conversation' ? css.approvalConversation : ''}`}>
         <div className={css.approvalBarCopy}>
@@ -100,6 +101,7 @@ export const ApprovalPanel = ({
             >
               <span className={css.modelChoiceHeading}>
                 <strong>{choice.modelId.toUpperCase()}</strong>
+                {choice.modelId === 'theta' && <small>{locale === 'zh-CN' ? '测试版' : 'Beta'}</small>}
                 {choice.recommended && <small>{locale === 'zh-CN' ? '推荐' : 'Recommended'}</small>}
               </span>
               <p>{choice.rationale}</p>

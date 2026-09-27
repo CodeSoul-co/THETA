@@ -157,7 +157,7 @@ export function ManualWorkbench() {
               : "draft" as const,
             datasetName: p.dataset_name ?? undefined,
             mode: (p.mode as any) ?? "zero_shot",
-            models: ["theta"],
+            models: ["lda"],
             numTopics: p.num_topics ?? 20,
             pipelineStatus: derivedPipelineStatus as any,
             hasResults,
@@ -190,7 +190,7 @@ export function ManualWorkbench() {
             hasResults,
             datasetName: ds.name,
             taskId: effectiveTaskId,
-            models: ["theta"],
+            models: ["lda"],
           })
         }
 
@@ -207,7 +207,7 @@ export function ManualWorkbench() {
             pipelineStatus: "completed" as const,
             hasResults: true,
             datasetName: ossDatasetName,
-            models: ["theta"],
+            models: ["lda"],
           })
         }
 
@@ -226,7 +226,7 @@ export function ManualWorkbench() {
               pipelineStatus: t.status === "completed" ? "completed" : t.status === "failed" ? "error" : "running",
               hasResults,
               datasetName: ds,
-              models: ["theta"],
+              models: ["lda"],
               taskId: t.task_id || null,
             })
           }
@@ -359,7 +359,7 @@ export function ManualWorkbench() {
             : "draft" as const,
           datasetName: p.dataset_name ?? undefined,
           mode: (p.mode as any) ?? "zero_shot",
-          models: ["theta"],
+          models: ["lda"],
           numTopics: p.num_topics ?? 20,
           pipelineStatus: derivedPipelineStatus as any,
           hasResults,
@@ -380,7 +380,7 @@ export function ManualWorkbench() {
           pipelineStatus: hasResults ? "completed" : "draft",
           hasResults,
           datasetName: ds.name,
-          models: ["theta"],
+          models: ["lda"],
         })
       }
       for (const t of tasks) {
@@ -397,7 +397,7 @@ export function ManualWorkbench() {
             pipelineStatus: t.status === "completed" ? "completed" : t.status === "failed" ? "error" : "running",
             hasResults,
             datasetName: ds,
-            models: ["theta"],
+            models: ["lda"],
             taskId: t.task_id || null,
           })
         }
@@ -476,7 +476,7 @@ export function ManualWorkbench() {
       name: created.name,
       datasetName: created.dataset_name ?? `project-${created.id}`,
       mode: "zero_shot",
-      models: ["theta"],
+      models: ["lda"],
       numTopics: created.num_topics,
       rows: 0,
       createdAt: "刚刚",

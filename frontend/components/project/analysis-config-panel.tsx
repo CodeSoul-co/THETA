@@ -40,7 +40,6 @@ const LANGUAGES = [
 ] as const
 
 const MODEL_LIST = [
-  { id: "theta", name: "THETA", group: "neural" as const },
   { id: "nvdm", name: "NVDM", group: "neural" as const },
   { id: "gsm", name: "GSM", group: "neural" as const },
   { id: "prodlda", name: "ProdLDA", group: "neural" as const },
@@ -52,16 +51,17 @@ const MODEL_LIST = [
   { id: "hdp", name: "HDP", group: "traditional" as const },
   { id: "stm", name: "STM", group: "traditional" as const },
   { id: "btm", name: "BTM", group: "traditional" as const },
+  { id: "theta", name: "THETA", group: "neural" as const },
 ] as const
 
 const MODEL_GROUPS = [
   {
-    label: "神经",
-    ids: ["theta", "nvdm", "gsm", "prodlda", "ctm", "etm", "dtm", "bertopic"],
-  },
-  {
     label: "传统",
     ids: ["lda", "hdp", "stm", "btm"],
+  },
+  {
+    label: "神经",
+    ids: ["nvdm", "gsm", "prodlda", "ctm", "etm", "dtm", "bertopic", "theta"],
   },
 ] as const
 
@@ -72,7 +72,7 @@ const QWEN_SIZES = [
 ] as const
 
 const EMBEDDING_MODES = [
-  { value: "zero_shot", label: "零样本（默认）", tip: "不训练嵌入，最快" },
+  { value: "zero_shot", label: "冻结嵌入（默认）", tip: "不微调嵌入模型，仍训练主题模型" },
   { value: "unsupervised", label: "无监督", tip: "无监督嵌入" },
   { value: "supervised", label: "有监督", tip: "需额外指定标签列" },
 ] as const
@@ -287,11 +287,13 @@ export function AnalysisConfigPanel({
                             <Label
                               htmlFor={`model-${modelId}`}
                               className={cn(
-                                "flex-1 whitespace-nowrap font-normal cursor-pointer text-sm",
+                                "flex flex-1 flex-wrap items-center gap-1 font-normal cursor-pointer text-sm",
                                 config.models.includes(modelId) && "font-medium text-blue-700"
                               )}
                             >
                               {model.name}
+                              {modelId === "lda" && <span className="rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-800">推荐</span>}
+                              {modelId === "theta" && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">测试版</span>}
                             </Label>
                           </div>
                         )

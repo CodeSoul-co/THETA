@@ -99,7 +99,7 @@ def export_results(directory, theta, beta, bow, vocab, model_name, source_rows=N
             metrics = evaluator.compute_all_metrics()
             evaluator.save_metrics()
         weights = values.mean(axis=0)
-        report['groups'][role] = {'count': len(indices), 'metrics': metrics, 'topicProportions': weights.tolist()}
+        report['groups'][role] = {'count': len(indices), 'metrics': metrics, 'topicProportions': weights.tolist(), 'maxTopicStd': float(values.std(axis=0).max())}
         with (target / 'documents.csv').open('w', encoding='utf-8-sig', newline='') as f:
             writer = csv.writer(f)
             writer.writerow(['source_row', 'topic', *[f'topic_{i}' for i in range(values.shape[1])]])

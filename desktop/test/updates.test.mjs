@@ -61,8 +61,8 @@ test('failed network checks are recoverable and development smoke never checks t
     fetcher: async () => { count++; throw Error('offline'); },
   };
   const manager = createUpdates(options);
-  assert.equal((await manager.check()).status, 'error'); assert.equal((await manager.check()).status, 'error'); assert.equal(count, 2);
-  const disabled = createUpdates({ ...options, enabled: false }); disabled.start(); await disabled.check(); disabled.stop(); assert.equal(count, 2);
+  assert.equal((await manager.check()).status, 'error'); assert.equal((await manager.check()).status, 'error'); assert.equal(count, 4);
+  const disabled = createUpdates({ ...options, enabled: false }); disabled.start(); await disabled.check(); disabled.stop(); assert.equal(count, 4);
 });
 
 test('unsigned Mac opens only a verified installer and preserves update preferences', async t => {
@@ -121,4 +121,31 @@ test('automatic notification stays quiet when disabled or no newer release exist
   t.mock.timers.tick(6 * 3600000);
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(requests, 1); assert.equal(notices, 0); assert.equal(manager.state().status, 'current');
+});
+
+test('API rate limits fall back to public releases and still verify installer bytes', async t => {
+  const home = temp(t), notifications = [];
+  let size = bytes.length, manifestStatus = 200, corrupt = false;
+  const manager = createUpdates({ version: '0.3.8', platform: 'darwin', arch: 'arm64', home, enabled: true, manualMac: true,
+    emit() {}, notify: kind => notifications.push(kind),
+    fetcher: async (url, options) => {
+      if (url.includes('api.github.com')) return new Response('', { status: 403 });
+      if (url.endsWith('.atom')) return new Response('<feed xmlns="http://www.w3.org/2005/Atom"><entry><id>tag:github.com,2008:Repository/1383233249/desktop-v0.3.9</id></entry></feed>');
+      if (url.endsWith('SHA256SUMS.txt')) return new Response(`${digest}  THETA-0.3.9-mac-arm64.dmg\n`);
+      if (url.endsWith('latest-mac.yml')) return new Response(null, { status: manifestStatus });
+      assert.equal(url, 'https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.9/THETA-0.3.9-mac-arm64.dmg');
+      return options?.method === 'HEAD' ? new Response(null, { headers: { 'Content-Length': String(size) } }) : new Response(corrupt ? Buffer.alloc(bytes.length) : bytes);
+    },
+  });
+  manifestStatus = 404;
+  assert.equal((await manager.check(true)).status, 'current'); assert.equal(notifications.length, 0);
+  manifestStatus = 200; size = 0;
+  assert.equal((await manager.check(true)).status, 'error'); assert.equal(notifications.length, 0);
+  size = bytes.length;
+  assert.equal((await manager.check(true)).status, 'available'); assert.deepEqual(notifications, ['available']);
+  corrupt = true;
+  assert.equal((await manager.download()).status, 'error');
+  assert.equal(existsSync(path.join(home, 'updates', 'THETA-0.3.9-mac-arm64.dmg')), false);
+  corrupt = false;
+  assert.equal((await manager.download()).status, 'ready'); assert.deepEqual(notifications, ['available', 'ready']);
 });

@@ -79,7 +79,7 @@ def generate_report(root, job, destination, *, workspace=None, dataset=None, pre
     # UMAP's cached kernels); a changed entry must invalidate cached reports.
     inputs = [Path(__file__), Path(__file__).with_name('__main__.py'), Path(native.__file__), Path(native.__file__).with_name('visualization_generator.py'),
               Path(native.__file__).with_name('topic_visualizer.py'),
-              Path(native.__file__).with_name('publication.py'),
+              Path(native.__file__).with_name('publication.py'), Path(native.__file__).with_name('dataset_views.py'),
               Path(native.__file__).parents[1] / 'artifact_utils.py', Path(__file__).with_name('result_analysis.py'),
               Path(__file__).with_name('results_reader.py'), Path(__file__).with_name('diagnostics.py'),
               engine_root() / 'src/models/row_provenance.py']

@@ -30,6 +30,36 @@ function selectRelease(releases, current, platform, arch) {
   }
   return null;
 }
+async function publicRelease(current, platform, arch, fetcher) {
+  const request = (url, method = 'GET') => fetcher(url, { method, signal: AbortSignal.timeout(20000) });
+  const response = await request(`${REPOSITORY}/releases.atom`);
+  if (!response.ok) throw new Error(`备用更新服务连接失败（HTTP ${response.status}）`);
+  const feed = await response.text();
+  if (!feed.includes('<feed ') || !feed.includes('</feed>')) throw new Error('备用更新服务返回的数据无效');
+  const versions = [...new Set([...feed.matchAll(/<id>tag:github\.com,2008:Repository\/\d+\/desktop-v(\d+\.\d+\.\d+)<\/id>/g)].map(match => match[1]))]
+    .filter(value => newer(value, current)).sort((a, b) => newer(a, b) ? -1 : 1);
+  const suffix = platform === 'darwin' ? `mac-${arch}.dmg` : `win-${arch}.exe`;
+  const metadata = platform === 'darwin' ? 'latest-mac.yml' : 'latest.yml';
+  for (const version of versions.slice(0, 5)) {
+    const base = `${REPOSITORY}/releases/download/desktop-v${version}/`;
+    const name = `THETA-${version}-${suffix}`;
+    const sums = await request(`${base}SHA256SUMS.txt`);
+    if (sums.status === 404) continue;
+    if (!sums.ok) throw new Error(`更新校验清单读取失败（HTTP ${sums.status}）`);
+    const entries = (await sums.text()).split(/\r?\n/).map(line => /^([a-f0-9]{64})  (\S+)$/.exec(line)).filter(Boolean);
+    const entry = entries.find(match => match[2] === name);
+    if (!entry) continue;
+    const [asset, manifest] = await Promise.all([request(base + name, 'HEAD'), request(base + metadata, 'HEAD')]);
+    if (asset.status === 404 || manifest.status === 404) continue;
+    if (!asset.ok || !manifest.ok) throw new Error('更新文件或更新清单暂时无法访问，请稍后重试');
+    // Reuse the same strict platform, URL, size and digest validation as the API path.
+    return selectRelease([{ tag_name: `desktop-v${version}`, draft: false, assets: [
+      { name, browser_download_url: base + name, size: Number(asset.headers.get('content-length')), digest: `sha256:${entry[1]}` },
+      { name: metadata },
+    ] }], current, platform, arch);
+  }
+  return null;
+}
 async function hashFile(file) {
   const digest = createHash('sha256');
   for await (const chunk of fs.createReadStream(file)) digest.update(chunk);
@@ -71,9 +101,11 @@ function createUpdates({ version, platform, arch, home, enabled, nativeFactory, 
     busy = true; release = undefined; native?.removeAllListeners(); native = undefined;
     update({ status: 'checking', error: undefined, percent: 0, availableVersion: undefined });
     try {
-      const response = await fetcher(API, { headers: { Accept: 'application/vnd.github+json' }, signal: AbortSignal.timeout(20000) });
-      if (!response.ok) throw new Error(`无法连接更新服务（HTTP ${response.status}），请检查网络后重试`);
-      const candidate = selectRelease(await response.json(), version, platform, arch);
+      let response;
+      try { response = await fetcher(API, { headers: { Accept: 'application/vnd.github+json' }, signal: AbortSignal.timeout(20000) }); }
+      catch { /* Public release pages remain usable when the API is unreachable. */ }
+      const candidate = response?.ok ? selectRelease(await response.json(), version, platform, arch)
+        : await publicRelease(version, platform, arch, fetcher);
       if (!candidate) { update({ status: 'current', availableVersion: undefined }); return { ...state }; }
       if (!manualMac) {
         native = nativeFactory(candidate.feed);

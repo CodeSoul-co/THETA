@@ -227,10 +227,12 @@ class ETM(nn.Module):
         if compute_loss:
             # Mode-based loss routing
             if mode == 'zero_shot':
-                # Zero-shot: no training loss, pure feature extraction
-                output['total_loss'] = torch.tensor(0.0, device=doc_embeddings.device)
-                output['recon_loss'] = torch.tensor(0.0, device=doc_embeddings.device)
-                output['kl_loss'] = torch.tensor(0.0, device=doc_embeddings.device)
+                # Freeze the embedding provider, not the randomly initialized topic head.
+                recon_loss = -torch.sum(bow_targets * log_word_dist, dim=-1).mean()
+                kl_loss = kl_weight * kl_theta_loss
+                output['recon_loss'] = recon_loss
+                output['kl_loss'] = kl_loss
+                output['total_loss'] = recon_loss + kl_loss
                 
             elif mode == 'supervised':
                 # Supervised: classification loss + reconstruction loss + KL divergence

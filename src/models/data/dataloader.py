@@ -4,7 +4,7 @@ ETM Dataset and DataLoader utilities
 
 import numpy as np
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, BatchSampler, RandomSampler
 from scipy import sparse
 from typing import Optional, Union
 
@@ -86,6 +86,25 @@ class ETMDataset(Dataset):
         return item
 
 
+class CompleteBatchSampler(BatchSampler):
+    """Keep every training row, merging a singleton tail for BatchNorm."""
+    def __iter__(self):
+        previous = None
+        for batch in super().__iter__():
+            if previous is not None:
+                if len(batch) == 1:
+                    yield previous + batch
+                    return
+                yield previous
+            previous = batch
+        if previous is not None:
+            yield previous
+
+    def __len__(self):
+        count = super().__len__()
+        return count - int(count > 1 and len(self.sampler) % self.batch_size == 1)
+
+
 def create_dataloader(
     dataset,
     batch_size: int = 32,
@@ -95,7 +114,7 @@ def create_dataloader(
     persistent_workers: bool = False,
     prefetch_factor: int = 2,
     sampler = None,
-    drop_last: bool = True
+    drop_last: bool = False
 ) -> DataLoader:
     """
     Create a DataLoader for ETM training.
@@ -120,6 +139,13 @@ def create_dataloader(
     if num_workers == 0:
         persistent_workers = False
     
+    if not drop_last and (shuffle or sampler is not None):
+        if len(dataset) < 2:
+            raise ValueError('主题模型训练至少需要 2 条有效正文')
+        batches = CompleteBatchSampler(sampler if sampler is not None else RandomSampler(dataset), max(2, batch_size), False)
+        return DataLoader(dataset, batch_sampler=batches, num_workers=num_workers,
+            pin_memory=pin_memory, persistent_workers=persistent_workers,
+            prefetch_factor=prefetch_factor if num_workers > 0 else None)
     return DataLoader(
         dataset,
         batch_size=batch_size,

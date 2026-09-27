@@ -1112,7 +1112,7 @@ def train_etm(
     else:
         if is_main_process(local_rank):
             logger.info("=" * 60)
-            logger.info("ZERO-SHOT MODE: Using pretrained embeddings without fine-tuning")
+            logger.info("ZERO-SHOT EMBEDDINGS: frozen provider; training topic encoder and decoder")
             logger.info("=" * 60)
 
     # Load labels for supervised mode (pass num_docs for alignment check)
@@ -1297,6 +1297,8 @@ def train_etm(
     if is_main_process(local_rank):
         logger.info("=" * 60)
         logger.info("Starting training...")
+        if config.embedding.mode == "zero_shot":
+            logger.info("冻结嵌入模型，仅训练主题模型；Loss = 词袋重建损失 + KL 正则。")
 
     for epoch in range(config.model.epochs):
         # Set epoch for distributed sampler
@@ -1338,11 +1340,11 @@ def train_etm(
             else:
                 loss = output['total_loss']
 
-            # Only backward if not zero_shot mode
-            if current_mode != 'zero_shot':
-                loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-                optimizer.step()
+            if not torch.isfinite(loss):
+                raise ValueError('THETA loss 非有限值，请检查词袋、嵌入及学习率')
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            optimizer.step()
 
             train_loss += loss.item() * doc_emb.size(0)
 
@@ -1515,7 +1517,7 @@ def train_etm(
         for batch in test_loader:
             doc_emb = batch['doc_embedding'].to(device)
             bow = batch['bow'].to(device)
-            output = model(doc_emb, bow, kl_weight=1.0)
+            output = model(doc_emb, bow, mode=config.embedding.mode, kl_weight=1.0)
             test_loss += output['total_loss'].item() * doc_emb.size(0)
     test_loss /= n_test
 

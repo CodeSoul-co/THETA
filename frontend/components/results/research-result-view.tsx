@@ -1,6 +1,8 @@
 "use client"
 
-import { SplitResults } from './split-results'
+import { apiFetch, API_BASE } from '@/lib/api/config'
+import { SplitResults, useSplitReport } from './split-results'
+import { DATASET_LABELS, filesForDataset, type DatasetRole } from '@/lib/result-splits'
 import { ExecutionLog } from "@/components/project/execution-log"
 
 import { useProjectDraft } from "@/lib/use-project-draft"
@@ -110,6 +112,7 @@ export function ResearchResultView({ source, initialDestination, onOpenAssistant
   const initialCatalog = source.kind === "run" ? source.catalog : undefined
   const [catalog, setCatalog] = useState<ResultItem[]>(initialCatalog?.results ?? [])
   const [refreshing, setRefreshing] = useState(false)
+  const [rebuilding, setRebuilding] = useState(false)
   const refreshInFlight = useRef(false)
   const [loadError, setLoadError] = useState<string>()
   const [selectedJobId, setSelectedJobId] = useProjectDraft<string | undefined>(`results:${runId}:job`, initialCatalog?.results.find((item) => item.status === "completed")?.jobId ?? initialCatalog?.results[0]?.jobId)
@@ -178,8 +181,21 @@ export function ResearchResultView({ source, initialDestination, onOpenAssistant
   const selected = catalog.find((item) => item.jobId === selectedJobId) ?? catalog[0]
   const readinessNotice = selected ? resultReadinessNotice(selected, source.kind === 'run') : undefined
   useEffect(() => { onSelection(selected ? { model: selected.modelId, jobId: selected.jobId } : null) }, [selected?.jobId, selected?.modelId, onSelection])
+  const regenerate = async () => {
+    if (!selected || source.kind !== 'dataset') return
+    setRebuilding(true); setLoadError(undefined)
+    try {
+      await apiFetch(API_BASE, `/api/results/${encodeURIComponent(datasetName!)}/regenerate?job_id=${encodeURIComponent(selected.jobId)}&model=${encodeURIComponent(selected.modelId)}`, { method: 'POST' })
+      await refresh()
+    } catch (error) { setLoadError(error instanceof Error ? error.message : String(error)) }
+    finally { setRebuilding(false) }
+  }
   const completed = catalog.filter((item) => item.status === "completed")
-  const files: ResultFile[] = selected?.artifacts?.files ?? []
+  const allFiles: ResultFile[] = selected?.artifacts?.files ?? []
+  const split = useSplitReport(allFiles)
+  const [datasetRole, setDatasetRole] = useState<DatasetRole>('all')
+  useEffect(() => { setDatasetRole('all'); setCategory('all'); setFigurePage(0) }, [selectedJobId])
+  const files = useMemo(() => filesForDataset(allFiles, datasetRole), [allFiles, datasetRole])
   const figures = useMemo(() => files.filter((file) => file.kind === "figure"), [files])
   const tableFiles = useMemo(() => files.filter((file) => file.kind === "table"), [files])
   const matrices = files.filter((file) => file.kind === "matrix")
@@ -209,7 +225,7 @@ export function ResearchResultView({ source, initialDestination, onOpenAssistant
     const topics = scope === "topic" ? scopedFamilies.filter((family) => scopeOf(family).topic === topicKey) : scopedFamilies
     return category === "all" ? topics : topics.filter((family) => categoryOf(family) === category)
   }, [category, scope, scopedFamilies, topicKey])
-  useEffect(() => { setFigurePage(0) }, [category, scope, topicKey, selectedJobId])
+  useEffect(() => { setFigurePage(0) }, [category, scope, topicKey, selectedJobId, datasetRole])
   const figurePages = Math.max(1, Math.ceil(visibleFamilies.length / 6))
   const pageFamilies = visibleFamilies.slice(Math.min(figurePage, figurePages - 1) * 6, (Math.min(figurePage, figurePages - 1) + 1) * 6)
 
@@ -403,13 +419,24 @@ export function ResearchResultView({ source, initialDestination, onOpenAssistant
 
         {readinessNotice && <p role="status" className="mt-4 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm leading-6 text-blue-800">{readinessNotice}</p>}
 
+        {split.url && <section className="mt-4 space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
+          <p className="text-sm font-medium">结果数据范围</p>
+          <div className="flex flex-wrap gap-2" role="tablist" aria-label="结果数据范围">{Object.entries(DATASET_LABELS).map(([key, label]) => <button key={key} role="tab" aria-selected={datasetRole === key} onClick={() => { setDatasetRole(key as DatasetRole); setCategory('all') }} className={`rounded-lg px-4 py-2 text-sm ${datasetRole === key ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}`}>{label}{split.report ? ` · ${split.report.groups[key as DatasetRole]?.count ?? 0}` : ''}</button>)}</div>
+          <p className="text-xs text-slate-500">指标、主题结果、可视化和导出文件同步切换。主题词与模型参数来自同一已训练模型，部分模型结构图可相同；文档分布使用所选数据集。</p>
+          {split.report?.testUsesAllData && <p className="text-xs text-amber-800">默认测试使用全量数据，测试与全量结果相同，不是独立留出测试。</p>}
+          {split.error && <p role="alert" className="text-sm text-red-700">{split.error}</p>}
+          {datasetRole !== 'all' && figures.length === 0 && <p role="status" className="text-sm text-amber-800">此任务尚未生成该数据集的图表，不会用全量图表代替。可基于已保存的模型重新生成结果；若日志提示绘图失败，请查看具体原因。</p>}
+          {source.kind === 'dataset' && <button onClick={() => void regenerate()} disabled={rebuilding || selected.reportStatus === 'generating'} className="rounded-lg border px-3 py-2 text-sm text-indigo-700 disabled:opacity-50">{rebuilding || selected.reportStatus === 'generating' ? '正在生成图表…' : '重新生成各数据集图表（不重新训练）'}</button>}
+          {selected.reportError && <p role="alert" className="text-sm text-red-700">{selected.reportError}</p>}
+        </section>}
+
         <div className="mt-5 flex flex-wrap gap-1.5 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm">
           {[["overview", "结果概览"], ["splits", "数据集结果"], ["topics", "主题结果"], ["metrics", "评估指标"], ["visualizations", "可视化"], ["files", "导出文件"], ...(source.kind === "dataset" ? [["logs", "执行日志"]] : [])].map(([key, label]) => (
             <button key={key} type="button" aria-pressed={activeTab === key} onClick={() => setActiveTab(key)} className={"rounded-xl px-4 py-2.5 text-sm transition " + (activeTab === key ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-50")}>{label}</button>
           ))}
         </div>
 
-        {activeTab === "splits" && <SplitResults files={files} />}
+        {activeTab === "splits" && <SplitResults files={allFiles} report={split.report} error={split.error} role={datasetRole} />}
         {activeTab === "logs" && <div className="mt-4"><ExecutionLog states={selected.execution ? [selected.execution] : []} workers={[{ id: selected.jobId, model: selected.modelId }]} logs={[]} running={selected.status === "running" || selected.status === "queued"} /></div>}
 
         {activeTab === "overview" && (
@@ -437,7 +464,8 @@ export function ResearchResultView({ source, initialDestination, onOpenAssistant
 
         {activeTab === "metrics" && (
           <div className="mt-4 space-y-4">
-            {metricRows.length > 0 && <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{metricRows.map(([key, value]) => <article key={key} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><p className="truncate text-xs text-slate-500">{key}</p><strong className="mt-2 block text-lg text-slate-900">{Number.isFinite(Number(value)) ? Number(value).toFixed(4) : value}</strong></article>)}</div>}
+            {split.url && <SplitResults files={allFiles} report={split.report} error={split.error} role={datasetRole} />}
+            {!split.url && metricRows.length > 0 && <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{metricRows.map(([key, value]) => <article key={key} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><p className="truncate text-xs text-slate-500">{key}</p><strong className="mt-2 block text-lg text-slate-900">{Number.isFinite(Number(value)) ? Number(value).toFixed(4) : value}</strong></article>)}</div>}
             <div className="grid gap-4 md:grid-cols-2">{metricFigures.map((family) => figureCard(family))}</div>
             {tableCard("评估指标明细", findTable(/evaluation_metrics\.csv$/u), "一行一个指标；口径以原生报告为准，数字之间不构成模型优劣排名。")}
           </div>

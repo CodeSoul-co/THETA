@@ -112,4 +112,84 @@ class DatasetSplitTests(unittest.TestCase):
                         self.assertEqual(result['theta'].shape, (20,2))
                         self.assertTrue(np.isfinite(result['theta']).all())
 
+    def test_complete_batches_keep_small_sets_and_merge_singletons(self):
+        import torch
+        from data.dataloader import create_dataloader
+        for count, batch_size in [(3, 256), (5, 2), (9, 4), (10, 4)]:
+            batches = list(create_dataloader(torch.arange(count), batch_size=batch_size))
+            self.assertTrue(all(len(batch) >= 2 for batch in batches))
+            self.assertEqual(sorted(torch.cat(batches).tolist()), list(range(count)))
+        batches = list(create_dataloader(torch.arange(1), batch_size=256, shuffle=False))
+        self.assertEqual(batches[0].tolist(), [0])
+
+    def test_theta_frozen_embedding_mode_really_trains_with_nonzero_loss(self):
+        import logging
+        import numpy as np
+        import torch
+        from config import PipelineConfig
+        from main import train_etm
+        from model.theta.etm import ETM
+        rng = np.random.default_rng(17)
+        config = PipelineConfig()
+        config.embedding.mode = 'zero_shot'
+        config.model.epochs = 2
+        config.model.batch_size = 256
+        config.model.num_workers = 0
+        config.model.num_topics = 2
+        config.model.doc_embedding_dim = 8
+        config.model.word_embedding_dim = 8
+        config.model.hidden_dim = 8
+        config.model.hidden_sizes = [8, 8]
+        config.model.train_word_embeddings = False
+        config.model.early_stopping = False
+        snapshots = []
+        original = ETM.__init__
+        def capture(model, *args, **kwargs):
+            original(model, *args, **kwargs)
+            snapshots.append({name: value.detach().clone() for name, value in model.named_parameters()})
+        with tempfile.TemporaryDirectory() as folder:
+            manifest = Path(folder)/'split.json'
+            manifest.write_text(json.dumps(assignments(10, {'enabled':True, 'method':'sequential', 'ratios':[.6,.2,.2]})))
+            with patch.dict(os.environ, {'THETA_DATA_SPLIT_FILE': str(manifest)}), patch.object(ETM, '__init__', capture), patch('main.load_labels_for_supervised', return_value=(None, 0, None)):
+                result = train_etm(rng.normal(size=(10,8)).astype('float32'), rng.integers(1,8,(10,12)).astype('float32'), rng.normal(size=(12,8)).astype('float32'), config, logging.getLogger('theta-test'), torch.device('cpu'))
+            history = result['history']
+            for name in ['train_loss', 'val_loss', 'recon_loss']:
+                self.assertEqual(len(history[name]), 2)
+                self.assertTrue(all(np.isfinite(v) and v > 0 for v in history[name]))
+            self.assertTrue(np.isfinite(result['test_loss']) and result['test_loss'] > 0)
+            parameters = dict(result['model'].named_parameters())
+            self.assertFalse(torch.equal(snapshots[0]['encoder.mu_layer.weight'], parameters['encoder.mu_layer.weight']))
+            self.assertFalse(torch.equal(snapshots[0]['decoder.topic_embeddings'], parameters['decoder.topic_embeddings']))
+            self.assertTrue(torch.equal(snapshots[0]['decoder.word_embeddings'], parameters['decoder.word_embeddings']))
+
+    def test_visualization_rows_metrics_and_metadata_follow_saved_split(self):
+        import csv
+        import numpy as np
+        import pandas as pd
+        from visualization.dataset_views import split_view, render_split_views
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder); report=root/'split_results.json'
+            theta=np.array([[.9,.1],[.8,.2],[.2,.8],[.1,.9]])
+            data={'theta':theta,'beta':np.eye(2),'source_rows':np.array([2,4,6,8]), 'bow_matrix':np.arange(8).reshape(4,2),
+                  'timestamps':list(range(4)), 'source_frame':pd.DataFrame({'id':[2,4,6,8]}), 'training_history':{'train_loss':[2,1]}, 'split_report_path':report}
+            groups={'all':{'count':4,'metrics':{'PPL':10}}}
+            for role,indices in {'train':[0,1],'validation':[2],'test':[3]}.items():
+                target=root/'splits'/role;target.mkdir(parents=True)
+                np.save(target/'theta.npy',theta[indices])
+                with (target/'documents.csv').open('w') as f:
+                    writer=csv.writer(f);writer.writerow(['source_row']);writer.writerows([[int(data['source_rows'][i])+1] for i in indices])
+                groups[role]={'count':len(indices),'metrics':{'PPL':len(indices)}}
+            report.write_text(json.dumps({'groups':groups,'testUsesAllData':False}))
+            view=split_view(data,report,'validation')
+            np.testing.assert_array_equal(view['theta'],theta[[2]])
+            np.testing.assert_array_equal(view['bow_matrix'],data['bow_matrix'][[2]])
+            self.assertEqual(view['source_frame']['id'].tolist(),[6]);self.assertEqual(view['timestamps'],[2])
+            self.assertEqual(view['metrics'],{'PPL':1});self.assertIsNone(view['training_history'])
+            rendered=[]
+            output=root/'plots';output.mkdir()
+            render_split_views(data,output,lambda subset,target: rendered.append((subset['theta'].copy(),target)))
+            self.assertEqual([len(matrix) for matrix,target in rendered],[2,1,1])
+            np.save(root/'splits/test/theta.npy',theta[[0]])
+            with self.assertRaises(ValueError):split_view(data,report,'test')
+
 if __name__ == '__main__': unittest.main()
