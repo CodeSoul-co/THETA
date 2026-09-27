@@ -50,12 +50,12 @@ export function AnalysisReport({ source, jobId }: { source: ResultSource; jobId:
     {(error || report?.error) && <p role="alert" className="text-sm text-red-700">{error || report?.error}</p>}
     <div className="flex flex-wrap gap-3">
       {!report && error && <button type="button" onClick={() => setRefresh(value => value + 1)} className="rounded-xl border bg-white px-4 py-2 text-sm">重新读取报告状态</button>}
-      {report?.status !== 'complete' && <button type="button" disabled={!report || submitting || report.status === 'running'} onClick={() => void generate()} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm text-white disabled:opacity-50">{submitting || report?.status === 'running' ? '正在生成…' : report?.status === 'failed' ? report.markdown ? '重试 PDF 导出' : '重试生成报告' : '生成完整分析报告'}</button>}
+      {report?.status !== 'complete' && !report?.pdf && <button type="button" disabled={!report || submitting || report.status === 'running'} onClick={() => void generate()} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm text-white disabled:opacity-50">{submitting || report?.status === 'running' ? '正在生成…' : report?.status === 'failed' ? report.markdown ? '重试 PDF 导出' : '重试生成报告' : '生成完整分析报告'}</button>}
       {report?.markdown && <a href={download('md')} download className="rounded-xl border bg-white px-4 py-2 text-sm">下载 Markdown</a>}
       {report?.pdf && <a href={download('pdf')} download className="rounded-xl border bg-white px-4 py-2 text-sm">下载 PDF</a>}
       {report?.bundle && <a href={download('zip')} download className="rounded-xl border bg-white px-4 py-2 text-sm">下载 Markdown 图文包</a>}
       {report?.markdown && report.status !== 'running' && <button type="button" disabled={submitting} onClick={() => void generate(true)} className="rounded-xl border bg-white px-4 py-2 text-sm disabled:opacity-50">重新生成（调用模型 API）</button>}
     </div>
-    {report?.markdown && <p className="text-xs text-slate-500">PDF 包含完整图文；如需编辑 Markdown，请下载图文包并保留 assets 文件夹。重新生成会更新报告，生成正文失败时仍保留原报告。</p>}
+    {report?.markdown && <p className="text-xs text-slate-500">{report.bundle ? 'PDF 包含完整图文；编辑 Markdown 时，请下载图文包并保留 assets 文件夹。' : '这是此前生成的报告；点击重新生成，可应用新的图文分析与排版。'}重新生成会更新报告，生成正文失败时仍保留原报告。</p>}
   </section>
 }

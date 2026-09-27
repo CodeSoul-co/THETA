@@ -68,6 +68,8 @@ class AnalysisReportTests(unittest.TestCase):
                 pix.clear_with(190); pix.save(target / '主题占比分布.png')
             catalog = collect_exhibits({'_resultHash': tree_hash(root)}, root, directory)
             self.assertEqual(len(catalog), 8)
+            self.assertNotIn('topic_id', catalog[0]['statistics'])
+            self.assertAlmostEqual(catalog[0]['statistics']['mean_weight']['mean'], 0.55)
             self.assertEqual([item['rows'][0]['mean_weight'] for item in catalog if item['kind'] == 'table'], ['0.9', '0.8', '0.3', '0.1'])
             self.assertEqual([item['scope'] for item in catalog if item['kind'] == 'figure'], ['全量', '训练集', '验证集', '测试集'])
             markdown = '# 完整分析报告\n\n' + '\n\n'.join(item['block'] for item in catalog) + '\n\n## 结论\n\n全量与测试集主题权重存在差异。'
@@ -96,6 +98,7 @@ class AnalysisReportTests(unittest.TestCase):
             summary = {'reportPath': str(root / 'report/index.html')}
             catalog = collect_exhibits(summary, root / 'unused-training', root / 'export')
             self.assertEqual(catalog[0]['rows'][0]['word'], 'science')
+            self.assertEqual(catalog[0]['statistics'], {})
             table.write_text('topic,word\n1,modified\n', encoding='utf-8')
             with self.assertRaisesRegex(ValueError, '变化'):
                 collect_exhibits(summary, root / 'unused-training', root / 'export')

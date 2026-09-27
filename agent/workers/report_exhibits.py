@@ -74,7 +74,10 @@ def collect_exhibits(summary, result_root, directory):
             note = f'来源：{source.relative_to(root).as_posix()}。展示前 {len(display)} / {len(rows)} 行、{len(columns)} / {len(reader.fieldnames)} 列；数值保持原始口径。'
             block += f'\n\n{note} [完整数据表]({name})\n'
             statistics = {}
-            for column in columns:
+            # Only summarize columns with one consistent quantity. Aggregating
+            # evaluation_metrics.value would mix unrelated metrics and units.
+            numeric_columns = [c for c in columns if c not in {'topic_id', 'topic', 'epoch'}] if stem in {'topic_proportions', 'training_curves'} else []
+            for column in numeric_columns:
                 numbers = []
                 for row in rows:
                     try: value = float(row.get(column))
