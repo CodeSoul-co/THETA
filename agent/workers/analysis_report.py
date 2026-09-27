@@ -122,14 +122,15 @@ def markdown_html(markdown):
 
 def export_pdf(payload):
     import pymupdf
+    from io import BytesIO
     directory = Path(payload['directory']).resolve()
     markdown = (directory / 'analysis.md').read_text(encoding='utf-8')
     target = directory / 'analysis.pdf'
-    temporary = directory / 'analysis.partial.pdf'
+    buffer = BytesIO()
     css = 'body{font-family:sans-serif;font-size:10pt;line-height:1.6;color:#172338}h1{font-size:22pt}h2{font-size:15pt;margin-top:22pt}h3{font-size:12pt}table{width:100%;border-collapse:collapse;margin:12pt 0;font-size:8pt}td,th{border:0.5pt solid #cdd5df;padding:5pt;text-align:left}th{background:#eef2f8}code{font-size:9pt}p{overflow-wrap:anywhere}'
     story = pymupdf.Story(html=markdown_html(markdown), user_css=css)
     box = pymupdf.paper_rect('a4'); content = box + (42, 42, -42, -42)
-    writer = pymupdf.DocumentWriter(str(temporary))
+    writer = pymupdf.DocumentWriter(buffer)
     try:
         more, pages = True, 0
         while more:
@@ -139,11 +140,14 @@ def export_pdf(payload):
             more, _ = story.place(content)
             story.draw(device); writer.end_page()
     finally: writer.close()
-    with pymupdf.open(temporary) as pdf:
+    with pymupdf.open(stream=buffer.getvalue(), filetype='pdf') as pdf:
         if not len(pdf) or not ''.join(page.get_text() for page in pdf).strip():
             raise ValueError('PDF 未生成可读取的正文')
         for i, page in enumerate(pdf):
             page.insert_text((42, box.height - 22), f'THETA | {i + 1} / {len(pdf)}', fontsize=8, color=(0.4, 0.45, 0.5))
-        pdf.save(target)
-    temporary.unlink(missing_ok=True)
+        # Write after rendering to memory: DocumentWriter can retain native file
+        # handles on Windows even after close(), preventing temporary-file removal.
+        temporary = directory / 'analysis.partial.pdf'
+        temporary.write_bytes(pdf.tobytes(garbage=3, deflate=True))
+    temporary.replace(target)
     return {'pages': pages, 'file': str(target)}
