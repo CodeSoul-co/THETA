@@ -21,6 +21,7 @@ import { isTextDocument, type DatasetPreview } from "@/lib/dataset-input"
 import { DATASET_ACCEPT, datasetFilesError, documentCollectionError, isDocumentCollection } from '@/lib/dataset-files'
 import { useFileDrop } from '@/lib/use-file-drop'
 import { useProjectDraft } from "@/lib/use-project-draft"
+import { explorationCounts } from '@/lib/analysis-config'
 
 interface PipelineResult { success: boolean; taskId?: string; dataset?: string; metrics?: Record<string, number>; topicWords?: Record<string, string[]>; duration: number }
 interface AutoPipelineProps {
@@ -205,7 +206,7 @@ export function AutoPipeline(props: AutoPipelineProps) {
     void (async () => {
       try {
         const modelParams = Object.fromEntries(config.models.map(model => [model, config.parameters[model] ?? {}]))
-        const response = await BackendAPI.startTraining({ file_id: Number(activeFileId), data_split: dataSplit, dataset_name: dataset, model_type: config.models.join(','), model_params: modelParams,
+        const response = await BackendAPI.startTraining({ file_id: Number(activeFileId), data_split: dataSplit, dataset_name: dataset, model_type: config.models.join(','), model_params: modelParams, topic_counts: explorationCounts(config),
           num_topics: Number(modelParams[config.models[0]].num_topics ?? modelParams[config.models[0]].max_topics ?? 20), vocab_size: config.vocabSize,
           plot_language: config.plotLanguage, stopwords_id: config.stopwords ? Number(config.stopwords.id) : undefined, model_size: config.modelSize, mode: config.mode,
           embedding_provider: config.embeddingProvider, cloud_confirmed: config.cloudConfirmed, external_request_limit: config.externalRequestLimit,

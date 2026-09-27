@@ -26,7 +26,7 @@ export class PythonCapabilityWorker implements CapabilityWorker {
       // Report views run the native visualization, which can exceed two minutes on a
       // large corpus; allow bounded native rendering without extending training.
       const defaultTimeoutMs = operation === 'compute.status' ? 5000 : Number(process.env.THETA_CAPABILITY_TIMEOUT_MS ?? 120000);
-      const timeoutMs = ['compute.results', 'figure.adjust'].includes(operation) ? Number(process.env.THETA_REPORT_TIMEOUT_MS ?? 600000) : defaultTimeoutMs;
+      const timeoutMs = ['compute.results', 'figure.adjust', 'analysis_report.evidence', 'analysis_report.pdf'].includes(operation) ? Number(process.env.THETA_REPORT_TIMEOUT_MS ?? 600000) : defaultTimeoutMs;
       const timer = setTimeout(() => stop(new Error(`能力调用超过 ${timeoutMs / 1000} 秒`)), timeoutMs);
       const killTimer = setTimeout(() => child.kill('SIGKILL'), timeoutMs + 2000);
       signal?.addEventListener('abort', abort, { once: true });

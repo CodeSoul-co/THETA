@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils"
 import { apiFetch, API_BASE } from "@/lib/api/config"
 import { ModelParameterFields } from "./model-parameter-fields"
 import type { ModelContract } from "@/lib/model-parameters"
-import { DEFAULT_ANALYSIS_CONFIG, type AnalysisConfig } from "@/lib/analysis-config"
+import { DEFAULT_ANALYSIS_CONFIG, explorationCounts, type AnalysisConfig } from "@/lib/analysis-config"
 export type { AnalysisConfig } from "@/lib/analysis-config"
 import { useProjectDraft } from "@/lib/use-project-draft"
 import { ComputationNotice, SetupError } from '@/components/theta-workbench/panels/WorkbenchNotice'
@@ -190,6 +190,7 @@ export function AnalysisConfigPanel({
     if (config.models.includes("theta") && config.embeddingProvider === "cloud" && (!embedding?.configured || !config.cloudConfirmed || config.mode !== "zero_shot")) return
     setSubmitting(true); setSubmitError('')
     try {
+      explorationCounts(config)
       if (await onConfirm({ ...config, cloudSelection: embedding ? { provider: embedding.provider, endpoint: embedding.endpoint, model: embedding.model } : undefined }) !== false) onOpenChange(false)
     } catch (cause) { setSubmitError(cause instanceof Error ? cause.message : String(cause)) }
     finally { setSubmitting(false) }
@@ -305,6 +306,16 @@ export function AnalysisConfigPanel({
 
               {/* 全局词汇表大小 */}
               <div className="space-y-2">
+                <div className="space-y-3 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
+                  <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" checked={config.topicExploration === true} onChange={e => setConfig(prev => ({ ...prev, topicExploration: e.target.checked }))} />多主题数探索实验（可选）</label>
+                  {config.topicExploration && <>
+                    <Label htmlFor="exploration-topics">主题数组合</Label>
+                    <Input id="exploration-topics" value={config.topicCounts ?? ''} placeholder="例如 5、10、15、20" onChange={e => setConfig(prev => ({ ...prev, topicCounts: e.target.value }))} />
+                    <p className="text-sm font-medium text-indigo-800" role="status">{(() => { try { const counts = explorationCounts(config); return `${config.models.length} 个模型 × ${counts.length} 个主题数 = ${config.models.length * counts.length} 组实验` } catch (error) { return error instanceof Error ? error.message : '请填写主题数' } })()}</p>
+                    <p className="text-sm text-amber-900">每个所选模型将按这些主题数分别训练，顺序执行并独立保留结果；总耗时和云端嵌入费用可能随实验数量增加。HDP 为截断上限，BERTopic 为合并目标，实际主题数可能不同。</p>
+                    <p className="text-xs text-slate-600">探索开启时，以这里的主题数覆盖各模型的主题数参数。使用同一数据划分比较，不能仅根据测试集挑选主题数。</p>
+                  </>}
+                </div>
                 <Label htmlFor="shared-topics">统一主题数</Label>
                 <div className="flex gap-2">
                   <Input id="shared-topics" type="number" min={2} max={100} value={sharedTopics} onChange={e => setSharedTopics(Math.max(2, Math.min(100, Number(e.target.value) || 2)))} />

@@ -2,6 +2,18 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { configFromPlans, plansFromConfig, type EditorTrainingPlan } from './analysis-config.ts'
 
+test('topic exploration is opt-in and produces distinct Cartesian model/topic plans', () => {
+  const originals: EditorTrainingPlan[] = [{ modelId: 'lda', textColumn: '正文', params: { num_topics: 8 }, rationale: '基线', timeoutSeconds: 600 }]
+  const config = configFromPlans(originals)
+  config.topicCounts = '5、10，10 20'
+  assert.equal(plansFromConfig(config, originals).length, 1)
+  config.topicExploration = true; config.models = ['lda', 'hdp']
+  const plans = plansFromConfig(config, originals)
+  assert.deepEqual(plans.map(p => [p.modelId, p.params.num_topics ?? p.params.max_topics]), [['lda',5],['lda',10],['lda',20],['hdp',5],['hdp',10],['hdp',20]])
+  assert.equal(plans[3].params.num_topics, undefined)
+  config.topicCounts = '5,abc'; assert.throws(() => plansFromConfig(config, originals), /整数主题数/)
+})
+
 test('shared editor prefills distinct models, retains recommendations and submits only the final selection', () => {
   const originals: EditorTrainingPlan[] = [
     { modelId: 'lda', textColumn: '正文', params: { num_topics: 8, alpha: 0.1, max_iter: 20 }, rationale: '词袋基线', timeoutSeconds: 600 },

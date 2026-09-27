@@ -202,7 +202,7 @@ export class LocalProductTools implements ProductToolExecutor {
         return { id: jobId, status: observed?.status ?? 'queued', phase: observed?.phase ?? '状态未知', percent: observed?.percent ?? 0 };
       });
       const report = session.reports?.find(item => item.jobId === jobId);
-      return { jobId, runId: run.id, modelId: run.plan?.modelId ?? 'unknown', status: job.status, phase: job.phase,
+      return { jobId, runId: run.id, modelId: run.plan?.modelId ?? 'unknown', topicCount: run.plan?.params.num_topics ?? run.plan?.params.max_topics, status: job.status, phase: job.phase,
         percent: job.percent, selected: session.resultSelection?.resolvedJobIds.includes(jobId) ?? false,
         reportStatus: report?.reportStatus === 'incomplete' ? 'incomplete' : report ? 'ready' : 'not_requested', order };
     }));
@@ -318,9 +318,9 @@ export class LocalProductTools implements ProductToolExecutor {
       const effect = this.approvals.get(pending.checkpointId);
       if (effect.status !== 'pending' || effect.expiresAt < Date.now() || contentHash((effect.payload as ComputeRequest).dataset) !== contentHash(dataset)) throw new Error('训练确认已过期或数据变化，请重新生成卡片。');
     } else if (pending.contentHash !== contentHash({ runId: sourceRun.id, dataset, plans: pending.trainingPlans, backend: this.backend })) throw new Error('数据或方案已变化，请重新生成卡片。');
-    if (!Array.isArray(input.plans) || input.plans.length < 1 || input.plans.length > 12) throw new Error('请选择 1–12 个模型。');
+    if (!Array.isArray(input.plans) || input.plans.length < 1 || input.plans.length > 48) throw new Error('请选择 1–48 组模型实验。');
     const plans = input.plans.map(plan => trainingPlanSchema.parse(plan));
-    if (new Set(plans.map(plan => plan.modelId)).size !== plans.length) throw new Error('模型不能重复。');
+    if (new Set(plans.map(plan => contentHash(plan))).size !== plans.length) throw new Error('相同模型与参数的实验不能重复。');
     const requests: ComputeRequest[] = [];
     for (const plan of plans) {
       // Credentials/endpoints are host configuration, never editable parameter overrides.
@@ -337,7 +337,7 @@ export class LocalProductTools implements ProductToolExecutor {
       }
       if (['local', 'custom'].includes(this.backend) && !preview.readiness.ready) throw new Error(preview.readiness.issues?.join(" ") || `${plan.modelId.toUpperCase()} 的运行环境或模型资源未就绪；未启动任何模型，请调整配置后重试。`);
       // The execution contract uses runId as dataset.project_id (at most 36 chars).
-      const runId = `run-${contentHash({ batchId, model: plan.modelId }).slice(0, 32)}`;
+      const runId = `run-${contentHash({ batchId, plan }).slice(0, 32)}`;
       requests.push({ runId, jobId: `job-${contentHash({ batchId, dataset, plan })}`, dataset, plan,
         execution: { ...preview.execution, ...(!['local', 'custom'].includes(this.backend) ? { computeConfigurationFingerprint: this.configurationFingerprint() } : {}) } });
     }

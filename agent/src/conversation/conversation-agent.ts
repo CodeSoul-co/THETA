@@ -1,3 +1,4 @@
+import { ACADEMIC_REPORT_INSTRUCTIONS } from './report-prompts.js';
 import { INSTRUCTIONS, INTERPRETATION_INSTRUCTIONS, RESEARCH_INSTRUCTIONS, FREE_ANALYSIS_INSTRUCTIONS, STATISTICAL_INTERPRETATION_INSTRUCTIONS, STATISTICAL_EVIDENCE_DISCIPLINE } from './prompts.js';
 import { randomUUID } from 'node:crypto';
 import { METRIC_INSTRUCTIONS } from './metric-instructions.js';
@@ -27,7 +28,7 @@ export class ConversationAgent {
     maxRounds?: number; maxToolCalls?: number; timeoutMs?: number; maxOutputTokens?: number;
     /** Explicit host opt-in; cancellation and repeated-action recovery remain active. */
     unboundedResearch?: boolean;
-    mode?: 'interactive' | 'research';
+    mode?: 'interactive' | 'research' | 'report';
   }) {}
 
   async turn(session: ProductSession, userMessage: string, inputSignal?: AbortSignal, input: { userIntent?: string } = {}): Promise<string> {
@@ -77,12 +78,12 @@ export class ConversationAgent {
       let attemptEnd: ReturnType<ExecutionTrace['start']> | undefined;
       try {
         const result = await this.options.inference.infer({
-          runId: session.runId ?? session.id, stepId: `dialogue:${randomUUID()}`, agentId: statisticalSynthesis ? 'agent.theta.statistical-interpretation' : synthesis ? 'agent.theta.result-interpretation' : 'agent.theta.conversation', modelAlias: 'runtime-selected',
-          input: { instructions: METRIC_INSTRUCTIONS + (synthesis ? INSTRUCTIONS + INTERPRETATION_INSTRUCTIONS : this.options.mode === 'research' ? RESEARCH_INSTRUCTIONS : INSTRUCTIONS) + STATISTICAL_INTERPRETATION_INSTRUCTIONS + STATISTICAL_EVIDENCE_DISCIPLINE + (statisticalSynthesis ? '\n本次为当前 approvedStatisticalReport 的只读解读。仅使用当前回执及 statistics_results 读取的同一批证据。不可沿用历史数字、诊断或预处理结论。无需新计划、确认或执行；完整正文由宿主保存。' : '') + (session.analysisMode === 'free' ? FREE_ANALYSIS_INSTRUCTIONS : '') + (summarize ? '\nThe configured tool budget is exhausted for this turn. Report only actually completed results and exact remaining blockers. Do not claim unexecuted actions or a host denial that did not occur.' : ''),
+          runId: session.runId ?? session.id, stepId: `dialogue:${randomUUID()}`, agentId: this.options.mode === 'report' ? 'agent.theta.academic-report' : statisticalSynthesis ? 'agent.theta.statistical-interpretation' : synthesis ? 'agent.theta.result-interpretation' : 'agent.theta.conversation', modelAlias: 'runtime-selected',
+          input: { instructions: this.options.mode === 'report' ? METRIC_INSTRUCTIONS + ACADEMIC_REPORT_INSTRUCTIONS : METRIC_INSTRUCTIONS + (synthesis ? INSTRUCTIONS + INTERPRETATION_INSTRUCTIONS : this.options.mode === 'research' ? RESEARCH_INSTRUCTIONS : INSTRUCTIONS) + STATISTICAL_INTERPRETATION_INSTRUCTIONS + STATISTICAL_EVIDENCE_DISCIPLINE + (statisticalSynthesis ? '\n本次为当前 approvedStatisticalReport 的只读解读。仅使用当前回执及 statistics_results 读取的同一批证据。不可沿用历史数字、诊断或预处理结论。无需新计划、确认或执行；完整正文由宿主保存。' : '') + (session.analysisMode === 'free' ? FREE_ANALYSIS_INSTRUCTIONS : '') + (summarize ? '\nThe configured tool budget is exhausted for this turn. Report only actually completed results and exact remaining blockers. Do not claim unexecuted actions or a host denial that did not occur.' : ''),
             messages: [...(synthesis ? session.messages.slice(session.pendingSynthesis?.evidenceMessageStart ?? turnStart) : statisticalSynthesis ? session.messages.slice(turnStart) : this.options.mode === 'research' ? researchHistory(session.messages, notebookKey(session)) : boundedHistory(session.messages)), { role: 'system', content: JSON.stringify({ session: session.id, approvedStatisticalReport: session.statisticalReports?.find(r=>r.analysisId===session.pendingStatisticalInterpretation) ?? null, analysisMode: session.analysisMode ?? 'topic', statisticalExecution:session.statisticalExecution ?? null, statisticalPlan: session.statisticalPlans?.[notebookKey(session)] ?? null, statisticalReports: session.statisticalReports?.filter(r=>r.runId===notebookKey(session)).map(r=>({analysisId:r.analysisId,status:r.status,reportPath:r.reportPath})) ?? [], selectedRun: session.runId ?? null, availableRuns: session.runIds ?? [],
               ...(this.options.mode === 'research' ? {originalUserObjective:session.lastUserIntent} : {}),
               availableDatasets: session.datasetRefs, pendingConfirmation: session.pendingConfirmation ?? null,
-              authorizationStatus: session.pendingConfirmation ? 'A host action is pending.' : (summarize ? '本轮调用预算已用完，尚未建立可点击的确认请求；这是本轮预算限制，不是宿主拒绝训练授权。准确报告最后的失败回执，不能把失败的计划说成已保存或把拟修复项说成已修复。' : '尚无待确认请求。可以先修复计划校验错误，再通过 training_request_approval 创建真实确认卡。创建请求无需事先批准，不执行训练或外部嵌入；执行仍必须等待用户确认。'),
+              authorizationStatus: this.options.mode === 'report' ? '用户已请求当前报告。仅允许读取本报告证据并交付正文，不执行训练或修改数据，无需额外确认。' : session.pendingConfirmation ? 'A host action is pending.' : (summarize ? '本轮调用预算已用完，尚未建立可点击的确认请求；这是本轮预算限制，不是宿主拒绝训练授权。准确报告最后的失败回执，不能把失败的计划说成已保存或把拟修复项说成已修复。' : '尚无待确认请求。可以先修复计划校验错误，再通过 training_request_approval 创建真实确认卡。创建请求无需事先批准，不执行训练或外部嵌入；执行仍必须等待用户确认。'),
               knowledgeCatalog: this.options.tools.knowledgeCatalog?.() ?? null,
               currentResearch: statisticalSynthesis ? null : this.options.tools.readState?.(session) ?? null,
               approvedSynthesis: session.pendingSynthesis ?? null,

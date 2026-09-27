@@ -1,6 +1,7 @@
 "use client"
 
 import { apiFetch, API_BASE } from '@/lib/api/config'
+import { AnalysisReport } from "./analysis-report"
 import { SplitResults, useSplitReport } from './split-results'
 import { DATASET_LABELS, filesForDataset, type DatasetRole } from '@/lib/result-splits'
 import { ExecutionLog } from "@/components/project/execution-log"
@@ -404,12 +405,12 @@ export function ResearchResultView({ source, initialDestination, onOpenAssistant
             </div>
           </div>
           <div className="px-5 py-4 sm:px-7">
-            <div className="mb-3 flex items-center justify-between"><p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">选择模型结果</p><p className="text-xs text-slate-400">每个模型保留独立参数、图表与导出文件</p></div>
+            <div className="mb-3 flex items-center justify-between"><p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">选择模型结果</p><p className="text-xs text-slate-400">每组模型与主题数保留独立结果；K 为设定主题数（HDP 上限 / BERTopic 目标）</p></div>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,180px),1fr))] gap-2.5">
               {catalog.map((item) => {
                 const active = item.jobId === selected?.jobId
                 return <button key={item.jobId} type="button" aria-pressed={active} onClick={() => setSelectedJobId(item.jobId)} className={"group rounded-2xl border p-3 text-left transition " + (active ? "border-blue-400 bg-blue-50/60 shadow-[0_8px_18px_rgba(59,130,246,0.12)]" : "border-slate-200 bg-white hover:border-blue-200 hover:bg-slate-50/70")}>
-                  <div className="flex flex-wrap items-start justify-between gap-2"><strong className="whitespace-nowrap text-sm text-slate-900">{item.modelId.toUpperCase()}</strong><span className={"shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium " + statusTone(item.status)}>{statusLabel(item.status)}</span></div>
+                  <div className="flex flex-wrap items-start justify-between gap-2"><strong className="whitespace-nowrap text-sm text-slate-900">{item.modelId.toUpperCase()}{item.topicCount != null ? ` · K=${item.topicCount}` : ""}</strong><span className={"shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium " + statusTone(item.status)}>{statusLabel(item.status)}</span></div>
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500"><span>{item.percent ?? (item.status === "completed" ? 100 : 0)}%</span><span>{item.artifacts?.figureCount ?? 0} 图 · {item.artifacts?.tableCount ?? 0} 表</span></div>
                 </button>
               })}
@@ -436,13 +437,15 @@ export function ResearchResultView({ source, initialDestination, onOpenAssistant
           ))}
         </div>
 
+        {["overview", "visualizations", "files"].includes(activeTab) && selected.status === "completed" && <AnalysisReport source={source} jobId={selected.jobId} />}
+
         {activeTab === "splits" && <SplitResults files={allFiles} report={split.report} error={split.error} role={datasetRole} />}
         {activeTab === "logs" && <div className="mt-4"><ExecutionLog states={selected.execution ? [selected.execution] : []} workers={[{ id: selected.jobId, model: selected.modelId }]} logs={[]} running={selected.status === "running" || selected.status === "queued"} /></div>}
 
         {activeTab === "overview" && (
           <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
             <section className="rounded-[22px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-              <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-medium text-blue-600">当前模型</p><h2 className="mt-1 text-xl font-semibold text-slate-900">{selected.modelId.toUpperCase()}</h2></div><div className="flex gap-2">{selected.artifacts?.reportUrl && <a href={selected.artifacts.reportUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-3.5 py-2 text-sm font-medium text-white transition hover:bg-blue-600"><FileText className="h-4 w-4" />完整原生报告</a>}</div></div>
+              <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-medium text-blue-600">当前模型</p><h2 className="mt-1 text-xl font-semibold text-slate-900">{selected.modelId.toUpperCase()}</h2></div></div>
               <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {[{ label: "状态", value: statusLabel(selected.status), icon: CheckCircle2 }, { label: "阶段", value: phaseLabel(selected.phase), icon: Clock3 }, { label: "图表", value: String(selected.artifacts?.figureCount ?? 0), icon: ImageIcon }, { label: "数据文件", value: String((selected.artifacts?.tableCount ?? 0) + (selected.artifacts?.matrixCount ?? 0)), icon: Layers3 }].map((item) => <article key={item.label} className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4"><item.icon className="h-4 w-4 text-blue-600" /><p className="mt-3 text-xs text-slate-500">{item.label}</p><strong className="mt-0.5 block truncate text-base text-slate-900">{item.value}</strong></article>)}
               </div>

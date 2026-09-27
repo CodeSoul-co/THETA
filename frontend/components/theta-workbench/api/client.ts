@@ -196,6 +196,7 @@ export interface WebRunResults {
 }
 
 export interface WebResultSummary {
+  topicCount?: number;
   execution?: import('@/lib/training-progress').TrainingWorkerState;
   jobId: string;
   runId: string;

@@ -75,7 +75,7 @@ def route(operation: str, payload: dict) -> None:
         profile = 'statistics'
     if operation in {'runtime.check', 'compute.preview', 'compute.submit'}:
         profile = model_profile((payload.get('plan') or payload).get('modelId', ''))
-    elif operation == 'figure.adjust' or operation == 'compute.results' and payload.get('view') != 'artifacts':
+    elif operation.startswith('analysis_report.') or operation == 'figure.adjust' or operation == 'compute.results' and payload.get('view') != 'artifacts':
         profile = 'reports'
     elif operation == 'runtime.environment':
         profile = payload.get('profile')

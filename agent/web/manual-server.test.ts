@@ -455,3 +455,60 @@ test('explicit chart regeneration preserves training files and scopes new downlo
   assert.equal((await fetch(base + '/api/results/other/regenerate?job_id=saved', { method: 'POST' })).status, 404);
   assert.equal(existsSync(path.join(root, 'theta.npy')), true);
 });
+
+test('topic-count experiments queue distinct jobs and finish only after every combination', async () => {
+  const home = mkdtempSync(path.join(os.tmpdir(), 'theta-topic-grid-'));
+  const states = new Map<string, any>(), submitted: any[] = [];
+  const worker: CapabilityWorker = { async call<T>(operation: string, input: any): Promise<T> {
+    if (operation === 'dataset.import') return { datasetRef: 'grid', sha256: 'test', fileName: 'data.csv', managedPath: input.filePath } as T;
+    if (operation === 'dataset.profile') return { columns: ['text'] } as T;
+    if (operation === 'compute.preview') return { execution: { embedding: { mode: 'local' } }, readiness: { ready: true } } as T;
+    if (operation === 'compute.submit') {
+      assert.ok([...states.values()].every(item => item.status !== 'running'));
+      assert.ok(!states.has(input.jobId), 'Each count needs its own persisted job');
+      submitted.push(input);
+      const resultDir = path.join(home, input.jobId); mkdirSync(resultDir);
+      const state = { id: input.jobId, status: 'running', phase: 'training', percent: 0, resultDir };
+      states.set(input.jobId, state); return state as T;
+    }
+    if (operation === 'compute.status') return { ...states.get(input.jobId) } as T;
+    throw new Error(operation);
+  } };
+  const server = createManualServer(home, worker);
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  try {
+    const file = await (await fetch(base + '/api/upload?dataset_name=grid&filename=data.csv', { method: 'POST', body: 'text\nfixture' })).json() as any;
+    const input = { file_id: file.id, dataset_name: 'grid', model_type: 'lda,hdp', topic_counts: [2, 4], model_params: { lda: { 'config.num_topics': 8 }, hdp: { max_topics: 10 } } };
+    assert.equal((await fetch(base + '/api/train/start', { method: 'POST', body: JSON.stringify({ ...input, topic_counts: [2, 2] }) })).status, 400);
+    const job = await (await fetch(base + '/api/train/start', { method: 'POST', body: JSON.stringify(input) })).json() as any;
+    for (let i = 0; i < 4; i++) {
+      for (let attempt = 0; attempt < 80 && submitted.length <= i; attempt++) {
+        await fetch(base + `/api/train/${job.id}/status`); await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      assert.equal(submitted.length, i + 1);
+      const current = submitted[i];
+      const status = await (await fetch(base + `/api/train/${job.id}/status`)).json() as any;
+      assert.equal(status.status, 'running'); assert.equal(status.experimentCount, 4);
+      assert.equal(current.plan.params['config.num_topics'], undefined);
+      assert.deepEqual(current.plan.dataSplit, { enabled: false });
+      Object.assign(states.get(current.jobId), { status: 'completed', phase: 'completed', percent: 100 });
+    }
+    let last: any;
+    for (let attempt = 0; attempt < 80; attempt++) {
+      last = await (await fetch(base + `/api/train/${job.id}/status`)).json();
+      if (last.status === 'succeeded') break;
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    assert.equal(last.status, 'succeeded'); assert.equal(last.progress, 100);
+    assert.deepEqual(submitted.map(item => [item.plan.modelId, item.plan.params.num_topics ?? item.plan.params.max_topics]), [['lda', 2], ['lda', 4], ['hdp', 2], ['hdp', 4]]);
+    const catalog = await (await fetch(base + '/api/results/grid/catalog')).json() as any;
+    assert.deepEqual(catalog.results.map((item: any) => item.topicCount).sort(), [2, 2, 4, 4]);
+    assert.equal((await fetch(base + `/api/results/other/analysis-report?job_id=${submitted[0].jobId}`)).status, 404);
+    const report = await (await fetch(base + `/api/results/grid/analysis-report?job_id=${submitted[0].jobId}`)).json() as any;
+    assert.equal(report.status, 'idle', 'Reading the result page must not start report inference');
+    assert.ok(!existsSync(path.join(home, 'analysis-reports')));
+  } finally {
+    await new Promise<void>(resolve => server.close(() => resolve())); rmSync(home, { recursive: true, force: true });
+  }
+});

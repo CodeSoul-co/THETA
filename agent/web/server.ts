@@ -21,6 +21,7 @@ import { productTools } from '../src/tools/tool-catalog.js';
 import { PythonCapabilityWorker } from '../src/adapters/python-worker.js';
 import { stageDelivery, createDeliveryZip } from './delivery-archive.js';
 import { METRIC_INSTRUCTIONS } from '../src/conversation/metric-instructions.js';
+import { AnalysisReports } from './analysis-reports.js';
 import { exportBuiltinStopwords, parseStopwords, STOPWORD_BYTES } from './stopwords.js';
 import {
   AgentAccessError,
@@ -63,6 +64,7 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
   const foregroundWaiting = new Set<string>();
   const tasks = new WebTaskStore(records);
   const capabilityWorker = adapters.worker ?? new PythonCapabilityWorker();
+  const analysisReports = new AnalysisReports(home, capabilityWorker);
   let modelCapabilities: Promise<Array<Record<string, unknown>>> | undefined;
   tasks.recover((id, lease) => sessions.release(id, lease));
   const inFlight = new Set<Promise<unknown>>();
@@ -680,6 +682,23 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
         sessions.save(session); return json(res, snapshot(session));
       }
       const id = parts[3]; let session = webSession(id, principal); const action = parts.slice(4).join('/');
+      if (action.startsWith('analysis-report/')) {
+        const jobId = parts[5];
+        const catalog = await tools.resultCatalog(session);
+        if (!catalog.results.some(result => result.jobId === jobId && result.status === 'completed')) throw new HttpError(404, '本对话没有此已完成结果');
+        const key = `${session.id}:${jobId}`;
+        if (method === 'POST') {
+          const input = JSON.parse((await readBody(req, 32 * 1024)).toString() || '{}');
+          if (input.researchQuestion !== undefined && (typeof input.researchQuestion !== 'string' || input.researchQuestion.length > 6000)) throw new HttpError(400, '研究问题须为不超过 6000 字的文本');
+          return json(res, analysisReports.start(key, jobId, inferenceFactory(), input.researchQuestion?.trim() || session.lastUserIntent || session.title), 202);
+        }
+        if (method !== 'GET') throw new HttpError(405, '不支持此操作');
+        const format = url.searchParams.get('format');
+        if (!format) return json(res, analysisReports.state(key));
+        const file = analysisReports.file(key, format);
+        res.writeHead(200, { 'Content-Type': format === 'pdf' ? 'application/pdf' : 'text/markdown; charset=utf-8', 'Content-Disposition': `attachment; filename="THETA-analysis.${format}"`, 'Cache-Control': 'no-store' });
+        return createReadStream(file).pipe(res);
+      }
       if (!action && method === 'DELETE') { const meta = records.get<WebMeta>('web-session', id); records.put('web-session', id, { ...meta, archived: true }); return json(res, { runId: id }); }
       if (!action && method === 'PATCH') {
         const body = JSON.parse((await readBody(req)).toString());
@@ -971,7 +990,7 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
       void work.finally(() => { monitoring.delete(meta.id); inFlight.delete(work); });
     }
   }, 3000);
-  monitor.unref(); server.on('close', () => { shuttingDown = true; clearInterval(monitor); for (const controller of active.values()) controller.abort(); void Promise.allSettled([...inFlight]).then(() => sessions.close()); });
+  monitor.unref(); server.on('close', () => { shuttingDown = true; clearInterval(monitor); for (const controller of active.values()) controller.abort(); void Promise.allSettled([analysisReports.close(), ...inFlight]).then(() => sessions.close()); });
   return server;
 }
 

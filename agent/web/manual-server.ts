@@ -15,6 +15,8 @@ import { loadThetaProjectEnvironment, repositoryRoot } from '../src/environment.
 import { assertRequestOrigin, AgentAccessError } from './deployment.js';
 import { exportBuiltinStopwords, parseStopwords, STOPWORD_BYTES } from './stopwords.js';
 import { stageDelivery, createDeliveryZip } from './delivery-archive.js';
+import { AnalysisReports } from './analysis-reports.js';
+import { createConfiguredProvider } from '../src/providers/configured-provider.js';
 
 // 手动工作台是独立宿主：没有 ConversationAgent、对话会话或确认卡映射。
 // 只复用底层数据导入、模型计算和结果文件能力；存储也与 .theta_agent 分开。
@@ -32,6 +34,7 @@ const safeName = (name: string, maxLength = 160) => { if (typeof name !== 'strin
 const projectNameKey = (name: string) => name.trim().normalize('NFC').toLowerCase();
 
 export function createManualServer(home: string, worker: CapabilityWorker = new PythonCapabilityWorker(), options: { localToken?: string } = {}) {
+  const analysisReports = new AnalysisReports(home, worker);
   mkdirSync(home, { recursive: true });
   const db = new DatabaseSync(path.join(home, 'manual.sqlite'));
   db.exec('PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT NOT NULL, value TEXT NOT NULL)');
@@ -97,7 +100,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
       const receipt = approvals.decide(approval.id, request.runId, approval.hash, true);
       await compute.submit(request, receipt);
       job = get('job', id);
-      if (!job.workers.some((item: RecordValue) => item.id === request.jobId)) job.workers.push({ id: request.jobId, model });
+      if (!job.workers.some((item: RecordValue) => item.id === request.jobId)) job.workers.push({ id: request.jobId, model, topicCount: request.plan.params.num_topics ?? request.plan.params.max_topics });
       job.queue.shift();
       save('job', job);
       observations.delete(id);
@@ -117,10 +120,11 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
       // A submission or cancellation may have updated this row while we waited.
       job = get('job', job.id);
       const failed = states.find(state => state.status === 'failed' || state.status === 'cancelled');
-      const done = states.length === job.models.length && states.every(state => state.status === 'completed');
+      const totalExperiments = job.experimentCount ?? job.models.length;
+      const done = states.length === totalExperiments && states.every(state => state.status === 'completed');
       const active = states.find(state => ['running', 'queued'].includes(state.status));
       const status = job.cancel_requested ? (active || dispatching.has(job.id) ? 'cancelling' : 'cancelled') : active || job.queue?.length ? 'running' : failed || job.submission_error ? 'failed' : done ? 'succeeded' : job.status;
-      const progress = states.length ? Math.round(states.reduce((sum, state) => sum + state.percent, 0) / job.models.length) : 0;
+      const progress = states.length ? Math.round(states.reduce((sum, state) => sum + state.percent, 0) / totalExperiments) : 0;
       Object.assign(job, { status, progress, states, error_message: job.cancel_requested ? '任务已由用户取消' : failed?.error ?? job.error_message }); save('job', job);
       for (const project of list('project')) {
         if (String(project.task_id) !== String(job.id)) continue;
@@ -286,6 +290,8 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
         const stopwords = input.stopwords_id == null ? undefined : get('stopwords', input.stopwords_id).words;
         const models = [...new Set(String(input.model_type ?? 'theta').split(','))];
         if (!models.length || models.some(model => !supported.has(model))) throw new HttpError(400, '模型选择无效');
+        const counts = input.topic_counts === undefined ? [] : input.topic_counts;
+        if (!Array.isArray(counts) || counts.length > 12 || counts.some(value => !Number.isInteger(value) || value < 2 || value > 500) || new Set(counts).size !== counts.length || Math.max(1, counts.length) * models.length > 48) throw new HttpError(400, '主题数组合需为 2–500 的不重复整数，最多 12 个主题数、48 组实验');
         const embeddingProvider = input.embedding_provider ?? 'local';
         if (!['local', 'cloud'].includes(embeddingProvider)) throw new HttpError(400, '请选择本地或云端嵌入');
         const cloud = models.includes('theta') && embeddingProvider === 'cloud';
@@ -295,7 +301,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
         const requestHash = contentHash(input);
         const existing = list('job').find(job => job.requestHash === requestHash && ['pending', 'running'].includes(job.status));
         if (existing) return json(res, { id: existing.id, status: existing.status, created_at: existing.created_at }, 200);
-        const job = insert('job', { requestHash, preflightIncomplete: true, dataset_name: file.dataset_name, file_id: file.id, models, mode: input.mode ?? 'zero_shot', num_topics: input.num_topics, status: 'pending', workers: [], created_at: new Date().toISOString() });
+        const job = insert('job', { requestHash, experimentCount: models.length * Math.max(1, counts.length), topicCounts: counts, preflightIncomplete: true, dataset_name: file.dataset_name, file_id: file.id, models, mode: input.mode ?? 'zero_shot', num_topics: input.num_topics, status: 'pending', workers: [], created_at: new Date().toISOString() });
         // Large Excel profiles and twelve preflights exceed an HTTP timeout. Return
         // the durable task immediately; all errors remain visible through polling.
         const preflight = (async () => {
@@ -303,9 +309,13 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
         const textColumn = input.text_column || profile.columns.find(column => /^(text|content|cleaned_content|body)$/iu.test(column)) || (profile.columns.length === 1 ? profile.columns[0] : undefined);
         if (!textColumn) throw new HttpError(400, '请选择文本列后再开始分析');
         const plans: { model: string; plan: TrainingPlan; execution: Record<string, unknown> }[] = [];
-        for (const model of models) {
+        for (const model of models) for (const count of counts.length ? counts : [undefined]) {
           const custom = input.model_params?.[model] ?? {};
           const params: TrainingPlan['params'] = { ...(model === 'hdp' ? { max_topics: input.num_topics ?? 20 } : { num_topics: input.num_topics ?? 20 }), vocab_size: input.vocab_size ?? 5000, ...custom, language: plotLanguage };
+          if (count !== undefined) {
+            for (const key of ['num_topics', 'max_topics', 'nr_topics', 'config.num_topics']) delete params[key];
+            params[model === 'hdp' ? 'max_topics' : 'num_topics'] = count;
+          }
           // Text preprocessing is automatic and independent from chart language.
           delete params['text.stopwords'];
           for (const key of ['config.train_ratio', 'config.val_ratio', 'config.test_ratio']) delete params[key];
@@ -380,7 +390,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
                 const kind = /\.(png|jpe?g|svg|pdf|webp)$/u.test(ext) ? 'figure' : /\.(csv|tsv)$/u.test(ext) ? 'table' : ext === '.npy' ? 'matrix' : ext === '.html' ? 'report' : 'artifact';
                 return { name, kind, url: `${base}/visualizations/file?${query}&path=${encodeURIComponent(name)}` };
               }) : [];
-              results.push({ jobId: state.id, runId: String(job.id), modelId, status: state.status, phase: state.phase, percent: state.percent, selected: false,
+              results.push({ jobId: state.id, runId: String(job.id), modelId, topicCount: current.workers.find((item: RecordValue) => item.id === state.id)?.topicCount, status: state.status, phase: state.phase, percent: state.percent, selected: false,
                 reportStatus: reportRecord?.status === 'generating' ? 'generating' : reportRecord?.status === 'failed' ? 'incomplete' : entries.length ? 'ready' : 'not_requested',
                 reportError: reportRecord?.error,
                 execution: { id: state.id, status: state.status, phase: state.phase, percent: state.percent, phaseHistory: state.phaseHistory, telemetry: state.telemetry },
@@ -401,6 +411,21 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
         const selectedState = owner ? ((await observe(owner)).states as ComputeJob[]).find(state => state.id === selectedJobId && state.status === 'completed') : undefined;
         if (selectedJobId && !selectedState?.resultDir) throw new HttpError(404, '该训练结果尚未完成');
         const result = selectedState?.resultDir ? { root: realpathSync.native(selectedState.resultDir), model: owner!.workers.find((item: RecordValue) => item.id === selectedJobId).model } : await latest(dataset, model);
+        if (parts[3] === 'analysis-report') {
+          if (!selectedJobId || !selectedState) throw new HttpError(400, '请选择已完成的具体任务');
+          const key = `${dataset}:${selectedJobId}`;
+          const format = url.searchParams.get('format');
+          if (method === 'POST') {
+            const input = JSON.parse((await body(req, 32 * 1024)).toString() || '{}');
+            if (input.researchQuestion !== undefined && (typeof input.researchQuestion !== 'string' || input.researchQuestion.length > 6000)) throw new HttpError(400, '研究问题须为不超过 6000 字的文本');
+            return json(res, analysisReports.start(key, selectedJobId, createConfiguredProvider(), input.researchQuestion?.trim() || `手动分析项目：${dataset}；模型：${result.model}；用户未提供其他研究目标。`), 202);
+          }
+          if (method !== 'GET') throw new HttpError(405, '不支持此操作');
+          if (!format) return json(res, analysisReports.state(key));
+          const file = analysisReports.file(key, format);
+          res.writeHead(200, { 'Content-Type': format === 'pdf' ? 'application/pdf' : 'text/markdown; charset=utf-8', 'Content-Disposition': `attachment; filename="THETA-analysis.${format}"`, 'Cache-Control': 'no-store' });
+          return createReadStream(file).pipe(res);
+        }
         if (parts[3] === 'regenerate' && method === 'POST') {
           if (!selectedJobId || !selectedState) throw new HttpError(400, '请选择已完成的具体任务');
           if (!reportWork.has(selectedJobId)) {
@@ -467,7 +492,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
   let resourcesClosed: Promise<void> = Promise.resolve();
   server.once('close', () => {
     closing = true; clearInterval(queueTimer);
-    resourcesClosed = Promise.allSettled([...reportWork.values(), ...preparing, ...dispatching.values(), ...[...observations.values()].map(item => item.pending)]).then(() => db.close());
+    resourcesClosed = Promise.allSettled([analysisReports.close(), ...reportWork.values(), ...preparing, ...dispatching.values(), ...[...observations.values()].map(item => item.pending)]).then(() => db.close());
   });
   const closeHttp = server.close.bind(server);
   // HTTP close alone does not wait for background work or release SQLite's Windows lock.

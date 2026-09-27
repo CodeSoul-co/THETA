@@ -79,6 +79,7 @@ export interface TrainSummaryResponse {
 // ==================== 训练参数 ====================
 
 export interface TrainParams {
+  topic_counts?: number[];
   data_split?: import('../data-split').DataSplit;
   embedding_provider?: 'local' | 'cloud';
   cloud_confirmed?: boolean;
@@ -219,6 +220,7 @@ export const BackendAPI = {
         stopwords_id: params.stopwords_id,
         vocab_size: params.vocab_size || 5000,
         model_params: params.model_params,
+        topic_counts: params.topic_counts,
         text_column: params.text_column,
         meta_columns: params.meta_columns,
         time_column: params.time_column,

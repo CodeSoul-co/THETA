@@ -79,12 +79,26 @@ test('edited multi-model configuration is validated atomically, queued serially 
   assert.equal((tools.readState(session) as any).lastObservedJob.percent, 100);
   assert.equal((await tools.resultCatalog(session)).results.length, 3);
 
+  await call('run_create'); await call('training_configure', { plans: [plan('lda')] });
+  const gridCard = session.pendingConfirmation!;
+  const gridInput = { checkpointId: gridCard.checkpointId, expectedContentHash: gridCard.contentHash,
+    plans: [plan('lda', { num_topics: 3 }), plan('lda', { num_topics: 6 })] };
+  await assert.rejects(tools.submitTrainingConfiguration(session, { ...gridInput, plans: [gridInput.plans[0], gridInput.plans[0]] }, save), /不能重复/);
+  await tools.submitTrainingConfiguration(session, gridInput, save);
+  jobs.set(submissions[3].jobId, { id: submissions[3].jobId, status: 'completed', phase: '完成', percent: 100 });
+  await call('run_status');
+  assert.notEqual(submissions[3].runId, submissions[4].runId, 'Different counts cannot overwrite the same research run');
+  assert.notEqual(submissions[3].jobId, submissions[4].jobId);
+  jobs.set(submissions[4].jobId, { id: submissions[4].jobId, status: 'completed', phase: '完成', percent: 100 });
+  await call('run_status');
+  assert.deepEqual((await tools.resultCatalog(session)).results.slice(-2).map(item => item.topicCount), [3, 6]);
+
   await call('run_create'); await call('training_configure', { plans: [plan('lda'), plan('btm')] });
   const pending = session.pendingConfirmation!;
   await tools.submitTrainingConfiguration(session, { checkpointId: pending.checkpointId, expectedContentHash: pending.contentHash, plans: pending.trainingPlans! }, save);
-  assert.equal(submissions.length, 4);
+  assert.equal(submissions.length, 6);
   await call('training_cancel'); await tools.approve(session, '确认', undefined, save);
-  await call('run_status'); assert.equal(submissions.length, 4, 'Cancelled queue never starts the second model');
+  await call('run_status'); assert.equal(submissions.length, 6, 'Cancelled queue never starts the second model');
   assert.equal(new ResearchStore(home).get<any>('run', session.runIds!.at(-1)!).lastObservedJob.status, 'cancelled');
 
   await call('run_create'); await call('training_configure', { plans: [plan('lda'), plan('theta', { mode: 'zero_shot' })] });
@@ -96,10 +110,10 @@ test('edited multi-model configuration is validated atomically, queued serially 
   const cloudInput = { checkpointId: cloudCard.checkpointId, expectedContentHash: cloudCard.contentHash, plans: cloudCard.trainingPlans! };
   await assert.rejects(tools.submitTrainingConfiguration(session, cloudInput, save), /明确勾选/u);
   await assert.rejects(tools.submitTrainingConfiguration(session, { ...cloudInput, cloudConfirmed: true, cloudSelection: { provider: 'fixture', model: 'changed', endpoint: 'https://example.invalid/v1' } }, save), /服务已变化/u);
-  assert.equal(submissions.length, 4);
+  assert.equal(submissions.length, 6);
   await tools.submitTrainingConfiguration(session, { ...cloudInput, cloudConfirmed: true, cloudSelection: { provider: 'fixture', model: 'embed', endpoint: 'https://example.invalid/v1' } }, save);
-  assert.equal(submissions.length, 5);
-  jobs.set(submissions[4].jobId, { id: submissions[4].jobId, status: 'completed', phase: '完成', percent: 100 });
-  await call('run_status'); assert.equal(submissions.length, 6); assert.equal(submissions[5].plan.params.embedding_provider, 'cloud');
-  assert.equal(new ResearchStore(home).get<any>('run', submissions[5].runId).plan.modelId, 'theta');
+  assert.equal(submissions.length, 7);
+  jobs.set(submissions[6].jobId, { id: submissions[6].jobId, status: 'completed', phase: '完成', percent: 100 });
+  await call('run_status'); assert.equal(submissions.length, 8); assert.equal(submissions[7].plan.params.embedding_provider, 'cloud');
+  assert.equal(new ResearchStore(home).get<any>('run', submissions[7].runId).plan.modelId, 'theta');
 });

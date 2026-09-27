@@ -29,6 +29,7 @@ configure_numba_cache()
 from . import capabilities, local_compute
 from . import execution_policy, runtime_environments
 from . import remote_report, figure_tools
+from . import analysis_report
 from .dataset import catalog, business, collection
 from .dataset.preprocess import preprocess
 
@@ -41,6 +42,8 @@ def statistics_call(name, payload):
     return getattr(engine, name)(payload)
 
 HANDLERS = {
+    "analysis_report.evidence": analysis_report.evidence,
+    "analysis_report.pdf": analysis_report.export_pdf,
     "statistics.methods": lambda p: statistics_call('catalog', p),
     "statistics.inspect": lambda p: statistics_call('inspect', p),
     "statistics.preview": lambda p: statistics_call('preview', p),

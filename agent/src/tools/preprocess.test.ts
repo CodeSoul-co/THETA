@@ -13,7 +13,7 @@ test('real preprocessing binds a new version to the shared training editor witho
   const home = mkdtempSync(path.join(tmpdir(), 'theta-preprocessing-'));
   const sessions = new ProductSessionStore(home), records = new ResearchStore(home);
   const session = sessions.create(); const file = path.join(home, 'input.csv');
-  const source = 'text,time\n  中文 English  ,2026-09-21\n第二篇研究,2026-09-20\n';
+  const source = 'text,time\n  中文 English  ,2026-09-21\n第二篇研究,2026-09-20\n第三篇教育研究,2026-09-19\n';
   writeFileSync(file, source);
   let submitted = 0;
   const tools = new LocalProductTools({runtimeDb:path.join(home,'runtime.sqlite'),uploadDir:path.join(home,'uploads'),worker:new PythonCapabilityWorker(),
