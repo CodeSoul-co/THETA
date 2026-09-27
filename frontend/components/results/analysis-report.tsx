@@ -1,13 +1,12 @@
 "use client"
 import { useEffect, useState } from 'react'
-import { apiFetch, API_BASE } from '@/lib/api/config'
+import { apiFetch } from '@/lib/api/config'
+import { analysisReportEndpoint } from '@/lib/analysis-report'
 import { resultDatasetName, type ResultSource } from './result-source'
 
 type Report = { status: 'idle' | 'running' | 'complete' | 'failed'; phase: string; error?: string; markdown?: boolean; pdf?: boolean }
 export function AnalysisReport({ source, jobId }: { source: ResultSource; jobId: string }) {
-  const endpoint = source.kind === 'run'
-    ? `/api/v3/runs/${encodeURIComponent(source.runId)}/analysis-report/${encodeURIComponent(jobId)}`
-    : `/api/results/${encodeURIComponent(resultDatasetName(source)!)}/analysis-report?job_id=${encodeURIComponent(jobId)}`
+  const endpoint = analysisReportEndpoint(source.kind, source.kind === 'run' ? source.runId : resultDatasetName(source)!, jobId)
   const [loaded, setLoaded] = useState<{ endpoint: string; state: Report }>()
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -19,7 +18,7 @@ export function AnalysisReport({ source, jobId }: { source: ResultSource; jobId:
     setError('')
     const read = async () => {
       try {
-        const response = await apiFetch<Report | { data: Report }>(API_BASE, endpoint)
+        const response = await apiFetch<Report | { data: Report }>('', endpoint)
         if (stopped) return
         const state = 'data' in response ? response.data : response
         setLoaded({ endpoint, state })
@@ -33,12 +32,12 @@ export function AnalysisReport({ source, jobId }: { source: ResultSource; jobId:
   const generate = async () => {
     setSubmitting(true); setError('')
     try {
-      const response = await apiFetch<Report | { data: Report }>(API_BASE, endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ researchQuestion: question }) })
+      const response = await apiFetch<Report | { data: Report }>('', endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ researchQuestion: question }) })
       setLoaded({ endpoint, state: 'data' in response ? response.data : response })
     } catch (e) { setError(e instanceof Error ? e.message : String(e)) }
     finally { setSubmitting(false) }
   }
-  const download = (format: string) => `${API_BASE}${endpoint}${endpoint.includes('?') ? '&' : '?'}format=${format}`
+  const download = (format: string) => `${endpoint}${endpoint.includes('?') ? '&' : '?'}format=${format}`
   return <section className="mt-4 space-y-3 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5">
     <h3 className="font-semibold text-slate-900">完整分析报告</h3>
     <p className="text-sm leading-6 text-slate-600">按数据描述性统计、数据分析、任务分析、建模描述、结论分析生成报告，涵盖当前模型的全量与各划分结果。使用“设置 → 模型 API”中配置的服务，并向该服务发送统计摘要、脱敏文本摘录和结果证据。仅在点击后生成，不会重新训练。</p>
