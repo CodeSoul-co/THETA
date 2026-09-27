@@ -10,7 +10,7 @@ def evidence(payload):
     from .capabilities import dataset_profile, verify_dataset
     from .dataset.business import understand
     # This validates the immutable result hash before reading any analysis evidence.
-    summary = results({**payload, 'view': 'summary'})
+    summary = results({**payload, 'view': 'analysis'})
     with database(payload['home']) as db:
         row = db.execute('SELECT request,value FROM jobs WHERE id=?', (payload['jobId'],)).fetchone()
     request, job = map(json.loads, row)
@@ -59,7 +59,12 @@ def evidence(payload):
         lines += [f'| {group_labels.get(key, key)} | {group["count"]} |' for key, group in splits['groups'].items()]
         if splits.get('testUsesAllData'):
             lines += ['', '**测试集使用全量数据，包含训练及验证记录，不是独立留出测试。**']
-    return {'description': '\n'.join(lines), 'dataset': dataset, 'profiles': profiles,
+    from .report_exhibits import collect_exhibits
+    summary['_resultHash'] = job['resultHash']
+    catalog = collect_exhibits(summary, root, Path(payload['directory'])) if payload.get('directory') else []
+    # Large matrix excerpts can crowd out the actual figures and tabular evidence.
+    summary = {key: value for key, value in summary.items() if key not in {'matrices', 'figures', 'tables', 'availableArtifacts'}}
+    return {'catalog': catalog, 'description': '\n'.join(lines), 'dataset': dataset, 'profiles': profiles,
             'plan': plan, 'context': contexts, 'summary': summary, 'splits': splits,
             'resultHash': job['resultHash'], 'jobId': job['id']}
 
@@ -88,36 +93,54 @@ def numeric_description(dataset, profile):
     return output
 
 
-def markdown_html(markdown):
-    """Small safe renderer for the report contract; never loads external resources."""
-    blocks, table, paragraph = [], [], []
-    def inline(text):
-        text = html.escape(text)
-        text = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', text)
-        text = re.sub(r'`([^`]+)`', r'<code>\1</code>', text)
-        return text
-    def flush():
-        if paragraph:
-            blocks.append('<p>' + '<br>'.join(map(inline, paragraph)) + '</p>'); paragraph.clear()
-        if table:
-            rows = [re.split(r'(?<!\\)\|', line.strip().strip('|')) for line in table]
-            rows = [row for row in rows if not all(re.fullmatch(r'\s*:?-+:?\s*', x) for x in row)]
-            blocks.append('<table>' + ''.join('<tr>' + ''.join(f'<{"th" if i == 0 else "td"}>' + inline(x.strip().replace('\\|', '|')) + f'</{"th" if i == 0 else "td"}>' for x in row) + '</tr>' for i, row in enumerate(rows)) + '</table>'); table.clear()
-    fenced = False
-    for line in markdown.splitlines():
-        if line.startswith('```'):
-            flush(); fenced = not fenced; continue
-        if not fenced and line.startswith('|'):
-            if paragraph: flush()
-            table.append(line); continue
-        if table: flush()
-        heading = re.match(r'^(#{1,4})\s+(.+)', line) if not fenced else None
-        if heading:
-            flush(); level = len(heading[1]); blocks.append(f'<h{level}>' + inline(heading[2]) + f'</h{level}>')
-        elif not line.strip(): flush()
-        else: paragraph.append(line)
-    flush()
-    return '<html><body>' + ''.join(blocks) + '</body></html>'
+def markdown_html(markdown, assets=None):
+    """CommonMark + tables, with HTML disabled and only verified local images."""
+    from markdown_it import MarkdownIt
+    renderer = MarkdownIt('commonmark', {'html': False, 'breaks': False}).enable('table')
+    assets = assets or {}
+    def image(tokens, index, options, env):
+        token = tokens[index]
+        src = token.attrGet('src')
+        if src not in assets:
+            return '<span>[图片未包含在报告中]</span>'
+        width, height = assets[src]
+        # Bound both dimensions to keep a figure and caption readable on A4.
+        scale = min(500 / width, 430 / height, 1)
+        return f'<img src="{html.escape(src, quote=True)}" width="{int(width * scale)}" height="{int(height * scale)}" />'
+    renderer.renderer.rules['image'] = image
+    # Source links are readable text in the PDF; no network or file URI navigation.
+    renderer.renderer.rules['link_open'] = lambda *args: '<span>'
+    renderer.renderer.rules['link_close'] = lambda *args: '</span>'
+    return '<html><body>' + renderer.render(markdown) + '</body></html>'
+
+
+def report_blocks(markdown):
+    """Keep captions with exhibits and repeat headers for long source tables."""
+    from markdown_it import MarkdownIt
+    tokens = MarkdownIt('commonmark', {'html': False}).enable('table').parse(markdown)
+    lines = markdown.splitlines()
+    blocks = []
+    for token in tokens:
+        if token.level != 0 or not token.map or token.type.endswith('_close'): continue
+        block = '\n'.join(lines[token.map[0]:token.map[1]])
+        if token.type == 'table_open':
+            rows = block.splitlines()
+            for offset in range(2, len(rows), 14):
+                blocks.append(('table', '\n'.join(rows[:2] + rows[offset:offset + 14])))
+        else: blocks.append((token.type, block))
+    groups = []
+    i = 0
+    while i < len(blocks):
+        kind, block = blocks[i]; i += 1
+        if block.startswith('!['):
+            while i < len(blocks) and (blocks[i][1].startswith('**图') or blocks[i][1].startswith('来源：')):
+                block += '\n\n' + blocks[i][1]; i += 1
+        elif block.startswith('**表') and i < len(blocks) and blocks[i][0] == 'table':
+            block += '\n\n' + blocks[i][1]; i += 1
+        elif kind == 'heading_open' and i < len(blocks):
+            block += '\n\n' + blocks[i][1]; i += 1
+        groups.append(block)
+    return groups
 
 
 def export_pdf(payload):
@@ -127,18 +150,38 @@ def export_pdf(payload):
     markdown = (directory / 'analysis.md').read_text(encoding='utf-8')
     target = directory / 'analysis.pdf'
     buffer = BytesIO()
-    css = 'body{font-family:sans-serif;font-size:10pt;line-height:1.6;color:#172338}h1{font-size:22pt}h2{font-size:15pt;margin-top:22pt}h3{font-size:12pt}table{width:100%;border-collapse:collapse;margin:12pt 0;font-size:8pt}td,th{border:0.5pt solid #cdd5df;padding:5pt;text-align:left}th{background:#eef2f8}code{font-size:9pt}p{overflow-wrap:anywhere}'
-    story = pymupdf.Story(html=markdown_html(markdown), user_css=css)
+    assets = {}
+    archive = pymupdf.Archive()
+    for file in sorted((directory / 'assets').glob('*.png')):
+        if file.is_symlink(): raise ValueError('报告图片不能是符号链接')
+        pix = pymupdf.Pixmap(file.read_bytes())
+        name = 'assets/' + file.name
+        assets[name] = (pix.width, pix.height)
+        archive.add((file.read_bytes(), name))
+    css = 'body{font-family:sans-serif;font-size:10pt;line-height:1.6;color:#172338}h1{font-size:22pt}h2{font-size:15pt;margin-top:22pt;page-break-after:avoid}h3{font-size:12pt;page-break-after:avoid}h4{font-size:10pt;page-break-after:avoid}img{display:block;margin:8pt auto}thead{display:table-header-group}tr{page-break-inside:avoid}table{page-break-inside:avoid;width:100%;border-collapse:collapse;margin:12pt 0;font-size:8pt}td,th{border:0.5pt solid #cdd5df;padding:5pt;text-align:left}th{font-weight:bold}code{font-size:9pt}p{overflow-wrap:anywhere}'
     box = pymupdf.paper_rect('a4'); content = box + (42, 42, -42, -42)
     writer = pymupdf.DocumentWriter(buffer)
+    pages, device, y = 1, writer.begin_page(box), content.y0
     try:
-        more, pages = True, 0
-        while more:
-            pages += 1
-            if pages > 150: raise ValueError('报告超过 150 页，请缩短内容后重试')
-            device = writer.begin_page(box)
-            more, _ = story.place(content)
-            story.draw(device); writer.end_page()
+        for block in report_blocks(markdown):
+            rendered = markdown_html(block, assets)
+            story = pymupdf.Story(html=rendered, user_css=css, archive=archive)
+            more, filled = story.place(pymupdf.Rect(content.x0, y, content.x1, content.y1))
+            # Tables and image/caption groups start on a fresh page if they do
+            # not fit. CSS page-break-inside is not honored by all Story builds.
+            if more and y > content.y0:
+                writer.end_page(); pages += 1; device = writer.begin_page(box); y = content.y0
+                story = pymupdf.Story(html=rendered, user_css=css, archive=archive)
+                more, filled = story.place(content)
+            while True:
+                if pages > 150: raise ValueError('报告超过 150 页，请缩短内容后重试')
+                story.draw(device)
+                if not more:
+                    y = filled[3] + 5
+                    break
+                writer.end_page(); pages += 1; device = writer.begin_page(box); y = content.y0
+                more, filled = story.place(content)
+        writer.end_page()
     finally: writer.close()
     with pymupdf.open(stream=buffer.getvalue(), filetype='pdf') as pdf:
         if not len(pdf) or not ''.join(page.get_text() for page in pdf).strip():
@@ -150,4 +193,10 @@ def export_pdf(payload):
         temporary = directory / 'analysis.partial.pdf'
         temporary.write_bytes(pdf.tobytes(garbage=3, deflate=True))
     temporary.replace(target)
+    import zipfile
+    with zipfile.ZipFile(directory / 'analysis.zip', 'w', zipfile.ZIP_DEFLATED) as bundle:
+        bundle.write(directory / 'analysis.md', 'analysis.md')
+        for file in sorted((directory / 'assets').glob('*')):
+            if file.is_file() and not file.is_symlink() and file.suffix in {'.png', '.csv'}:
+                bundle.write(file, 'assets/' + file.name)
     return {'pages': pages, 'file': str(target)}

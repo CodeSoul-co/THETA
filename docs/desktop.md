@@ -14,12 +14,12 @@ LDA, BTM, HDP and STM use their existing CPU implementations. CLI Agent plans ac
 
 ## Download and install
 
-Download from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.11):
+Download from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.12):
 
 | Platform | Installer | Installation |
 | --- | --- | --- |
-| macOS Apple Silicon | `THETA-0.3.11-mac-arm64.dmg` | Open the DMG and drag THETA into Applications |
-| Windows x64 | `THETA-0.3.11-win-x64.exe` | Run the installer |
+| macOS Apple Silicon | `THETA-0.3.12-mac-arm64.dmg` | Open the DMG and drag THETA into Applications |
+| Windows x64 | `THETA-0.3.12-win-x64.exe` | Run the installer |
 
 This is an unsigned preview without macOS notarization. Your operating system may show a security warning. Native Intel Mac and Windows ARM installers are not provided.
 
@@ -89,6 +89,8 @@ Output is under `desktop/release`: macOS app, DMG, and ZIP; Windows NSIS EXE. Bu
 From 0.3.8, use **Settings → App updates** or **THETA → Check for updates**. The app checks automatically about 30 seconds after launch and every six hours; this can be disabled. When a newer compatible version is found, a dialog shows the version and offers “Download update” or “Later”. A second notification appears when the download is ready. Download progress and errors appear in the app. Windows can restart to install after confirmation. The current unsigned Mac preview downloads the DMG directly; open it, quit THETA and replace the app in Applications. Signed Mac builds support native restart-to-install. Projects and settings are retained, and ordinary quitting never starts installation. Versions before 0.3.8 require one manual installation to receive this feature.
 
 ## Academic analysis reports and topic-count exploration
+
+Reports embed numbered training figures and their source tables near the analysis that cites them. Each caption identifies the data scope; excerpts state their row limits. Download the Markdown ZIP to keep images and complete CSVs beside the text, or use the standalone PDF. Use **Regenerate (model API)** to update an older report explicitly; failed writing preserves its previous download.
 
 After a job completes, use **Generate full analysis report** in its result view. Optionally enter the research question. The report uses the configured model API and sends statistics, redacted excerpts and verified results only after this click. It writes a Chinese academic report organized into descriptive statistics, data analysis, task analysis, modeling and conclusions, with paragraph-based reasoning and a target of approximately 5,000–8,000 Chinese characters when supported by evidence. Generation runs asynchronously; download Markdown and PDF separately. PDF-only retry preserves the completed Markdown. Closing the app interrupts unfinished generation, which can be retried on the next launch.
 

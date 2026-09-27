@@ -418,12 +418,12 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
           if (method === 'POST') {
             const input = JSON.parse((await body(req, 32 * 1024)).toString() || '{}');
             if (input.researchQuestion !== undefined && (typeof input.researchQuestion !== 'string' || input.researchQuestion.length > 6000)) throw new HttpError(400, '研究问题须为不超过 6000 字的文本');
-            return json(res, analysisReports.start(key, selectedJobId, createConfiguredProvider(), input.researchQuestion?.trim() || `手动分析项目：${dataset}；模型：${result.model}；用户未提供其他研究目标。`), 202);
+            return json(res, analysisReports.start(key, selectedJobId, createConfiguredProvider(), input.researchQuestion?.trim() || `手动分析项目：${dataset}；模型：${result.model}；用户未提供其他研究目标。`, input.regenerate === true), 202);
           }
           if (method !== 'GET') throw new HttpError(405, '不支持此操作');
           if (!format) return json(res, analysisReports.state(key));
           const file = analysisReports.file(key, format);
-          res.writeHead(200, { 'Content-Type': format === 'pdf' ? 'application/pdf' : 'text/markdown; charset=utf-8', 'Content-Disposition': `attachment; filename="THETA-analysis.${format}"`, 'Cache-Control': 'no-store' });
+          res.writeHead(200, { 'Content-Type': format === 'pdf' ? 'application/pdf' : format === 'zip' ? 'application/zip' : 'text/markdown; charset=utf-8', 'Content-Disposition': `attachment; filename="THETA-analysis.${format}"`, 'Cache-Control': 'no-store' });
           return createReadStream(file).pipe(res);
         }
         if (parts[3] === 'regenerate' && method === 'POST') {

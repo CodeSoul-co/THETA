@@ -446,3 +446,8 @@ xgboost==3.4.1
     # via -r ../agent/workers/statistics/requirements.txt
 xlrd==2.0.2
     # via -r ../agent/requirements.service.txt
+
+markdown-it-py==4.0.0
+    # via -r ../agent/requirements.service.txt
+mdurl==0.1.2
+    # via markdown-it-py

@@ -690,13 +690,13 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
         if (method === 'POST') {
           const input = JSON.parse((await readBody(req, 32 * 1024)).toString() || '{}');
           if (input.researchQuestion !== undefined && (typeof input.researchQuestion !== 'string' || input.researchQuestion.length > 6000)) throw new HttpError(400, '研究问题须为不超过 6000 字的文本');
-          return json(res, analysisReports.start(key, jobId, inferenceFactory(), input.researchQuestion?.trim() || session.lastUserIntent || session.title), 202);
+          return json(res, analysisReports.start(key, jobId, inferenceFactory(), input.researchQuestion?.trim() || session.lastUserIntent || session.title, input.regenerate === true), 202);
         }
         if (method !== 'GET') throw new HttpError(405, '不支持此操作');
         const format = url.searchParams.get('format');
         if (!format) return json(res, analysisReports.state(key));
         const file = analysisReports.file(key, format);
-        res.writeHead(200, { 'Content-Type': format === 'pdf' ? 'application/pdf' : 'text/markdown; charset=utf-8', 'Content-Disposition': `attachment; filename="THETA-analysis.${format}"`, 'Cache-Control': 'no-store' });
+        res.writeHead(200, { 'Content-Type': format === 'pdf' ? 'application/pdf' : format === 'zip' ? 'application/zip' : 'text/markdown; charset=utf-8', 'Content-Disposition': `attachment; filename="THETA-analysis.${format}"`, 'Cache-Control': 'no-store' });
         return createReadStream(file).pipe(res);
       }
       if (!action && method === 'DELETE') { const meta = records.get<WebMeta>('web-session', id); records.put('web-session', id, { ...meta, archived: true }); return json(res, { runId: id }); }

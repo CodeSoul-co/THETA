@@ -14,7 +14,7 @@ LDA、BTM、HDP、STM 继续使用已有 CPU 实现。CLI Agent 方案支持 `de
 
 ## 使用
 
-首版构建目标为 **macOS Apple Silicon（arm64）** 和 **Windows x64**。从 [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.11) 下载：Mac 使用 `THETA-0.3.11-mac-arm64.dmg`，Windows 使用 `THETA-0.3.11-win-x64.exe`。Mac 打开 DMG 后将 THETA 拖入「应用程序」；Windows 运行 EXE 安装程序。当前为未正式签名／公证的预览版，系统可能显示安全提示。暂不提供 Intel Mac 或 Windows ARM 原生版本。
+首版构建目标为 **macOS Apple Silicon（arm64）** 和 **Windows x64**。从 [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.12) 下载：Mac 使用 `THETA-0.3.12-mac-arm64.dmg`，Windows 使用 `THETA-0.3.12-win-x64.exe`。Mac 打开 DMG 后将 THETA 拖入「应用程序」；Windows 运行 EXE 安装程序。当前为未正式签名／公证的预览版，系统可能显示安全提示。暂不提供 Intel Mac 或 Windows ARM 原生版本。
 
 发行页提供 `SHA256SUMS.txt`，用于核对下载文件完整性。macOS 可运行 `shasum -a 256 文件名.dmg`；Windows PowerShell 可运行 `Get-FileHash 文件名.exe -Algorithm SHA256`，与校验文件对应行比较。
 
@@ -79,6 +79,8 @@ npm --prefix desktop run dist
 从 0.3.8 起，可使用“设置 → 应用更新”或“THETA → 检查更新”。应用在启动约 30 秒后及每六小时自动检查，可关闭自动检查。发现兼容的新版本后，会弹窗显示版本号，并提供“下载更新”和“稍后”；下载完成后再次提醒。下载进度与错误直接在应用内显示。Windows 确认后可重启安装。当前未正式签名的 Mac 预览版会直接下载 DMG，打开后退出 THETA，再替换“应用程序”中的旧版；正式签名的 Mac 构建支持原生重启安装。项目与配置会保留，普通退出不会触发安装。0.3.8 之前的版本需要手动安装一次，才能获得此功能。
 
 ## 学术分析报告与多主题数探索
+
+报告在论证段落附近引用并插入带编号的训练图表及其数据表，图注标明数据范围，表格摘录注明展示行数。需要编辑时下载 Markdown 图文包，保留正文旁的图片及完整 CSV 文件，也可直接下载独立 PDF。旧报告可点击**重新生成（调用模型 API）**更新；正文生成失败时保留旧报告。
 
 任务完成后，在结果页点击**生成完整分析报告**，可选填研究问题。只有点击后才会使用已配置的模型接口发送统计摘要、脱敏摘录与已校验结果。报告按描述性统计、数据分析、任务分析、建模描述、结论分析组织，采用连贯的学术段落，证据充分时以约 5000–8000 字为目标。后台异步生成，分别下载 Markdown 和 PDF。PDF 导出失败可单独重试，保留已生成正文。退出应用会中断未完成的生成，下次启动可重试。
 

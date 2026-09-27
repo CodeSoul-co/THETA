@@ -370,7 +370,7 @@ def results(payload: dict) -> dict:
         evidence[key] = all_items[offset:offset + page_size]
         evidence['nextOffset'] = offset + page_size if offset + page_size < len(all_items) else None
         evidence['itemCount'] = len(all_items)
-    else:
+    elif view != 'analysis':
         evidence['summaryCounts'] = {key: len(evidence[key]) for key in ['evidence', 'tables', 'figures', 'matrices']}
         for key, limit in [('evidence', 3), ('tables', 1), ('figures', 5)]:
             evidence[key] = evidence[key][:limit]

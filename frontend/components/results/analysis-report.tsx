@@ -4,7 +4,7 @@ import { apiFetch } from '@/lib/api/config'
 import { analysisReportEndpoint } from '@/lib/analysis-report'
 import { resultDatasetName, type ResultSource } from './result-source'
 
-type Report = { status: 'idle' | 'running' | 'complete' | 'failed'; phase: string; error?: string; markdown?: boolean; pdf?: boolean }
+type Report = { status: 'idle' | 'running' | 'complete' | 'failed'; phase: string; error?: string; markdown?: boolean; pdf?: boolean; bundle?: boolean }
 export function AnalysisReport({ source, jobId }: { source: ResultSource; jobId: string }) {
   const endpoint = analysisReportEndpoint(source.kind, source.kind === 'run' ? source.runId : resultDatasetName(source)!, jobId)
   const [loaded, setLoaded] = useState<{ endpoint: string; state: Report }>()
@@ -29,10 +29,10 @@ export function AnalysisReport({ source, jobId }: { source: ResultSource; jobId:
     return () => { stopped = true; clearTimeout(timer) }
   }, [endpoint, submitting, refresh])
   useEffect(() => { setQuestion('') }, [endpoint])
-  const generate = async () => {
+  const generate = async (regenerate = false) => {
     setSubmitting(true); setError('')
     try {
-      const response = await apiFetch<Report | { data: Report }>('', endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ researchQuestion: question }) })
+      const response = await apiFetch<Report | { data: Report }>('', endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ researchQuestion: question, regenerate }) })
       setLoaded({ endpoint, state: 'data' in response ? response.data : response })
     } catch (e) { setError(e instanceof Error ? e.message : String(e)) }
     finally { setSubmitting(false) }
@@ -40,7 +40,7 @@ export function AnalysisReport({ source, jobId }: { source: ResultSource; jobId:
   const download = (format: string) => `${endpoint}${endpoint.includes('?') ? '&' : '?'}format=${format}`
   return <section className="mt-4 space-y-3 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5">
     <h3 className="font-semibold text-slate-900">完整分析报告</h3>
-    <p className="text-sm leading-6 text-slate-600">按数据描述性统计、数据分析、任务分析、建模描述、结论分析生成报告，涵盖当前模型的全量与各划分结果。使用“设置 → 模型 API”中配置的服务，并向该服务发送统计摘要、脱敏文本摘录和结果证据。仅在点击后生成，不会重新训练。</p>
+    <p className="text-sm leading-6 text-slate-600">按数据描述性统计、数据分析、任务分析、建模描述、结论分析生成报告，涵盖当前模型的全量与各划分结果。使用“设置 → 模型 API”中配置的服务，并向该服务发送统计摘要、脱敏文本摘录和结果证据。正文引用并插入当前任务的原生图表，区分各数据集范围。仅在点击后生成，不会重新训练。</p>
     {report && !report.markdown && ['idle', 'failed'].includes(report.status) && <label className="block space-y-2 text-sm text-slate-700">
       <span>研究问题（可选）</span>
       <textarea key={endpoint} maxLength={6000} rows={3} value={question} onChange={e => setQuestion(e.target.value)} placeholder="希望通过这次数据分析回答什么问题？未填写时，依据当前任务目标组织报告。" className="w-full rounded-xl border border-slate-200 bg-white p-3" />
@@ -53,6 +53,9 @@ export function AnalysisReport({ source, jobId }: { source: ResultSource; jobId:
       {report?.status !== 'complete' && <button type="button" disabled={!report || submitting || report.status === 'running'} onClick={() => void generate()} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm text-white disabled:opacity-50">{submitting || report?.status === 'running' ? '正在生成…' : report?.status === 'failed' ? report.markdown ? '重试 PDF 导出' : '重试生成报告' : '生成完整分析报告'}</button>}
       {report?.markdown && <a href={download('md')} download className="rounded-xl border bg-white px-4 py-2 text-sm">下载 Markdown</a>}
       {report?.pdf && <a href={download('pdf')} download className="rounded-xl border bg-white px-4 py-2 text-sm">下载 PDF</a>}
+      {report?.bundle && <a href={download('zip')} download className="rounded-xl border bg-white px-4 py-2 text-sm">下载 Markdown 图文包</a>}
+      {report?.markdown && report.status !== 'running' && <button type="button" disabled={submitting} onClick={() => void generate(true)} className="rounded-xl border bg-white px-4 py-2 text-sm disabled:opacity-50">重新生成（调用模型 API）</button>}
     </div>
+    {report?.markdown && <p className="text-xs text-slate-500">PDF 包含完整图文；如需编辑 Markdown，请下载图文包并保留 assets 文件夹。重新生成会更新报告，生成正文失败时仍保留原报告。</p>}
   </section>
 }
