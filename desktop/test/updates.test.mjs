@@ -89,3 +89,36 @@ test('inconsistent native metadata cannot become an installable candidate', asyn
   await manager.check(); assert.equal(manager.state().status, 'error');
   await manager.download(); assert.equal(downloads, 0);
 });
+
+test('automatic startup checks announce a new version without downloading it', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
+  const notices = []; let requests = 0;
+  const manager = createUpdates({ version: '0.3.8', platform: 'darwin', arch: 'arm64', home: temp(t), enabled: true, manualMac: true,
+    emit() {}, notify: (kind, state) => notices.push({ kind, version: state.availableVersion }),
+    fetcher: async () => { requests++; return Response.json([release()]); },
+  });
+  t.after(() => manager.stop());
+  manager.start();
+  t.mock.timers.tick(29999); assert.equal(requests, 0);
+  t.mock.timers.tick(1);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(notices, [{ kind: 'available', version: '0.3.9' }]);
+  assert.equal(manager.state().status, 'available'); assert.equal(requests, 1);
+});
+
+test('automatic notification stays quiet when disabled or no newer release exists', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
+  let notices = 0, requests = 0;
+  const manager = createUpdates({ version: '0.3.9', platform: 'darwin', arch: 'arm64', home: temp(t), enabled: true, manualMac: true,
+    emit() {}, notify: () => notices++, fetcher: async () => { requests++; return Response.json([release()]); },
+  });
+  t.after(() => manager.stop());
+  manager.configure(false); manager.start();
+  t.mock.timers.tick(30000);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(requests, 0); assert.equal(notices, 0);
+  manager.configure(true);
+  t.mock.timers.tick(6 * 3600000);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(requests, 1); assert.equal(notices, 0); assert.equal(manager.state().status, 'current');
+});
