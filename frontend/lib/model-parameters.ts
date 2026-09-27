@@ -34,7 +34,7 @@ const labels: Record<string, string> = {
 export const parameterLabel = (key: string) => labels[key.split('.').at(-1)!] ?? '模型参数'
 export const parameterChoiceLabel = (value: string | number) => ({ true: '开启', false: '关闭', batch: '批量学习', online: '在线学习', zeroshot: '零样本推断', combined: '联合推断', relu: '线性整流', softplus: '平滑整流', gelu: '高斯误差线性', tanh: '双曲正切', sigmoid: '逻辑函数' }[String(value)] ?? String(value))
 // These are controlled by the data/embedding panels, never arbitrary credential fields.
-const managed = new Set(['vocab_size', 'prepare.vocab_size', 'language', 'lang', 'mode', 'model_size', 'text.stopwords',
+const managed = new Set(['config.train_ratio', 'config.val_ratio', 'config.test_ratio', 'vocab_size', 'prepare.vocab_size', 'language', 'lang', 'mode', 'model_size', 'text.stopwords',
   'embedding_provider', 'embedding_cloud_provider', 'embedding_model', 'embedding_api_base', 'embedding_api_key_env'])
 export function editableParameters(contract: ModelContract) {
   return Object.entries(contract.parameters).filter(([key]) => !managed.has(key))

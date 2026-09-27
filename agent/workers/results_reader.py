@@ -6,7 +6,7 @@ import json
 import re
 from pathlib import Path
 
-EVIDENCE_NAME = re.compile(r"^(?:metrics|topic_words|info|training_history|topic_evolution|covariate_effects|covariate_info)(?:_[\w.-]+)?\.json$")
+EVIDENCE_NAME = re.compile(r"^(?:metrics|topic_words|info|training_history|topic_evolution|covariate_effects|covariate_info|split_results)(?:_[\w.-]+)?\.json$")
 
 
 def tree_hash(root: Path) -> str:

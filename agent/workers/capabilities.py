@@ -243,6 +243,27 @@ def validate_plan(payload: dict) -> dict:
         raise ValueError("DTM 需要明确的时间列")
     if plan["modelId"] == "stm" and not plan.get("covariates"):
         raise ValueError("STM 需要明确的协变量列")
+    sys.path.insert(0, str(engine_root() / 'src/models'))
+    from data.dataset_split import assignments, plan_options
+    options = plan_options(plan)
+    if options.get('enabled') and options.get('mode') == 'upload':
+        sources = options.get('sources', {})
+        if set(sources) != {'train', 'validation', 'test'}: raise ValueError('请分别上传训练、验证和测试集')
+        roles = []
+        for role in ('train', 'validation', 'test'):
+            selection = sources[role]
+            info = dataset_profile({'dataset': selection['dataset']})
+            chosen = [selection.get('textColumn'), *selection.get('covariates', [])]
+            for field in ('timeColumn', 'labelColumn'):
+                if plan.get(field) and not selection.get(field): raise ValueError(f'{role} 数据集还需要选择{field}')
+                if selection.get(field): chosen.append(selection[field])
+            if len(selection.get('covariates', [])) != len(plan.get('covariates', [])):
+                raise ValueError('三份数据的元数据列数量和含义必须一致')
+            if any(column not in info['columns'] for column in chosen): raise ValueError(f'{role} 数据集的列选择无效')
+            roles.extend([role] * info['rowCount'])
+        assignments(len(roles), options, roles)
+    else:
+        assignments(profile['rowCount'], options)
     validate_parameters(engine_root(), plan)
     if 'prepare.time_slices' in plan['params']:
         if not plan.get('timeColumn'): raise ValueError('time_slices 必须对应已选时间列')

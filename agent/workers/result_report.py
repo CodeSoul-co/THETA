@@ -64,6 +64,16 @@ def generate_report(root, job, destination, *, workspace=None, dataset=None, pre
     plan = job.get('plan', {})
     params = plan.get('params', {})
     source = verify_dataset(dataset) if dataset else None
+    # The worker-bound normalized table carries the combined upload row order.
+    split_sources = (plan.get('dataSplit') or {}).get('sources', {})
+    verified_sources = [verify_dataset(item['dataset']) for item in split_sources.values()]
+    if prepared and Path(prepared).with_suffix('.split.json').is_file():
+        if file_hash(Path(prepared)) != job.get('preparedHash'):
+            raise ValueError('Normalized split data changed before reporting')
+        source = Path(prepared)
+        plan = {**plan, 'textColumn': 'text', 'covariates': [f'cov_{i}' for i in range(len(plan.get('covariates', [])))],
+                **({'timeColumn': 'year'} if plan.get('timeColumn') else {}),
+                **({'labelColumn': 'label'} if plan.get('labelColumn') else {})}
     metadata_dir = native.resolve_theta_data_dir(root, params.get('mode', 'zero_shot')) if model == 'theta' else Path(workspace) if workspace else None
     # The worker entry configures the visualization runtime (writable numba cache for
     # UMAP's cached kernels); a changed entry must invalidate cached reports.
@@ -73,6 +83,7 @@ def generate_report(root, job, destination, *, workspace=None, dataset=None, pre
               Path(native.__file__).parents[1] / 'artifact_utils.py', Path(__file__).with_name('result_analysis.py'),
               Path(__file__).with_name('results_reader.py'), Path(__file__).with_name('diagnostics.py'),
               engine_root() / 'src/models/row_provenance.py']
+    inputs.extend(verified_sources)
     if source:
         inputs.append(source)
     if prepared: inputs.append(Path(prepared))
@@ -124,7 +135,7 @@ def generate_report(root, job, destination, *, workspace=None, dataset=None, pre
                     raise ValueError('Source metadata exceeds the existing full-data reader limit')
                 text_column = plan['textColumn']
                 columns = list(dict.fromkeys([text_column, *plan.get('covariates', []),
-                    *[c for c in ['timestamp', 'year', 'date', '日期', 'channel'] if c in table.columns]]))
+                    *[c for c in ['timestamp', 'year', 'date', '日期', 'channel', 'source_file', 'source_row'] if c in table.columns]]))
                 rows = table.rows
                 aligned = False
                 indices = np.arange(len(rows))

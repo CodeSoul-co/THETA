@@ -7,6 +7,7 @@ const empty = z.object({}).strict();
 const model = z.object({ modelId: z.enum(['lda', 'btm', 'hdp', 'dtm', 'stm', 'bertopic', 'ctm', 'theta', 'etm', 'nvdm', 'gsm', 'prodlda']) }).strict();
 export const trainingPlanSchema = z.object({
   modelId: model.shape.modelId, textColumn: z.string().min(1), timeColumn: z.string().min(1).optional(), labelColumn: z.string().min(1).optional(), device: z.string().regex(/^(auto|cpu|cuda:[0-9]+)$/u).optional().describe('auto prefers an available NVIDIA CUDA GPU and retries GPU failures once on CPU. Windows defaults to auto; other platforms default to CPU. Respect explicit CPU requests.'),
+  dataSplit: z.object({ enabled: z.boolean(), mode: z.literal('ratio').default('ratio'), method: z.enum(['random', 'sequential']).default('random'), ratios: z.array(z.number().positive().max(1)).length(3).default([0.7, 0.2, 0.1]), seed: z.number().int().min(0).max(4294967295).default(42) }).strict().optional().describe('Disabled/default: 70% training, 30% validation, test on all rows (not held out). Enabled: disjoint train/validation/test ratios summing to 1; fit only training rows.'),
   covariates: z.array(z.string().min(1)).max(20).optional(),
   params: z.record(z.union([z.string().max(500), z.number().finite(), z.boolean(), z.null(), z.array(z.number().int().positive()).max(32)])).default({}).transform((params) => {
     if (typeof params.language !== 'string') return params;

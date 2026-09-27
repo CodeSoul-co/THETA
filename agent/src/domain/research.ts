@@ -4,7 +4,12 @@ export interface Dataset {
   inputKind?: "text" | "table"; documentCount?: number; recordCount?: number;
   datasetRef: string; sha256: string; fileName: string; managedPath: string; sizeBytes: number;
 }
+export interface DataSplit {
+  enabled: boolean; mode?: 'ratio' | 'upload'; method?: 'random' | 'sequential'; ratios?: number[]; seed?: number;
+  sources?: Record<string, { dataset: Dataset; textColumn: string; timeColumn?: string; labelColumn?: string; covariates?: string[] }>;
+}
 export interface TrainingPlan {
+  dataSplit?: DataSplit;
   modelId: string; textColumn: string; timeColumn?: string; labelColumn?: string; device?: string; covariates?: string[];
   params: Record<string, string | number | boolean | null | number[]>;
   rationale: string; timeoutSeconds: number; externalRequestLimit?: number;

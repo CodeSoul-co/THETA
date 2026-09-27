@@ -26,6 +26,7 @@ from datetime import datetime
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 from data.dataloader import create_dataloader
+from data.dataset_split import current as current_split, subset as split_subset
 from tqdm import tqdm
 
 # Add parent directory to path for imports
@@ -139,6 +140,31 @@ class BaselineTrainer:
         
         ensure_dir(Path(self.output_dir))
     
+    def split_rows(self):
+        source = self.workspace_dir / 'source_rows.npy'
+        return np.load(source) if source.exists() else None
+
+    def training_rows(self, values):
+        spec = current_split(len(values), self.split_rows())
+        if not spec: return values
+        indices = spec['groups']['train']
+        return [values[i] for i in indices] if isinstance(values, list) else values[indices]
+
+    def validation_loss(self, model, dataset, kind, batch_size):
+        if not current_split(len(dataset), self.split_rows()): return None
+        loader = DataLoader(split_subset(dataset, 'validation', self.split_rows()), batch_size=batch_size, shuffle=False)
+        model.eval()
+        total, count = 0., 0
+        with torch.no_grad():
+            for batch in loader:
+                values = [value.to(self.device) for value in batch]
+                if kind == 'ctm': output = model(*values)
+                elif kind == 'etm': output = model(torch.zeros(len(values[0]), 1, device=self.device), values[0])
+                else: output = model(values[0])
+                loss = output['loss'] if 'loss' in output else output['recon_loss'].mean() + output['kl_loss'].mean()
+                total += float(loss.mean().item()) * len(values[0]); count += len(values[0])
+        return total / count
+
     def get_model_output_dir(self, model_name: str, timestamp: str = None) -> Path:
         """
         Get output directory for a specific model.
@@ -332,7 +358,7 @@ class BaselineTrainer:
                 processor.load_csv(csv_path)
                 self.texts = processor.texts
                 self.sbert_embeddings = processor.get_sbert_embeddings(
-                    texts=self.texts,
+                    texts=self.training_rows(self.texts),
                     model_name=sbert_model
                 )
                 # Save SBERT embeddings
@@ -461,11 +487,11 @@ class BaselineTrainer:
         
         # Train
         start_time = time.time()
-        model.fit(self.bow_matrix)
+        model.fit(self.training_rows(self.bow_matrix))
         train_time = time.time() - start_time
         
         # Get results
-        theta = model.get_theta()
+        theta = model.get_theta(self.bow_matrix)
         beta = model.get_beta()
         topic_words = model.get_topic_words(self.vocab, top_k=10)
         perplexity = model.get_perplexity(self.bow_matrix)
@@ -578,7 +604,7 @@ class BaselineTrainer:
         
         dataset = TensorDataset(emb_tensor, bow_tensor)
         dataloader = create_dataloader(
-            dataset, 
+            split_subset(dataset, 'train', self.split_rows()),
             batch_size=batch_size, 
             shuffle=True,
             num_workers=4,
@@ -623,8 +649,11 @@ class BaselineTrainer:
             print(f"Epoch {epoch+1}/{epochs} - Loss: {avg_loss:.4f}")
             
             # Early stopping
-            if avg_loss < best_loss:
-                best_loss = avg_loss
+            val_loss = self.validation_loss(model, dataset, 'ctm', batch_size)
+            training_history[-1]['val_loss'] = val_loss
+            monitored_loss = val_loss if val_loss is not None else avg_loss
+            if monitored_loss < best_loss:
+                best_loss = monitored_loss
                 patience_counter = 0
             else:
                 patience_counter += 1
@@ -769,7 +798,7 @@ class BaselineTrainer:
                 elif self.texts is not None:
                     print("Training Word2Vec embeddings...")
                     word_embeddings = train_word2vec_embeddings(
-                        texts=self.texts,
+                        texts=self.training_rows(self.texts),
                         vocab=self.vocab,
                         embedding_dim=embedding_dim
                     )
@@ -797,7 +826,7 @@ class BaselineTrainer:
         bow_tensor = torch.tensor(bow_dense, dtype=torch.float32)
         
         dataset = TensorDataset(bow_tensor)
-        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        dataloader = DataLoader(split_subset(dataset, 'train', self.split_rows()), batch_size=batch_size, shuffle=True)
         
         # Optimizer
         optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -855,8 +884,11 @@ class BaselineTrainer:
             print(f"Epoch {epoch+1}/{epochs} - Loss: {avg_loss:.4f}, Recon: {avg_recon:.4f}, KL: {avg_kl:.4f}")
             
             # Early stopping
-            if avg_loss < best_loss:
-                best_loss = avg_loss
+            val_loss = self.validation_loss(model, dataset, 'etm', batch_size)
+            training_history[-1]['val_loss'] = val_loss
+            monitored_loss = val_loss if val_loss is not None else avg_loss
+            if monitored_loss < best_loss:
+                best_loss = monitored_loss
                 patience_counter = 0
             else:
                 patience_counter += 1
@@ -1021,7 +1053,8 @@ class BaselineTrainer:
             # Use dimensionality-reduced BOW as document representation
             from sklearn.decomposition import TruncatedSVD
             svd = TruncatedSVD(n_components=min(256, self.bow_matrix.shape[1] - 1))
-            doc_embeddings = svd.fit_transform(self.bow_matrix).astype(np.float32)
+            svd.fit(self.training_rows(self.bow_matrix))
+            doc_embeddings = svd.transform(self.bow_matrix).astype(np.float32)
             doc_embedding_dim = doc_embeddings.shape[1]
         
         # Create dataset
@@ -1031,16 +1064,16 @@ class BaselineTrainer:
             torch.tensor(time_indices, dtype=torch.long)
         )
         
-        # Split train and validation sets
-        n_total = len(dataset)
-        n_train = int(n_total * 0.9)
-        n_val = n_total - n_train
-        
-        train_dataset, val_dataset = torch.utils.data.random_split(
-            dataset, [n_train, n_val],
-            generator=torch.Generator().manual_seed(42)
-        )
-        
+        spec = current_split(len(dataset), self.split_rows())
+        if spec:
+            train_dataset = split_subset(dataset, 'train', self.split_rows())
+            val_dataset = split_subset(dataset, 'validation', self.split_rows())
+            n_train, n_val = len(train_dataset), len(val_dataset)
+        else:
+            n_train = int(len(dataset) * 0.9)
+            n_val = len(dataset) - n_train
+            train_dataset, val_dataset = torch.utils.data.random_split(dataset, [n_train, n_val], generator=torch.Generator().manual_seed(42))
+
         train_loader = create_dataloader(
             train_dataset, 
             batch_size=batch_size, 
@@ -1298,12 +1331,12 @@ class BaselineTrainer:
         
         # Handle both sparse and dense matrices
         bow_dense = self.bow_matrix.toarray() if sp.issparse(self.bow_matrix) else self.bow_matrix
-        model.fit(bow_dense, vocab=self.vocab)
+        model.fit(self.training_rows(bow_dense), vocab=self.vocab)
         
         train_time = time.time() - start_time
         
         # Get results
-        theta = model.get_theta()
+        theta = model.get_theta(self.bow_matrix)
         beta = model.get_beta()
         actual_topics = model.actual_num_topics
         
@@ -1359,8 +1392,8 @@ class BaselineTrainer:
         # Handle both sparse and dense matrices
         bow_dense = self.bow_matrix.toarray() if sp.issparse(self.bow_matrix) else self.bow_matrix
         model.fit(
-            bow_dense,
-            covariates=covariates,
+            self.training_rows(bow_dense),
+            covariates=self.training_rows(covariates),
             covariate_names=covariate_names,
             vocab=self.vocab,
             dataset=self.dataset
@@ -1369,7 +1402,7 @@ class BaselineTrainer:
         train_time = time.time() - start_time
         
         # Get results
-        theta = model.get_theta()
+        theta = model.get_theta(self.bow_matrix)
         beta = model.get_beta()
         topic_words = {
             f"topic_{topic_id}": [word for word, _ in model.get_topic_words(topic_id, top_n=10, vocab=self.vocab)]
@@ -1457,12 +1490,12 @@ class BaselineTrainer:
         
         # Handle both sparse and dense matrices
         bow_dense = self.bow_matrix.toarray() if sp.issparse(self.bow_matrix) else self.bow_matrix
-        model.fit(bow_dense, vocab=self.vocab)
+        model.fit(self.training_rows(bow_dense), vocab=self.vocab)
         
         train_time = time.time() - start_time
         
         # Get results
-        theta = model.get_theta()
+        theta = model.get_theta(self.bow_matrix)
         beta_matrix = model.get_beta()
         
         # Save results
@@ -1515,7 +1548,7 @@ class BaselineTrainer:
         bow_dense = self.bow_matrix.toarray() if sp.issparse(self.bow_matrix) else self.bow_matrix
         bow_tensor = torch.FloatTensor(bow_dense)
         dataset = TensorDataset(bow_tensor)
-        dataloader = create_dataloader(dataset, batch_size=batch_size, shuffle=True, num_workers=0)
+        dataloader = create_dataloader(split_subset(dataset, 'train', self.split_rows()), batch_size=batch_size, shuffle=True, num_workers=0)
         
         # Optimizer
         optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -1546,9 +1579,9 @@ class BaselineTrainer:
                 total_recon += output['recon_loss'].sum().item()
                 total_kl += output['kl_loss'].sum().item()
             
-            avg_loss = total_loss / len(bow_tensor)
-            avg_recon = total_recon / len(bow_tensor)
-            avg_kl = total_kl / len(bow_tensor)
+            avg_loss = total_loss / len(dataloader.dataset)
+            avg_recon = total_recon / len(dataloader.dataset)
+            avg_kl = total_kl / len(dataloader.dataset)
             
             training_history.append({
                 'epoch': epoch + 1,
@@ -1558,8 +1591,11 @@ class BaselineTrainer:
             })
             
             print(f"Epoch {epoch+1}/{epochs} | Loss: {avg_loss:.4f} | Recon: {avg_recon:.4f} | KL: {avg_kl:.4f}")
-            if avg_loss < best_loss:
-                best_loss = avg_loss
+            val_loss = self.validation_loss(model, dataset, 'neural', batch_size)
+            training_history[-1]['val_loss'] = val_loss
+            monitored_loss = val_loss if val_loss is not None else avg_loss
+            if monitored_loss < best_loss:
+                best_loss = monitored_loss
                 best_model_state = {key: value.detach().clone() for key, value in model.state_dict().items()}
                 patience_counter = 0
             else:
@@ -1703,7 +1739,7 @@ class BaselineTrainer:
         
         # Fit model
         print(f"  Fitting BERTopic on {len(texts)} documents...")
-        model.fit(texts, embeddings=embeddings)
+        model.fit(self.training_rows(texts), embeddings=self.training_rows(embeddings) if embeddings is not None else None)
         
         train_time = time.time() - start_time
         
@@ -1712,7 +1748,7 @@ class BaselineTrainer:
         print(f"  Outlier documents: {model.outlier_count}")
         
         # Get theta (document-topic distribution)
-        theta = model.get_theta()
+        theta = model.transform(texts, embeddings=embeddings)
         if theta is not None and len(theta.shape) == 1:
             # If 1D (topic assignments), convert to probability matrix
             num_docs = len(texts)

@@ -390,3 +390,33 @@ test('truncated uploads are rejected and document collections cannot include ano
   const files = await (await fetch(base + '/api/files')).json() as any[];
   assert.equal(files.length, 2, 'Original upload stays available after combining');
 });
+
+test('独立划分使用本项目上传回执与各自列选择，拒绝跨项目文件', async () => {
+  const home = mkdtempSync(path.join(os.tmpdir(), 'theta-manual-splits-'));
+  const previews: any[] = [];
+  const worker: CapabilityWorker = { async call<T>(operation: string, input: any): Promise<T> {
+    if (operation === 'dataset.import') return { datasetRef: input.filePath, sha256: input.filePath, managedPath: input.filePath, fileName: 'data.csv' } as T;
+    if (operation === 'dataset.profile') return { columns: ['body', 'text', 'message'] } as T;
+    if (operation === 'compute.preview') { previews.push(input.plan); return { execution: {}, readiness: { ready: false } } as T; }
+    throw new Error(operation);
+  } };
+  const server = createManualServer(home, worker);
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  try {
+    const upload = async (dataset: string, name: string) => (await (await fetch(`${base}/api/upload?dataset_name=${dataset}&filename=${name}`, { method: 'POST', body: 'body\nfixture\n' })).json()) as any;
+    const train = await upload('split', 'train.csv'), val = await upload('split', 'val.txt'), test = await upload('split', 'test.json');
+    const foreign = await upload('foreign', 'other.csv');
+    const sources = { train: { fileId: train.id, textColumn: 'body', dataset: { managedPath: '/untrusted' } }, validation: { fileId: val.id, textColumn: 'text' }, test: { fileId: test.id, textColumn: 'message' } };
+    const start = (values: any) => fetch(base + '/api/train/start', { method: 'POST', body: JSON.stringify({ file_id: train.id, dataset_name: 'split', model_type: 'lda', text_column: 'body', data_split: { enabled: true, mode: 'upload', sources: values } }) });
+    assert.equal((await start(sources)).status, 201);
+    for (let i = 0; !previews.length && i < 20; i++) await new Promise(resolve => setTimeout(resolve, 10));
+    assert.equal(previews[0].dataSplit.sources.validation.textColumn, 'text');
+    assert.notEqual(previews[0].dataSplit.sources.train.dataset.managedPath, '/untrusted');
+    assert.equal((await start({ ...sources, test: { ...sources.test, fileId: foreign.id } })).status, 400);
+    assert.equal((await start({ ...sources, test: sources.train })).status, 400);
+  } finally {
+    await new Promise<void>(resolve => server.close(() => resolve()));
+    rmSync(home, { recursive: true, force: true });
+  }
+});

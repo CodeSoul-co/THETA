@@ -82,7 +82,7 @@ class ModelContractTests(unittest.TestCase):
 
     def test_supervised_label_mapping_and_missing_labels_fail_before_submission(self):
         with tempfile.TemporaryDirectory() as home:
-            file = Path(home)/'data.csv'; file.write_text('body,target,year\nfirst text,A,2020\nsecond text,B,2021\n')
+            file = Path(home)/'data.csv'; file.write_text('body,target,year\nfirst text,A,2020\nsecond text,B,2021\nthird text,A,2022\nfourth text,B,2023\n')
             dataset = dataset_import({'filePath': str(file), 'uploadDir': str(Path(home)/'uploads')})
             plan = {'modelId': 'theta', 'textColumn': 'body', 'labelColumn': 'target', 'params': {'mode': 'supervised'}, 'timeoutSeconds': 30}
             validate_plan({'plan': plan, 'dataset': dataset})

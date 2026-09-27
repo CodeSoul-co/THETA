@@ -788,6 +788,11 @@ def run_baseline(model_name: str, args) -> Dict[str, Any]:
             metrics = evaluator.compute_all_metrics()
             # Save metrics JSON to model_dir
             evaluator.save_metrics()
+            from data.dataset_split import export_results
+            rows_file = Path(workspace_dir) / 'source_rows.npy'
+            source_rows = np.load(rows_file) if rows_file.exists() else None
+            export_results(model_dir, theta, beta, bow_matrix, vocab, model_name, source_rows)
+
             
             result['eval_status'] = 'completed'
             result['metrics'] = {

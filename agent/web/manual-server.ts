@@ -137,7 +137,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
     throw new HttpError(404, '该模型还没有已完成的结果');
   };
   const files = (root: string): string[] => readdirSync(root, { withFileTypes: true }).flatMap(entry => entry.isSymbolicLink() ? [] : entry.isDirectory() ? files(path.join(root, entry.name)) : [path.join(root, entry.name)]);
-  const readResult = (root: string, pattern: RegExp) => { const file = files(root).find(file => pattern.test(path.basename(file))); return file ? JSON.parse(readFileSync(file, 'utf8')) : {}; };
+  const readResult = (root: string, pattern: RegExp) => { const file = files(root).find(file => !path.relative(root, file).split(path.sep).includes('splits') && pattern.test(path.basename(file))); return file ? JSON.parse(readFileSync(file, 'utf8')) : {}; };
   const topics = (root: string): Record<string, [string, number | null][]> => {
     const raw = readResult(root, /^topic_words.*\.json$/u); const values = raw.topics ?? raw.topic_words ?? raw;
     return Object.fromEntries(Object.entries(values).filter(([, value]) => Array.isArray(value)).map(([key, value]) => [key, (value as unknown[]).map(word => Array.isArray(word) ? [String(word[0]), typeof word[1] === 'number' ? word[1] : null] : typeof word === 'object' && word ? [String((word as RecordValue).word), (word as RecordValue).weight ?? null] : [String(word), null])]));
@@ -254,6 +254,28 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
       if (url.pathname === '/api/train/start' && method === 'POST') {
         const input = JSON.parse((await body(req)).toString()); const file = get('file', input.file_id);
         if (file.dataset_name !== input.dataset_name) throw new HttpError(400, '上传文件与数据集不匹配');
+        if (input.data_split != null && (typeof input.data_split !== 'object' || typeof input.data_split.enabled !== 'boolean')) throw new HttpError(400, '数据划分配置无效');
+        let dataSplit: TrainingPlan['dataSplit'] = { enabled: false };
+        if (input.data_split?.enabled) {
+          const requested = input.data_split;
+          dataSplit = { enabled: true, mode: requested.mode, method: requested.method, ratios: requested.ratios, seed: requested.seed };
+          if (requested.mode === 'upload') {
+            dataSplit.sources = {};
+            const hashes = new Set<string>();
+            for (const role of ['train', 'validation', 'test']) {
+              const selection = requested.sources?.[role];
+              if (!selection?.fileId || typeof selection.textColumn !== 'string') throw new HttpError(400, '请分别上传训练、验证和测试集并选择正文列');
+              const source = get('file', selection.fileId);
+              if (source.dataset_name !== file.dataset_name) throw new HttpError(400, '划分文件必须属于当前项目');
+              if (hashes.has(source.dataset.sha256)) throw new HttpError(400, '三份独立数据不能使用同一份文件，请检查上传内容');
+              hashes.add(source.dataset.sha256);
+              dataSplit.sources[role] = { dataset: source.dataset, textColumn: selection.textColumn,
+                ...(selection.timeColumn ? { timeColumn: selection.timeColumn } : {}),
+                ...(selection.labelColumn ? { labelColumn: selection.labelColumn } : {}),
+                covariates: selection.covariates ?? [] };
+            }
+          }
+        }
         const plotLanguage = input.plot_language ?? input.language ?? 'zh';
         if (!['zh', 'en', 'chinese', 'english'].includes(plotLanguage)) throw new HttpError(400, '请选择中文或英文绘图语言');
         const stopwords = input.stopwords_id == null ? undefined : get('stopwords', input.stopwords_id).words;
@@ -281,9 +303,10 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
           const params: TrainingPlan['params'] = { ...(model === 'hdp' ? { max_topics: input.num_topics ?? 20 } : { num_topics: input.num_topics ?? 20 }), vocab_size: input.vocab_size ?? 5000, ...custom, language: plotLanguage };
           // Text preprocessing is automatic and independent from chart language.
           delete params['text.stopwords'];
+          for (const key of ['config.train_ratio', 'config.val_ratio', 'config.test_ratio']) delete params[key];
           if (stopwords) params['text.stopwords'] = stopwords.join('\n');
           if (model === 'theta') Object.assign(params, { mode: input.mode ?? 'zero_shot', model_size: input.model_size ?? '0.6B', embedding_provider: embeddingProvider });
-          const plan: TrainingPlan = { modelId: model, textColumn, params, timeoutSeconds: 43200, device: process.platform === 'win32' ? 'auto' : 'cpu', rationale: '用户在手动工作台明确提交的参数', ...(model === 'theta' && cloud ? { externalRequestLimit } : {}), ...(input.time_column ? { timeColumn: input.time_column } : {}), ...(input.label_column ? { labelColumn: input.label_column } : {}), ...(model === 'stm' ? { covariates: input.meta_columns ?? [] } : {}) };
+          const plan: TrainingPlan = { modelId: model, textColumn, dataSplit, params, timeoutSeconds: 43200, device: process.platform === 'win32' ? 'auto' : 'cpu', rationale: '用户在手动工作台明确提交的参数', ...(model === 'theta' && cloud ? { externalRequestLimit } : {}), ...(input.time_column ? { timeColumn: input.time_column } : {}), ...(input.label_column ? { labelColumn: input.label_column } : {}), ...(model === 'stm' ? { covariates: input.meta_columns ?? [] } : {}) };
           const preview = await worker.call<{ execution: Record<string, unknown>; readiness: { ready: boolean; missing?: unknown } }>('compute.preview', { dataset: file.dataset, plan });
           if (!preview.readiness.ready) throw new HttpError(400, `${model.toUpperCase()} 的本地运行环境或模型权重未就绪，请先配置计算环境。`);
           if ((preview.execution.embedding as RecordValue)?.mode !== (model === 'theta' && cloud ? 'cloud' : 'local')) throw new HttpError(400, '实际嵌入策略与用户选择不一致，请重新确认');

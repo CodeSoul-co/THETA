@@ -246,6 +246,7 @@ class BERTopicModel(TraditionalTopicModel):
             raise ValueError("Model not fitted. Call fit() first.")
         
         topics, probs = self.model.transform(texts, embeddings=embeddings)
+        self.prediction_topics_ = topics
         
         if probs is None or np.asarray(probs).ndim == 1:
             # If probabilities not available, create one-hot encoding

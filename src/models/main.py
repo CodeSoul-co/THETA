@@ -594,10 +594,15 @@ def train_two_stage(
     n_val = int(n_total * config.model.val_ratio)
     n_test = n_total - n_train - n_val
 
-    train_dataset, val_dataset, test_dataset = random_split(
-        dataset, [n_train, n_val, n_test],
-        generator=torch.Generator().manual_seed(config.seed)
-    )
+    from data.dataset_split import current as current_split, subset as split_subset
+    if current_split(len(dataset)):
+        train_dataset = split_subset(dataset, 'train')
+        val_dataset = split_subset(dataset, 'validation')
+        test_dataset = split_subset(dataset, 'test')
+        n_train, n_val, n_test = len(train_dataset), len(val_dataset), len(test_dataset)
+    else:
+        train_dataset, val_dataset, test_dataset = random_split(
+            dataset, [n_train, n_val, n_test], generator=torch.Generator().manual_seed(config.seed))
 
     # Create dataloaders
     dl_num_workers = config.model.num_workers if n_total <= 200000 else min(config.model.num_workers, 2)
@@ -905,10 +910,15 @@ def train_two_stage(
     )
 
     # Split data (use same split as Stage 1)
-    train_dataset_stage2, val_dataset_stage2, test_dataset_stage2 = random_split(
-        dataset_stage2, [n_train, n_val, n_test],
-        generator=torch.Generator().manual_seed(config.seed)
-    )
+    from data.dataset_split import current as current_split, subset as split_subset
+    if current_split(len(dataset_stage2)):
+        train_dataset_stage2 = split_subset(dataset_stage2, 'train')
+        val_dataset_stage2 = split_subset(dataset_stage2, 'validation')
+        test_dataset_stage2 = split_subset(dataset_stage2, 'test')
+        n_train, n_val, n_test = len(train_dataset_stage2), len(val_dataset_stage2), len(test_dataset_stage2)
+    else:
+        train_dataset_stage2, val_dataset_stage2, test_dataset_stage2 = random_split(
+            dataset_stage2, [n_train, n_val, n_test], generator=torch.Generator().manual_seed(config.seed))
 
     # Create new samplers for Stage 2
     train_sampler_stage2 = None
@@ -1138,10 +1148,15 @@ def train_etm(
     n_val = int(n_total * config.model.val_ratio)
     n_test = n_total - n_train - n_val
 
-    train_dataset, val_dataset, test_dataset = random_split(
-        dataset, [n_train, n_val, n_test],
-        generator=torch.Generator().manual_seed(config.seed)
-    )
+    from data.dataset_split import current as current_split, subset as split_subset
+    if current_split(len(dataset)):
+        train_dataset = split_subset(dataset, 'train')
+        val_dataset = split_subset(dataset, 'validation')
+        test_dataset = split_subset(dataset, 'test')
+        n_train, n_val, n_test = len(train_dataset), len(val_dataset), len(test_dataset)
+    else:
+        train_dataset, val_dataset, test_dataset = random_split(
+            dataset, [n_train, n_val, n_test], generator=torch.Generator().manual_seed(config.seed))
 
     # Scale DataLoader workers for large datasets
     # With keep_sparse=True, BOW is CSR (~few hundred MB) so workers are safe.
@@ -1691,6 +1706,9 @@ def save_results(
     np.save(os.path.join(config.model_dir, "theta.npy"), theta)
     np.save(os.path.join(config.model_dir, "beta.npy"), beta)
     np.save(os.path.join(config.model_dir, "topic_embeddings.npy"), topic_emb)
+
+    from data.dataset_split import export_results
+    export_results(config.exp_dir, theta, beta, bow_matrix, vocab, 'theta')
 
     # Save topic words
     topic_words_dict = {str(k): words for k, words in topic_words}

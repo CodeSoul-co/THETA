@@ -647,7 +647,13 @@ def generate_bow(texts: List[str], vocab_size: int, output_dir: Path) -> Tuple[s
     
     print(f"\n[Generating BOW] vocab_size={vocab_size}")
     
-    small_corpus = len(texts) < 10
+    from data.dataset_split import current as current_split
+    rows_file = output_dir / 'source_rows.npy'
+    if not rows_file.exists(): rows_file = output_dir.parent / 'source_rows.npy'
+    rows = np.load(rows_file) if rows_file.exists() else None
+    split = current_split(len(texts), rows)
+    fitting_texts = [texts[i] for i in split['groups']['train']] if split else texts
+    small_corpus = len(fitting_texts) < 10
     if small_corpus:
         print(f"[数据提示] 当前仅 {len(texts)} 条正文，使用小样本词频阈值；结果仅适合流程验证，建议增加独立文本记录。", flush=True)
     vocab_config = VocabConfig(
@@ -656,7 +662,7 @@ def generate_bow(texts: List[str], vocab_size: int, output_dir: Path) -> Tuple[s
         max_df_ratio=1.0 if small_corpus else 0.7
     )
     vocab_builder = VocabBuilder(config=vocab_config)
-    vocab_builder.add_documents(texts, dataset_name="dataset")
+    vocab_builder.add_documents(fitting_texts, dataset_name="dataset")
     vocab_builder.build_vocab()
     
     bow_generator = BOWGenerator(vocab_builder)
@@ -890,6 +896,10 @@ def generate_word2vec_embeddings(texts: List[str], vocab: List[str], output_dir:
         language: DEPRECATED - Language is now auto-detected by StopwordManager
     """
     from gensim.models import Word2Vec
+    from data.dataset_split import current as current_split
+    source_file = output_dir / 'source_rows.npy'
+    split = current_split(len(texts), np.load(source_file) if source_file.exists() else None)
+    if split: texts = [texts[i] for i in split['groups']['train']]
     
     print(f"\n[Generating Word2Vec Embedding]")
     print(f"  Vocab size: {len(vocab)}")

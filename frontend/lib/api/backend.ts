@@ -79,6 +79,7 @@ export interface TrainSummaryResponse {
 // ==================== 训练参数 ====================
 
 export interface TrainParams {
+  data_split?: import('../data-split').DataSplit;
   embedding_provider?: 'local' | 'cloud';
   cloud_confirmed?: boolean;
   cloud_selection?: { provider: string; endpoint: string; model: string };

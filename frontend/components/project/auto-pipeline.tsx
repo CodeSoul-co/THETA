@@ -1,5 +1,7 @@
 "use client"
 
+import { DataSplitCard } from './data-split-card'
+import { defaultDataSplit, splitError, type DataSplit } from '@/lib/data-split'
 import { toast } from 'sonner'
 import { ComputationNotice, SetupError } from '@/components/theta-workbench/panels/WorkbenchNotice'
 import { useEffect, useRef, useState } from "react"
@@ -48,6 +50,8 @@ export function AutoPipeline(props: AutoPipelineProps) {
   callbacks.current = props
   const folderInput = useRef<HTMLInputElement>(null)
   useEffect(() => { folderInput.current?.setAttribute("webkitdirectory", ""); folderInput.current?.setAttribute("directory", "") })
+  const [dataSplit, setDataSplit] = useProjectDraft<DataSplit>(props.projectKey + ':split-v1', defaultDataSplit)
+  const [splitBusy, setSplitBusy] = useState(false)
   const [files, setFiles] = useState<File[]>([])
   const [replacing, setReplacing] = useState(false)
   const [uploads, setUploads] = useState<{ name: string; fileId: string; size: number; inputKind?: string }[]>([])
@@ -184,22 +188,29 @@ export function AutoPipeline(props: AutoPipelineProps) {
   }
 
   const start = (config: AnalysisConfig) => {
+    if (splitBusy) { setError('请等待划分数据上传或预览完成。'); return false }
+    const problem = splitError(dataSplit)
+    if (problem) { setError(problem); return false }
+    const external = dataSplit.enabled && dataSplit.mode === 'upload'
+    const train = external ? dataSplit.sources.train : undefined
+    const activeFileId = train?.fileId ?? fileId
+    const activeSelection = train ? { ...train, metaColumns: train.covariates ?? [] } : selection
     if (!config.models.length) { setError('请至少选择一个模型后再继续。'); return false }
-    if (busy.current || !fileId || !selection?.textColumn) { setError('请先上传数据，等待读取正文或选择表格中的正文列。'); return false }
-    if (config.models.includes('dtm') && !selection.timeColumn) { setError('DTM 需要真实时间列，请上传包含正文和时间列的表格。'); return false }
-    if (config.models.includes('stm') && !selection.metaColumns.length) { setError('STM 需要元数据列作为协变量，请上传包含正文和元数据的表格。'); return false }
-    if (config.mode === 'supervised' && !selection.labelColumn) { setError('有监督嵌入需要标签列，请上传包含正文和标签列的表格。'); return false }
+    if (busy.current || !activeFileId || !activeSelection?.textColumn) { setError('请先上传数据，等待读取正文或选择表格中的正文列。'); return false }
+    if (config.models.includes('dtm') && !activeSelection.timeColumn) { setError('DTM 需要真实时间列，请上传包含正文和时间列的表格。'); return false }
+    if (config.models.includes('stm') && !activeSelection.metaColumns.length) { setError('STM 需要元数据列作为协变量，请上传包含正文和元数据的表格。'); return false }
+    if (config.mode === 'supervised' && !activeSelection.labelColumn) { setError('有监督嵌入需要标签列，请上传包含正文和标签列的表格。'); return false }
     busy.current = true; setSubmitting(true); setError(null)
     callbacks.current.onConfigConfirmed?.(config)
     void (async () => {
       try {
         const modelParams = Object.fromEntries(config.models.map(model => [model, config.parameters[model] ?? {}]))
-        const response = await BackendAPI.startTraining({ file_id: Number(fileId), dataset_name: dataset, model_type: config.models.join(','), model_params: modelParams,
+        const response = await BackendAPI.startTraining({ file_id: Number(activeFileId), data_split: dataSplit, dataset_name: dataset, model_type: config.models.join(','), model_params: modelParams,
           num_topics: Number(modelParams[config.models[0]].num_topics ?? modelParams[config.models[0]].max_topics ?? 20), vocab_size: config.vocabSize,
           plot_language: config.plotLanguage, stopwords_id: config.stopwords ? Number(config.stopwords.id) : undefined, model_size: config.modelSize, mode: config.mode,
           embedding_provider: config.embeddingProvider, cloud_confirmed: config.cloudConfirmed, external_request_limit: config.externalRequestLimit,
           cloud_selection: config.cloudSelection,
-          text_column: selection.textColumn, meta_columns: selection.metaColumns, time_column: selection.timeColumn, label_column: selection.labelColumn })
+          text_column: activeSelection.textColumn, meta_columns: activeSelection.metaColumns, time_column: activeSelection.timeColumn, label_column: activeSelection.labelColumn })
         setTaskId(String(response.id)); setTask(null)
         callbacks.current.onTaskCreated?.(String(response.id))
         log('任务已保存，服务正在检查数据和运行环境。')
@@ -228,10 +239,11 @@ export function AutoPipeline(props: AutoPipelineProps) {
       {fileId && !replacing && <><Button variant="outline" onClick={() => { setReplacing(true); setColumnsOpen(false); setConfigOpen(false); setError(null) }}>重新上传 / 更换数据</Button><p className="text-xs text-slate-500">新文件上传成功后切换，原始数据与已有结果保留。</p><label className="block space-y-2 text-sm">本次分析文件<select aria-label="本次分析文件" className="block w-full rounded-lg border p-2" value={fileId} onChange={e => { setFileId(e.target.value); setSelection(null); setDraft({ fileId: e.target.value, selection: null, columnsOpen: false, configOpen: false }) }}>{uploads.map(file => <option key={file.fileId} value={file.fileId}>{file.name}</option>)}</select></label><p className="text-xs text-slate-500">每个任务分析一个文件。多文件上传后，请明确选择本次文件。</p>{textInput ? <div className="space-y-3 rounded-xl border bg-slate-50 p-4">
         <h3 className="text-sm font-semibold">正文预览</h3><p className="text-xs text-slate-500">直接读取文本，无需选择数据列。按非空行、PDF 页面或 Word 段落生成分析记录。</p>
         {previewError ? <p role="alert" className="text-sm text-red-700">{previewError}<button className="ml-2 underline" onClick={() => setPreviewAttempt(value => value + 1)}>重新读取</button></p> : !textPreview ? <p role="status" className="text-sm">正在读取正文…</p> : <><p className="text-xs text-slate-500">共 {textPreview.totalRecords ?? textPreview.rows.length} 条正文记录，预览前 5 条</p><div className="max-h-72 space-y-3 overflow-y-auto">{(textPreview.segments ?? textPreview.rows.map(row => ({ text: row[0] }))).map((segment, index) => <article key={index} className="rounded-lg bg-white p-3"><p className="mb-2 text-xs text-slate-400">{'source_file' in segment && <span>{String(segment.source_file)} · </span>}{'page' in segment ? `第 ${segment.page} 页` : 'paragraph' in segment ? `第 ${segment.paragraph} 段` : `正文 ${index + 1}`}</p><p className="whitespace-pre-wrap text-sm leading-6 [overflow-wrap:anywhere]">{segment.text}</p></article>)}</div></>}
-      </div> : <Button variant="outline" onClick={() => changeColumnsOpen(true)}>选择数据列</Button>}{selection && <Button className="ml-2" onClick={() => changeConfigOpen(true)}>配置分析参数</Button>}</>}
+      </div> : <Button variant="outline" onClick={() => changeColumnsOpen(true)}>选择数据列</Button>}{(selection || dataSplit.enabled && dataSplit.mode === 'upload' && dataSplit.sources.train?.textColumn) && <Button className="ml-2" onClick={() => { const problem = splitError(dataSplit); if (problem || splitBusy) { setError(problem ?? '请等待数据读取完成'); return }; changeConfigOpen(true) }}>配置分析参数</Button>}</>}
+      {fileId && !replacing && <DataSplitCard value={dataSplit} onChange={setDataSplit} dataset={dataset} files={uploads} onBusy={setSplitBusy} onUploaded={file => setUploads(prev => [file, ...prev.filter(item => item.fileId !== file.fileId)])} />}
     </section>}
     <ExecutionLog states={task?.states} workers={task?.workers} logs={logs} running={running || submitting} />
-    {!textInput && <ColumnSelectPanel key={fileId} projectKey={props.projectKey} open={columnsOpen} onReplace={() => { setReplacing(true); setConfigOpen(false); setError(null) }} onOpenChange={changeColumnsOpen} datasetName={dataset} jobId={fileId} onConfirm={value => { setSelection(value); setColumnsOpen(false); setConfigOpen(true); setDraft({ fileId, selection: value, columnsOpen: false, configOpen: true }) }} />}
+    {!textInput && <ColumnSelectPanel key={fileId} projectKey={props.projectKey} open={columnsOpen} onReplace={() => { setReplacing(true); setConfigOpen(false); setError(null) }} onOpenChange={changeColumnsOpen} datasetName={dataset} jobId={fileId} onConfirm={value => { setSelection(value); setColumnsOpen(false); setDraft({ fileId, selection: value, columnsOpen: false, configOpen: false }) }} />}
     <AnalysisConfigPanel datasetSizeBytes={uploads.find(file => file.fileId === fileId)?.size} projectKey={props.projectKey} open={configOpen} onOpenChange={changeConfigOpen} datasetName={dataset} error={error} onConfirm={start} />
   </div>
 }

@@ -282,7 +282,7 @@ def export_baseline_metadata(directory, model_name, result, trainer):
         counts = vectorizer.transform(trainer.texts)
         columns = [vectorizer.vocabulary_[word] for word in vocab]
         sparse.save_npz(output / 'bow_matrix.npz', counts[:, columns].tocsr())
-        np.save(output / 'document_topics.npy', np.asarray(model.get_topics(), dtype=np.int64))
+        np.save(output / 'document_topics.npy', np.asarray(getattr(model, 'prediction_topics_', model.get_topics()), dtype=np.int64))
     history = result.get('training_history')
     if history and not list(output.glob('training_history*.json')):
         keys = list(dict.fromkeys(key for row in history for key in row if key != 'epoch'))

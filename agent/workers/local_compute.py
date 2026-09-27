@@ -126,25 +126,43 @@ def cancelled(home: str, job_id: str) -> bool:
 
 def normalize_dataset(payload: dict, destination: Path) -> None:
     plan = payload["plan"]
-    source = verify_dataset(payload["dataset"])
-    table = load_dataset(source, profile_limit=1_000_000)
-    if table.rows_truncated:
-        raise ValueError("本地规范化最多支持一百万行；禁止用画像样本代替完整训练数据")
-    mappings = {"text": plan["textColumn"]}
-    if plan.get("labelColumn"):
-        mappings["label"] = plan["labelColumn"]
-    if plan.get("timeColumn"):
-        mappings["year"] = plan["timeColumn"]
-        mappings["timestamp"] = plan["timeColumn"]
-    for index, column in enumerate(plan.get("covariates", [])):
-        mappings[f"cov_{index}"] = column
+    sys.path.insert(0, str(engine_root() / 'src/models'))
+    from data.dataset_split import assignments, plan_options
+    options = plan_options(plan)
+    external = options.get('enabled') and options.get('mode') == 'upload'
+    sources = options.get('sources', {}) if external else {'all': {'dataset': payload['dataset'], 'textColumn': plan['textColumn']}}
+    if external and set(sources) != {'train', 'validation', 'test'}:
+        raise ValueError('请分别上传训练、验证和测试集')
+    normalized, roles = [], []
+    for role in (('train', 'validation', 'test') if external else ('all',)):
+        selection = sources[role]
+        descriptor = selection['dataset']
+        table = load_dataset(verify_dataset(descriptor), profile_limit=1_000_000)
+        if table.rows_truncated:
+            raise ValueError("本地规范化最多支持一百万行；禁止用画像样本代替完整训练数据")
+        mappings = {"text": selection.get('textColumn') or plan['textColumn']}
+        for field, target in [('labelColumn', 'label'), ('timeColumn', 'year')]:
+            column = selection.get(field) or plan.get(field)
+            if column: mappings[target] = column
+        if 'year' in mappings: mappings['timestamp'] = mappings['year']
+        covariates = selection.get('covariates', plan.get('covariates', []))
+        for index, column in enumerate(covariates): mappings[f'cov_{index}'] = column
+        if any(column not in table.columns for column in mappings.values()):
+            raise ValueError(f'{role} 数据集中的列不存在，请重新选择正文、时间、标签或元数据列')
+        before = len(normalized)
+        for row_number, row in enumerate(table.rows):
+            if str(row.get(mappings['text'], '') or '').strip():
+                normalized.append({**{key: row.get(column, "") for key, column in mappings.items()}, "source_file": descriptor["fileName"], "source_row": row_number + 1})
+                roles.append(role)
+        if len(normalized) == before: raise ValueError(f'{role} 数据集没有有效正文')
+        verify_dataset(descriptor)
+    manifest = assignments(len(normalized), options, roles if external else None)
     destination.parent.mkdir(parents=True, exist_ok=True)
+    fields = list(dict.fromkeys(key for row in normalized for key in row))
     with destination.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(mappings))
-        writer.writeheader()
-        for row in table.rows:
-            writer.writerow({key: row.get(column, "") for key, column in mappings.items()})
-    verify_dataset(payload["dataset"])
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader(); writer.writerows(normalized)
+    destination.with_suffix('.split.json').write_text(json.dumps(manifest), encoding='utf-8')
 
 
 def run(home: str, job_id: str) -> None:
@@ -222,6 +240,7 @@ def run(home: str, job_id: str) -> None:
                          keep_job_dir=True, heartbeat_interval_seconds=2)
         environment = training_environment({**payload['execution'], 'device': selected_device})
         environment['THETA_COMPUTE_DEVICE'] = selected_device
+        environment['THETA_DATA_SPLIT_FILE'] = str(normalized.with_suffix('.split.json'))
         environment.pop('THETA_CUDA_SITE_PACKAGES', None)
         if gpu and cuda_runtime:
             environment['THETA_CUDA_SITE_PACKAGES'] = str(cuda_runtime)

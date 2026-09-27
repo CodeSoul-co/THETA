@@ -14,12 +14,12 @@ LDA, BTM, HDP and STM use their existing CPU implementations. CLI Agent plans ac
 
 ## Download and install
 
-Download from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.8):
+Download from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.9):
 
 | Platform | Installer | Installation |
 | --- | --- | --- |
-| macOS Apple Silicon | `THETA-0.3.8-mac-arm64.dmg` | Open the DMG and drag THETA into Applications |
-| Windows x64 | `THETA-0.3.8-win-x64.exe` | Run the installer |
+| macOS Apple Silicon | `THETA-0.3.9-mac-arm64.dmg` | Open the DMG and drag THETA into Applications |
+| Windows x64 | `THETA-0.3.9-win-x64.exe` | Run the installer |
 
 This is an unsigned preview without macOS notarization. Your operating system may show a security warning. Native Intel Mac and Windows ARM installers are not provided.
 

@@ -81,3 +81,14 @@ python -m dataclean.main \
 ```
 
 All CSV files in the input directory will be processed and saved to the output directory with the same filenames.
+
+## Training, validation and test data in the workbench
+
+In the data selection card, enable **Custom training / validation / test split** to choose either:
+
+- **Ratios:** three positive percentages adding up to 100%, with random or sequential allocation. The initial ratios are 70% / 20% / 10%. Random allocation uses a configurable seed; sequential allocation takes training rows first, followed by validation and test rows.
+- **Separate uploads:** select or upload three different files. Each file can use a supported table or document format, with its own text, time, label and metadata columns. Documents are segmented by content. The full dataset is the concatenation of the three uploads.
+
+With the switch off, training and validation use a random 70% / 30% split, and testing uses the full dataset. This test includes training and validation rows and is **not an independent holdout score**. At least two training records and one record in each evaluation set must remain after preprocessing. Word vocabulary and model fitting use training records only; all result groups use that same fitted model.
+
+Open **Results → Dataset results** to compare full-data, training, validation and test metrics and average topic weights, and download each group's document results and topic matrix. Older runs without split records are identified explicitly and are not assigned invented subsets. This workflow is shared by Web and desktop. CLI Agent training plans accept `dataSplit` with `enabled`, `mode: "ratio"`, `ratios`, `method` and `seed`.
