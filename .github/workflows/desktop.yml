@@ -54,10 +54,10 @@ jobs:
           npm --prefix desktop run prepare:python
           if [ "$RUNNER_OS" = 'Windows' ]; then
             export THETA_PYTHON="$GITHUB_WORKSPACE/desktop/runtime/python/python.exe"
-            PYTHONPATH='agent;trainning' desktop/runtime/python/python.exe -m unittest workers.tests.test_compute_device workers.tests.test_cuda_runtime workers.tests.test_execution_policy workers.tests.test_training_progress workers.tests.test_dataset_preview workers.tests.test_small_corpus workers.tests.test_dataset_split workers.tests.test_analysis_report worker.tests.test_pipeline
+            PYTHONPATH='agent;trainning' desktop/runtime/python/python.exe -m unittest workers.tests.test_compute_device workers.tests.test_cuda_runtime workers.tests.test_execution_policy workers.tests.test_baseline_cloud_embedding workers.tests.test_training_progress workers.tests.test_dataset_preview workers.tests.test_small_corpus workers.tests.test_dataset_split workers.tests.test_analysis_report worker.tests.test_pipeline
           else
             export THETA_PYTHON="$GITHUB_WORKSPACE/desktop/runtime/python/bin/python3"
-            PYTHONPATH=agent:trainning desktop/runtime/python/bin/python3 -m unittest workers.tests.test_compute_device workers.tests.test_cuda_runtime workers.tests.test_execution_policy workers.tests.test_training_progress workers.tests.test_dataset_preview workers.tests.test_small_corpus workers.tests.test_dataset_split workers.tests.test_analysis_report worker.tests.test_pipeline
+            PYTHONPATH=agent:trainning desktop/runtime/python/bin/python3 -m unittest workers.tests.test_compute_device workers.tests.test_cuda_runtime workers.tests.test_execution_policy workers.tests.test_baseline_cloud_embedding workers.tests.test_training_progress workers.tests.test_dataset_preview workers.tests.test_small_corpus workers.tests.test_dataset_split workers.tests.test_analysis_report worker.tests.test_pipeline
           fi
           if [ "$RUNNER_OS" = 'Windows' ]; then
             desktop/runtime/python/python.exe desktop/scripts/check-cuda-component.py
@@ -65,7 +65,7 @@ jobs:
           npm --prefix desktop run prepare:runtime
           npm --prefix frontend run test:manual-upload
           npm --prefix frontend run test:presentation
-          node --test agent/dist/web/manual-server.test.js agent/dist/web/manual-result-import.test.js agent/dist/web/analysis-reports.test.js
+          node --test agent/dist/src/tools/training-batches.test.js agent/dist/web/upload-stream.test.js agent/dist/web/manual-server.test.js agent/dist/web/manual-result-import.test.js agent/dist/web/analysis-reports.test.js
           npm --prefix desktop test
           npm --prefix desktop run smoke
           npm --prefix desktop run dist
