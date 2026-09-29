@@ -1,5 +1,6 @@
 "use client"
 
+import { UploadedDatasetFiles, type UploadedDatasetFile } from './uploaded-dataset-files'
 import { DataSplitCard } from './data-split-card'
 import { defaultDataSplit, splitError, type DataSplit } from '@/lib/data-split'
 import { toast } from 'sonner'
@@ -18,7 +19,7 @@ import { AnalysisConfigPanel, type AnalysisConfig } from "./analysis-config-pane
 import { ColumnSelectPanel, type ColumnSelection } from "./column-select-panel"
 import { ETMAgentAPI } from "@/lib/api/etm-agent"
 import { isTextDocument, type DatasetPreview } from "@/lib/dataset-input"
-import { DATASET_ACCEPT, datasetFilesError, documentCollectionError, isDocumentCollection } from '@/lib/dataset-files'
+import { DATASET_ACCEPT, datasetFilesError, documentCollectionError, isDocumentCollection, folderDatasetFiles, datasetFilesWarning } from '@/lib/dataset-files'
 import { useFileDrop } from '@/lib/use-file-drop'
 import { useProjectDraft } from "@/lib/use-project-draft"
 import { explorationCounts } from '@/lib/analysis-config'
@@ -40,7 +41,7 @@ interface AutoPipelineProps {
   onDlcStarted?: () => void
   onViewResults?: () => void
 }
-type JobState = TrainStatusResponse & { queued_models?: string[]; states?: TrainingWorkerState[]; workers?: { id: string; model: string }[] }
+type JobState = TrainStatusResponse & { model_failures?: { model: string; topicCount?: number; stage: string; error: string }[]; partial_success?: boolean; queued_models?: string[]; states?: TrainingWorkerState[]; workers?: { id: string; model: string }[] }
 const phases = ["上传数据", "数据预处理", "模型训练", "模型评估", "生成可视化"]
 const phaseIndex = (phase?: string) => ({ preparing: 1, preparing_data: 1, preprocessing: 1, training: 2, evaluating: 3, evaluation: 3, visualizing: 4, visualization: 4, publishing: 4, uploading: 4 }[phase ?? ""] ?? 1)
 
@@ -55,7 +56,7 @@ export function AutoPipeline(props: AutoPipelineProps) {
   const [splitBusy, setSplitBusy] = useState(false)
   const [files, setFiles] = useState<File[]>([])
   const [replacing, setReplacing] = useState(false)
-  const [uploads, setUploads] = useState<{ name: string; fileId: string; size: number; inputKind?: string }[]>([])
+  const [uploads, setUploads] = useState<UploadedDatasetFile[]>([])
   const [fileId, setFileId] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -82,7 +83,7 @@ export function AutoPipeline(props: AutoPipelineProps) {
         const [knownFiles, jobs] = await Promise.all([BackendAPI.getFiles(), BackendAPI.getTrainJobs()])
         if (cancelled) return
         const matching = knownFiles.filter(file => file.dataset_name === dataset && isUploadedFileId(file.id))
-        setUploads(matching.map(file => ({ name: file.filename, fileId: String(file.id), size: Number(file.size) || 0, inputKind: file.input_kind })))
+        setUploads(matching.map(file => ({ name: file.source_name || file.filename, fileId: String(file.id), size: Number(file.size) || 0, inputKind: file.input_kind, sourceFileIds: file.source_file_ids })))
         if (matching[0]) { setFileId(String(matching[0].id)); setUploadProgress(100) }
         if (props.initialTaskId) { setTaskId(props.initialTaskId); return }
         // Recover a task whose HTTP response was lost instead of duplicating it.
@@ -155,9 +156,15 @@ export function AutoPipeline(props: AutoPipelineProps) {
   const selectFiles = (next: File[]) => {
     if (busy.current) return
     const fromFolder = next.some(file => !!file.webkitRelativePath)
+    if (fromFolder) {
+      const { supported, skipped } = folderDatasetFiles(next)
+      if (skipped.length) toast.warning(`跳过 ${skipped.length} 个不支持格式或空文件`, { description: skipped.slice(0, 3).map(file => file.name).join('、') })
+      next = supported
+    }
     const problem = (fromFolder || next.length > 1 && next.every(file => isTextDocument(file.name))) ? documentCollectionError(next) : datasetFilesError(next)
     if (problem) { setError(problem); return }
     setFiles(next); setError(null); setUploadProgress(0)
+    const warning = datasetFilesWarning(next); if (warning) toast.warning(warning)
     toast.success(`已添加 ${next.length} 个文件，请点击“上传并配置分析”继续`)
   }
   const { dragging, dropProps } = useFileDrop(selectFiles, uploading, setError)
@@ -165,14 +172,15 @@ export function AutoPipeline(props: AutoPipelineProps) {
   const upload = async () => {
     if (busy.current || !files.length) return
     busy.current = true; setUploading(true); setError(null)
+    let received: UploadedDatasetFile[] = []
     try {
       log(`开始上传 ${files.length} 个文件`)
-      let receipts: { name: string; fileId: string; size: number; inputKind?: string }[] = await uploadManualFiles(files, (file, progress) => SimpleETMAPI.uploadDataset(file, dataset, progress), setUploadProgress)
+      let receipts: UploadedDatasetFile[] = await uploadManualFiles(files, (file, progress) => SimpleETMAPI.uploadDataset(file, dataset, progress), setUploadProgress, receipt => { received.push(receipt); setUploads(previous => [...previous, receipt]) })
       if (isDocumentCollection(files) && files.every(file => isTextDocument(file.name))) {
         const combined = await apiFetch<{ file_id: number; name: string; size: number; inputKind: string }>(API_BASE, `/api/datasets/${encodeURIComponent(dataset)}/combine`, {
-          method: 'POST', body: JSON.stringify({ fileIds: receipts.map(file => file.fileId), sourceNames: files.map(file => file.webkitRelativePath || file.name) }), timeoutMs: 300_000,
+          method: 'POST', body: JSON.stringify({ fileIds: receipts.map(file => file.fileId), sourceNames: files.map(file => file.webkitRelativePath || file.name) }), timeoutMs: 0,
         })
-        receipts = [{ ...combined, fileId: String(combined.file_id) }, ...receipts]
+        receipts = [{ ...combined, fileId: String(combined.file_id), sourceFileIds: receipts.map(file => Number(file.fileId)) }, ...receipts]
       }
       const directText = receipts[0].inputKind === 'text' || isTextDocument(receipts[0].name)
       setUploads(previous => [...receipts, ...previous.filter(file => !receipts.some(next => next.fileId === file.fileId))]); setFileId(receipts[0].fileId)
@@ -184,8 +192,39 @@ export function AutoPipeline(props: AutoPipelineProps) {
       log(directText ? '上传成功，正在直接读取正文，无需选择数据列。' : '上传成功，请选择本次分析的文本列与元数据。')
       toast.success(`上传成功，共 ${files.length} 个文件`, { description: directText ? '正在读取正文，随后可配置分析参数' : '请选择本次分析的正文列' })
       setColumnsOpen(receipts.length === 1 && !directText)
-    } catch (e) { const message = e instanceof Error ? e.message : '上传失败'; setError(message); log(message) }
+    } catch (e) { if (received.length) { setFileId(received[0].fileId); setReplacing(false); setFiles([]); setSelection(null); setDraft({ fileId: received[0].fileId, selection: null, columnsOpen: false, configOpen: false }) }; const message = e instanceof Error ? e.message : '上传失败'; setError(message); log(message) }
     finally { busy.current = false; setUploading(false) }
+  }
+
+  const combineUploaded = async (chosen: UploadedDatasetFile[], textColumns: Record<string, string>) => {
+    if (busy.current) return
+    busy.current = true
+    try {
+      const combined = await apiFetch<{ file_id: number; name: string; size: number; inputKind: string }>(API_BASE, `/api/datasets/${encodeURIComponent(dataset)}/combine`, {
+        method: 'POST', body: JSON.stringify({ fileIds: chosen.map(file => file.fileId), sourceNames: chosen.map(file => file.name), textColumns }), timeoutMs: 0,
+      })
+      const file = { ...combined, fileId: String(combined.file_id), sourceFileIds: chosen.map(file => Number(file.fileId)) }
+      setUploads(previous => [file, ...previous]); setFileId(file.fileId); setSelection(null); setColumnsOpen(false); setConfigOpen(false)
+      setDraft({ fileId: file.fileId, selection: null, columnsOpen: false, configOpen: false }); setError(null)
+      toast.success(`已合并 ${chosen.length} 个文件，将使用全部正文分析`)
+    } finally { busy.current = false }
+  }
+  const deleteUploaded = async (file: UploadedDatasetFile) => {
+    if (busy.current) return
+    busy.current = true
+    try {
+      const response = await apiFetch<{ removed_file_ids: number[] }>(API_BASE, `/api/files/${file.fileId}`, { method: 'DELETE' })
+      const removed = new Set(response.removed_file_ids.map(String))
+      const remaining = uploads.filter(item => !removed.has(item.fileId))
+      setUploads(remaining)
+      if (fileId && removed.has(fileId)) {
+        const next = remaining[0]?.fileId ?? null
+        setFileId(next); setSelection(null); setColumnsOpen(false); setConfigOpen(false)
+        setDraft({ fileId: next, selection: null, columnsOpen: false, configOpen: false })
+      }
+      setDataSplit(previous => ({ ...previous, sources: Object.fromEntries(Object.entries(previous.sources).filter(([, source]) => source && !removed.has(source.fileId))) }))
+      setError(null); toast.success('文件已从项目移除，已有训练记录与结果保留')
+    } finally { busy.current = false }
   }
 
   const start = (config: AnalysisConfig) => {
@@ -198,9 +237,6 @@ export function AutoPipeline(props: AutoPipelineProps) {
     const activeSelection = train ? { ...train, metaColumns: train.covariates ?? [] } : selection
     if (!config.models.length) { setError('请至少选择一个模型后再继续。'); return false }
     if (busy.current || !activeFileId || !activeSelection?.textColumn) { setError('请先上传数据，等待读取正文或选择表格中的正文列。'); return false }
-    if (config.models.includes('dtm') && !activeSelection.timeColumn) { setError('DTM 需要真实时间列，请上传包含正文和时间列的表格。'); return false }
-    if (config.models.includes('stm') && !activeSelection.metaColumns.length) { setError('STM 需要元数据列作为协变量，请上传包含正文和元数据的表格。'); return false }
-    if (config.mode === 'supervised' && !activeSelection.labelColumn) { setError('有监督嵌入需要标签列，请上传包含正文和标签列的表格。'); return false }
     busy.current = true; setSubmitting(true); setError(null)
     callbacks.current.onConfigConfirmed?.(config)
     void (async () => {
@@ -231,16 +267,18 @@ export function AutoPipeline(props: AutoPipelineProps) {
     <ol className="flex flex-wrap gap-3 rounded-xl border bg-white p-4 text-sm">{phases.map((phase, index) => <li key={phase} className={`flex items-center gap-2 rounded-lg px-3 py-2 ${done || (index === 0 && fileId) || (running && index < current) ? 'bg-emerald-50 text-emerald-700' : running && current === index ? 'bg-blue-50 text-blue-700' : 'text-slate-400'}`}>
       {done || (index === 0 && fileId) || (running && index < current) ? <Check className="size-4" /> : running && current === index ? <Loader2 className="size-4 animate-spin" /> : <span>{index + 1}</span>}{phase}</li>)}</ol>
     {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700"><p className="flex items-center gap-2"><AlertCircle className="size-4" /></p><SetupError error={error} />{!running && fileId && <Button variant="outline" className="mt-3" onClick={() => { setTaskId(null); setTask(null); setError(null); textInput ? changeConfigOpen(true) : changeColumnsOpen(true) }}>调整配置后重试</Button>}</div>}
+    {!!task?.model_failures?.length && <section role="status" className="space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"><h3 className="font-semibold">{task.partial_success ? '部分模型已完成，结果可以正常查看' : '以下模型未能完成，其他可用模型将继续执行'}</h3>{task.model_failures.map((failure, index) => <p key={index}><strong>{failure.model.toUpperCase()}{failure.topicCount ? ` · K=${failure.topicCount}` : ''}</strong> · {failure.stage === 'preflight' ? '配置检查' : failure.stage === 'submission' ? '启动' : '训练'}：{failure.error}</p>)}</section>}
     {pollError && <p role="status" className="text-sm text-amber-700">{pollError}</p>}
     {!!task?.queued_models?.length && <p className="text-sm text-slate-600">排队模型：{task.queued_models.map(model => model.toUpperCase()).join('、')}。按顺序执行，关闭页面不会中断队列。</p>}
     {running && <Button variant="outline" onClick={async () => { try { const cancelled = await BackendAPI.cancelTraining(Number(taskId)); setTask(cancelled); setError(cancelled.status === 'cancelled' ? '任务已取消，可以调整数据与参数后重新开始。' : null) } catch (e) { setError(e instanceof Error ? e.message : '取消失败，请重试') } }}>取消本次训练</Button>}
     {(running || submitting) && <div role="status" className="space-y-4 rounded-2xl border bg-white p-6"><p className="flex items-center gap-2 text-sm font-medium"><Loader2 className="size-4 animate-spin" />{submitting ? '正在保存分析任务…' : systemText(task?.message || '正在检查数据与运行环境…')}</p><Progress value={task?.progress ?? 0} /><p className="text-xs leading-5 text-slate-500">{task?.progress ?? 0}% 为 worker 阶段进度，不是剩余时间估算。可以离开页面，返回后恢复真实任务状态。</p>{task?.states?.map(state => <p key={state.id} className="text-xs text-slate-600">{task.workers?.find(item => item.id === state.id)?.model.toUpperCase()} · {statusLabel(state.status)} · {systemText(state.phase)} · {state.percent}%</p>)}</div>}
     {!recovering && !running && !done && !submitting && <section className="space-y-4 rounded-2xl border bg-white p-6"><h2 className="font-semibold">{fileId ? '选择数据与分析参数' : '上传数据'}</h2>
-      {(!fileId || replacing) && <><p className="text-sm text-slate-500">支持 Excel、CSV、TXT、PDF、DOCX、JSON 等格式。表格选择正文列；TXT、Markdown、PDF、Word 直接读取正文，无需选择数据列。</p><label {...dropProps} aria-busy={uploading} className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 text-sm text-blue-700 transition-colors focus-within:ring-2 focus-within:ring-blue-500 ${dragging ? "border-blue-500 bg-blue-50" : "border-slate-200"}`}><Upload className="size-5" />{dragging ? "松开即可添加文件" : "拖拽文件到这里，或点击选择文件"}<input className="sr-only" aria-label="选择文件" type="file" multiple accept={DATASET_ACCEPT} disabled={uploading} onChange={e => { selectFiles(Array.from(e.target.files || [])); e.target.value = "" }} /></label><input ref={folderInput} type="file" className="sr-only" aria-label="选择文件夹" disabled={uploading} onChange={event => { selectFiles(Array.from(event.target.files || []).filter(file => !file.webkitRelativePath.split("/").some(part => part.startsWith(".")))); event.target.value = "" }} /><Button variant="outline" disabled={uploading} onClick={() => folderInput.current?.click()}>选择文件夹（按内容合并文档）</Button>{replacing && <Button variant="outline" disabled={uploading} onClick={() => { setReplacing(false); setFiles([]); setError(null) }}>取消更换，保留原数据</Button>}<ComputationNotice sizeBytes={files.reduce((sum, file) => sum + file.size, 0)} />{files.map((file, index) => <p key={`${file.name}-${index}`} className="text-sm text-slate-600">{file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB</p>)}{uploading ? <><Progress value={uploadProgress} /><p className="text-sm">正在上传 · {uploadProgress}%</p></> : <Button disabled={!files.length} onClick={() => void upload()}>上传并配置分析</Button>}</>}
-      {fileId && !replacing && <><Button variant="outline" onClick={() => { setReplacing(true); setColumnsOpen(false); setConfigOpen(false); setError(null) }}>重新上传 / 更换数据</Button><p className="text-xs text-slate-500">新文件上传成功后切换，原始数据与已有结果保留。</p><label className="block space-y-2 text-sm">本次分析文件<select aria-label="本次分析文件" className="block w-full rounded-lg border p-2" value={fileId} onChange={e => { setFileId(e.target.value); setSelection(null); setDraft({ fileId: e.target.value, selection: null, columnsOpen: false, configOpen: false }) }}>{uploads.map(file => <option key={file.fileId} value={file.fileId}>{file.name}</option>)}</select></label><p className="text-xs text-slate-500">每个任务分析一个文件。多文件上传后，请明确选择本次文件。</p>{textInput ? <div className="space-y-3 rounded-xl border bg-slate-50 p-4">
+      {(!fileId || replacing) && <><p className="text-sm text-slate-500">支持 Excel、CSV、TXT、PDF、DOCX、JSON 等格式。表格选择正文列；TXT、Markdown、PDF、Word 直接读取正文，无需选择数据列。</p><label {...dropProps} aria-busy={uploading} className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 text-sm text-blue-700 transition-colors focus-within:ring-2 focus-within:ring-blue-500 ${dragging ? "border-blue-500 bg-blue-50" : "border-slate-200"}`}><Upload className="size-5" />{dragging ? "松开即可添加文件" : "拖拽文件到这里，或点击选择文件"}<input className="sr-only" aria-label="选择文件" type="file" multiple accept={DATASET_ACCEPT} disabled={uploading} onChange={e => { selectFiles(Array.from(e.target.files || [])); e.target.value = "" }} /></label><input ref={folderInput} type="file" className="sr-only" aria-label="选择文件夹" disabled={uploading} onChange={event => { selectFiles(Array.from(event.target.files || [])); event.target.value = "" }} /><Button variant="outline" disabled={uploading} onClick={() => folderInput.current?.click()}>选择整个文件夹</Button>{replacing && <Button variant="outline" disabled={uploading} onClick={() => { setReplacing(false); setFiles([]); setError(null) }}>取消更换，保留原数据</Button>}<ComputationNotice sizeBytes={files.reduce((sum, file) => sum + file.size, 0)} />{datasetFilesWarning(files) && <p role="status" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{datasetFilesWarning(files)}</p>}<div className="max-h-60 overflow-y-auto">{files.map((file, index) => <p key={`${file.name}-${index}`} className="text-sm text-slate-600">{file.webkitRelativePath || file.name} · {(file.size / 1024 / 1024).toFixed(1)} MB <button type="button" disabled={uploading} className="ml-2 underline" onClick={() => setFiles(previous => previous.filter((_, i) => i !== index))}>移除</button></p>)}</div>{uploading ? <><Progress value={uploadProgress} /><p className="text-sm">正在上传 · {uploadProgress}%</p></> : <Button disabled={!files.length} onClick={() => void upload()}>上传并配置分析</Button>}</>}
+      {fileId && !replacing && <><Button variant="outline" onClick={() => { setReplacing(true); setColumnsOpen(false); setConfigOpen(false); setError(null) }}>重新上传 / 更换数据</Button><p className="text-xs text-slate-500">新文件上传成功后切换，原始数据与已有结果保留。</p><label className="block space-y-2 text-sm">本次分析数据<select aria-label="本次分析数据" className="block w-full rounded-lg border p-2" value={fileId} onChange={e => { setFileId(e.target.value); setSelection(null); setDraft({ fileId: e.target.value, selection: null, columnsOpen: false, configOpen: false }) }}>{uploads.map(file => <option key={file.fileId} value={file.fileId}>{file.name}</option>)}</select></label><p className="text-xs text-slate-500">文档文件夹上传后自动合并全部正文。也可在下方勾选已上传文件，合并为一次分析数据。表格可分别选择正文列。</p>{textInput ? <div className="space-y-3 rounded-xl border bg-slate-50 p-4">
         <h3 className="text-sm font-semibold">正文预览</h3><p className="text-xs text-slate-500">直接读取文本，无需选择数据列。按非空行、PDF 页面或 Word 段落生成分析记录。</p>
         {previewError ? <p role="alert" className="text-sm text-red-700">{previewError}<button className="ml-2 underline" onClick={() => setPreviewAttempt(value => value + 1)}>重新读取</button></p> : !textPreview ? <p role="status" className="text-sm">正在读取正文…</p> : <><p className="text-xs text-slate-500">共 {textPreview.totalRecords ?? textPreview.rows.length} 条正文记录，预览前 5 条</p><div className="max-h-72 space-y-3 overflow-y-auto">{(textPreview.segments ?? textPreview.rows.map(row => ({ text: row[0] }))).map((segment, index) => <article key={index} className="rounded-lg bg-white p-3"><p className="mb-2 text-xs text-slate-400">{'source_file' in segment && <span>{String(segment.source_file)} · </span>}{'page' in segment ? `第 ${segment.page} 页` : 'paragraph' in segment ? `第 ${segment.paragraph} 段` : `正文 ${index + 1}`}</p><p className="whitespace-pre-wrap text-sm leading-6 [overflow-wrap:anywhere]">{segment.text}</p></article>)}</div></>}
       </div> : <Button variant="outline" onClick={() => changeColumnsOpen(true)}>选择数据列</Button>}{(selection || dataSplit.enabled && dataSplit.mode === 'upload' && dataSplit.sources.train?.textColumn) && <Button className="ml-2" onClick={() => { const problem = splitError(dataSplit); if (problem || splitBusy) { setError(problem ?? '请等待数据读取完成'); return }; changeConfigOpen(true) }}>配置分析参数</Button>}</>}
+      {!!uploads.length && !replacing && <UploadedDatasetFiles files={uploads} dataset={dataset} disabled={uploading || splitBusy} onCombine={combineUploaded} onDelete={deleteUploaded} />}
       {fileId && !replacing && <DataSplitCard value={dataSplit} onChange={setDataSplit} dataset={dataset} files={uploads} onBusy={setSplitBusy} onUploaded={file => setUploads(prev => [file, ...prev.filter(item => item.fileId !== file.fileId)])} />}
     </section>}
     <ExecutionLog states={task?.states} workers={task?.workers} logs={logs} running={running || submitting} />

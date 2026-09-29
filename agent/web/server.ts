@@ -1,3 +1,4 @@
+import { receiveUpload } from './upload-stream.js';
 import { rm } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
@@ -38,7 +39,7 @@ interface Project { id: string; name: string; ownerId?: string; createdAt: strin
 interface DatasetOwner { datasetRef: string; ownerId: string; projectIds?: string[] }
 interface WebArtifact { id: string; runId: string; path: string }
 class HttpError extends Error { constructor(readonly status: number, message: string, readonly code = 'agent_error') { super(message); } }
-const MAX_UPLOAD = 200 * 1024 * 1024;
+
 const DATASET_FORMATS = ['csv', 'tsv', 'txt', 'md', 'json', 'jsonl', 'ndjson', 'xlsx', 'xls', 'parquet', 'pdf', 'docx'] as const;
 const MODEL_IDS = ['lda', 'btm', 'hdp', 'dtm', 'stm', 'bertopic', 'ctm', 'theta', 'etm', 'nvdm', 'gsm', 'prodlda'] as const;
 
@@ -324,7 +325,7 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
         workerApiUnchanged: true,
         resultSelection: { modes: ['manual', 'automatic'], automaticStrategies: ['latest_completed', 'all_completed'], readsResultContent: false },
       },
-      datasets: { formats: DATASET_FORMATS, maximumUploadBytes: MAX_UPLOAD, maximumTrainingRows: 1_000_000 },
+      datasets: { formats: DATASET_FORMATS, maximumUploadBytes: null, maximumTrainingRows: 1_000_000 },
       models: await inspectModels(),
       tools: productTools.map(tool => ({ id: tool.name, domain: tool.worker, effect: tool.effect, description: tool.description })),
       approvals: ['compute.submit', 'compute.cancel', 'results.read', 'results.synthesize', 'statistics.execute'],
@@ -438,7 +439,7 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
   const json = (res: ServerResponse, data: unknown, status = 200) => { res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify({ ok: true, data })); };
   const readBody = async (req: IncomingMessage, max = 1024 * 1024) => {
     const chunks: Buffer[] = []; let size = 0;
-    for await (const chunk of req) { size += chunk.length; if (size > max) throw new HttpError(413, '文件超过 200 MiB 或请求过大。'); chunks.push(chunk); }
+    for await (const chunk of req) { size += chunk.length; if (size > max) throw new HttpError(413, '请求过大。'); chunks.push(chunk); }
     return Buffer.concat(chunks);
   };
   const server = createServer(async (req, res) => {
@@ -618,9 +619,9 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
         records.put('web-project', project.id, project); return json(res, { ...project, ownerId: undefined, runIds: metas(principal).filter(m => m.projectId === project.id).map(m => m.id) });
       }
       if (url.pathname === '/api/v3/datasets/combine' && method === 'POST') {
-        const input = JSON.parse((await readBody(req)).toString());
+        const input = JSON.parse((await readBody(req, Infinity)).toString());
         projectFor(input.projectId, principal);
-        if (!Array.isArray(input.datasetRefs) || !input.datasetRefs.length || input.datasetRefs.length > 500) throw new HttpError(400, '请选择 1–500 个正文文件');
+        if (!Array.isArray(input.datasetRefs) || !input.datasetRefs.length) throw new HttpError(400, '请选择至少一个文件');
         for (const ref of input.datasetRefs) {
           assertDatasetOwner(ref, principal);
           if (!datasetAssignedToProject(ref, input.projectId, principal)) throw new HttpError(400, '文件不属于当前项目');
@@ -640,18 +641,24 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
             : datasetOwnedBy(d.datasetRef, principal)).map(view) });
         }
         if (projectId) projectFor(projectId, principal);
-        const raw = await readBody(req, MAX_UPLOAD + 1024 * 1024);
-        const form = await new Request('http://localhost', { method: 'POST', headers: { 'content-type': req.headers['content-type'] ?? '' }, body: new Uint8Array(raw) }).formData();
-        const file = form.get('file');
-        if (!(file instanceof File) || !file.size || file.size > MAX_UPLOAD) throw new HttpError(400, '请选择非空且不超过 200 MiB 的数据文件。');
+        let fileName = url.searchParams.get('filename');
+        let legacyFile: File | undefined;
+        if (!fileName) {
+          const raw = await readBody(req, Infinity);
+          const form = await new Request('http://localhost', { method: 'POST', headers: { 'content-type': req.headers['content-type'] ?? '' }, body: new Uint8Array(raw) }).formData();
+          const file = form.get('file');
+          if (!(file instanceof File) || !file.size) throw new HttpError(400, '请选择非空数据文件。');
+          legacyFile = file; fileName = file.name;
+        }
         const tempDir = path.join(home, 'incoming', randomUUID()); mkdirSync(tempDir, { recursive: true });
-        const filePath = path.join(tempDir, 'data' + path.extname(file.name).toLowerCase());
+        const filePath = path.join(tempDir, 'data' + path.extname(fileName).toLowerCase());
         try {
-          writeFileSync(filePath, Buffer.from(await file.arrayBuffer()), { mode: 0o600 });
+          if (legacyFile) writeFileSync(filePath, Buffer.from(await legacyFile.arrayBuffer()), { mode: 0o600 });
+          else await receiveUpload(req, filePath);
           const scratch: ProductSession = { id: `upload-${randomUUID()}`, title: '', datasetRefs: [], messages: [], updatedAt: new Date().toISOString() };
           const receipt = await tools.attach(filePath, scratch) as { datasetRef: string };
           const imported = records.get<Dataset>('dataset', receipt.datasetRef);
-          records.put('dataset', receipt.datasetRef, { ...imported, fileName: path.basename(file.name) });
+          records.put('dataset', receipt.datasetRef, { ...imported, fileName: path.basename(fileName) });
           const previousOwner = datasetOwner(receipt.datasetRef);
           records.put('web-dataset-owner', receipt.datasetRef, {
             datasetRef: receipt.datasetRef,
@@ -991,6 +998,7 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
     }
   }, 3000);
   monitor.unref(); server.on('close', () => { shuttingDown = true; clearInterval(monitor); for (const controller of active.values()) controller.abort(); void Promise.allSettled([analysisReports.close(), ...inFlight]).then(() => sessions.close()); });
+  server.requestTimeout = 0;
   return server;
 }
 

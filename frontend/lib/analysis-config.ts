@@ -41,7 +41,7 @@ export function configFromPlans(plans: EditorTrainingPlan[]): AnalysisConfig {
     plotLanguage: ['en', 'english'].includes(String(first.params.language)) ? 'en' : 'zh',
     vocabSize: Number(first.params['prepare.vocab_size'] ?? first.params.vocab_size ?? 5000),
     modelSize: String(theta?.params.model_size ?? '0.6B'),
-    embeddingProvider: theta?.params.embedding_provider === 'cloud' ? 'cloud' : 'local',
+    embeddingProvider: plans.find(plan => ['theta', 'ctm', 'bertopic'].includes(plan.modelId))?.params.embedding_provider === 'cloud' ? 'cloud' : 'local',
     mode: (theta?.params.mode ?? 'zero_shot') as AnalysisConfig['mode'], externalRequestLimit: theta?.externalRequestLimit ?? 200,
   }
 }
@@ -53,6 +53,7 @@ export function plansFromConfig(config: AnalysisConfig, originals: EditorTrainin
     // The shared controls own these values; hidden legacy values must not override them.
     for (const key of ['prepare.vocab_size', 'vocab_size', 'language', 'lang', 'mode', 'model_size', 'embedding_provider', 'embedding_cloud_provider', 'embedding_model', 'embedding_api_base', 'embedding_api_key_env', 'text.stopwords']) delete params[key]
     params.vocab_size = config.vocabSize; params.language = config.plotLanguage
+    if (['theta', 'ctm', 'bertopic'].includes(modelId)) params.embedding_provider = config.embeddingProvider
     if (modelId === 'theta') Object.assign(params, { mode: config.mode, model_size: config.modelSize, embedding_provider: config.embeddingProvider })
     if (count !== undefined) {
       for (const key of ['num_topics', 'max_topics', 'nr_topics', 'config.num_topics']) delete params[key]
@@ -62,7 +63,7 @@ export function plansFromConfig(config: AnalysisConfig, originals: EditorTrainin
       ...(config.timeColumn ? { timeColumn: config.timeColumn } : {}), ...(config.labelColumn ? { labelColumn: config.labelColumn } : {}),
       ...(modelId === 'stm' ? { covariates: config.covariates ?? [] } : {}),
       rationale: original?.rationale ?? '用户在训练配置中追加的模型', timeoutSeconds: original?.timeoutSeconds ?? 43200,
-      device: original?.device ?? 'cpu', ...(modelId === 'theta' ? { externalRequestLimit: config.externalRequestLimit } : {}),
+      device: original?.device ?? 'cpu', ...(['theta', 'ctm', 'bertopic'].includes(modelId) ? { externalRequestLimit: config.externalRequestLimit } : {}),
     }
   }))
 }

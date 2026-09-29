@@ -8,6 +8,7 @@ export async function uploadManualFiles<T extends { name: string; size: number }
   files: T[],
   upload: (file: T, progress: (percent: number) => void) => Promise<{ file_id: number }>,
   onProgress: (percent: number) => void,
+  onUploaded?: (file: { name: string; fileId: string; size: number }) => void,
 ) {
   if (!files.length) throw new Error('请先选择数据文件')
   const progress = files.map(() => 0)
@@ -19,7 +20,9 @@ export async function uploadManualFiles<T extends { name: string; size: number }
         onProgress(Math.round(progress.reduce((sum, value) => sum + value, 0) / files.length * .95))
       })
       if (!isUploadedFileId(result.file_id)) throw new Error('上传服务未返回有效文件编号，请重新上传。')
-      return { name: file.name, fileId: String(result.file_id), size: file.size }
+      const receipt = { name: ('webkitRelativePath' in file ? String(file.webkitRelativePath) : '') || file.name, fileId: String(result.file_id), size: file.size }
+      onUploaded?.(receipt)
+      return receipt
     }))
     const failed = batch.find(result => result.status === 'rejected')
     if (failed?.status === 'rejected') throw failed.reason

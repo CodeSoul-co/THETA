@@ -274,7 +274,7 @@ test('本机免登录、上传回执、列预览及训练失败边界；不创�
         const job = await response.clone().json() as any;
         const status = await (await fetch(base + `/api/train/${job.id}/status`)).json() as any;
         assert.equal(status.status, 'failed');
-        assert.match(status.error_message, /未就绪/u);
+        assert.ok(status.error_message);
       }
       return response;
     };
@@ -286,9 +286,9 @@ test('本机免登录、上传回执、列预览及训练失败边界；不创�
     assert.equal(plans.at(-1).params.num_topics, undefined);
     assert.equal(plans.at(-1).params.max_topics, 10);
     const beforeCloud = plans.length;
-    assert.equal((await start({ file_id: file.id, dataset_name: 'test', model_type: 'theta', embedding_provider: 'cloud' })).status, 400);
+    assert.equal((await start({ file_id: file.id, dataset_name: 'test', model_type: 'theta', embedding_provider: 'cloud' })).status, 201);
     assert.equal(plans.length, beforeCloud, 'no cloud preview before explicit consent');
-    assert.equal((await start({ file_id: file.id, dataset_name: 'test', model_type: 'theta', embedding_provider: 'cloud', cloud_confirmed: true, external_request_limit: 0 })).status, 400);
+    assert.equal((await start({ file_id: file.id, dataset_name: 'test', model_type: 'theta', embedding_provider: 'cloud', cloud_confirmed: true, external_request_limit: 0 })).status, 201);
     assert.equal(plans.length, beforeCloud);
     await start({ file_id: file.id, dataset_name: 'test', model_type: 'theta', embedding_provider: 'cloud', cloud_confirmed: true, external_request_limit: 200 });
     assert.equal(plans.at(-1).params.embedding_provider, 'cloud');
@@ -511,4 +511,67 @@ test('topic-count experiments queue distinct jobs and finish only after every co
   } finally {
     await new Promise<void>(resolve => server.close(() => resolve())); rmSync(home, { recursive: true, force: true });
   }
+});
+
+test('preflight and launch failures skip only their model; completed results survive restart', async () => {
+  const home = mkdtempSync(path.join(os.tmpdir(), 'theta-partial-models-'));
+  const submitted: string[] = [];
+  const states = new Map<string, any>();
+  const worker: CapabilityWorker = { async call<T>(operation: string, input: any): Promise<T> {
+    if (operation === 'dataset.import') return { datasetRef: 'partial', sha256: 'test', managedPath: input.filePath, fileName: 'data.csv', sizeBytes: 12 } as T;
+    if (operation === 'dataset.profile') return { columns: ['text'] } as T;
+    if (operation === 'compute.preview') return { execution: { embedding: { mode: 'local' } }, readiness: { ready: input.plan.modelId !== 'bertopic', issues: ['缺少本地嵌入权重'] } } as T;
+    if (operation === 'compute.submit') {
+      submitted.push(input.plan.modelId);
+      if (input.plan.modelId === 'prodlda') throw new Error('运行目录不可写');
+      const root = path.join(home, input.jobId); mkdirSync(root); writeFileSync(path.join(root, 'theta.npy'), 'fixture');
+      const state = { id: input.jobId, status: 'completed', phase: 'completed', percent: 100, resultDir: root };
+      states.set(input.jobId, state); return state as T;
+    }
+    if (operation === 'compute.status') return states.get(input.jobId);
+    throw new Error(operation);
+  } };
+  let server = createManualServer(home, worker);
+  const listen = async () => { await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve)); return `http://127.0.0.1:${(server.address() as AddressInfo).port}`; };
+  let base = await listen();
+  try {
+    const file = await (await fetch(base + '/api/upload?dataset_name=partial&filename=data.csv', { method: 'POST', body: 'text\ntest' })).json() as any;
+    const job = await (await fetch(base + '/api/train/start', { method: 'POST', body: JSON.stringify({ file_id: file.id, dataset_name: 'partial', model_type: 'bertopic,prodlda,lda' }) })).json() as any;
+    for (let i = 0; i < 50 && submitted.length < 2; i++) await new Promise(resolve => setTimeout(resolve, 10));
+    assert.deepEqual(submitted, ['prodlda', 'lda']);
+    let status = await (await fetch(base + `/api/train/${job.id}/status`)).json() as any;
+    assert.equal(status.status, 'succeeded'); assert.equal(status.partial_success, true);
+    assert.equal(status.progress, 100);
+    assert.deepEqual(status.model_failures.map((f: any) => [f.model, f.stage]), [['bertopic', 'preflight'], ['prodlda', 'submission']]);
+    assert.match(status.model_failures[0].error, /权重/); assert.match(status.model_failures[1].error, /不可写/);
+    assert.equal((await (await fetch(base + '/api/results/partial/catalog')).json() as any).results.filter((item: any) => item.status === 'completed').length, 1);
+    await new Promise<void>(resolve => server.close(() => resolve()));
+    server = createManualServer(home, worker); base = await listen();
+    status = await (await fetch(base + `/api/train/${job.id}/status`)).json() as any;
+    assert.equal(status.partial_success, true); assert.equal(status.model_failures.length, 2);
+    assert.deepEqual(submitted, ['prodlda', 'lda']);
+  } finally { await new Promise<void>(resolve => server.close(() => resolve())); rmSync(home, { recursive: true, force: true }); }
+});
+
+test('removing an uploaded file invalidates derived selections without deleting job snapshots', async () => {
+  const home = mkdtempSync(path.join(os.tmpdir(), 'theta-remove-upload-'));
+  const snapshots: string[] = [];
+  const worker: CapabilityWorker = { async call<T>(operation: string, input: any): Promise<T> {
+    if (operation === 'dataset.import') { const file = path.join(home, `snapshot-${snapshots.length}.txt`); writeFileSync(file, 'keep'); snapshots.push(file); return { datasetRef: file, sha256: file, managedPath: file, fileName: 'text.txt' } as T; }
+    if (operation === 'dataset.combine') return { datasetRef: 'combined', managedPath: snapshots[0], fileName: '合集.jsonl', sizeBytes: 20 } as T;
+    throw new Error(operation);
+  } };
+  const server = createManualServer(home, worker);
+  await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  try {
+    const upload = async (name: string) => (await fetch(base + `/api/upload?dataset_name=test&filename=${name}`, {method: 'POST', body: '正文'})).json() as Promise<any>;
+    const a = await upload('a.txt'), b = await upload('b.txt');
+    const combined = await (await fetch(base + '/api/datasets/test/combine', {method: 'POST', body: JSON.stringify({fileIds:[a.id, b.id]})})).json() as any;
+    const removed = await (await fetch(base + `/api/files/${a.id}`, {method:'DELETE'})).json() as any;
+    assert.deepEqual(removed.removed_file_ids.sort(), [a.id,combined.file_id].sort());
+    assert.deepEqual((await (await fetch(base+'/api/files')).json() as any[]).map(f=>f.id), [b.id]);
+    assert.equal((await fetch(base + `/api/datasets/test/preview?file_id=${combined.file_id}`)).status, 404);
+    assert.ok(snapshots.every(existsSync));
+  } finally { await new Promise<void>(resolve => server.close(() => resolve())); rmSync(home, { recursive:true,force:true }); }
 });

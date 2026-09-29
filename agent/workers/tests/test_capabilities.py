@@ -20,7 +20,7 @@ class CapabilityTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
         self.source = self.root / 'input.csv'
-        self.source.write_text('content,year,group\nTransport policy text,2020,A\nHealth policy text,2021,B\n', encoding='utf-8')
+        self.source.write_text('content,year,group\nTransport policy text,2020,A\nHealth policy text,2021,B\nEducation policy text,2020,A\nEnvironment policy text,2021,B\n', encoding='utf-8')
         self.dataset = dataset_import({'filePath': str(self.source), 'uploadDir': str(self.root / 'uploads')})
         self.plan = {'modelId': 'lda', 'textColumn': 'content', 'params': {'num_topics': 2}, 'rationale': 'baseline', 'timeoutSeconds': 60}
 
@@ -56,7 +56,7 @@ class CapabilityTests(unittest.TestCase):
 
     def test_profile_is_aggregate_and_data_tampering_fails(self):
         value = dataset_profile({'dataset': self.dataset})
-        self.assertEqual(value['rowCount'], 2)
+        self.assertEqual(value['rowCount'], 4)
         self.assertNotIn('Transport policy text', json.dumps(value))
         self.assertNotIn('sampleRows', value)
         Path(self.dataset['managedPath']).write_text('changed')

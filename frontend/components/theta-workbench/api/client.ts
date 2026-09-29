@@ -196,6 +196,7 @@ export interface WebRunResults {
 }
 
 export interface WebResultSummary {
+  error?: string;
   topicCount?: number;
   execution?: import('@/lib/training-progress').TrainingWorkerState;
   jobId: string;
@@ -861,8 +862,8 @@ export const uploadDataset = async (projectId: string, file: File): Promise<WebD
   body.append('file', file);
   if (await apiVersion() === 'v2') return request('/api/v2/datasets/upload', { method: 'POST', body });
   const { displayName, ...dataset } = await request<Omit<WebDataset, 'name'> & { displayName: string }>(
-    `/api/v3/datasets/upload?projectId=${encodeURIComponent(projectId)}`,
-    { method: 'POST', body },
+    `/api/v3/datasets/upload?projectId=${encodeURIComponent(projectId)}&filename=${encodeURIComponent(file.name)}`,
+    { method: 'POST', body: file, headers: { 'Content-Type': 'application/octet-stream', 'x-theta-file-size': String(file.size) } },
   );
   return { ...dataset, name: displayName, projectId };
 };

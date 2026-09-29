@@ -17,7 +17,7 @@ export interface TrainingPlan {
 export interface ResearchRun {
   id: string; goal: string; datasetRef?: string; profile?: Record<string, unknown>; computeBackend?: string;
   plan?: TrainingPlan; planHash?: string; revision?: number;
-  jobs: string[]; activeJob?: string; lastObservedJob?: { id: string; status: ComputeJob['status']; percent: number; phase?: string; telemetry?: JobTelemetry; resultDir?: string; resultWarning?: string }; notes: string[];
+  jobs: string[]; activeJob?: string; lastObservedJob?: { id: string; error?: string; status: ComputeJob['status']; percent: number; phase?: string; telemetry?: JobTelemetry; resultDir?: string; resultWarning?: string }; notes: string[];
 }
 export interface TrainingEvent {
   source?: 'local' | 'cloud'; scope?: 'documents' | 'vocabulary';

@@ -36,7 +36,7 @@ def execution_policy(plan: dict) -> dict:
     device = requested_device(plan)
     if device not in {'cpu', 'auto'} and not re.fullmatch(r'cuda:[0-9]+', device): raise ValueError('device 必须为 auto、cpu 或 cuda:非负编号')
     assets = {}
-    if plan['params'].get('embedding.model_path'):
+    if selected in {'local', 'qwen'} and plan['params'].get('embedding.model_path'):
         key = ('QWEN_MODEL_' + str(plan['params'].get('model_size', '0.6B')).replace('.', '_')) if plan['modelId'] == 'theta' else 'SBERT_MODEL_PATH'
         assets[key] = str(Path(plan['params']['embedding.model_path']).expanduser().resolve(strict=True))
         if not (Path(assets[key]) / 'config.json').is_file(): raise ValueError('本地模型路径缺少 config.json')
@@ -44,8 +44,8 @@ def execution_policy(plan: dict) -> dict:
             'runtime': runtime_environments.identity(runtime_environments.model_profile(plan['modelId']))}
     if selected in {'local', 'qwen'}:
         return {**base, 'embedding': {'mode': 'local'}, 'maxExternalRequests': 0}
-    if selected not in {'cloud', 'openai', 'dashscope', 'siliconflow', 'zhipu', 'volcengine', 'openai_compatible'} or plan['modelId'] != 'theta' or plan['params'].get('mode', 'zero_shot') != 'zero_shot':
-        raise ValueError('云 embedding 仅支持 THETA zero_shot；微调和其他模型请使用本地模型')
+    if selected not in {'cloud', 'openai', 'dashscope', 'siliconflow', 'zhipu', 'volcengine', 'openai_compatible'} or plan['modelId'] not in {'theta', 'ctm', 'bertopic'} or plan['modelId'] == 'theta' and plan['params'].get('mode', 'zero_shot') != 'zero_shot':
+        raise ValueError('云 embedding 支持 THETA zero_shot、CTM 和 BERTopic；THETA 微调请使用本地模型')
     settings = embedding_settings(plan['params'])
     target = urlsplit(settings.api_base)
     if not (target.scheme == 'https' or target.scheme == 'http' and target.hostname in {'localhost', '127.0.0.1', '::1'}):
@@ -78,7 +78,7 @@ def configuration_summary(_: dict) -> dict:
             'configured': bool(settings.api_key and settings.model and settings.api_base),
             'configurationIssues': (["EMBEDDING_API_KEY_ENV 必须是环境变量名，不能填密钥内容"] if not valid_key_name else
                                     ["密钥变量未设置或为空"] if not settings.api_key else []),
-            'requiresConfirmation': True, 'supportedCloudMode': 'THETA zero_shot'},
+            'requiresConfirmation': True, 'supportedCloudMode': 'THETA zero_shot / CTM / BERTopic'},
             'agentInferenceRequiresConfirmation': False,
             'workerEnvironments': runtime_environments.catalog({}),
             'policy': '配置表示能力可用，不代表授权。模型下载和未登记外部服务不会自动调用。'}

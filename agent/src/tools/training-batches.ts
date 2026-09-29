@@ -35,19 +35,19 @@ export class TrainingBatches {
     if (!this.active(session) && !batch.requests.some(request => request.runId === session.runId)) return;
     const done = batch.states.filter(job => job.status === 'completed').length;
     const current = batch.states.find(job => job.status === 'running');
-    const status: ComputeJob['status'] = batch.cancelled ? 'cancelled' : batch.error ? 'failed' : done === batch.states.length ? 'completed' : batch.states.every(terminal) ? 'failed' : 'running';
-    const phase = current?.phase ?? (status === 'running' ? '等待下一模型训练' : status === 'completed' ? '全部模型训练完成' : '训练已停止');
-    return { job: { id: batch.id, status, phase: `已完成 ${done}/${batch.states.length} · ${phase}`, percent: Math.round(batch.states.reduce((sum, job) => sum + job.percent, 0) / batch.states.length), error: batch.error }, jobs: batch.states,
+    const status: ComputeJob['status'] = batch.cancelled ? 'cancelled' : batch.error ? 'failed' : batch.states.every(terminal) ? done > 0 ? 'completed' : 'failed' : 'running';
+    const phase = current?.phase ?? (status === 'running' ? '等待下一模型训练' : status === 'completed' ? done === batch.states.length ? '全部模型训练完成' : '部分模型完成，其他模型失败原因见各项状态' : '训练已停止');
+    return { job: { id: batch.id, status, phase: `已完成 ${done}/${batch.states.length} · ${phase}`, percent: Math.round(batch.states.reduce((sum, job) => sum + (terminal(job) ? 100 : job.percent), 0) / batch.states.length), error: batch.error }, jobs: batch.states,
       summary: `${phase}；已完成 ${done}/${batch.states.length} 个模型。${batch.error ?? batch.observationError ?? ''}` };
   }
-  create(session: ProductSession, input: { id: string; sourceHash: string; configurationHash: string; requests: ComputeRequest[]; goal: string }): void {
+  create(session: ProductSession, input: { id: string; sourceHash: string; configurationHash: string; requests: ComputeRequest[]; failures?: Record<string, string>; goal: string }): void {
     const { id, sourceHash, configurationHash, requests } = input;
     if (this.get(id)) throw new Error('这张训练卡已经提交，请查看已保存任务。');
     // A confirmed batch may wait for earlier models; its scope is immutable and its
     // lifetime covers only these explicitly bounded jobs, not future experiments.
     const approval = this.approvals.request(session.id, { action: 'compute.batch', target: this.backend, payload: requests, summary: `用户在配置弹窗确认 ${requests.length} 个模型：${requests.map(r => r.plan.modelId).join('、')}` }, requests.reduce((sum, request) => sum + request.plan.timeoutSeconds * 1000, 0) + 30 * 60_000);
     const receipt = this.approvals.decide(approval.id, session.id, approval.hash, true);
-    const states: ComputeJob[] = requests.map(request => ({ id: request.jobId, status: 'queued', phase: '等待训练', percent: 0 }));
+    const states: ComputeJob[] = requests.map(request => ({ id: request.jobId, status: input.failures?.[request.jobId] ? 'failed' : 'queued', phase: input.failures?.[request.jobId] ? '配置检查失败' : '等待训练', percent: 0, error: input.failures?.[request.jobId] }));
     for (const [index, request] of requests.entries()) {
       const run: ResearchRun = { id: request.runId, datasetRef: request.dataset.datasetRef, goal: input.goal, plan: request.plan, planHash: contentHash(request), computeBackend: this.backend,
         jobs: [request.jobId], notes: [], lastObservedJob: states[index] };
@@ -79,7 +79,11 @@ export class TrainingBatches {
           const request = batch.requests[index];
           const approval = this.approvals.request(session.id, { action: 'compute.submit', target: this.backend, payload: request, summary: `已确认批次 ${id} · ${request.plan.modelId}` });
           const receipt = this.approvals.decide(approval.id, session.id, approval.hash, true);
-          const job = await this.compute.submit(request, receipt);
+          let job: ComputeJob;
+          try { job = await this.compute.submit(request, receipt); }
+          catch (error) {
+            job = { id: request.jobId, status: 'failed', phase: '模型启动失败', percent: 0, error: error instanceof Error ? error.message : String(error) };
+          }
           batch.states[index] = { ...job, status: job.status === 'queued' ? 'running' : job.status };
           const run = this.records.get<ResearchRun>('run', request.runId); run.activeJob = job.id; run.lastObservedJob = job; this.records.put('run', run.id, run);
         }

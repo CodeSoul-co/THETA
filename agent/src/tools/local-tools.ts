@@ -199,10 +199,10 @@ export class LocalProductTools implements ProductToolExecutor {
         const cached = this.statusCache.get(jobId);
         if (cached) return cached;
         const observed = run.lastObservedJob;
-        return { id: jobId, status: observed?.status ?? 'queued', phase: observed?.phase ?? '状态未知', percent: observed?.percent ?? 0 };
+        return { id: jobId, status: observed?.status ?? 'queued', phase: observed?.phase ?? '状态未知', percent: observed?.percent ?? 0, error: observed?.error };
       });
       const report = session.reports?.find(item => item.jobId === jobId);
-      return { jobId, runId: run.id, modelId: run.plan?.modelId ?? 'unknown', topicCount: run.plan?.params.num_topics ?? run.plan?.params.max_topics, status: job.status, phase: job.phase,
+      return { jobId, runId: run.id, modelId: run.plan?.modelId ?? 'unknown', topicCount: run.plan?.params.num_topics ?? run.plan?.params.max_topics, status: job.status, phase: job.phase, error: job.error,
         percent: job.percent, selected: session.resultSelection?.resolvedJobIds.includes(jobId) ?? false,
         reportStatus: report?.reportStatus === 'incomplete' ? 'incomplete' : report ? 'ready' : 'not_requested', order };
     }));
@@ -297,7 +297,7 @@ export class LocalProductTools implements ProductToolExecutor {
       contentHash: contentHash({ runId: run.id, dataset, plans, backend: this.backend }), trainingPlans: plans, summary };
     context.save(); return { needsUser: true, summary, instruction: '等待用户在训练配置弹窗里修改并确认。不得替用户提交。' };
   }
-  /** Final host/UI confirmation: validate ALL edited models before queuing ANY compute. */
+  /** Final host/UI confirmation: preserve per-model failures while queuing valid models. */
   async submitTrainingConfiguration(session: ProductSession, input: {
     checkpointId: string; expectedContentHash: string; plans: unknown[]; cloudConfirmed?: boolean;
     cloudSelection?: { provider: string; model: string; endpoint: string }; stopwords?: string[];
@@ -322,12 +322,16 @@ export class LocalProductTools implements ProductToolExecutor {
     const plans = input.plans.map(plan => trainingPlanSchema.parse(plan));
     if (new Set(plans.map(plan => contentHash(plan))).size !== plans.length) throw new Error('相同模型与参数的实验不能重复。');
     const requests: ComputeRequest[] = [];
+    const failures: Record<string, string> = {};
     for (const plan of plans) {
+      let execution: Record<string, unknown> = {};
+      let failure: string | undefined;
+      try {
       // Credentials/endpoints are host configuration, never editable parameter overrides.
       for (const key of ['embedding_cloud_provider', 'embedding_model', 'embedding_api_base', 'embedding_api_key_env', 'text.stopwords']) delete plan.params[key];
       if (input.stopwords) plan.params['text.stopwords'] = input.stopwords.join('\n');
-      const cloud = plan.modelId === 'theta' && plan.params.embedding_provider === 'cloud';
-      if (cloud && (input.cloudConfirmed !== true || (plan.params.mode ?? 'zero_shot') !== 'zero_shot' || !input.cloudSelection)) throw new Error('云端嵌入仅支持 THETA 零样本，请明确勾选发送文本与费用确认。');
+      const cloud = ['theta', 'ctm', 'bertopic'].includes(plan.modelId) && plan.params.embedding_provider === 'cloud';
+      if (cloud && (input.cloudConfirmed !== true || plan.modelId === 'theta' && (plan.params.mode ?? 'zero_shot') !== 'zero_shot' || !input.cloudSelection)) throw new Error('云端嵌入支持 THETA 零样本、CTM 和 BERTopic；请勾选发送文本与费用确认。');
       const preview = await this.worker.call<{ execution: Record<string, unknown>; readiness: { ready: boolean; issues?: string[] } }>('compute.preview', { plan, dataset }, signal);
       const actual = preview.execution.embedding as { mode: string; provider?: string; endpoint?: string; model?: string };
       if (actual.mode !== (cloud ? 'cloud' : 'local')) throw new Error(`${plan.modelId} 的实际嵌入方式与选择不一致。`);
@@ -335,15 +339,22 @@ export class LocalProductTools implements ProductToolExecutor {
         const shown = input.cloudSelection!;
         if (shown.provider !== actual.provider || shown.model !== actual.model || shown.endpoint.replace(/\/$/u, '').replace(/\/embeddings$/u, '') + '/embeddings' !== actual.endpoint) throw new Error('云端服务已变化，请重新打开配置并确认。');
       }
-      if (['local', 'custom'].includes(this.backend) && !preview.readiness.ready) throw new Error(preview.readiness.issues?.join(" ") || `${plan.modelId.toUpperCase()} 的运行环境或模型资源未就绪；未启动任何模型，请调整配置后重试。`);
+      if (['local', 'custom'].includes(this.backend) && !preview.readiness.ready) throw new Error(preview.readiness.issues?.join(" ") || `${plan.modelId.toUpperCase()} 的运行环境或模型资源未就绪；该模型已跳过，请调整配置后重试。`);
+      execution = preview.execution;
+      } catch (error) {
+        signal?.throwIfAborted();
+        failure = error instanceof Error ? error.message : String(error);
+      }
       // The execution contract uses runId as dataset.project_id (at most 36 chars).
       const runId = `run-${contentHash({ batchId, plan }).slice(0, 32)}`;
-      requests.push({ runId, jobId: `job-${contentHash({ batchId, dataset, plan })}`, dataset, plan,
-        execution: { ...preview.execution, ...(!['local', 'custom'].includes(this.backend) ? { computeConfigurationFingerprint: this.configurationFingerprint() } : {}) } });
+      const jobId = `job-${contentHash({ batchId, dataset, plan })}`;
+      if (failure) failures[jobId] = failure;
+      requests.push({ runId, jobId, dataset, plan,
+        execution: { ...execution, ...(!['local', 'custom'].includes(this.backend) ? { computeConfigurationFingerprint: this.configurationFingerprint() } : {}) } });
     }
     signal?.throwIfAborted();
     if (pending.kind === 'action') this.approvals.decide(pending.checkpointId, session.id, pending.contentHash, false);
-    this.batches.create(session, { id: batchId, sourceHash: input.expectedContentHash, configurationHash, requests, goal: sourceRun.goal });
+    this.batches.create(session, { id: batchId, sourceHash: input.expectedContentHash, configurationHash, requests, failures, goal: sourceRun.goal });
     save();
     await this.batches.advance(session, save);
     return { batchId, ...this.batches.view(session), instruction: '用户已在配置弹窗确认了这些模型和最终参数。队列已持久化，按顺序执行；不能另行提交新任务。' };
@@ -352,7 +363,7 @@ export class LocalProductTools implements ProductToolExecutor {
     return contentHash({ runId: run.id, dataset: this.dataset(session), plan, backend: this.backend });
   }
   private needsEmbeddingChoice(session: ProductSession, run: ResearchRun, plan: TrainingPlan): boolean {
-    return plan.modelId === 'theta' && (plan.params.mode ?? 'zero_shot') === 'zero_shot'
+    return (['ctm', 'bertopic'].includes(plan.modelId) || plan.modelId === 'theta' && (plan.params.mode ?? 'zero_shot') === 'zero_shot')
       && session.embeddingSelections?.[run.id]?.scope !== this.embeddingScope(session, run, plan);
   }
   private async requestEmbeddingChoice(context: ProductToolContext, run: ResearchRun, plan: TrainingPlan): Promise<unknown> {
@@ -391,7 +402,7 @@ export class LocalProductTools implements ProductToolExecutor {
     session.embeddingSelections[run.id] = { scope: this.embeddingScope(session, run, plan) };
     const context = { session, userMessage: provider === 'local' ? '本地嵌入' : '云端嵌入', signal, save };
     if (choice.plans) {
-      const result = await this.proposeTrainingConfiguration(context, choice.plans.map(item => item.modelId === 'theta' ? plan : item)) as { summary: string };
+      const result = await this.proposeTrainingConfiguration(context, choice.plans.map(item => item.modelId === plan.modelId ? plan : item)) as { summary: string };
       return { summary: result.summary };
     }
     await this.execute('plan_propose', plan, context);
@@ -546,7 +557,7 @@ export class LocalProductTools implements ProductToolExecutor {
     const run = this.run(session);
     if (name === 'training_configure') {
       const plans = args.plans as TrainingPlan[];
-      const theta = plans.find(plan => plan.modelId === 'theta' && (plan.params.mode ?? 'zero_shot') === 'zero_shot');
+      const theta = plans.find(plan => ['ctm', 'bertopic'].includes(plan.modelId) || plan.modelId === 'theta' && (plan.params.mode ?? 'zero_shot') === 'zero_shot');
       if (theta) {
         const result = await this.requestEmbeddingChoice(context, run, theta);
         const choice = session.pendingConfirmation!.embeddingChoice!; choice.plans = plans;
@@ -692,7 +703,7 @@ export class LocalProductTools implements ProductToolExecutor {
     if (!isExplicitApproval(userMessage) || !session.pendingConfirmation) throw new Error('需要先展示确认内容，并由用户明确回复“确认”。');
     const pending = session.pendingConfirmation;
     if (pending.kind === 'training_config') {
-      const theta = pending.trainingPlans?.find(plan => plan.modelId === 'theta' && plan.params.embedding_provider === 'cloud');
+      const theta = pending.trainingPlans?.find(plan => ['theta', 'ctm', 'bertopic'].includes(plan.modelId) && plan.params.embedding_provider === 'cloud');
       return this.submitTrainingConfiguration(session, { checkpointId: pending.checkpointId, expectedContentHash: pending.contentHash, plans: pending.trainingPlans!, cloudConfirmed: !!theta,
         ...(theta ? { cloudSelection: { provider: String(theta.params.embedding_cloud_provider), model: String(theta.params.embedding_model), endpoint: String(theta.params.embedding_api_base) } } : {}) }, save, signal);
     }

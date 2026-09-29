@@ -851,6 +851,13 @@ def generate_vocab_embeddings(
 
 def generate_sbert_embeddings(texts: List[str], output_dir: Path, batch_size: int = 32) -> np.ndarray:
     """Generate SBERT embedding (CTM/DTM specific)"""
+    from model.embedding_providers import resolve_embedding_settings, create_cloud_embedding_provider
+    settings = resolve_embedding_settings()
+    if settings.is_cloud:
+        embeddings = create_cloud_embedding_provider().embed(texts, batch_size=batch_size)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        np.save(output_dir / 'sbert_embeddings.npy', embeddings)
+        return embeddings
     from sentence_transformers import SentenceTransformer
     
     print(f"\n[Generating SBERT Embedding]")
@@ -1120,8 +1127,7 @@ def prepare_baseline_data(args):
         try:
             generate_sbert_embeddings(texts, result_dir, args.batch_size)
         except Exception as e:
-            print(f"  [Warning] SBERT generation failed: {e}")
-            print(f"  CTM model may not work, but LDA and ETM can run normally")
+            raise RuntimeError(f"语义嵌入生成失败：{e}") from e
     else:
         print("\n[Skip] SBERT embedding generation (--skip-sbert)")
     

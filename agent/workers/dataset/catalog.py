@@ -33,7 +33,7 @@ def entries():
                 continue
             try:
                 stat = file.stat()
-                if not file.is_file() or stat.st_size > 200 * 1024 * 1024:
+                if not file.is_file():
                     continue
                 relative = file.relative_to(root).as_posix()
                 version = f'{relative}:{stat.st_size}:{stat.st_mtime_ns}'

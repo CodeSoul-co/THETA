@@ -108,6 +108,7 @@ def config_parameters(root, class_name='ModelConfig'):
 def contract(root, model):
     native = cli_parameters(root, 'run_pipeline.py')
     allowed = COMMON | MODEL_CLI[model]
+    if model in {'ctm', 'bertopic'}: allowed |= {key for key in MODEL_CLI['theta'] if key.startswith('embedding_')}
     if model == 'hdp': allowed = allowed - {'num_topics'}
     entries = {key: {**native[key], 'target': 'pipeline'} for key in sorted(allowed)}
     for key, info in cli_parameters(root, 'prepare_data.py').items():
@@ -210,7 +211,7 @@ def validate_parameters(root, plan):
     if params.get('embedding.normalize') is False and params.get('embedding_provider', 'local') in {'local', 'qwen'}: raise ValueError('本地 Qwen 实现固定归一化，normalize=False 仅适用于云嵌入')
     provider = params.get('embedding_provider', 'local')
     if provider not in {'local', 'qwen'}:
-        if plan['modelId'] != 'theta' or params.get('mode', 'zero_shot') != 'zero_shot': raise ValueError('远端 embedding API 仅支持 THETA zero_shot')
+        if plan['modelId'] not in {'theta', 'ctm', 'bertopic'} or plan['modelId'] == 'theta' and params.get('mode', 'zero_shot') != 'zero_shot': raise ValueError('远端 embedding API 支持 THETA zero_shot、CTM 和 BERTopic')
         if 'embedding_api_key_env' in params and not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', params['embedding_api_key_env']): raise ValueError('embedding_api_key_env 必须是环境变量名')
         if 'embedding_api_base' in params:
             target = urlsplit(params['embedding_api_base'])

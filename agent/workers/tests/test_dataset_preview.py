@@ -100,5 +100,20 @@ class DatasetPreviewTest(unittest.TestCase):
         self.assertEqual(preview['segments'][2]['source_file'], 'doc-1.txt')
         source = self.root / 'table.csv'; source.write_text('text\n正文', encoding='utf8')
         table = dataset_import({'filePath': str(source), 'uploadDir': str(self.root / 'uploads')})
-        with self.assertRaisesRegex(ValueError, '表格请单独上传'):
-            combine({'datasets': [table], 'uploadDir': str(self.root / 'uploads')})
+        mixed = combine({'datasets': [*files, table], 'uploadDir': str(self.root / 'uploads')})
+        self.assertEqual(mixed['recordCount'], 7)
+        many = combine({'datasets': [table] * 501, 'uploadDir': str(self.root / 'uploads')})
+        self.assertEqual(many['recordCount'], 501)
+
+    def test_collection_explicit_columns_and_streaming_beyond_reservoir(self):
+        from workers.dataset.collection import combine
+        from workers.dataset.readers import visit_dataset_rows
+        source = self.root / 'table.csv'
+        source.write_text('标题,摘要\n标题1,摘要1\n标题2,摘要2', encoding='utf8')
+        dataset = dataset_import({'filePath': str(source), 'uploadDir': str(self.root/'uploads')})
+        with self.assertRaisesRegex(ValueError, '选择正文列'):
+            combine({'datasets': [dataset], 'uploadDir': str(self.root/'uploads')})
+        result = combine({'datasets': [{**dataset, 'textColumn': '摘要', 'fileName': '子目录/table.csv'}], 'uploadDir': str(self.root/'uploads')})
+        rows = []; visit_dataset_rows(Path(result['managedPath']), rows.append)
+        self.assertEqual([r['text'] for r in rows], ['摘要1', '摘要2'])
+        self.assertTrue(all(r['source_file'] == '子目录/table.csv' for r in rows))

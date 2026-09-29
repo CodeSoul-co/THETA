@@ -346,8 +346,8 @@ export const SimpleETMAPI = {
     if (capabilities.upload_mode === 'direct') {
       onProgress?.(5);
       const result = await sharedApiFetch<UploadCompleteResponse>(API_BASE,
-        `/api/upload?dataset_name=${encodeURIComponent(datasetName)}&filename=${encodeURIComponent(file.name)}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', 'x-theta-file-size': String(file.size) }, body: file, timeoutMs: 300_000 });
+        `/api/upload?dataset_name=${encodeURIComponent(datasetName)}&filename=${encodeURIComponent(file.name)}&source_name=${encodeURIComponent(file.webkitRelativePath || file.name)}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', 'x-theta-file-size': String(file.size) }, body: file, timeoutMs: 0 });
       onProgress?.(100);
       return { file_id: result.id, dataset_name: datasetName, oss_path: result.file_path };
     }

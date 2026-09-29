@@ -12,7 +12,18 @@ from dataclasses import dataclass
 from datetime import date, datetime, time
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Iterable, Iterator
+from typing import Any, Iterable, Iterator, Callable
+from contextvars import ContextVar
+
+_record_sink: ContextVar[Callable[[dict], None] | None] = ContextVar("dataset_record_sink", default=None)
+
+def visit_dataset_rows(path: Path, sink: Callable[[dict], None]) -> "DatasetReader":
+    token = _record_sink.set(sink)
+    try:
+        return load_dataset(path, profile_limit=10)
+    finally:
+        _record_sink.reset(token)
+
 
 
 SUPPORTED_SUFFIXES = {'.csv', '.tsv', '.txt', '.md', '.json', '.jsonl', '.ndjson', '.xlsx', '.xls', '.parquet', '.pdf', '.docx'}
@@ -209,6 +220,9 @@ def _bounded_reader(
         if len(head_rows) < 10:
             head_rows.append(row)
         row_count += 1
+        sink = _record_sink.get()
+        if sink is not None:
+            sink(row)
         if len(rows) < limit:
             rows.append(row)
             continue

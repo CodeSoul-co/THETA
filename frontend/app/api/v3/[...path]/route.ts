@@ -1,3 +1,4 @@
+import { desktopAccessError } from '@/lib/server/desktop-access'
 
 import { allowLocalSession, isLocalRequestOrigin } from '@/lib/local-development'
 import type { NextRequest } from 'next/server'
@@ -32,6 +33,8 @@ export async function OPTIONS() {
 }
 
 async function proxy(request: NextRequest, context: RouteContext) {
+  const denied = desktopAccessError(request)
+  if (denied) return denied
   const configuredBaseUrl = process.env.THETA_AGENT_API_URL?.trim() || 'http://127.0.0.1:4318'
   if (!allowLocalSession(request.url, configuredBaseUrl, process.env.NODE_ENV, process.env.THETA_LOCAL_AUTH_ENABLED, process.env.THETA_DESKTOP_TOKEN)) {
     return unavailable('无法使用本地 THETA Agent，请从本机工作台或 THETA 应用启动。')
@@ -49,7 +52,7 @@ async function proxy(request: NextRequest, context: RouteContext) {
 
   const headers = new Headers()
   if (process.env.THETA_DESKTOP_TOKEN) headers.set('x-theta-desktop-token', process.env.THETA_DESKTOP_TOKEN)
-  for (const name of ['accept', 'content-type', 'last-event-id', 'user-agent', 'x-forwarded-for', 'x-forwarded-proto']) {
+  for (const name of ['accept', 'x-theta-file-size', 'content-type', 'last-event-id', 'user-agent', 'x-forwarded-for', 'x-forwarded-proto']) {
     const value = request.headers.get(name)
     if (value) headers.set(name, value)
   }

@@ -334,7 +334,7 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange, initialTab 
                 <label className={css.field}><span>向量维度（可选）</span><input type="number" min="1" max="65536" value={embedding.dimensions ?? ''} onChange={event => setEmbedding({ ...embedding, dimensions: event.target.value === '' ? null : Number(event.target.value) })} placeholder="留空使用服务默认值" /></label>
                 <label className={css.field}><span>Embedding API Key</span><input type="password" autoComplete="off" value={embeddingKey} onChange={event => { setEmbeddingKey(event.target.value); setClearEmbeddingKey(false) }} placeholder={embedding.apiKeyConfigured && !clearEmbeddingKey ? '********' : '填写 Embedding 服务密钥'} /></label>
                 <label className={css.optionLabel}><input type="checkbox" checked={clearEmbeddingKey} onChange={event => setClearEmbeddingKey(event.target.checked)} /><span>清除已保存的 Embedding API Key</span></label>
-                <p className={css.fieldDescription}>云端 Embedding 当前用于 THETA zero-shot。执行时会发送文本到所选服务，仍需确认具体任务与请求预算；微调和其他模型使用本地权重。密钥加密保存在本机。</p>
+                <p className={css.fieldDescription}>云端 Embedding 支持 THETA 零样本、CTM 和 BERTopic。执行时会发送文本到所选服务，仍需确认具体任务与请求预算；THETA 微调使用本地权重。密钥加密保存在本机。</p>
               </>
             )}
             <p className="break-all text-sm text-slate-500">数据与结果保存位置：{dataHome}</p><div className={css.actionRow}><Button variant="outline" disabled={saving} onClick={() => void saveEmbeddingSettings()}>{saving ? '保存中…' : '保存 Embedding 配置'}</Button><Button variant="ghost" onClick={() => void window.thetaDesktop?.openData()}>打开数据目录</Button></div>

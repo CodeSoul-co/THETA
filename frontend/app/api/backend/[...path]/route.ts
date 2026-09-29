@@ -1,3 +1,4 @@
+import { desktopAccessError } from '@/lib/server/desktop-access'
 
 import { allowLocalSession, isLocalRequestOrigin, isManualWorkspacePath } from '@/lib/local-development'
 import type { NextRequest } from 'next/server'
@@ -40,6 +41,8 @@ export async function OPTIONS() {
 }
 
 async function proxy(request: NextRequest, context: RouteContext) {
+  const denied = desktopAccessError(request)
+  if (denied) return denied
   const { path } = await context.params
   const localBackend = process.env.THETA_MANUAL_LOCAL_API_URL?.trim() || 'http://127.0.0.1:4321'
   const localDevelopment = allowLocalSession(request.url, localBackend, process.env.NODE_ENV, process.env.THETA_LOCAL_AUTH_ENABLED, process.env.THETA_DESKTOP_TOKEN)

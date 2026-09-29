@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { DATASET_ACCEPT, datasetFilesError } from './dataset-files.ts'
+import { DATASET_ACCEPT, datasetFilesError, datasetFilesWarning } from './dataset-files.ts'
 
 test('picker and drop accept the same Unicode filenames and supported formats', () => {
   for (const suffix of DATASET_ACCEPT.split(',')) assert.equal(datasetFilesError([{ name: `中文 空格 ${suffix.toUpperCase()}`, size: 12 }]), undefined)
@@ -9,7 +9,9 @@ test('invalid replacement batches do not silently discard files', () => {
   assert.match(datasetFilesError([{ name: 'a.csv', size: 10 }, { name: 'b.exe', size: 10 }])!, /不支持/)
   assert.match(datasetFilesError([{ name: 'a.csv', size: 10 }, { name: 'b.csv', size: 10 }], 'zh-CN', true)!, /一个/)
   assert.match(datasetFilesError([{ name: 'empty.docx', size: 0 }])!, /空文件/)
-  assert.match(datasetFilesError([{ name: 'large.xlsx', size: 200 * 1024 * 1024 + 1 }])!, /200 MiB/)
+  assert.equal(datasetFilesError([{ name: 'large.xlsx', size: 200 * 1024 * 1024 + 1 }]), undefined)
+  assert.ok(datasetFilesWarning([{size: 201 * 1024 * 1024}]))
+  assert.equal(datasetFilesError(Array.from({length: 2501}, (_,i) => ({name: `${i}.txt`, size: 10}))), undefined)
   assert.equal(datasetFilesError([{ name: 'max.xlsx', size: 200 * 1024 * 1024 }]), undefined)
   assert.match(datasetFilesError([])!, /文件夹/)
   assert.match(datasetFilesError([{ name: 'bad.exe', size: 3 }], 'en')!, /not supported/)
@@ -29,5 +31,5 @@ test('folder drops traverse nested directories and every directory-reader batch'
   const files = await droppedFiles({ items: [{ kind: 'file', webkitGetAsEntry: () => directory }], files: [] } as unknown as DataTransfer)
   assert.deepEqual(files.map(file => file.webkitRelativePath), ['folder/one.txt', 'folder/nested/two.md'])
   assert.equal(documentCollectionError(files), undefined)
-  assert.match(documentCollectionError([{ name: 'table.xlsx', size: 5 }])!, /表格请单独上传/)
+  assert.equal(documentCollectionError([{ name: 'table.xlsx', size: 5 }]), undefined)
 })

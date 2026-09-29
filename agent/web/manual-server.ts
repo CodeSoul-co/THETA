@@ -1,3 +1,4 @@
+import { receiveUpload } from './upload-stream.js';
 import { rm } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
@@ -38,8 +39,8 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
   mkdirSync(home, { recursive: true });
   const db = new DatabaseSync(path.join(home, 'manual.sqlite'));
   db.exec('PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT NOT NULL, value TEXT NOT NULL)');
-  const list = (kind: string): RecordValue[] => db.prepare('SELECT id,value FROM records WHERE kind=? ORDER BY id DESC').all(kind).map(row => ({ ...JSON.parse(String(row.value)), id: Number(row.id) }));
-  const get = (kind: string, id: string | number) => { const row = db.prepare('SELECT value FROM records WHERE kind=? AND id=?').get(kind, Number(id)); if (!row) throw new HttpError(404, '记录不存在'); return { ...JSON.parse(String(row.value)), id: Number(id) } as RecordValue; };
+  const list = (kind: string): RecordValue[] => db.prepare('SELECT id,value FROM records WHERE kind=? ORDER BY id DESC').all(kind).map(row => ({ ...JSON.parse(String(row.value)), id: Number(row.id) })).filter(record => !record.deleted);
+  const get = (kind: string, id: string | number) => { const row = db.prepare('SELECT value FROM records WHERE kind=? AND id=?').get(kind, Number(id)); if (!row) throw new HttpError(404, '记录不存在'); const record = { ...JSON.parse(String(row.value)), id: Number(id) } as RecordValue; if (record.deleted) throw new HttpError(404, '文件已删除'); return record; };
   const insert = (kind: string, value: RecordValue): RecordValue => { const id = Number(db.prepare('INSERT INTO records(kind,value) VALUES (?,?)').run(kind, JSON.stringify(value)).lastInsertRowid); return { ...value, id }; };
   const save = (kind: string, value: RecordValue) => db.prepare('UPDATE records SET value=? WHERE kind=? AND id=?').run(JSON.stringify(value), kind, value.id);
   const visibleRecords = (kind: string) => {
@@ -95,16 +96,27 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
       if (states.some(state => ['running', 'queued'].includes(state.status))) return;
       job = get('job', id);
       if (closing || job.cancel_requested || !job.queue?.length) return;
-      const { model, request } = job.queue[0];
-      const approval = approvals.request(request.runId, { action: 'compute.submit', target: 'local', payload: request, summary: `手动训练 ${model}` });
-      const receipt = approvals.decide(approval.id, request.runId, approval.hash, true);
-      await compute.submit(request, receipt);
-      job = get('job', id);
-      if (!job.workers.some((item: RecordValue) => item.id === request.jobId)) job.workers.push({ id: request.jobId, model, topicCount: request.plan.params.num_topics ?? request.plan.params.max_topics });
-      job.queue.shift();
-      save('job', job);
-      observations.delete(id);
-      if (job.cancel_requested) await compute.cancel(request.jobId);
+      while (job.queue?.length && !job.cancel_requested && !closing) {
+        const { model, request } = job.queue[0];
+        try {
+          const approval = approvals.request(request.runId, { action: 'compute.submit', target: 'local', payload: request, summary: `手动训练 ${model}` });
+          const receipt = approvals.decide(approval.id, request.runId, approval.hash, true);
+          await compute.submit(request, receipt);
+          job = get('job', id);
+          if (!job.workers.some((item: RecordValue) => item.id === request.jobId)) job.workers.push({ id: request.jobId, model, topicCount: request.plan.params.num_topics ?? request.plan.params.max_topics });
+          job.queue.shift();
+          save('job', job);
+          observations.delete(id);
+          if (job.cancel_requested) await compute.cancel(request.jobId);
+          return;
+        } catch (error) {
+          job = get('job', id);
+          job.model_failures = [...(job.model_failures ?? []), { model, topicCount: request.plan.params.num_topics ?? request.plan.params.max_topics, stage: 'submission', error: error instanceof Error ? error.message : '模型启动失败' }];
+          job.queue.shift();
+          save('job', job);
+          observations.delete(id);
+        }
+      }
     })().catch(error => {
       const job = get('job', id);
       save('job', { ...job, queue: [], submission_error: true, status: job.cancel_requested ? 'cancelled' : 'failed', error_message: error instanceof Error ? error.message : '排队任务启动失败' });
@@ -121,18 +133,21 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
       job = get('job', job.id);
       const failed = states.find(state => state.status === 'failed' || state.status === 'cancelled');
       const totalExperiments = job.experimentCount ?? job.models.length;
-      const done = states.length === totalExperiments && states.every(state => state.status === 'completed');
+      const completed = states.filter(state => state.status === 'completed');
+      const failures = [...(job.model_failures ?? []), ...states.filter(state => ['failed', 'cancelled'].includes(state.status)).map(state => ({ ...job.workers.find((item: RecordValue) => item.id === state.id), stage: 'training', error: state.error || state.message || '模型训练失败' }))];
+      const settled = !job.preflightIncomplete && !job.queue?.length && states.length + (job.model_failures?.length ?? 0) >= totalExperiments && states.every(state => ['completed', 'failed', 'cancelled'].includes(state.status));
+      const done = settled && completed.length > 0;
       const active = states.find(state => ['running', 'queued'].includes(state.status));
-      const status = job.cancel_requested ? (active || dispatching.has(job.id) ? 'cancelling' : 'cancelled') : active || job.queue?.length ? 'running' : failed || job.submission_error ? 'failed' : done ? 'succeeded' : job.status;
-      const progress = states.length ? Math.round(states.reduce((sum, state) => sum + state.percent, 0) / totalExperiments) : 0;
-      Object.assign(job, { status, progress, states, error_message: job.cancel_requested ? '任务已由用户取消' : failed?.error ?? job.error_message }); save('job', job);
+      const status = job.cancel_requested ? (active || dispatching.has(job.id) ? 'cancelling' : 'cancelled') : active || job.queue?.length ? 'running' : done ? 'succeeded' : settled || job.submission_error ? 'failed' : job.status;
+      const progress = Math.round((states.reduce((sum, state) => sum + (['failed', 'cancelled'].includes(state.status) ? 100 : state.percent), 0) + (job.model_failures?.length ?? 0) * 100) / totalExperiments);
+      Object.assign(job, { status, progress, states, error_message: job.cancel_requested ? '任务已由用户取消' : status === 'failed' ? failures.map(item => `${item.model.toUpperCase()}${item.topicCount ? ` (K=${item.topicCount})` : ''}: ${item.error}`).join('；') || job.error_message : job.error_message }); save('job', job);
       for (const project of list('project')) {
         if (String(project.task_id) !== String(job.id)) continue;
         const pipelineStatus = status === 'succeeded' ? 'completed' : ['failed', 'cancelled'].includes(status) ? 'error' : 'running';
         if (project.pipeline_status !== pipelineStatus) save('project', { ...project, pipeline_status: pipelineStatus, status: pipelineStatus === 'completed' ? 'completed' : pipelineStatus === 'error' ? 'no_result' : 'running' });
       }
       const { queue, ...publicJob } = job;
-      return { ...publicJob, queued_models: (queue ?? []).map((item: RecordValue) => item.model), job_id: job.id, task_id: String(job.id), dataset: job.dataset_name, current_step: active?.phase, message: status === 'cancelling' ? '正在停止计算进程' : failed?.error ?? (done ? '训练与结果生成完成' : active ? active.message ?? (active.phase.includes('prepar') ? '正在预处理数据' : '本地模型训练中') : job.error_message ?? '等待执行') };
+      return { ...publicJob, model_failures: failures, partial_success: done && failures.length > 0, queued_models: (queue ?? []).map((item: RecordValue) => item.model), job_id: job.id, task_id: String(job.id), dataset: job.dataset_name, current_step: active?.phase, message: status === 'cancelling' ? '正在停止计算进程' : (done ? failures.length ? '部分模型已完成；其他模型的失败原因见下方' : '训练与结果生成完成' : active ? active.message ?? (active.phase.includes('prepar') ? '正在预处理数据' : '本地模型训练中') : job.error_message ?? '等待执行') };
     })();
     if (includeTelemetry) observations.set(job.id, { at: Date.now(), pending }); return pending;
   };
@@ -236,22 +251,41 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
       if (url.pathname === '/api/upload' && method === 'POST') {
         const name = safeName(url.searchParams.get('filename') ?? '', 255); const datasetName = safeName(url.searchParams.get('dataset_name') ?? '');
         if (!/\.(csv|tsv|txt|md|json|jsonl|ndjson|xlsx|xls|parquet|pdf|docx)$/iu.test(name)) throw new HttpError(400, '暂不支持此文件类型');
-        const bytes = await body(req, 200 * 1024 * 1024); if (!bytes.length) throw new HttpError(400, '不能上传空文件');
-        const expectedSize = req.headers['x-theta-file-size'];
-        if (expectedSize !== undefined && (!/^\d+$/.test(String(expectedSize)) || Number(expectedSize) !== bytes.length)) throw new HttpError(400, '文件传输不完整，请重新上传原始文件。');
         const folder = path.join(home, 'incoming', randomUUID()); mkdirSync(folder, { recursive: true });
-        const source = path.join(folder, 'data' + path.extname(name).toLowerCase()); writeFileSync(source, bytes, { flag: 'wx', mode: 0o600 });
-        const dataset = { ...await worker.call<Dataset>('dataset.import', { filePath: source, uploadDir: path.join(home, 'uploads') }), fileName: name };
-        const file = insert('file', { filename: name, dataset_name: datasetName, dataset, file_path: name, size: bytes.length, created_at: new Date().toISOString() });
-        return json(res, { id: file.id, filename: name, dataset_name: datasetName, file_path: name }, 201);
+        const source = path.join(folder, 'data' + path.extname(name).toLowerCase());
+        try {
+          const size = await receiveUpload(req, source);
+          const dataset = { ...await worker.call<Dataset>('dataset.import', { filePath: source, uploadDir: path.join(home, 'uploads') }), fileName: name };
+          const file = insert('file', { filename: name, source_name: url.searchParams.get('source_name') || name, dataset_name: datasetName, dataset, file_path: name, size, created_at: new Date().toISOString() });
+          return json(res, { id: file.id, filename: name, dataset_name: datasetName, file_path: name }, 201);
+        } finally { await rm(folder, { recursive: true, force: true }); }
       }
+      if (parts[1] === 'files' && parts.length === 3 && method === 'DELETE') {
+        const file = get('file', parts[2]);
+        const removed = new Set<number>([file.id]);
+        const files = list('file');
+        // Derived collections must not silently continue to contain a removed source.
+        let changed = true;
+        while (changed) {
+          changed = false;
+          for (const item of files) if (!removed.has(item.id) && item.source_file_ids?.some((id: number) => removed.has(id))) { removed.add(item.id); changed = true; }
+        }
+        db.exec('BEGIN IMMEDIATE');
+        try {
+          for (const item of files) if (removed.has(item.id)) save('file', { ...item, deleted: true });
+          db.exec('COMMIT');
+        } catch (error) { db.exec('ROLLBACK'); throw error; }
+        // Immutable input snapshots remain available to submitted jobs and their results.
+        return json(res, { removed_file_ids: [...removed] });
+      }
+
       if (parts[1] === 'datasets' && parts[3] === 'combine' && method === 'POST') {
-        const input = JSON.parse((await body(req)).toString());
-        if (!Array.isArray(input.fileIds) || !input.fileIds.length || input.fileIds.length > 500) throw new HttpError(400, '请选择 1–500 个正文文件');
-        const files = input.fileIds.map((id: unknown) => get('file', String(id)));
+        const input = JSON.parse((await body(req, Infinity)).toString());
+        if (!Array.isArray(input.fileIds) || !input.fileIds.length) throw new HttpError(400, '请选择至少一个文件');
+        const files = [...new Set(input.fileIds.map(String))].map((id: unknown) => get('file', String(id)));
         if (files.some((file: RecordValue) => !file || file.dataset_name !== parts[2])) throw new HttpError(400, '文件不属于当前项目');
-        const dataset = await worker.call<Dataset>('dataset.combine', { datasets: files.map((file: RecordValue, index: number) => ({ ...file.dataset, ...(typeof input.sourceNames?.[index] === 'string' ? { fileName: input.sourceNames[index].slice(0, 512) } : {}) })), uploadDir: path.join(home, 'uploads') });
-        const file = insert('file', { filename: dataset.fileName, dataset_name: parts[2], dataset, input_kind: 'text', file_path: dataset.fileName, size: dataset.sizeBytes, created_at: new Date().toISOString() });
+        const dataset = await worker.call<Dataset>('dataset.combine', { datasets: files.map((file: RecordValue, index: number) => ({ ...file.dataset, ...(typeof input.textColumns?.[String(file.id)] === 'string' ? { textColumn: input.textColumns[String(file.id)] } : {}), ...(typeof input.sourceNames?.[index] === 'string' ? { fileName: input.sourceNames[index].slice(0, 512) } : {}) })), uploadDir: path.join(home, 'uploads') });
+        const file = insert('file', { filename: dataset.fileName, dataset_name: parts[2], dataset, input_kind: 'text', source_file_ids: files.map((file: RecordValue) => file.id), file_path: dataset.fileName, size: dataset.sizeBytes, created_at: new Date().toISOString() });
         return json(res, { file_id: file.id, name: dataset.fileName, size: dataset.sizeBytes, inputKind: 'text' }, 201);
       }
       if (parts[1] === 'datasets' && parts[3] === 'preview') {
@@ -294,10 +328,8 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
         if (!Array.isArray(counts) || counts.length > 12 || counts.some(value => !Number.isInteger(value) || value < 2 || value > 500) || new Set(counts).size !== counts.length || Math.max(1, counts.length) * models.length > 48) throw new HttpError(400, '主题数组合需为 2–500 的不重复整数，最多 12 个主题数、48 组实验');
         const embeddingProvider = input.embedding_provider ?? 'local';
         if (!['local', 'cloud'].includes(embeddingProvider)) throw new HttpError(400, '请选择本地或云端嵌入');
-        const cloud = models.includes('theta') && embeddingProvider === 'cloud';
-        if (cloud && (input.cloud_confirmed !== true || (input.mode ?? 'zero_shot') !== 'zero_shot')) throw new HttpError(400, '云端嵌入需要明确同意发送文本，且仅支持零样本模式');
+        const cloud = embeddingProvider === 'cloud';
         const externalRequestLimit = input.external_request_limit ?? 200;
-        if (cloud && (!Number.isInteger(externalRequestLimit) || externalRequestLimit < 1 || externalRequestLimit > 1000)) throw new HttpError(400, '云端请求上限必须为 1–1000 的整数');
         const requestHash = contentHash(input);
         const existing = list('job').find(job => job.requestHash === requestHash && ['pending', 'running'].includes(job.status));
         if (existing) return json(res, { id: existing.id, status: existing.status, created_at: existing.created_at }, 200);
@@ -309,7 +341,13 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
         const textColumn = input.text_column || profile.columns.find(column => /^(text|content|cleaned_content|body)$/iu.test(column)) || (profile.columns.length === 1 ? profile.columns[0] : undefined);
         if (!textColumn) throw new HttpError(400, '请选择文本列后再开始分析');
         const plans: { model: string; plan: TrainingPlan; execution: Record<string, unknown> }[] = [];
+        const failures: RecordValue[] = [];
         for (const model of models) for (const count of counts.length ? counts : [undefined]) {
+          try {
+          if (['theta', 'ctm', 'bertopic'].includes(model) && cloud) {
+            if (input.cloud_confirmed !== true || model === 'theta' && (input.mode ?? 'zero_shot') !== 'zero_shot') throw new HttpError(400, '云端嵌入需要同意发送文本，且仅支持零样本模式');
+            if (!Number.isInteger(externalRequestLimit) || externalRequestLimit < 1 || externalRequestLimit > 1000) throw new HttpError(400, '云端请求上限必须为 1–1000 的整数');
+          }
           const custom = input.model_params?.[model] ?? {};
           const params: TrainingPlan['params'] = { ...(model === 'hdp' ? { max_topics: input.num_topics ?? 20 } : { num_topics: input.num_topics ?? 20 }), vocab_size: input.vocab_size ?? 5000, ...custom, language: plotLanguage };
           if (count !== undefined) {
@@ -320,17 +358,19 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
           delete params['text.stopwords'];
           for (const key of ['config.train_ratio', 'config.val_ratio', 'config.test_ratio']) delete params[key];
           if (stopwords) params['text.stopwords'] = stopwords.join('\n');
+          if (['theta', 'ctm', 'bertopic'].includes(model)) params.embedding_provider = embeddingProvider;
           if (model === 'theta') Object.assign(params, { mode: input.mode ?? 'zero_shot', model_size: input.model_size ?? '0.6B', embedding_provider: embeddingProvider });
-          const plan: TrainingPlan = { modelId: model, textColumn, dataSplit, params, timeoutSeconds: 43200, device: process.platform === 'win32' ? 'auto' : 'cpu', rationale: '用户在手动工作台明确提交的参数', ...(model === 'theta' && cloud ? { externalRequestLimit } : {}), ...(input.time_column ? { timeColumn: input.time_column } : {}), ...(input.label_column ? { labelColumn: input.label_column } : {}), ...(model === 'stm' ? { covariates: input.meta_columns ?? [] } : {}) };
-          const preview = await worker.call<{ execution: Record<string, unknown>; readiness: { ready: boolean; missing?: unknown } }>('compute.preview', { dataset: file.dataset, plan });
-          if (!preview.readiness.ready) throw new HttpError(400, `${model.toUpperCase()} 的本地运行环境或模型权重未就绪，请先配置计算环境。`);
-          if ((preview.execution.embedding as RecordValue)?.mode !== (model === 'theta' && cloud ? 'cloud' : 'local')) throw new HttpError(400, '实际嵌入策略与用户选择不一致，请重新确认');
-          if (model === 'theta' && cloud) {
+          const plan: TrainingPlan = { modelId: model, textColumn, dataSplit, params, timeoutSeconds: 43200, device: process.platform === 'win32' ? 'auto' : 'cpu', rationale: '用户在手动工作台明确提交的参数', ...(['theta', 'ctm', 'bertopic'].includes(model) && cloud ? { externalRequestLimit } : {}), ...(input.time_column ? { timeColumn: input.time_column } : {}), ...(input.label_column ? { labelColumn: input.label_column } : {}), ...(model === 'stm' ? { covariates: input.meta_columns ?? [] } : {}) };
+          const preview = await worker.call<{ execution: Record<string, unknown>; readiness: { ready: boolean; issues?: string[]; missingDependencies?: string[]; requiredAssetVariable?: string } }>('compute.preview', { dataset: file.dataset, plan });
+          if (!preview.readiness.ready) throw new HttpError(400, `${model.toUpperCase()}：${preview.readiness.issues?.join('；') || (preview.readiness.missingDependencies?.length ? '缺少计算依赖：' + preview.readiness.missingDependencies.join(', ') : '运行环境检查未通过，请检查计算依赖和嵌入配置。')}`);
+          if ((preview.execution.embedding as RecordValue)?.mode !== (['theta', 'ctm', 'bertopic'].includes(model) && cloud ? 'cloud' : 'local')) throw new HttpError(400, '实际嵌入策略与用户选择不一致，请重新确认');
+          if (['theta', 'ctm', 'bertopic'].includes(model) && cloud) {
             const actual = preview.execution.embedding as RecordValue;
             const shown = input.cloud_selection;
             if (!shown || shown.provider !== actual.provider || shown.model !== actual.model || String(shown.endpoint).replace(/\/$/u, '').replace(/\/embeddings$/u, '') + '/embeddings' !== actual.endpoint) throw new HttpError(400, '云端接收服务或模型与界面确认内容不一致，请重新打开配置并确认');
           }
           plans.push({ model, plan, execution: preview.execution });
+          } catch (error) { failures.push({ model, topicCount: count ?? input.model_params?.[model]?.num_topics ?? input.model_params?.[model]?.max_topics ?? input.num_topics ?? 20, stage: 'preflight', error: error instanceof Error ? error.message : '模型检查失败' }); }
         }
         const current = get('job', job.id);
         if (current.cancel_requested || closing) return;
@@ -338,7 +378,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
           model,
           request: { jobId: `job-${contentHash({ manualJobId: job.id, model, dataset: file.dataset, plan })}`, runId: `manual-project-${job.id}`, dataset: file.dataset, plan, execution } satisfies ComputeRequest,
         }));
-        current.status = 'running'; current.preflightIncomplete = false; save('job', current);
+        current.model_failures = failures; current.status = plans.length ? 'running' : 'failed'; current.preflightIncomplete = false; save('job', current);
         await advance(job.id);
         })().catch(error => {
           const current = get('job', job.id);
@@ -375,6 +415,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
           const seen = new Set<string>();
           for (const job of list('job').filter(j => j.dataset_name === dataset)) {
             const current = await observe(job);
+            for (const [index, failure] of (job.model_failures ?? []).entries()) results.push({ jobId: `failed-${job.id}-${index}`, runId: String(job.id), modelId: failure.model, topicCount: failure.topicCount, status: 'failed', phase: failure.stage === 'preflight' ? '配置检查失败' : '启动失败', percent: 0, error: failure.error, selected: false, reportStatus: 'not_requested' });
             for (const state of (current.states ?? []) as ComputeJob[]) {
               if (seen.has(state.id)) continue;
               seen.add(state.id);
@@ -390,7 +431,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
                 const kind = /\.(png|jpe?g|svg|pdf|webp)$/u.test(ext) ? 'figure' : /\.(csv|tsv)$/u.test(ext) ? 'table' : ext === '.npy' ? 'matrix' : ext === '.html' ? 'report' : 'artifact';
                 return { name, kind, url: `${base}/visualizations/file?${query}&path=${encodeURIComponent(name)}` };
               }) : [];
-              results.push({ jobId: state.id, runId: String(job.id), modelId, topicCount: current.workers.find((item: RecordValue) => item.id === state.id)?.topicCount, status: state.status, phase: state.phase, percent: state.percent, selected: false,
+              results.push({ jobId: state.id, runId: String(job.id), modelId, topicCount: current.workers.find((item: RecordValue) => item.id === state.id)?.topicCount, status: state.status, phase: state.phase, percent: state.percent, error: state.error, selected: false,
                 reportStatus: reportRecord?.status === 'generating' ? 'generating' : reportRecord?.status === 'failed' ? 'incomplete' : entries.length ? 'ready' : 'not_requested',
                 reportError: reportRecord?.error,
                 execution: { id: state.id, status: state.status, phase: state.phase, percent: state.percent, phaseHistory: state.phaseHistory, telemetry: state.telemetry },
@@ -499,6 +540,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
   server.close = (callback) => closeHttp(error => {
     void resourcesClosed.then(() => callback?.(error), cause => callback?.(cause));
   });
+  server.requestTimeout = 0; // Uploads are bounded by available storage, not a fixed transfer duration.
   return server;
 }
 

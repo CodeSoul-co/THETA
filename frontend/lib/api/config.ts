@@ -40,7 +40,7 @@ export async function apiFetch<T>(
   };
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const timer = timeoutMs > 0 ? setTimeout(() => controller.abort(), timeoutMs) : undefined;
 
   let response: Response;
   try {

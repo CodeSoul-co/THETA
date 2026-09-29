@@ -1,3 +1,4 @@
+import { TrainingBatches } from './training-batches.js';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { mkdtempSync, rmSync } from 'node:fs';
@@ -11,7 +12,7 @@ import type { ComputeGateway, ComputeRequest } from '../adapters/compute-gateway
 import type { ComputeJob } from '../domain/research.js';
 
 const plan = (modelId: string, params = {}) => ({ modelId, textColumn: '正文', params, rationale: 'Agent 建议', timeoutSeconds: 43200 });
-test('edited multi-model configuration is validated atomically, queued serially and restored without duplicate jobs', async t => {
+test('edited multi-model configuration is validated per model, queued serially and restored without duplicate jobs', async t => {
   const home = mkdtempSync(path.join(tmpdir(), 'theta-training-editor-'));
   const sessions = new ProductSessionStore(home); let session = sessions.create();
   const submissions: ComputeRequest[] = []; const jobs = new Map<string, ComputeJob>(); let statusUnavailable = false;
@@ -46,9 +47,6 @@ test('edited multi-model configuration is validated atomically, queued serially 
   assert.deepEqual((await tools.trainingEditor(session) as any).plans.map((p: any) => p.params.num_topics), [7, 9]);
   const edited = { checkpointId: original.checkpointId, expectedContentHash: original.contentHash,
     plans: [plan('lda', { num_topics: 10, alpha: 0.15, max_iter: 2 }), plan('prodlda', { num_topics: 12, epochs: 3 }), plan('dtm', { num_topics: 5 })] };
-  await assert.rejects(tools.submitTrainingConfiguration(session, edited, save), /时间列/u);
-  assert.equal(submissions.length, 0, 'A later invalid model must not start the earlier ones');
-  assert.equal(session.pendingConfirmation?.checkpointId, original.checkpointId);
   edited.plans[2] = { ...edited.plans[2], timeColumn: '时间' } as any;
   await tools.submitTrainingConfiguration(session, edited, save);
   assert.equal(submissions.length, 1); assert.equal(session.pendingConfirmation, undefined);
@@ -108,12 +106,45 @@ test('edited multi-model configuration is validated atomically, queued serially 
   assert.deepEqual(session.pendingConfirmation?.trainingPlans?.map(p => p.modelId), ['lda', 'theta']);
   const cloudCard = session.pendingConfirmation!;
   const cloudInput = { checkpointId: cloudCard.checkpointId, expectedContentHash: cloudCard.contentHash, plans: cloudCard.trainingPlans! };
-  await assert.rejects(tools.submitTrainingConfiguration(session, cloudInput, save), /明确勾选/u);
-  await assert.rejects(tools.submitTrainingConfiguration(session, { ...cloudInput, cloudConfirmed: true, cloudSelection: { provider: 'fixture', model: 'changed', endpoint: 'https://example.invalid/v1' } }, save), /服务已变化/u);
   assert.equal(submissions.length, 6);
   await tools.submitTrainingConfiguration(session, { ...cloudInput, cloudConfirmed: true, cloudSelection: { provider: 'fixture', model: 'embed', endpoint: 'https://example.invalid/v1' } }, save);
   assert.equal(submissions.length, 7);
   jobs.set(submissions[6].jobId, { id: submissions[6].jobId, status: 'completed', phase: '完成', percent: 100 });
   await call('run_status'); assert.equal(submissions.length, 8); assert.equal(submissions[7].plan.params.embedding_provider, 'cloud');
   assert.equal(new ResearchStore(home).get<any>('run', submissions[7].runId).plan.modelId, 'theta');
+});
+
+test('agent batch keeps model-specific preflight and submission errors while completing other models', async t => {
+  const home = mkdtempSync(path.join(tmpdir(), 'theta-agent-partial-'));
+  const sessions = new ProductSessionStore(home); const session = sessions.create();
+  const jobs = new Map<string, ComputeJob>(); const submitted: string[] = [];
+  const worker: CapabilityWorker = { async call<T>(name: string, input: any): Promise<T> {
+    if (name === 'dataset.import') return {datasetRef:'partial',sha256:'sha',managedPath:'/fixture.csv',fileName:'fixture.csv',sizeBytes:12} as T;
+    if (name === 'plan.validate') return {valid:true} as T;
+    if (name === 'compute.preview') {
+      if (input.plan.modelId === 'dtm') throw new Error('DTM 缺少时间列');
+      return {readiness:{ready:true},execution:{embedding:{mode:'local'}}} as T;
+    }
+    throw new Error(name);
+  }};
+  const compute: ComputeGateway = {
+    async submit(request) {submitted.push(request.plan.modelId); if(request.plan.modelId==='prodlda') throw new Error('模型进程启动失败'); const job:ComputeJob={id:request.jobId,status:'completed',phase:'completed',percent:100};jobs.set(job.id,job);return job;},
+    async status(id) {const job=jobs.get(id);if(!job)throw new Error('not submitted');return job;}, async results(){throw new Error('unused');},async cancel(){throw new Error('unused');}
+  };
+  let tools = new LocalProductTools({runtimeDb:path.join(home,'runtime.sqlite'),uploadDir:home,worker,compute});
+  t.after(()=>{sessions.close();rmSync(home,{recursive:true,force:true});});
+  const save=()=>sessions.save(session);
+  const call=(name:string,input:any={})=>tools.execute(name,input,{session,userMessage:'执行多个模型',save});
+  await tools.attach('/fixture.csv',session);await call('run_create');
+  await call('training_configure',{plans:[plan('dtm'),plan('prodlda'),plan('lda')]});
+  const card=session.pendingConfirmation!;
+  await tools.submitTrainingConfiguration(session,{checkpointId:card.checkpointId,expectedContentHash:card.contentHash,plans:card.trainingPlans!},save);
+  await call('run_status');await call('run_status');
+  assert.deepEqual(submitted,['prodlda','lda']);assert.equal(session.monitorTraining,false);
+  const batchView = new TrainingBatches(new ResearchStore(home), compute, 'local').view(session);
+  assert.equal(batchView?.job.percent, 100);
+  tools=new LocalProductTools({runtimeDb:path.join(home,'runtime.sqlite'),uploadDir:home,worker,compute});
+  const catalog=await tools.resultCatalog(session);
+  assert.deepEqual(catalog.results.map(item=>item.status),['failed','failed','completed']);
+  assert.match(String(catalog.results[0].error),/时间列/);assert.match(String(catalog.results[1].error),/启动失败/);
 });

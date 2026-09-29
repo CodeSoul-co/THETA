@@ -381,6 +381,7 @@ export function ResearchResultView({ source, initialDestination, onOpenAssistant
   return (
     <div className="min-h-full min-w-0 bg-[#f5f8fc] p-4 [overflow-wrap:anywhere] sm:p-6 lg:p-8">
       <div className="mx-auto max-w-[1380px]">
+        {catalog.some(item => item.status === 'failed') && <section role="status" className="mb-4 space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950"><h3 className="font-semibold">部分模型未完成；已完成的模型结果不受影响</h3>{catalog.filter(item => item.status === 'failed').map(item => <p key={item.jobId}><strong>{item.modelId.toUpperCase()}{item.topicCount ? ` · K=${item.topicCount}` : ''}</strong>：{item.error || item.phase || '请查看该模型的执行日志'}</p>)}</section>}
         {loadError && <p role="alert" className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{loadError}</p>}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">

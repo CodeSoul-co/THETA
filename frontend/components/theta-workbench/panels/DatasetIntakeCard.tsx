@@ -1,5 +1,5 @@
 import { toast } from 'sonner'
-import { DATASET_ACCEPT, datasetFilesError, documentCollectionError, isDocumentCollection } from '@/lib/dataset-files'
+import { DATASET_ACCEPT, datasetFilesWarning, folderDatasetFiles, datasetFilesError, documentCollectionError, isDocumentCollection } from '@/lib/dataset-files'
 import { useFileDrop } from '@/lib/use-file-drop'
 import { ComputationNotice } from './WorkbenchNotice'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -102,6 +102,13 @@ export const DatasetIntakeCard = ({ disabled = false, interaction, storageScope,
 
   const selectFiles = (files: File[]): void => {
     if (processing || disabled) return
+    if (files.some(file => !!file.webkitRelativePath)) {
+      const { supported, skipped } = folderDatasetFiles(files)
+      if (skipped.length) toast.info(`${skipped.length} 个不支持或空文件未纳入分析`)
+      files = supported
+    }
+    const warning = datasetFilesWarning(files, locale)
+    if (warning) toast.warning(warning, { duration: 8000 })
     const problem = isDocumentCollection(files) ? documentCollectionError(files, locale) : datasetFilesError(files, locale)
     if (problem) { setError(problem); return }
     const accepted = files
@@ -188,10 +195,11 @@ export const DatasetIntakeCard = ({ disabled = false, interaction, storageScope,
             </Button>
             <strong>{locale === 'zh-CN' ? (dragging ? '松开即可添加文件' : '拖拽文件到这里，也可点击选择') : (dragging ? 'Drop your file here' : 'Drag a file here, or choose a file')}</strong>
             <span>{locale === 'zh-CN' ? '支持 CSV、Excel、JSON、Parquet、PDF、DOCX、TXT 等格式' : 'CSV, Excel, JSON, Parquet, PDF, DOCX and text supported'}</span>
-            <small>{locale === 'zh-CN' ? '单文件或文档文件夹最大 200 MiB；按正文段落切分' : 'Up to 200 MiB per file'}</small>
+            <small>{locale === 'zh-CN' ? '支持整个文件夹；文件较多或较大时会提示耗时，不设固定大小或数量上限' : 'Entire folders supported; large uploads may take longer. No fixed size or count limit.'}</small>
             <input
               ref={fileInput}
               type="file"
+              multiple
               hidden
               disabled={processing || disabled}
               accept={DATASET_ACCEPT}

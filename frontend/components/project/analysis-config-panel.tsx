@@ -80,7 +80,7 @@ const EMBEDDING_MODES = [
 // ==================== 类型 ====================
 
 export interface AnalysisConfigService {
-  runtime(): Promise<{ embedding: { configured: boolean; provider: string; endpoint: string; model: string } }>
+  runtime(): Promise<{ embedding: { preferredMode?: string; configured: boolean; provider: string; endpoint: string; model: string } }>
   model(id: string): Promise<ModelContract>
   uploadStopwords(file: File): Promise<NonNullable<AnalysisConfig['stopwords']>>
   stopwordsDownloadUrl: string
@@ -147,7 +147,7 @@ export function AnalysisConfigPanel({
     service.runtime()
       .then(result => { if (!cancelled) {
         setEmbedding(result.embedding)
-        setConfig(prev => ({ ...prev, cloudConfirmed: false }))
+        setConfig(prev => ({ ...prev, ...(result.embedding.preferredMode ? { embeddingProvider: result.embedding.preferredMode === "local" ? "local" : "cloud" } : {}), cloudConfirmed: false }))
       } })
       .catch(() => { if (!cancelled) setEmbedding(null) })
     return () => { cancelled = true }
@@ -187,7 +187,6 @@ export function AnalysisConfigPanel({
       return
     }
     if (!valid) return
-    if (config.models.includes("theta") && config.embeddingProvider === "cloud" && (!embedding?.configured || !config.cloudConfirmed || config.mode !== "zero_shot")) return
     setSubmitting(true); setSubmitError('')
     try {
       explorationCounts(config)
@@ -357,29 +356,31 @@ export function AnalysisConfigPanel({
                   ))}
                 </TabsList>
 
-                {/* THETA 配置 */}
-                <TabsContent value="theta" className="mt-4">
-                  <div className="space-y-6 rounded-xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
-                    {/* THETA 专属配置 */}
-                    <div className="space-y-4">
-                      <h4 className="font-semibold text-blue-800">THETA 专属配置</h4>
+                {config.models.some(model => ['theta', 'ctm', 'bertopic'].includes(model)) && (
                       <div className="space-y-3 rounded-xl border bg-white p-4">
                         <Label>嵌入计算位置</Label>
                         <RadioGroup aria-label="嵌入计算位置" value={config.embeddingProvider} onValueChange={v => setConfig(prev => ({ ...prev, embeddingProvider: v as "local" | "cloud", cloudConfirmed: false, ...(v === "cloud" ? { mode: "zero_shot" } : {}) }))} className="grid gap-3 sm:grid-cols-2">
-                          <div className="flex items-center gap-2"><RadioGroupItem id="embedding-local" value="local" /><Label htmlFor="embedding-local">本地嵌入 · Qwen</Label></div>
+                          <div className="flex items-center gap-2"><RadioGroupItem id="embedding-local" value="local" /><Label htmlFor="embedding-local">本地嵌入 · 已配置模型</Label></div>
                           <div className="flex items-center gap-2"><RadioGroupItem id="embedding-cloud" value="cloud" /><Label htmlFor="embedding-cloud">云端嵌入 · 已配置服务</Label></div>
                         </RadioGroup>
                         {config.embeddingProvider === "cloud" && <div className="space-y-3 text-xs leading-5 text-slate-600">
                           {embedding?.configured ? <p className="break-all">服务：{embedding.provider} · {embedding.model}<br />接收地址：{embedding.endpoint}</p> : <p role="alert" className="text-red-600">云端嵌入 API 未配置完整。请在「设置 → 嵌入模型」填写地址、模型与密钥后重试。</p>}
-                          <Label htmlFor="cloud-limit">本轮最多外部请求次数</Label>
+                          <Label htmlFor="cloud-limit">每个模型实验最多外部请求次数</Label>
                           <Input id="cloud-limit" type="number" min={1} max={1000} value={config.externalRequestLimit} onChange={e => setConfig(prev => ({ ...prev, externalRequestLimit: Math.max(1, Math.min(1000, Number(e.target.value) || 1)) }))} />
                           <Label htmlFor="embedding-batch">每次请求的文本块数</Label>
                           <Input id="embedding-batch" type="number" min={1} max={64} value={(config.parameters.theta?.['prepare.batch_size'] as number ?? 32)} onChange={e => setConfig(prev => ({ ...prev, parameters: { ...prev.parameters, theta: { ...prev.parameters.theta, 'prepare.batch_size': Math.max(1, Math.min(64, Number(e.target.value) || 1)) } } }))} />
                           <p>长文会分块编码后合并；请求预算包含正文、词表和重试。增大批量可减少请求次数，不改变原始文本。</p>
                           <div className="flex items-start gap-2"><Checkbox id="cloud-consent" checked={config.cloudConfirmed} onCheckedChange={v => setConfig(prev => ({ ...prev, cloudConfirmed: v === true }))} /><Label htmlFor="cloud-consent" className="text-xs font-normal leading-5">允许将本次文本发送给上述服务并消耗 API 额度；达到请求上限即停止。云端仅支持零样本嵌入。</Label></div>
                         </div>}
-                        <p className="text-xs text-slate-500">此选项仅用于 THETA；CTM、BERTopic 使用本地多语言 SBERT，其他模型不调用云端嵌入。</p>
+                        <p className="text-xs text-slate-500">应用于 THETA、CTM 和 BERTopic。THETA 微调仍需本地权重；其他模型不调用云端嵌入。未确认云端发送或配置有误时，仅跳过受影响的模型。</p>
                       </div>
+                )}
+                {/* THETA 配置 */}
+                <TabsContent value="theta" className="mt-4">
+                  <div className="space-y-6 rounded-xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+                    {/* THETA 专属配置 */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-blue-800">THETA 专属配置</h4>
                       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                         <div className="space-y-2">
                           <Label className="text-sm">Qwen 模型尺寸</Label>
@@ -450,7 +451,7 @@ export function AnalysisConfigPanel({
             </Button>
             <Button
               onClick={handleConfirm}
-              disabled={submitting || uploadingStopwords || (config.models.length > 0 && (!valid || (!!columns && !config.textColumn) || (config.models.includes("theta") && config.embeddingProvider === "cloud" && (!embedding?.configured || !config.cloudConfirmed))))}
+              disabled={submitting || uploadingStopwords || (config.models.length > 0 && (!valid || (!!columns && !config.textColumn)))}
               className="bg-blue-600 hover:bg-blue-700"
             >
               {submitting ? '正在校验并提交…' : confirmLabel}

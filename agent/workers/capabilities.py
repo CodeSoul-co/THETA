@@ -27,8 +27,8 @@ MODELS = {
     "hdp": "HDP 截断主题探索，需识别低权重主题",
     "dtm": "按时间片建模，需要有效时间列",
     "stm": "结构主题模型，需要协变量",
-    "ctm": "结合语义 embedding 与词袋的主题模型，需要本地 SBERT",
-    "bertopic": "语义聚类主题模型，需要本地 SBERT",
+    "ctm": "结合语义 embedding 与词袋的主题模型，支持本地 SBERT 或经确认的云端嵌入",
+    "bertopic": "语义聚类主题模型，支持本地 SBERT 或经确认的云端嵌入",
     "theta": "THETA 主题模型；zero_shot 支持本地 Qwen 或显式批准的云 embedding，微调需要本地 Qwen",
 }
 
@@ -48,8 +48,7 @@ def model_inspect(payload: dict) -> dict:
     return {"modelId": model, "description": MODELS[model], "runtimeProfile": runtime_environments.model_profile(model),
             "requiresTime": model == "dtm", "requiresCovariates": model == "stm",
             "requiresWeights": model in {"theta", "ctm", "bertopic"},
-            "embeddingOptions": (["local", "cloud_zero_shot_requires_approval"] if model == 'theta'
-                                 else ["local_sbert"] if model in {'ctm', 'bertopic'} else ["not_required"]),
+            "embeddingOptions": (["local", "cloud_zero_shot_requires_approval"] if model in {'theta', 'ctm', 'bertopic'} else ["not_required"]),
             "parameterNotes": {"max_iter": "LDA/STM 的训练迭代上限", "epochs": "神经模型的训练轮数；不是 LDA/STM 的迭代数",
                                "covariates": "STM 必须选择真实分组/解释变量；输出关联不等于因果效应",
                                "num_topics": "用于可解释的小规模比较；不能只按样本数自动确定业务主题数"},
@@ -63,7 +62,7 @@ def model_inspect(payload: dict) -> dict:
 def runtime_check(payload: dict) -> dict:
     model = model_inspect(payload)["modelId"]
     cloud = payload.get('embeddingProvider') == 'cloud'
-    mode_supported = not cloud or model == 'theta' and payload.get('mode', 'zero_shot') == 'zero_shot'
+    mode_supported = not cloud or model in {'ctm', 'bertopic'} or model == 'theta' and payload.get('mode', 'zero_shot') == 'zero_shot'
     # prepare_data imports the complete dataclean converter even for CSV input.
     # Keep the probe aligned with the code path that compute.submit will execute,
     # otherwise readiness can report a false positive and fail before training.
@@ -82,7 +81,7 @@ def runtime_check(payload: dict) -> dict:
     asset_key = "QWEN_MODEL_0_6B" if model == "theta" else "SBERT_MODEL_PATH"
     if model == "theta" and payload.get("modelSize") in {"4B", "8B"}:
         asset_key = "QWEN_MODEL_" + payload["modelSize"]
-    needs = model in {"theta", "ctm", "bertopic"} and not (model == 'theta' and cloud and mode_supported)
+    needs = model in {"theta", "ctm", "bertopic"} and not (cloud and mode_supported)
     asset = payload.get("modelAssets", {}).get(asset_key, os.environ.get(asset_key, ""))
     assets_ready = not needs or (bool(asset) and Path(asset).is_dir() and (Path(asset) / 'config.json').is_file()
         and any(file.stat().st_size > 0 for pattern in ['*.safetensors', 'pytorch_model*.bin'] for file in Path(asset).glob(pattern) if file.is_file()))
@@ -101,7 +100,7 @@ def runtime_check(payload: dict) -> dict:
     if not gpu_ready:
         issues.append("所选 GPU 不可用。请选择 CPU，或检查 GPU 与驱动配置后重试。")
     if not mode_supported:
-        issues.append("当前模型或训练模式不支持云端嵌入。请选择兼容的本地模型；云端嵌入适用于 THETA 零样本分析。")
+        issues.append("当前模型或训练模式不支持云端嵌入。请选择兼容的本地模型；云端嵌入适用于 THETA 零样本、CTM 和 BERTopic。")
     return {"ready": not missing and assets_ready and gpu_ready and mode_supported, "issues": issues, "embeddingModeSupported": mode_supported, "deviceReady": gpu_ready, "modelId": model, "missingDependencies": missing,
             "modelAssetsReady": assets_ready, "requiredAssetVariable": asset_key if needs else None,
             "modelAsset": {"name": Path(asset).name, "path": str(Path(asset).resolve())} if needs and asset else None,
@@ -114,8 +113,6 @@ def dataset_import(payload: dict) -> dict:
     source = Path(payload["filePath"]).expanduser().resolve(strict=True)
     if not source.is_file() or source.suffix.lower() not in SUPPORTED_SUFFIXES:
         raise ValueError("请选择支持的数据文件")
-    if source.stat().st_size > 200 * 1024 * 1024:
-        raise ValueError("本地导入限制为 200 MiB；更大数据请使用数据服务")
     from .dataset.readers import validate_document_container
     validate_document_container(source)
     digest = file_hash(source)
