@@ -112,6 +112,7 @@ jobs:
         if: ${{ success() && (!inputs.target || inputs.target == 'all' || inputs.target == matrix.platform) }}
         with:
           name: THETA-${{ matrix.platform }}-${{ matrix.arch }}
+          retention-days: 7
           compression-level: 0
           path: |
             desktop/release/THETA-*.dmg
@@ -125,6 +126,7 @@ jobs:
         if: failure()
         with:
           name: desktop-logs-${{ matrix.platform }}
+          retention-days: 3
           path: desktop/.smoke-home/中文路径/logs/
 
   release:
