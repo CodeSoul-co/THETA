@@ -6,7 +6,7 @@ THETA provides a Web workbench, CLI Agent, and desktop apps. Local use does not 
 
 ## Desktop apps
 
-Download the Mac DMG or Windows EXE from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.0). Python and CPU compute dependencies are bundled. Download model weights as needed and enter your API keys in Settings. See the [desktop guide](desktop.md).
+Download the Mac DMG or Windows EXE from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.13). Python and CPU compute dependencies are bundled. Download model weights as needed and enter your API keys in Settings. See the [desktop guide](desktop.md).
 
 ## Source installation
 

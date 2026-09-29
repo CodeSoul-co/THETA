@@ -6,7 +6,7 @@ THETA 提供网页工作台、CLI Agent 和桌面应用。本机使用无需账�
 
 ## 桌面应用
 
-从 [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.0) 下载 Mac DMG 或 Windows EXE。Python 与 CPU 计算依赖已内置；模型权重按需下载，密钥由用户在设置中填写。详见[桌面指南](desktop.zh.md)。
+从 [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.13) 下载 Mac DMG 或 Windows EXE。Python 与 CPU 计算依赖已内置；模型权重按需下载，密钥由用户在设置中填写。详见[桌面指南](desktop.zh.md)。
 
 ## 源码版
 
