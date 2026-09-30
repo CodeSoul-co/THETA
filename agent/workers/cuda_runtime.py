@@ -30,7 +30,7 @@ assert cuda.cuDriverGetVersion(ctypes.byref(version)) == 0 and version.value >= 
 print('THETA_DRIVER_READY')
 '''
     try:
-        result = subprocess.run([sys.executable, '-I', '-c', code], capture_output=True, text=True, timeout=10)
+        result = subprocess.run([sys.executable, '-I', '-B', '-c', code], capture_output=True, text=True, timeout=10)
         return result.returncode == 0 and 'THETA_DRIVER_READY' in result.stdout.splitlines()
     except (OSError, subprocess.TimeoutExpired):
         return False

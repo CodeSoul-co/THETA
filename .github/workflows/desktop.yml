@@ -78,6 +78,7 @@ jobs:
           if [ "$RUNNER_OS" = 'macOS' ]; then
             codesign --verify --deep --strict desktop/release/mac-arm64/THETA.app
             desktop/release/mac-arm64/THETA.app/Contents/MacOS/THETA --smoke-test
+            codesign --verify --deep --strict desktop/release/mac-arm64/THETA.app
           else
             desktop/release/win-unpacked/THETA.exe --smoke-test
           fi

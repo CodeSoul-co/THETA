@@ -28,7 +28,7 @@ app.on('second-instance', () => { window?.restore(); window?.focus(); });
 
 function pythonCall(args, options = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(python, args, { cwd: path.join(runtime, 'agent'), env: serviceEnv, windowsHide: true, ...options });
+    const child = spawn(python, ['-B', ...args], { cwd: path.join(runtime, 'agent'), env: serviceEnv, windowsHide: true, ...options });
     let stdout = '', stderr = '';
     const timer = setTimeout(() => { child.kill(); reject(new Error('Python check timed out')); }, 120000);
     child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');

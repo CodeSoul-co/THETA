@@ -27,7 +27,7 @@ torch.cuda.synchronize()
 print('THETA_CUDA_READY')
 '''
     try:
-        result = subprocess.run([sys.executable, '-I', '-c', probe, *([str(cuda_runtime)] if cuda_runtime else [])],
+        result = subprocess.run([sys.executable, '-I', '-B', '-c', probe, *([str(cuda_runtime)] if cuda_runtime else [])],
             env={**os.environ, 'CUDA_VISIBLE_DEVICES': '0'}, capture_output=True, text=True, timeout=30)
         if result.returncode == 0 and 'THETA_CUDA_READY' in result.stdout.splitlines():
             return 'cuda:0', 'selected'
