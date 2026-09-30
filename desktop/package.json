@@ -1,7 +1,7 @@
 {
   "name": "theta-desktop",
   "productName": "THETA",
-  "version": "0.3.14",
+  "version": "0.3.15",
   "private": true,
   "description": "THETA local research workbench with bundled Python",
   "author": "CodeSoul",
@@ -64,6 +64,7 @@
     ],
     "artifactName": "THETA-${version}-${os}-${arch}.${ext}",
     "mac": {
+      "identity": "-",
       "target": [
         "dmg",
         "zip"

@@ -76,6 +76,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ "$RUNNER_OS" = 'macOS' ]; then
+            codesign --verify --deep --strict desktop/release/mac-arm64/THETA.app
             desktop/release/mac-arm64/THETA.app/Contents/MacOS/THETA --smoke-test
           else
             desktop/release/win-unpacked/THETA.exe --smoke-test

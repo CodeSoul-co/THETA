@@ -1,13 +1,13 @@
-# THETA 0.3.14
+# THETA 0.3.15
 
-[English](https://github.com/CodeSoul-co/THETA/blob/main/docs/releases/desktop-v0.3.14.md) | **中文**
+[English](https://github.com/CodeSoul-co/THETA/blob/main/docs/releases/desktop-v0.3.15.md) | **中文**
 
 | 平台 | 安装包 |
 | --- | --- |
-| macOS Apple Silicon | [下载 DMG](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.14/THETA-0.3.14-mac-arm64.dmg) |
-| Windows x64 | [下载 EXE](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.14/THETA-0.3.14-win-x64.exe) |
+| macOS Apple Silicon | [下载 DMG](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.15/THETA-0.3.15-mac-arm64.dmg) |
+| Windows x64 | [下载 EXE](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.15/THETA-0.3.15-win-x64.exe) |
 
-启动不再要求钥匙串密码。API Key 使用本机用户专属加密存储；从旧版钥匙串存储升级时，需要重新输入一次 API Key。Windows 使用普通用户权限运行，安装程序不再提供权限提升。未签名应用的系统提示仍由操作系统决定，当前预览版未正式签名或公证。
+启动不再要求钥匙串密码。API Key 使用本机用户专属加密存储；从旧版钥匙串存储升级时，需要重新输入一次 API Key。Windows 使用普通用户权限运行，安装程序不再提供权限提升。Mac 应用使用本地签名，发布前验证签名完整性。当前预览版没有 Developer ID 正式签名或公证，操作系统仍可能显示安全提示。
 
 训练提交、进度、取消和结果读取统一通过 worker HTTP API。桌面 worker 服务与界面、Agent 服务分别运行；Web 和 CLI 使用同一协议。预留 HTTPS 远程 worker 地址与令牌配置；远程部署还需提供 worker 可访问的数据与结果存储。
 

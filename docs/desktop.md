@@ -14,14 +14,14 @@ LDA, BTM, HDP and STM use their existing CPU implementations. CLI Agent plans ac
 
 ## Download and install
 
-Download from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.14):
+Download from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.15):
 
 | Platform | Installer | Installation |
 | --- | --- | --- |
-| macOS Apple Silicon | `THETA-0.3.14-mac-arm64.dmg` | Open the DMG and drag THETA into Applications |
-| Windows x64 | `THETA-0.3.14-win-x64.exe` | Run the installer |
+| macOS Apple Silicon | `THETA-0.3.15-mac-arm64.dmg` | Open the DMG and drag THETA into Applications |
+| Windows x64 | `THETA-0.3.15-win-x64.exe` | Run the installer |
 
-This is an unsigned preview without macOS notarization. Your operating system may show a security warning. Native Intel Mac and Windows ARM installers are not provided.
+The macOS preview uses verified ad-hoc signing, without Developer ID signing or notarization. Your operating system may show a security warning. Native Intel Mac and Windows ARM installers are not provided.
 
 Compare your downloaded file with `SHA256SUMS.txt` on the release page. On macOS, run `shasum -a 256 filename.dmg`; in Windows PowerShell, run `Get-FileHash filename.exe -Algorithm SHA256`.
 
