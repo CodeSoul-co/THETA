@@ -47,7 +47,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [ "$RUNNER_OS" = 'macOS' ]; then ulimit -n 8192; fi
+          if [ "$RUNNER_OS" = 'macOS' ]; then
+            sudo sysctl -w kern.maxfiles=262144 kern.maxfilesperproc=65536
+            ulimit -n 65536
+          fi
           pnpm --dir agent install --frozen-lockfile
           npm --prefix frontend ci
           npm --prefix desktop ci
