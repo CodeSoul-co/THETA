@@ -94,6 +94,7 @@ plan.validate
 | `label` | 标签列（可选） | `--label_col label` |
 | `year` + `timestamp` | 同一时间列（可选） | `--time_column year` |
 | `cov_0` … `cov_N` | 协变量按顺序 | `--covariate_columns cov_0 …` |
+| `source_file` + `source_row` | 原始文件与行号溯源 | 保留用于结果与源数据对齐 |
 
 引擎入口必须存在 `src/models/run_pipeline.py`（`engine_root()` 用它判断仓库有效性）、`prepare_data.py`、`main.py`。转换前后都会校验托管副本 sha256，被改动即拒绝训练。
 

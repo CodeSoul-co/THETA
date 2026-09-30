@@ -116,7 +116,7 @@ await check('ExecutionSpec v2 与规范化列契约', async () => {
   expect(parsed.rejectSchema === 'rejected', 'schema_version 必须严格校验');
   expect(parsed.rejectFilename === 'rejected', 'dataset.filename 带路径必须被拒绝');
   expect(parsed.stdlibStatistics === true, 'worker 侧标准库 statistics 被本地包遮蔽');
-  expect(parsed.normalizedHeader === 'text,cov_0', '规范化列契约变化：' + parsed.normalizedHeader);
+  expect(parsed.normalizedHeader === 'text,cov_0,source_file,source_row', '规范化列契约变化：' + parsed.normalizedHeader);
   expect(parsed.normalizedRows === 3, '规范化行数不一致：' + parsed.normalizedRows);
   return 'spec v2 + ' + parsed.normalizedHeader;
 });
