@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { localInferenceSettings } from './inference-settings.js';
 import { once } from 'node:events';
+import { ProductSessionStore } from '../src/memory/session-store.js';
 import { createAgentServer } from './server.js';
 import { createConfiguredProvider } from '../src/providers/configured-provider.js';
 
@@ -37,9 +38,11 @@ test('Web configuration uses desktop validation, masks and persists keys, and su
 });
 
 
-test('Web settings HTTP endpoint saves masked profiles without dropping unfinished configuration', async () => {
+test('Web settings HTTP endpoint saves masked profiles without dropping unfinished configuration', async t => {
   const before = { ...process.env }, home = mkdtempSync(path.join(tmpdir(), 'theta-web-settings-http-'));
-  let server: ReturnType<typeof createAgentServer> | undefined;
+  let server: ReturnType<typeof createAgentServer> | undefined, sessionsClosed = false;
+  const closeSessions = ProductSessionStore.prototype.close;
+  t.mock.method(ProductSessionStore.prototype, 'close', function(this: ProductSessionStore) { sessionsClosed = true; closeSessions.call(this); });
   try {
     for (const key of Object.keys(process.env)) if (/^(THETA_INFERENCE_|THETA_DESKTOP_TOKEN|OPENAI_|DEEPSEEK_|GLM_|MINIMAX_)/.test(key)) delete process.env[key];
     server = createAgentServer(home); server.listen(0, '127.0.0.1'); await once(server, 'listening');
@@ -64,6 +67,8 @@ test('Web settings HTTP endpoint saves masked profiles without dropping unfinish
   } finally {
     if (server) { server.closeAllConnections(); await new Promise<void>(resolve => server!.close(() => resolve())); }
     for (const key of Object.keys(process.env)) if (!(key in before)) delete process.env[key];
-    Object.assign(process.env, before); rmSync(home, { recursive: true, force: true });
+    Object.assign(process.env, before);
+    assert.ok(sessionsClosed, 'HTTP close must wait for SQLite shutdown before cleanup');
+    rmSync(home, { recursive: true, force: true });
   }
 });

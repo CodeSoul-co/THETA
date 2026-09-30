@@ -1024,7 +1024,18 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
       void work.finally(() => { monitoring.delete(meta.id); inFlight.delete(work); });
     }
   }, 3000);
-  monitor.unref(); server.on('close', () => { shuttingDown = true; clearInterval(monitor); for (const controller of active.values()) controller.abort(); void Promise.allSettled([analysisReports.close(), ...inFlight]).then(() => sessions.close()); });
+  monitor.unref();
+  let resourcesClosed: Promise<void> = Promise.resolve();
+  server.once('close', () => {
+    shuttingDown = true; clearInterval(monitor);
+    for (const controller of active.values()) controller.abort();
+    resourcesClosed = Promise.allSettled([analysisReports.close(), ...inFlight]).then(() => sessions.close());
+  });
+  const closeHttp = server.close.bind(server);
+  // Match the manual API: close completes only after SQLite handles are released.
+  server.close = callback => closeHttp(error => {
+    void resourcesClosed.then(() => callback?.(error), cause => callback?.(cause));
+  });
   server.requestTimeout = 0;
   return server;
 }
