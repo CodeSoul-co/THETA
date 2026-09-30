@@ -1,0 +1,17 @@
+.dialog { width: min(780px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); overflow-y: auto; }
+.actions,.controls,.heading,.install>div { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.actions { margin-bottom: 22px; }
+.install { display: grid; gap: 8px; margin-bottom: 22px; }
+.install input { flex: 1; min-width: 180px; border: 1px solid var(--dsw-alias-border-1, #dce1eb); border-radius: 10px; padding: 12px; background: transparent; color: inherit; }
+.list { display: grid; gap: 12px; }
+.card { border: 1px solid var(--dsw-alias-border-1, #dce1eb); border-radius: 16px; padding: 18px; }
+.heading span { margin-left: auto; font-size: 12px; color: #687894; background: #f1f5fc; border-radius: 8px; padding: 4px 8px; }
+.card p { margin: 10px 0; line-height: 1.6; color: #687894; }
+.source { font-size: 12px; overflow-wrap: anywhere; }
+.controls { font-size: 13px; }
+.controls label,.controls a { display: inline-flex; gap: 6px; align-items: center; }
+.controls a { color: #365fd5; margin-left: auto; }
+.controls input { accent-color: #365fd5; }
+.note { display: flex; gap: 8px; font-size: 12px; line-height: 1.7; color: #687894; margin-top: 20px; }
+.error { color: #b42318; background: #fff1f0; padding: 12px; border-radius: 10px; }
+.notice { color: #17664a; background: #edf9f2; padding: 12px; border-radius: 10px; }

@@ -49,7 +49,12 @@ def parse_progress(line):
             return None
     if line.startswith('COMMAND:'):
         return {'kind': 'command'}
-    if re.search(r'Running Visualizations|Generating visualizations|Additional Visualizations|Covariate Visualizations', line):
+    if re.match(r'\[Evaluating [A-Z0-9_-]+\]', line):
+        return {'kind': 'evaluating'}
+    metric = re.fullmatch(r'Evaluating metric (TD|iRBO|NPMI|C_V|UMass|Exclusivity|PPL)', line)
+    if metric:
+        return {'kind': 'evaluating', 'metric': metric[1]}
+    if re.search(r'Running Visualizations|Generating visualizations|Additional Visualizations|Covariate Visualizations|\[Visualizing [A-Z0-9_-]+\]', line):
         return {'kind': 'visualizing'}
     match = re.fullmatch(r'iteration:\s*(\d+)\s+of max_iter:\s*(\d+)', line)
     if match and 0 < int(match[1]) <= int(match[2]):

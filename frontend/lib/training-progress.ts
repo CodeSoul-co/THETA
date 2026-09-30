@@ -4,12 +4,13 @@ export interface TrainingEvent {
   id: string | number
   at: number | null
   device?: string; status?: string
-  kind: 'device' | 'epoch' | 'iteration' | 'batch' | 'embedding' | 'early_stop' | 'command' | 'visualizing'
+  kind: 'device' | 'epoch' | 'iteration' | 'batch' | 'embedding' | 'early_stop' | 'command' | 'evaluating' | 'visualizing'
   current?: number
   total?: number | null
   stage?: string | null
   batch?: { current: number; total: number }
   activity?: string
+  metric?: string
   metrics?: Record<string, number>
 }
 export interface TrainingWorkerState {
@@ -49,6 +50,7 @@ export function trainingEventText(event: TrainingEvent): string {
     return parts.join(' · ')
   }
   if (event.kind === 'command') return '启动计算步骤'
+  if (event.kind === 'evaluating') return `评估指标${event.metric ? ' · ' + event.metric : ''}`
   if (event.kind === 'visualizing') return '生成可视化'
   if (event.kind === 'early_stop') return `第 ${event.current} 轮触发提前停止`
   if (event.stage) parts.push(event.stage === 'stage1' ? '第一阶段' : '第二阶段')

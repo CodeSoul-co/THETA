@@ -14,7 +14,7 @@ LDA、BTM、HDP、STM 继续使用已有 CPU 实现。CLI Agent 方案支持 `de
 
 ## 使用
 
-首版构建目标为 **macOS Apple Silicon（arm64）** 和 **Windows x64**。从 [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.13) 下载：Mac 使用 `THETA-0.3.13-mac-arm64.dmg`，Windows 使用 `THETA-0.3.13-win-x64.exe`。Mac 打开 DMG 后将 THETA 拖入「应用程序」；Windows 运行 EXE 安装程序。当前为未正式签名／公证的预览版，系统可能显示安全提示。暂不提供 Intel Mac 或 Windows ARM 原生版本。
+首版构建目标为 **macOS Apple Silicon（arm64）** 和 **Windows x64**。从 [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.14) 下载：Mac 使用 `THETA-0.3.14-mac-arm64.dmg`，Windows 使用 `THETA-0.3.14-win-x64.exe`。Mac 打开 DMG 后将 THETA 拖入「应用程序」；Windows 运行 EXE 安装程序。当前为未正式签名／公证的预览版，系统可能显示安全提示。暂不提供 Intel Mac 或 Windows ARM 原生版本。
 
 发行页提供 `SHA256SUMS.txt`，用于核对下载文件完整性。macOS 可运行 `shasum -a 256 文件名.dmg`；Windows PowerShell 可运行 `Get-FileHash 文件名.exe -Algorithm SHA256`，与校验文件对应行比较。
 
@@ -26,7 +26,7 @@ LDA、BTM、HDP、STM 继续使用已有 CPU 实现。CLI Agent 方案支持 `de
 
 可以稍后再配置模型。LDA 等传统算法不需要下载神经网络权重；本地 Embedding 权重通过设置中的链接自行下载。云端 Embedding 当前适用于 THETA zero-shot，执行具体任务时仍需确认发送文本及请求预算；THETA 微调和 CTM / BERTopic 使用本地模型。
 
-保存配置后新任务立即生效，不需要重启工作台。正在运行的训练使用启动时的配置。密钥由 Electron safeStorage 使用操作系统能力加密，保存在应用数据目录，页面不回显密钥。
+保存配置后新任务立即生效，不需要重启工作台。正在运行的训练使用启动时的配置。密钥使用 AES-256-GCM 和本机用户专属加密文件保存，文件权限限制为当前用户可读。启动和更新不再要求钥匙串密码。从旧版系统钥匙串存储升级时，需要重新输入一次 API Key；旧密文会保留供恢复。密钥不会进入安装包或模型提示词。
 
 安装包不预置 API Key，首次使用由用户自行填写。打包前会拒绝私有环境文件、用户设置和已知本地密钥，并核对布偶猫 Logo；应用启动时也不会继承开发机的模型密钥环境变量。重新安装后仍显示的已保存配置来自本机应用数据目录，不是安装包内置配置。
 
@@ -85,3 +85,11 @@ npm --prefix desktop run dist
 任务完成后，在结果页点击**生成完整分析报告**，可选填研究问题。只有点击后才会使用已配置的模型接口发送统计摘要、脱敏摘录与已校验结果。报告按描述性统计、数据分析、任务分析、建模描述、结论分析组织，采用连贯的学术段落，证据充分时以约 5000–8000 字为目标。后台异步生成，分别下载 Markdown 和 PDF。PDF 导出失败可单独重试，保留已生成正文。退出应用会中断未完成的生成，下次启动可重试。
 
 分析配置中的**多主题数探索实验**默认关闭。开启后填写 2–500 的整数主题数，按所选模型与主题数的组合顺序运行，各自保存结果。最多 12 个主题数、48 组实验，使用相同的数据划分配置进行比较。HDP 为截断上限，BERTopic 为合并目标，实际主题数可能不同。更多实验会增加耗时，也可能增加嵌入接口调用费用。
+
+## 技能管理
+
+对话模式左侧「新建项目」上方增加「技能管理」。可导入包含 SKILL.md 的文件夹、ZIP／tar.gz 压缩包或单个 SKILL.md。下载支持 GitHub 仓库地址或具体技能文件夹地址；可启用／停用、导出和删除导入的技能。内置 Data Viz 绘图模板也显示在同一列表中，可以停用。Agent 下载的技能会自动出现在这里；导入不会执行脚本或授予文件、服务访问权限。
+
+## 训练服务
+
+桌面端使用独立的本地 worker 服务，Web 和 CLI 自动启动本地私有 API。训练启动、进度、取消及结果均使用同一 HTTP 协议。可通过 THETA_WORKER_API_URL 和 THETA_WORKER_API_TOKEN 预留远程服务接入；远程部署还需提供 worker 与结果交付宿主均可访问的存储。详见[服务接口契约](../agent/docs/worker-interface-contract.md)。

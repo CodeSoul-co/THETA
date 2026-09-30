@@ -1,5 +1,3 @@
-import path from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
 import type { ComputeJob, Dataset, TrainingPlan } from '../domain/research.js';
 import type { CapabilityWorker } from './python-worker.js';
 import { EffectApprovals, type ApprovalReceipt } from '../domain/effect-approval.js';
@@ -25,20 +23,11 @@ export class LocalComputeGateway implements ComputeGateway {
   }
   status(jobId: string): Promise<ComputeJob> { return this.worker.call('compute.status', { home: this.home, jobId }); }
   /**
-   * A local job already lives in compute.sqlite: reading the row avoids spawning a
-   * Python worker per job for every result-list request. Returns undefined when the
-   * store cannot be read, so callers can fall back to the capability call.
+   * The worker owns its database. Hosts use the API and their bounded observer
+   * cache rather than reading local files (which may belong to a remote worker).
    */
   cachedStatus(jobId: string): ComputeJob | undefined {
-    let db: DatabaseSync | undefined;
-    try {
-      db = new DatabaseSync(path.join(this.home, 'compute.sqlite'), { readOnly: true });
-      const row = db.prepare('SELECT state, value FROM jobs WHERE id = ?').get(jobId) as { state?: string; value?: string } | undefined;
-      if (!row?.value) return undefined;
-      const job = JSON.parse(row.value) as ComputeJob;
-      return { ...job, id: job.id ?? jobId, status: (row.state as ComputeJob['status']) ?? job.status };
-    } catch { return undefined; }
-    finally { try { db?.close(); } catch { /* ignore */ } }
+    return undefined;
   }
   cancel(jobId: string): Promise<ComputeJob> { return this.worker.call('compute.cancel', { home: this.home, jobId }); }
   results(jobId: string, view: ResultView, offset?: number): Promise<unknown> { return this.worker.call('compute.results', { home: this.home, jobId, view, offset }); }

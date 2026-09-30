@@ -1,3 +1,5 @@
+import { Readable } from 'node:stream';
+import { InstalledSkills } from '../src/tools/installed-skills.js';
 import { receiveUpload } from './upload-stream.js';
 import { rm } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
@@ -46,6 +48,7 @@ const MODEL_IDS = ['lda', 'btm', 'hdp', 'dtm', 'stm', 'bertopic', 'ctm', 'theta'
 /** Local HTTP transport for the same core used by the CLI; no workflow engine. */
 export function createAgentServer(home: string, inferenceFactory = createConfiguredProvider, options: AgentServerOptions = {}, adapters: Pick<ConstructorParameters<typeof LocalProductTools>[0], 'worker' | 'compute'> = {}) {
   const mode = options.mode ?? 'local';
+  const skills = new InstalledSkills(home);
   const sessions = new ProductSessionStore(home);
   const records = new ResearchStore(home);
   const consultations = new ConsultationStore(home);
@@ -462,6 +465,21 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
       if (resourceParts[0] === 'conversations') resourceParts[0] = 'runs';
       const parts = ['api', 'v3', ...resourceParts];
       const principal = await authenticateRequest(req, { ...options, mode });
+      if (parts[2] === 'skills') {
+        if (mode !== 'local') throw new HttpError(403, 'Skill management is local-only', 'forbidden');
+        if (method === 'GET' && !parts[3]) return json(res, {skills:skills.list()});
+        if (method === 'GET' && parts[4] === 'download') {
+          const archive=await skills.archive(parts[3]);
+          res.writeHead(200, {'Content-Type':'application/gzip','Content-Disposition':`attachment; filename="${parts[3]}.tar.gz"`,'Cache-Control':'no-store'});return res.end(archive);
+        }
+        if (method === 'DELETE' && parts[3]) {skills.remove(parts[3]);return json(res,{skills:skills.list()});}
+        if (method === 'POST' && parts[3] === 'import-archive') return json(res,await skills.importArchive(Readable.from([await readBody(req,32*1024*1024)])));
+        const input=JSON.parse((await readBody(req,48*1024*1024)).toString() || '{}');
+        if (method === 'POST' && parts[3] === 'import') return json(res,skills.import(input.files,'local',input.id));
+        if (method === 'POST' && parts[3] === 'install') return json(res,await skills.download(String(input.url),input.id));
+        if (method === 'PATCH' && parts[3]) {skills.setEnabled(parts[3],input.enabled);return json(res,{skills:skills.list()});}
+        throw new HttpError(404,'Unknown skill endpoint','not_found');
+      }
       if (parts[2] === 'health') return json(res, { service: 'theta-agent', mode: 'conversation', checks: [] });
       if (parts[2] === 'training-runtime' && method === 'GET') return json(res, await capabilityWorker.call('runtime.config', {}));
       if (parts[2] === 'training-models' && method === 'GET' && MODEL_IDS.includes(parts[3] as typeof MODEL_IDS[number])) return json(res, await capabilityWorker.call('models.inspect', { modelId: parts[3] }));

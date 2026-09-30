@@ -14,12 +14,12 @@ LDA, BTM, HDP and STM use their existing CPU implementations. CLI Agent plans ac
 
 ## Download and install
 
-Download from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.13):
+Download from [GitHub Releases](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.14):
 
 | Platform | Installer | Installation |
 | --- | --- | --- |
-| macOS Apple Silicon | `THETA-0.3.13-mac-arm64.dmg` | Open the DMG and drag THETA into Applications |
-| Windows x64 | `THETA-0.3.13-win-x64.exe` | Run the installer |
+| macOS Apple Silicon | `THETA-0.3.14-mac-arm64.dmg` | Open the DMG and drag THETA into Applications |
+| Windows x64 | `THETA-0.3.14-win-x64.exe` | Run the installer |
 
 This is an unsigned preview without macOS notarization. Your operating system may show a security warning. Native Intel Mac and Windows ARM installers are not provided.
 
@@ -35,7 +35,7 @@ The app opens directly into the workbench. Open Settings:
 
 You can configure models later. Traditional algorithms such as LDA do not need neural model weights. Download local embedding weights yourself using the links in Settings. Cloud embeddings are supported for THETA zero-shot; each task requires confirmation of the text scope and request budget. THETA fine-tuning, CTM, and BERTopic require compatible local models.
 
-Saved settings apply to new tasks immediately. Running tasks retain their starting configuration. Keys are encrypted through Electron safeStorage using operating-system facilities, stored in the application data directory, and never displayed again in the form.
+Saved settings apply to new tasks immediately. Running tasks retain their starting configuration. Keys use AES-256-GCM with a per-user local encryption file and restricted file permissions. Starting or updating THETA does not request a Keychain password. When upgrading from legacy Keychain storage, re-enter your API keys once; old ciphertext is retained for recovery. Keys never enter installers or model instructions.
 
 Installers contain no API keys or personal configuration. Settings retained after reinstallation come from your application data directory.
 
@@ -95,3 +95,11 @@ Reports embed numbered training figures and their source tables near the analysi
 After a job completes, use **Generate full analysis report** in its result view. Optionally enter the research question. The report uses the configured model API and sends statistics, redacted excerpts and verified results only after this click. It writes a Chinese academic report organized into descriptive statistics, data analysis, task analysis, modeling and conclusions, with paragraph-based reasoning and a target of approximately 5,000–8,000 Chinese characters when supported by evidence. Generation runs asynchronously; download Markdown and PDF separately. PDF-only retry preserves the completed Markdown. Closing the app interrupts unfinished generation, which can be retried on the next launch.
 
 **Topic-count exploration** is optional and off by default in the analysis configuration. Enter integer counts from 2 to 500; the selected models are crossed with those counts (at most 12 counts and 48 combinations), run sequentially and retain independent results. Compare using the same split settings. HDP counts are truncation ceilings and BERTopic counts are merge targets; actual counts may differ. Additional runs take more time and may incur additional embedding requests.
+
+## Skill Manager
+
+In conversation mode, open **Skill Manager** above New project in the left sidebar. Import a folder containing SKILL.md, ZIP/tar.gz, or a single SKILL.md. GitHub downloads accept a repository URL or a specific /tree/ref/skill-folder URL. Toggle availability, export a package, or remove an imported skill. Bundled Data Viz remains available in the same catalog and can be disabled. Skills downloaded by the Agent appear here automatically; importing guidance does not execute its scripts or grant access to files or services.
+
+## Worker API
+
+Desktop uses a separate private loopback worker service. Web and CLI start a private loopback API automatically. Training, status, cancellation and results use the same HTTP contract. Remote hosts can configure THETA_WORKER_API_URL and THETA_WORKER_API_TOKEN. See the [worker interface](../agent/docs/worker-interface-contract.md); remote storage must be accessible to the worker and result delivery host.

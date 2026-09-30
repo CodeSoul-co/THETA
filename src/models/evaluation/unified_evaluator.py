@@ -122,6 +122,7 @@ class UnifiedEvaluator:
                 'dtm': 'DTM PPL requires the correct time-specific beta for each document; the shared evaluator has only the last-slice beta.',
             }[self.model_name.lower()]
         for name, compute in metrics:
+            print(f"Evaluating metric {name}", flush=True)
             try:
                 value = compute()
                 average, per_topic = value if isinstance(value, tuple) else (value, None)

@@ -14,7 +14,7 @@ export async function inspectPackage(root, privateValues = []) {
       const file = path.join(directory, entry.name);
       const relative = path.relative(root, file);
       if ((entry.name.startsWith('.env') && entry.name !== '.env.example')
-        || ['settings.json', 'credentials.json', '.npmrc', '.pypirc', '.smoke-home'].includes(entry.name)) {
+        || ['settings.json', 'credentials.json', 'credentials.key', '.npmrc', '.pypirc', '.smoke-home'].includes(entry.name)) {
         throw new Error(`Private configuration found in package: ${relative}`);
       }
       if (entry.isDirectory()) { await walk(file); continue; }
@@ -60,7 +60,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
   const root = path.dirname(desktop);
   const values = localCredentials(root);
   const count = await inspectPackage(path.join(desktop, 'runtime'), values);
-  for (const name of ['main.cjs', 'preload.cjs', 'services.mjs', 'settings.cjs', 'updates.cjs']) {
+  for (const name of ['main.cjs', 'preload.cjs', 'services.mjs', 'settings.cjs', 'updates.cjs', 'credentials.cjs', 'worker-services.mjs']) {
     const contents = readFileSync(path.join(desktop, name));
     if (values.some(value => typeof value === 'string' && value.length >= 8 && contents.includes(Buffer.from(value)))) {
       throw new Error(`Local credential found in application file: ${name}`);

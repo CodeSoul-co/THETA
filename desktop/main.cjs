@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain, utilityProcess, session, shell, safeStorage, net } = require('electron');
+const { app, BrowserWindow, Menu, dialog, ipcMain, utilityProcess, session, shell, net } = require('electron');
 const { existsSync, mkdirSync, createWriteStream, readFileSync, writeFileSync } = require('node:fs');
 const { spawn, spawnSync } = require('node:child_process');
 const { randomBytes } = require('node:crypto');
@@ -22,7 +22,8 @@ try {
 const runtime = app.isPackaged ? path.join(process.resourcesPath, 'runtime') : path.join(__dirname, 'runtime');
 const python = path.join(runtime, 'python', process.platform === 'win32' ? 'python.exe' : 'bin/python3');
 let providerSpecs = [];
-let window, service, origin, token, serviceEnv, stopped = false, restarting = false, quitting = false;
+let credentials;
+let window, service, workerService, origin, token, workerToken, workerUrl, serviceEnv, stopped = false, restarting = false, quitting = false;
 app.on('second-instance', () => { window?.restore(); window?.focus(); });
 
 function pythonCall(args, options = {}) {
@@ -57,6 +58,7 @@ function environment(port) {
   Object.assign(env, {
     NODE_ENV: 'production', NEXT_TELEMETRY_DISABLED: '1', PORT: String(port), HOSTNAME: '127.0.0.1',
     THETA_PROJECT_ROOT: runtime, THETA_DESKTOP_HOME: home, THETA_DESKTOP_TOKEN: token,
+    THETA_WORKER_API_TOKEN: workerToken, ...(workerUrl ? { THETA_WORKER_API_URL: workerUrl } : {}),
     THETA_AGENT_HOME: path.join(home, 'agent'), THETA_AGENT_SERVICE_MODE: 'local',
     THETA_ENV_FILE: path.join(home, '.desktop-no-env'), THETA_LOCAL_AUTH_ENABLED: 'true',
     THETA_PYTHON: python, THETA_WORKER_CONTROL_PYTHON: python,
@@ -79,13 +81,13 @@ function environment(port) {
   Object.assign(env, { EMBEDDING_PROVIDER: embedding.mode, EMBEDDING_CLOUD_PROVIDER: embedding.provider,
     EMBEDDING_MODEL: embedding.model, EMBEDDING_API_BASE: embedding.baseUrl, EMBEDDING_API_KEY_ENV: 'EMBEDDING_API_KEY' });
   if (embedding.dimensions) env.EMBEDDING_DIMENSIONS = String(embedding.dimensions);
-  if (embedding.encryptedKey) env.EMBEDDING_API_KEY = safeStorage.decryptString(Buffer.from(embedding.encryptedKey, 'base64'));
+  if (embedding.encryptedKey) env.EMBEDDING_API_KEY = credentials.decrypt(embedding.encryptedKey);
   const selected = settings.providers[settings.providerId];
   for (const spec of providerSpecs) {
     const id = spec.id === 'gpt' ? 'openai' : spec.id;
     const profile = settings.providers[id];
     if (id !== settings.providerId || !profile?.encryptedKey) continue;
-    env[spec.envApiKey] = safeStorage.decryptString(Buffer.from(profile.encryptedKey, 'base64'));
+    env[spec.envApiKey] = credentials.decrypt(profile.encryptedKey);
     env[spec.envBaseUrl] = profile.baseUrl;
     env[spec.envModel] = profile.model;
   }
@@ -94,13 +96,15 @@ function environment(port) {
     if (settings.providerId === 'openai-compatible') {
       env.THETA_INFERENCE_BASE_URL = selected.baseUrl;
       env.THETA_INFERENCE_MODEL = selected.model;
-      env.THETA_INFERENCE_API_KEY = safeStorage.decryptString(Buffer.from(selected.encryptedKey, 'base64'));
+      env.THETA_INFERENCE_API_KEY = credentials.decrypt(selected.encryptedKey);
     }
   }
 
   return env;
 }
 async function stopService() {
+  const worker = workerService; workerService = undefined; workerUrl = undefined;
+  if (worker?.pid) worker.postMessage('shutdown');
   const child = service; service = undefined;
   if (!child || !child.pid) return;
   await new Promise(resolve => {
@@ -115,8 +119,19 @@ async function startService() {
   try { previousPort = JSON.parse(readFileSync(path.join(home, 'port.json'))).port; } catch {}
   const port = await selectPort(smoke ? 0 : previousPort);
   writeFileSync(path.join(home, 'port.json'), JSON.stringify({ port }));
-  token = randomBytes(32).toString('hex');
+  token = randomBytes(32).toString('hex'); workerToken = randomBytes(32).toString('hex');
   serviceEnv = environment(port);
+  const worker = utilityProcess.fork(path.join(__dirname, 'worker-services.mjs'), [], { cwd: runtime, env: serviceEnv, stdio: 'pipe', serviceName: 'THETA worker API' });
+  workerService = worker;
+  const workerLog = createWriteStream(path.join(home, 'logs/worker-api.log'), { flags: 'a', mode: 0o600 });
+  worker.stdout?.pipe(workerLog, { end: false }); worker.stderr?.pipe(workerLog, { end: false });
+  worker.once('exit', () => workerLog.end());
+  workerUrl = await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { worker.kill(); reject(new Error('Worker API 启动超时')); }, 30000);
+    worker.once('exit', code => { clearTimeout(timer); reject(new Error(`Worker API 退出 (${code})`)); });
+    worker.on('message', message => { if (message?.type === 'ready') { clearTimeout(timer); resolve(message.url); } });
+  });
+  serviceEnv.THETA_WORKER_API_URL = workerUrl;
   const child = utilityProcess.fork(path.join(__dirname, 'services.mjs'), [], {
     cwd: runtime, env: serviceEnv, stdio: 'pipe', serviceName: 'THETA local services',
   });
@@ -151,8 +166,7 @@ function openSettings() {
 async function applySettings() {
   serviceEnv = environment(Number(serviceEnv.PORT));
   const requestId = randomBytes(12).toString('hex');
-  await new Promise((resolve, reject) => {
-    const child = service;
+  for (const child of [workerService, service]) await new Promise((resolve, reject) => {
     if (!child?.pid) { reject(new Error('本地服务未运行，请重新启动服务')); return; }
     const cleanup = () => { clearTimeout(timer); child.removeListener('message', listener); };
     const timer = setTimeout(() => { cleanup(); reject(new Error('应用配置超时，请重新启动服务')); }, 5000);
@@ -167,7 +181,7 @@ function registerSettings() {
   }
   ipcMain.handle('settings:read', event => {
     trusted(event); const value = readSettings(settingsFile);
-    const { encryptedKey, ...embedding } = embeddingSettings(value);
+    const { encryptedKey, legacyEncryptedKey, ...embedding } = embeddingSettings(value);
     return { embedding: { ...embedding, apiKeyConfigured: Boolean(encryptedKey) }, home, python: '3.12.13' };
   });
   ipcMain.handle('settings:catalog', event => {
@@ -185,18 +199,12 @@ function registerSettings() {
   });
   ipcMain.handle('settings:save-inference', async (event, value) => {
     trusted(event);
-    saveInference(settingsFile, value, key => {
-      if (!safeStorage.isEncryptionAvailable()) throw new Error('系统密钥存储不可用，无法保存 API Key');
-      return safeStorage.encryptString(key).toString('base64');
-    });
+    saveInference(settingsFile, value, credentials.encrypt);
     await applySettings();
   });
   ipcMain.handle('settings:save-embedding', async (event, value) => {
     trusted(event);
-    saveEmbedding(settingsFile, value, key => {
-      if (!safeStorage.isEncryptionAvailable()) throw new Error('系统密钥存储不可用，无法保存 API Key');
-      return safeStorage.encryptString(key).toString('base64');
-    });
+    saveEmbedding(settingsFile, value, credentials.encrypt);
     await applySettings();
   });
   ipcMain.handle('settings:select-model', async event => {
@@ -260,6 +268,17 @@ async function runSmoke(services) {
   assert.equal((await get(origin, '/api/backend/api/auth/me')).status, 404);
   assert.equal((await get(origin, '/api/v3/projects', { headers: { ...headers, origin: 'https://evil.example' } })).status, 403);
   assert.equal((await get(origin, '/workbench?mode=conversation')).status, 200);
+  const workerHealth = await fetch(workerUrl + '/health', { headers: { authorization: `Bearer ${workerToken}` } });
+  assert.equal(workerHealth.status, 200);
+  assert.equal((await fetch(workerUrl + '/health')).status, 403);
+  const skillCatalog = await (await get(origin, '/api/v3/skills')).json();
+  assert.ok(skillCatalog.data.skills.some(skill => skill.id === 'data-viz' && skill.bundled));
+  const skillFiles = [{ path: 'SKILL.md', content: Buffer.from('---\nname: desktop-skill-check\ndescription: Smoke fixture\n---\nUse actual evidence.').toString('base64') }];
+  const importedSkill = await get(origin, '/api/v3/skills/import', { method: 'POST', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify({ files: skillFiles }) });
+  assert.equal(importedSkill.status, 200);
+  assert.equal((await importedSkill.json()).data.id, 'desktop-skill-check');
+  assert.equal((await get(origin, '/api/v3/skills/desktop-skill-check/download')).status, 200);
+  assert.equal((await get(origin, '/api/v3/skills/desktop-skill-check', { method: 'DELETE' })).status, 200);
   // Verify homepage images through the authenticated Electron session. Internal
   // optimizer fetches do not carry its token and previously left these blank.
   await window.loadURL(origin + '/');
@@ -376,7 +395,17 @@ app.whenReady().then(async () => {
   if (!app.requestSingleInstanceLock()) { app.quit(); return; }
   await clearUpgradeCaches(home, app.getVersion());
   settingsFile = path.join(home, 'settings.json');
-  if (!smoke) {
+  credentials = require('./credentials.cjs').createCredentials(home);
+  // Keep legacy ciphertext for recovery without calling the OS Keychain at startup.
+  const settings = readSettings(settingsFile);
+  let migrated = false;
+  for (const profile of [...Object.values(settings.providers), settings.embedding].filter(Boolean)) {
+    if (profile.encryptedKey && !profile.encryptedKey.startsWith('local:v1:')) {
+      profile.legacyEncryptedKey = profile.encryptedKey; delete profile.encryptedKey; migrated = true;
+    }
+  }
+  if (migrated) require('./settings.cjs').writeSettings(settingsFile, settings);
+  if (!smoke && app.isPackaged) {
     try { saveDataLocation(locationFile, home); }
     catch { await dialog.showMessageBox({ type: 'warning', message: '本次已使用所选数据目录，但无法记住该位置。', detail: `下次请使用 --data-dir="${home}" 启动 THETA。` }); }
   }

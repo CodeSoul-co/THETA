@@ -56,4 +56,4 @@ function saveEmbedding(file, input, encrypt) {
     encryptedKey: input.clearApiKey ? undefined : apiKey ? encrypt(apiKey) : existing.encryptedKey };
   return writeSettings(file, { ...previous, embedding });
 }
-module.exports = { MODEL_KEYS, readSettings, saveInference, saveEmbedding, embeddingSettings };
+module.exports = { MODEL_KEYS, writeSettings, readSettings, saveInference, saveEmbedding, embeddingSettings };

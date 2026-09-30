@@ -18,7 +18,26 @@
 
 ## 1. Node ↔ Python 能力传输
 
-调用方：`agent/src/adapters/python-worker.ts`（`PythonCapabilityWorker`）。
+调用方：`agent/src/adapters/python-worker.ts`（`PythonCapabilityWorker`）。所有宿主调用均通过 HTTP；桌面端由独立服务进程承载，本地 Web／CLI 自动启动回环 API。
+
+```text
+GET  /health
+POST /v1/capabilities/<operation>
+Authorization: Bearer <宿主自动生成的私有令牌>
+请求：原操作的 JSON input
+响应：{"ok":true,"data":...} 或 {"ok":false,"error":"..."}
+```
+
+配置 `THETA_WORKER_API_URL` 与 `THETA_WORKER_API_TOKEN` 可以替换 HTTP 服务地址；远程地址必须使用 HTTPS。启动独立宿主：
+
+```sh
+npm --prefix agent run build
+THETA_WORKER_API_TOKEN=<私有令牌至少32字符> node agent/dist/web/worker-server.js
+```
+
+默认仅监听 `127.0.0.1:4319`，可用 `THETA_WORKER_API_HOST` 和 `THETA_WORKER_API_PORT` 配置。远程宿主需自行提供 TLS 入口和受控存储映射，当前 API 的数据／结果路径必须在 worker 和结果交付宿主上可访问。令牌仅由宿主持有，不提供给浏览器或模型；已有授权和数据校验继续适用。
+
+API 服务内部通过 `ProcessCapabilityWorker` 调用原有 Python JSON 操作：
 
 ```text
 <python> -m workers <operation>      # cwd = agent/

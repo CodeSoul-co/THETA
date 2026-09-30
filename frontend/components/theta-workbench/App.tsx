@@ -1,5 +1,6 @@
 
 import { OPEN_SOURCE_EDITION } from '@/lib/edition'
+import { Puzzle } from 'lucide-react'
 import { Activity, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { ResizableSidebar } from '@/components/layout/resizable-sidebar'
@@ -62,6 +63,7 @@ import {
 } from './ui/index.ts'
 import { CatBrandWordmark } from './ui/CatBrandWordmark.tsx'
 import { ConversationPane, type QueuedChatMessage } from './panels/ConversationPane.tsx'
+const SkillsDialog = dynamic(() => import('./panels/SkillsDialog').then(module => module.SkillsDialog))
 const ManualWorkbench = dynamic(() => import('./ManualWorkbench').then(module => module.ManualWorkbench))
 import { DetailPane } from './panels/DetailPane.tsx'
 import { SettingsDialog } from './panels/SettingsDialog.tsx'
@@ -418,6 +420,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
   const [workspaceSessionId, setWorkspaceSessionId] = useState<string | undefined>()
   const [workspaceInteraction, setWorkspaceInteraction] = useState<WebAgentInteraction | undefined>()
   const [workspaceActivity, setWorkspaceActivity] = useState<{ proposal?: unknown; semanticDecision?: unknown; steps?: unknown; result?: unknown; evidenceRefs?: unknown }>()
+  const [skillsOpen, setSkillsOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [sidebarWidth, setSidebarWidth] = useState(readSidebarWidth)
   const [sidebarResizing, setSidebarResizing] = useState(false)
@@ -1808,6 +1811,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
 
   return (
     <div className={css.shell}>
+      {skillsOpen && <SkillsDialog open onClose={() => setSkillsOpen(false)} locale={locale} />}
       <div className={css.body}>
         {sidebarOpen && workspaceMode === 'conversation' && !resultDestination && (
           <aside
@@ -1818,6 +1822,10 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
               <CatBrandWordmark className={css.sidebarBrandLogo} />
             </div>
             <div className={css.sidebarCreateActions}>
+              <button type="button" className={css.projectCreateButton} onClick={() => setSkillsOpen(true)}>
+                <Puzzle size={24} aria-hidden="true" />
+                <span>{locale === 'zh-CN' ? '技能管理' : 'Skill Manager'}</span>
+              </button>
               <button
                 type="button"
                 className={css.projectCreateButton}

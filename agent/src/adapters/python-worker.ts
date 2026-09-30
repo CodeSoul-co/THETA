@@ -9,10 +9,10 @@ export const pythonExecutable = (): string => {
   const local = path.join(packageRoot, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
   return process.env.THETA_PYTHON ?? (existsSync(local) ? local : 'python3');
 };
-export class PythonCapabilityWorker implements CapabilityWorker {
+export class ProcessCapabilityWorker implements CapabilityWorker {
   async call<T>(operation: string, input: unknown, signal?: AbortSignal): Promise<T> {
     return new Promise((resolve, reject) => {
-      const child = spawn(pythonExecutable(), ['-m', 'workers', operation], { cwd: packageRoot, env: { ...process.env, THETA_PROJECT_ROOT: repositoryRoot(), THETA_WORKER_CONTROL_PYTHON: pythonExecutable(), PYTHONNOUSERSITE: '1', PYTHONUTF8: '1' }, stdio: ['pipe', 'pipe', 'pipe'] });
+      const child = spawn(pythonExecutable(), ['-m', 'workers', operation], { cwd: packageRoot, env: { ...process.env, THETA_PROJECT_ROOT: repositoryRoot(), THETA_WORKER_CONTROL_PYTHON: pythonExecutable(), PYTHONNOUSERSITE: '1', PYTHONUTF8: '1' }, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
       child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
       let stdout = ''; let stderr = ''; let failure: Error | undefined;
       let forcedStop: ReturnType<typeof setTimeout> | undefined;
@@ -43,5 +43,32 @@ export class PythonCapabilityWorker implements CapabilityWorker {
       child.stdin.end(JSON.stringify(input));
       if (signal?.aborted) abort();
     });
+  }
+}
+
+let localApi: Promise<{ url: string; token: string }> | undefined;
+/** Web, desktop and CLI share the same HTTP contract. Python stays inside the worker. */
+export class PythonCapabilityWorker implements CapabilityWorker {
+  async call<T>(operation: string, input: unknown, signal?: AbortSignal): Promise<T> {
+    signal?.throwIfAborted();
+    const endpoint = process.env.THETA_WORKER_API_URL;
+    const connection = endpoint ? { url: endpoint, token: process.env.THETA_WORKER_API_TOKEN ?? '' }
+      : await (localApi ??= import('../../web/worker-server.js').then(module => module.startLocalWorkerApi()));
+    const url = new URL(connection.url);
+    if (url.username || url.password || url.search || url.hash || !(url.protocol === 'https:' || url.protocol === 'http:' && ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname))) throw new Error('Worker API requires HTTPS or a loopback HTTP address');
+    if (!connection.token) throw new Error('Worker API token is missing');
+    const timeout = operation === 'compute.status' ? 7000 : ['compute.results', 'figure.adjust', 'analysis_report.evidence', 'analysis_report.pdf'].includes(operation) ? Number(process.env.THETA_REPORT_TIMEOUT_MS ?? 600000) + 5000 : Number(process.env.THETA_CAPABILITY_TIMEOUT_MS ?? 120000) + 5000;
+    try {
+      const response = await fetch(connection.url.replace(/\/$/, '') + '/v1/capabilities/' + encodeURIComponent(operation), {
+        method: 'POST', headers: { authorization: `Bearer ${connection.token}`, 'content-type': 'application/json' },
+        body: JSON.stringify(input), signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(timeout)]) : AbortSignal.timeout(timeout),
+      });
+      const result = await response.json() as { ok: boolean; data?: T; error?: string };
+      if (!response.ok || !result.ok) throw new Error(result.error ?? `Worker API HTTP ${response.status}`);
+      return result.data as T;
+    } catch (error) {
+      if (signal?.aborted) throw new Error('能力调用已中断');
+      throw error;
+    }
   }
 }

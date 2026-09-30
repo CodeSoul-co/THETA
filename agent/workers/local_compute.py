@@ -56,6 +56,9 @@ def status(payload: dict) -> dict:
                 result['resultWarning'] = '历史任务记录为 completed，但 BERTopic 结果导出不完整；不能视为正常交付。已有文件保留，可申请诊断与结果整理。'
                 result['diagnostics'] = failure_diagnostics(payload['home'], payload['jobId'])
         result["telemetry"] = observe(payload["home"], result, row[2])
+        activity = result['telemetry'].get('activity')
+        if result.get('status') == 'running' and activity in {'evaluating', 'visualizing'}:
+            result.update(phase=activity, percent=75 if activity == 'evaluating' else 90)
         if row[1] in {"queued", "running"} and time.time() - row[2] > 30:
             result["error"] = "Worker 心跳已中断，任务状态不确定；不会自动重复启动训练。"
         return result

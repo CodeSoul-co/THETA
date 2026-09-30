@@ -22,6 +22,20 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def _top_word_counts(beta, matrix, top_k):
+    """Exact document counts, bounded to selected words and 4096 rows per batch."""
+    if matrix.shape[0] == 0 or matrix.shape[1] != beta.shape[1] or top_k < 1:
+        raise ValueError('Coherence needs documents, a matching vocabulary and positive top_k')
+    top = np.argsort(-beta, axis=1)[:, :top_k]
+    words, mapped = np.unique(top, return_inverse=True)
+    counts = np.zeros((len(words), len(words)), dtype=np.int64)
+    for start in range(0, matrix.shape[0], 4096):
+        selected = matrix[start:start + 4096, :][:, words]
+        binary = sparse.csr_matrix(selected > 0, dtype=np.int64)
+        counts += (binary.T @ binary).toarray()
+    return mapped.reshape(top.shape), np.diag(counts), counts
+
+
 def compute_topic_diversity(
     beta: np.ndarray,
     top_k: int = 25
@@ -74,23 +88,8 @@ def compute_topic_coherence_npmi(
     num_topics, vocab_size = beta.shape
     num_docs = doc_term_matrix.shape[0]
     
-    # Convert to binary occurrence matrix if not already
-    if sparse.issparse(doc_term_matrix):
-        doc_term_binary = doc_term_matrix.copy()
-        doc_term_binary.data = np.ones_like(doc_term_binary.data)
-    else:
-        doc_term_binary = (doc_term_matrix > 0).astype(np.float32)
-    
-    # Get top words for each topic
-    top_words_indices = np.argsort(-beta, axis=1)[:, :top_k]
-    
-    # Compute document frequency for each word
-    if sparse.issparse(doc_term_binary):
-        word_doc_freq = np.array(doc_term_binary.sum(axis=0)).flatten()
-    else:
-        word_doc_freq = doc_term_binary.sum(axis=0)
-    
-    # Compute NPMI for each topic
+    top_words_indices, word_doc_freq, cooccurrence = _top_word_counts(beta, doc_term_matrix, top_k)
+    top_k = top_words_indices.shape[1]
     coherence_scores = []
     
     for topic_idx in range(num_topics):
@@ -108,19 +107,7 @@ def compute_topic_coherence_npmi(
                 doc_freq_j = word_doc_freq[word_j]
                 
                 # Get co-occurrence frequency
-                if sparse.issparse(doc_term_binary):
-                    # For sparse matrices
-                    docs_with_i = doc_term_binary[:, word_i].nonzero()[0]
-                    docs_with_j = doc_term_binary[:, word_j].nonzero()[0]
-                    co_occur = len(set(docs_with_i).intersection(set(docs_with_j)))
-                else:
-                    # For dense matrices
-                    co_occur = np.sum(
-                        np.logical_and(
-                            doc_term_binary[:, word_i] > 0,
-                            doc_term_binary[:, word_j] > 0
-                        )
-                    )
+                co_occur = cooccurrence[word_i, word_j]
                 
                 # Compute probabilities
                 p_i = (doc_freq_i + eps) / num_docs
@@ -280,29 +267,20 @@ def compute_perplexity(
     Returns:
         Perplexity score
     """
-    if sparse.issparse(doc_term_matrix):
-        bow = doc_term_matrix.toarray()
-    else:
-        bow = np.asarray(doc_term_matrix)
-    
-    # Compute document-word probabilities: p(w|d) = sum_k theta(d,k) * beta(k,w)
-    # Shape: (D, V)
-    doc_word_probs = theta @ beta
-    
-    # Add epsilon to avoid log(0)
-    doc_word_probs = np.clip(doc_word_probs, eps, 1.0)
-    
-    # Compute log-likelihood
-    # Only consider words that appear in each document
-    log_likelihood = np.sum(bow * np.log(doc_word_probs))
-    
-    # Total number of words
-    total_words = np.sum(bow)
-    
-    # Perplexity
-    perplexity = np.exp(-log_likelihood / total_words)
-    
-    return float(perplexity)
+    # Bound D x V probabilities/logs to a small row batch, including sparse input.
+    log_likelihood = 0.0
+    total_words = 0.0
+    for start in range(0, doc_term_matrix.shape[0], 512):
+        bow = doc_term_matrix[start:start + 512]
+        if sparse.issparse(bow):
+            bow = bow.toarray()
+        probabilities = np.clip(theta[start:start + 512] @ beta, eps, 1.0)
+        log_likelihood += float(np.sum(bow * np.log(probabilities), dtype=np.float64))
+        total_words += float(np.sum(bow, dtype=np.float64))
+    if total_words <= 0:
+        raise ValueError('Perplexity needs observed word counts')
+    return float(np.exp(-log_likelihood / total_words))
+
 
 
 def compute_topic_coherence_cv(
@@ -328,22 +306,8 @@ def compute_topic_coherence_cv(
     num_topics, vocab_size = beta.shape
     num_docs = doc_term_matrix.shape[0]
     
-    # Convert to binary occurrence matrix
-    if sparse.issparse(doc_term_matrix):
-        doc_term_binary = doc_term_matrix.copy()
-        doc_term_binary.data = np.ones_like(doc_term_binary.data)
-    else:
-        doc_term_binary = (doc_term_matrix > 0).astype(np.float32)
-    
-    # Get top words for each topic
-    top_words_indices = np.argsort(-beta, axis=1)[:, :top_k]
-    
-    # Compute document frequency
-    if sparse.issparse(doc_term_binary):
-        word_doc_freq = np.array(doc_term_binary.sum(axis=0)).flatten()
-    else:
-        word_doc_freq = doc_term_binary.sum(axis=0)
-    
+    top_words_indices, word_doc_freq, cooccurrence = _top_word_counts(beta, doc_term_matrix, top_k)
+    top_k = top_words_indices.shape[1]
     cv_scores = []
     
     for topic_idx in range(num_topics):
@@ -363,17 +327,7 @@ def compute_topic_coherence_cv(
                 doc_freq_i = word_doc_freq[word_i]
                 doc_freq_j = word_doc_freq[word_j]
                 
-                if sparse.issparse(doc_term_binary):
-                    docs_with_i = set(doc_term_binary[:, word_i].nonzero()[0])
-                    docs_with_j = set(doc_term_binary[:, word_j].nonzero()[0])
-                    co_occur = len(docs_with_i.intersection(docs_with_j))
-                else:
-                    co_occur = np.sum(
-                        np.logical_and(
-                            doc_term_binary[:, word_i] > 0,
-                            doc_term_binary[:, word_j] > 0
-                        )
-                    )
+                co_occur = cooccurrence[word_i, word_j]
                 
                 p_i = (doc_freq_i + eps) / num_docs
                 p_j = (doc_freq_j + eps) / num_docs
@@ -424,22 +378,8 @@ def compute_topic_coherence_umass(
     num_topics, vocab_size = beta.shape
     num_docs = doc_term_matrix.shape[0]
     
-    # Convert to binary
-    if sparse.issparse(doc_term_matrix):
-        doc_term_binary = doc_term_matrix.copy()
-        doc_term_binary.data = np.ones_like(doc_term_binary.data)
-    else:
-        doc_term_binary = (doc_term_matrix > 0).astype(np.float32)
-    
-    # Get top words
-    top_words_indices = np.argsort(-beta, axis=1)[:, :top_k]
-    
-    # Document frequency
-    if sparse.issparse(doc_term_binary):
-        word_doc_freq = np.array(doc_term_binary.sum(axis=0)).flatten()
-    else:
-        word_doc_freq = doc_term_binary.sum(axis=0)
-    
+    top_words_indices, word_doc_freq, cooccurrence = _top_word_counts(beta, doc_term_matrix, top_k)
+    top_k = top_words_indices.shape[1]
     umass_scores = []
     
     for topic_idx in range(num_topics):
@@ -455,17 +395,7 @@ def compute_topic_coherence_umass(
                 
                 doc_freq_j = word_doc_freq[word_j]
                 
-                if sparse.issparse(doc_term_binary):
-                    docs_with_i = set(doc_term_binary[:, word_i].nonzero()[0])
-                    docs_with_j = set(doc_term_binary[:, word_j].nonzero()[0])
-                    co_occur = len(docs_with_i.intersection(docs_with_j))
-                else:
-                    co_occur = np.sum(
-                        np.logical_and(
-                            doc_term_binary[:, word_i] > 0,
-                            doc_term_binary[:, word_j] > 0
-                        )
-                    )
+                co_occur = cooccurrence[word_i, word_j]
                 
                 # UMass formula: log((D(w_i, w_j) + eps) / D(w_j))
                 umass_sum += np.log((co_occur + eps) / (doc_freq_j + eps))

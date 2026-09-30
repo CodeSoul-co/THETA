@@ -22,8 +22,8 @@ export interface ResearchRun {
 export interface TrainingEvent {
   source?: 'local' | 'cloud'; scope?: 'documents' | 'vocabulary';
   completedBatches?: number; totalBatches?: number; chunks?: number; chunkTotal?: number;
-  id: number | string; at: number | null; kind: 'command' | 'visualizing' | 'iteration' | 'epoch' | 'batch' | 'embedding' | 'early_stop';
-  current?: number; total?: number | null; stage?: string | null; activity?: string;
+  id: number | string; at: number | null; kind: 'command' | 'evaluating' | 'visualizing' | 'iteration' | 'epoch' | 'batch' | 'embedding' | 'early_stop';
+  metric?: string; current?: number; total?: number | null; stage?: string | null; activity?: string;
   batch?: { current: number; total: number }; metrics?: Record<string, number>;
 }
 export interface JobTelemetry {
@@ -33,7 +33,7 @@ export interface JobTelemetry {
   lastLogAgeSeconds: number | null;
   events?: TrainingEvent[]; detail?: TrainingEvent | null;
   iteration: { current: number; total: number; source: string; meaning: string } | null;
-  activity: 'fitting' | 'embedding' | 'visualizing' | null; limitation: string;
+  activity: 'fitting' | 'embedding' | 'evaluating' | 'visualizing' | null; limitation: string;
 }
 export interface ComputeJob {
   id: string; status: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';

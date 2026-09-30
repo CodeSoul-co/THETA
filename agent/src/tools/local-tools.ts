@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { InstalledSkills } from './installed-skills.js';
 import { BundledSkills, skillTools } from './bundled-skills.js';
 import { KnowledgeBase } from '../knowledge/knowledge-base.js';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -25,6 +26,7 @@ export interface ProductToolExecutor {
   execute(name: string, input: unknown, context: ProductToolContext): Promise<unknown>;
   readContext?(session: ProductSession): unknown;
   readState?(session: ProductSession): unknown;
+  skillsCatalog?(): unknown;
   knowledgeCatalog?(): unknown;
   toolAvailable?(name: string, session: ProductSession): boolean;
   analysisProgress?(session: ProductSession): unknown;
@@ -76,6 +78,7 @@ export class LocalProductTools implements ProductToolExecutor {
   /** Last observed job snapshot per job id; terminal jobs are never re-queried. */
   private readonly statusCache = new Map<string, ComputeJob>();
   private static readonly TERMINAL = new Set(['completed', 'failed', 'cancelled']);
+  skillsCatalog(): unknown { return new InstalledSkills(path.dirname(this.options.runtimeDb)).list().filter(item=>item.enabled); }
   knowledgeCatalog(): unknown { return this.knowledge.catalog(); }
   toolAvailable(name: string, session: ProductSession): boolean {
     if (statisticsTools.some(tool=>tool.name===name)) return this.statistics.available(name,session);

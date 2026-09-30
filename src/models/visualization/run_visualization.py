@@ -349,7 +349,7 @@ def load_visualization_data(
         if (bow_dir / 'bow_matrix.npz').is_file():
             data['bow_matrix'] = sparse.load_npz(bow_dir / 'bow_matrix.npz')
         elif bow_file.exists():
-            data['bow_matrix'] = np.load(bow_file)
+            data['bow_matrix'] = np.load(bow_file, mmap_mode='r')
             print(f"✓ Loaded bow_matrix: {data['bow_matrix'].shape}")
     
     # Load timestamps (optional) - check in model_dir parent or evaluation_dir
@@ -772,7 +772,7 @@ def load_baseline_data(result_dir, dataset, model, num_topics=20, workspace_dir=
     for directory in bow_paths:
         if directory is None: continue
         if (directory / 'bow_matrix.npz').is_file(): data['bow_matrix'] = sparse.load_npz(directory / 'bow_matrix.npz'); break
-        if (directory / 'bow_matrix.npy').is_file(): data['bow_matrix'] = np.load(directory / 'bow_matrix.npy', allow_pickle=False); break
+        if (directory / 'bow_matrix.npy').is_file(): data['bow_matrix'] = np.load(directory / 'bow_matrix.npy', allow_pickle=False, mmap_mode='r'); break
     if data.get('bow_matrix') is not None and data['bow_matrix'].shape != (data['theta'].shape[0], len(data['vocab'])):
         raise ValueError('BOW rows/vocabulary are not aligned to the result matrices')
     metrics_path = optional_file(f'metrics_k{num_topics}.json')

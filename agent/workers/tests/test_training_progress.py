@@ -12,6 +12,8 @@ from workers.job_observation import observe
 
 class TrainingProgressTests(unittest.TestCase):
     def test_epoch_metrics_stage_and_carriage_return_batches(self):
+        self.assertEqual(parse_progress('[Evaluating LDA]')['kind'], 'evaluating')
+        self.assertEqual(parse_progress('Evaluating metric NPMI')['metric'], 'NPMI')
         value = parse_progress('2026-09-24 INFO Stage2 Epoch 3/50: train_loss=1.2, val_loss=1e-3, kl=0.02')
         self.assertEqual((value['current'], value['total'], value['stage']), (3, 50, 'stage2'))
         self.assertEqual(value['metrics'], {'train_loss': 1.2, 'val_loss': .001, 'kl_loss': .02})
@@ -37,6 +39,12 @@ class TrainingProgressTests(unittest.TestCase):
             recorder('Epoch 2/3 - Loss: 4.2')
             running = observe(home, job, 1000, now=1001)
             self.assertEqual(running['detail']['current'], 2)
+            recorder('[Evaluating LDA]')
+            recorder('Evaluating metric NPMI')
+            evaluating = observe(home, job, 1000, now=1001)
+            self.assertIsNone(evaluating['iteration'])
+            self.assertEqual(evaluating['activity'], 'evaluating')
+            self.assertEqual(evaluating['detail']['metric'], 'NPMI')
             recorder('Running Visualizations')
             self.assertIsNone(observe(home, job, 1000, now=1001)['detail'])
             job.update(status='completed', phase='completed')
