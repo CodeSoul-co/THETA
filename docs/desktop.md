@@ -33,7 +33,7 @@ The app opens directly into the workbench. Open Settings:
 - **Local embeddings:** select a complete compatible model directory containing configuration, tokenizer, and weights. The default suggestion is `Qwen/Qwen3-Embedding-0.6B`. The model name is a label; the selected directory supplies the files. CTM and BERTopic can use a separate Sentence Transformers model.
 - **Cloud embeddings:** the preset is GLM / Zhipu at `https://open.bigmodel.cn/api/paas/v4`, model `embedding-3`. Set the endpoint, model, dimensions, and a separate embedding API key. OpenAI-compatible embedding services are also supported.
 
-You can configure models later. Traditional algorithms such as LDA do not need neural model weights. Download local embedding weights yourself using the links in Settings. Cloud embeddings are supported for THETA zero-shot; each task requires confirmation of the text scope and request budget. THETA fine-tuning, CTM, and BERTopic require compatible local models.
+You can configure models later. Traditional algorithms such as LDA do not need neural model weights. Download local embedding weights yourself using the links in Settings. Cloud embeddings are supported for THETA zero-shot, CTM and BERTopic; each task requires confirmation of the text scope and request budget. THETA fine-tuning requires compatible local models.
 
 Saved settings apply to new tasks immediately. Running tasks retain their starting configuration. Keys use AES-256-GCM with a per-user local encryption file and restricted file permissions. Starting or updating THETA does not request a Keychain password. When upgrading from legacy Keychain storage, re-enter your API keys once; old ciphertext is retained for recovery. Keys never enter installers or model instructions.
 

@@ -24,7 +24,7 @@ LDA、BTM、HDP、STM 继续使用已有 CPU 实现。CLI Agent 方案支持 `de
 - **Embedding 模型 → 本地模型**：默认建议 `Qwen/Qwen3-Embedding-0.6B`。用户可填写名称并选择兼容模型的完整本地目录（包含 config.json、分词器和权重）；名称仅用于标识，实际加载所选目录。CTM / BERTopic 可另选 Sentence Transformers 兼容模型。
 - **Embedding 模型 → 云端 Embedding API**：默认 GLM / 智谱，Base URL 为 `https://open.bigmodel.cn/api/paas/v4`，模型为 `embedding-3`。可修改地址、模型和向量维度，并单独保存 Embedding API Key；也可使用 OpenAI 兼容服务。
 
-可以稍后再配置模型。LDA 等传统算法不需要下载神经网络权重；本地 Embedding 权重通过设置中的链接自行下载。云端 Embedding 当前适用于 THETA zero-shot，执行具体任务时仍需确认发送文本及请求预算；THETA 微调和 CTM / BERTopic 使用本地模型。
+可以稍后再配置模型。LDA 等传统算法不需要下载神经网络权重；本地 Embedding 权重通过设置中的链接自行下载。云端 Embedding 支持 THETA zero-shot、CTM 和 BERTopic，执行具体任务时仍需确认发送文本及请求预算；THETA 微调使用本地模型。
 
 保存配置后新任务立即生效，不需要重启工作台。正在运行的训练使用启动时的配置。密钥使用 AES-256-GCM 和本机用户专属加密文件保存，文件权限限制为当前用户可读。启动和更新不再要求钥匙串密码。从旧版系统钥匙串存储升级时，需要重新输入一次 API Key；旧密文会保留供恢复。密钥不会进入安装包或模型提示词。
 

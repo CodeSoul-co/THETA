@@ -10,9 +10,15 @@
 
 安装包内置 Python 与 CPU 计算依赖，无需另装 Python、Node.js 或 Conda，不包含模型权重和用户密钥。当前为未正式签名的预览版，系统可能显示安全提示。
 
-进入 THETA 后，在设置中填写对话模型地址、模型名称与密钥。本地嵌入可选择兼容模型目录，默认建议 Qwen3-Embedding-0.6B；云端嵌入可填写服务地址和密钥，默认预设为 GLM embedding-3。THETA 零样本模式支持云端嵌入，微调、CTM 和 BERTopic 需要兼容的本地权重。
+进入 THETA 后，在设置中填写对话模型地址、模型名称与密钥。本地嵌入可选择兼容模型目录，默认建议 Qwen3-Embedding-0.6B；云端嵌入可填写服务地址和密钥，默认预设为 GLM embedding-3。THETA 零样本模式、CTM 和 BERTopic 支持云端嵌入。THETA 微调需要兼容的本地权重。
 
-项目和结果保存在本机。Mac 应用数据位于 `~/Library/Application Support/THETA`，Windows 位于 `%APPDATA%/THETA`。安装更新会保留这些数据。
+启动无需输入钥匙串密码。密钥通过本机用户所有的加密文件保存；从旧版钥匙串存储升级时，需重新输入一次密钥。
+
+项目和结果保存在本机。Mac 使用 `~/Library/Application Support/THETA`。Windows 新安装优先使用安装目录内可写的 `THETA-data` 文件夹，必要时回退到 `%APPDATA%/THETA`。更新保留已有数据位置。
+
+## 技能管理
+
+在对话模式中，点击「新建项目」上方的「技能管理」。可导入文件夹、ZIP、tar.gz 或 SKILL.md，也可填写 GitHub 仓库或技能文件夹地址下载。支持启用、停用、导出和删除已导入的技能。内置绘图模板和 Agent 按用户要求下载的技能显示在同一列表中。Agent 使用前会读取已启用技能的说明；导入不会执行脚本或安装依赖。
 
 ## 网页工作台
 

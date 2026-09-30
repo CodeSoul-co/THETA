@@ -10,9 +10,15 @@ Download the installer from [GitHub Releases](https://github.com/CodeSoul-co/THE
 
 Python and CPU compute dependencies are included. You do not need to install Python, Node.js, or Conda. Model weights and user credentials are not bundled. This is an unsigned preview; your operating system may show a security prompt.
 
-Open Settings inside THETA to enter your conversation model endpoint, model name, and API key. Local embeddings accept a compatible model directory, with Qwen3-Embedding-0.6B as the default suggestion. Cloud embeddings accept your endpoint and key, with GLM embedding-3 as the preset. THETA zero-shot supports cloud embeddings; fine-tuning, CTM, and BERTopic require compatible local weights.
+Open Settings inside THETA to enter your conversation model endpoint, model name, and API key. Local embeddings accept a compatible model directory, with Qwen3-Embedding-0.6B as the default suggestion. Cloud embeddings accept your endpoint and key, with GLM embedding-3 as the preset. THETA zero-shot, CTM and BERTopic support cloud embeddings. THETA fine-tuning requires compatible local weights.
 
-Projects and results remain on your computer. Application data is stored under `~/Library/Application Support/THETA` on macOS and `%APPDATA%/THETA` on Windows. Installing an update preserves this data.
+Launch does not require a Keychain password. API keys use local user-owned encryption; users upgrading from legacy Keychain storage re-enter their keys once.
+
+Projects and results remain on your computer. macOS uses `~/Library/Application Support/THETA`. New Windows installations use a writable `THETA-data` folder inside the installation directory, falling back to `%APPDATA%/THETA` when needed. Updates preserve the existing data location.
+
+## Skill Manager
+
+In conversation mode, open **Skill Manager** above **New project**. Import a folder, ZIP, tar.gz or SKILL.md, or download a skill from a GitHub repository or skill folder URL. Enable or disable skills, export packages and remove imported skills. Built-in Data Viz plotting templates and Agent-requested downloads appear in the same list. The Agent reads enabled skill instructions before use; importing files does not execute scripts or install dependencies.
 
 ## Web workbench
 
