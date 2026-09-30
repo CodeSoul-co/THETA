@@ -33,7 +33,7 @@ From 0.3.8, use **Settings → App updates** for future downloads. Windows suppo
 
 Windows automatically uses compatible NVIDIA GPUs, with CPU fallback. The first accelerated task downloads a verified GPU component (about 2.6 GiB); CPU-only computers do not need it. See the [GPU setup details](docs/desktop.md#windows-gpu-acceleration).
 
-The desktop app bundles its own homepage and does not update automatically. To get the new homepage and live execution logs, quit THETA and install this version over the previous one. Your projects and settings are retained.
+The desktop app bundles the Web interface. Source updates take effect after `./theta-web restart`; installed apps need an application update to receive the same changes. Updating the app retains projects and settings.
 
 | System | Installer |
 | --- | --- |
@@ -71,9 +71,23 @@ Conversation mode preserves original data and saves derived files, preprocessing
 
 This is a local development entry point, not an unauthenticated production deployment. See [web setup and troubleshooting](frontend/README.md) for details. The independent CLI remains `./theta`.
 
-For THETA zero-shot analysis, choose local or cloud embeddings before confirming training. The confirmation card identifies the cloud service, data scope, and request budget. CTM, BERTopic, and THETA fine-tuning require compatible local embeddings.
+For THETA zero-shot analysis, choose local or cloud embeddings before confirming training. The confirmation card identifies the cloud service, data scope, and request budget. CTM and BERTopic also support local or cloud embeddings. THETA fine-tuning requires compatible local model weights.
 
 Conversation and manual modes share the training configuration dialog. Review the proposed models, data columns, and parameters before starting. Multiple models run sequentially and retain separate results. Draft settings and confirmed queues persist across refreshes without submitting duplicate tasks.
+
+### Shared Web and desktop workflow
+
+The Web workbench and desktop app use the same interface and Worker APIs for training, progress, and results. Upload individual files or a whole folder, combine selected files, remove uploaded source files, or replace data within the current project. Large uploads show a processing-time notice. LDA is the recommended default; THETA is marked as experimental. You can clear model selections while editing, but must select at least one before starting. A failed model retains its own error while other ready models continue.
+
+Optional dataset splitting supports adjustable training, validation, and test proportions, random or sequential splitting, and separately uploaded datasets. Results provide separate metrics and visualizations for the full dataset and each split. Without custom splitting, training and validation use 70% / 30%, and testing uses all data, including the training data. The full-data test is not an independent holdout evaluation.
+
+In conversation mode, manage imported or downloaded skills alongside the built-in visualization skill. Completed manual results can be copied into a conversation for further interpretation. Request the full analysis report from the results page to generate Markdown and PDF asynchronously; it is not generated until requested.
+
+In local Web **Settings → Model API**, enter your endpoint, model, and key, then click **Done** to save. Keys are encrypted locally and remain masked; leaving the field blank preserves an existing key. The desktop app also provides **Embedding model** settings. Source Web and CLI users configure embedding endpoints and local model paths in private `agent/.env.local` as described in the [Agent guide](agent/README.md).
+
+Feature consistency does not imply automatic data synchronization between installations. Web defaults to `.theta_agent/` and `.local/manual-workbench/`; the desktop uses its own data directory. Use the same service and storage to access the same projects; separate computers do not automatically share projects or credentials.
+
+See the [help website](https://codesoul-co.github.io/THETA/) for usage instructions. For bugs, open a [GitHub issue](https://github.com/CodeSoul-co/THETA/issues) or email [duanzhenke@code-soul.com](mailto:duanzhenke@code-soul.com).
 
 > The engine quickstart below is for source users. Desktop users can install THETA directly from the downloads above.
 

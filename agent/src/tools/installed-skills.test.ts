@@ -15,7 +15,9 @@ test('one persistent skill catalog serves UI and Agent, with safe import, enable
     const manager=new InstalledSkills(home), tools=new BundledSkills(home);
     const session:ProductSession={id:'skills',title:'Skills',datasetRefs:[],messages:[],updatedAt:''};
     const context={session,userMessage:'Use my imported skill',save(){}};
-    assert.equal(manager.import(files).id,'research-demo');
+    assert.equal(manager.import([...files,{path:'.git/config',content:'YQ=='}]).id,'research-demo');
+    assert.equal(manager.list().find(item=>item.id==='research-demo')?.files,2);
+    assert.throws(()=>manager.import([...files,{path:'.env.local',content:'YQ=='}],'local','secret'),/secrets/);
     assert.equal(manager.list().length,2);
     assert.match((await tools.execute('skills_read',{skill:'research-demo'},context) as any).content,/write paragraphs/);
     manager.setEnabled('research-demo',false);

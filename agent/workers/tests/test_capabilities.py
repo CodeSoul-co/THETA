@@ -7,6 +7,7 @@ from contextlib import closing
 import time
 import unittest
 import sys
+import os
 from unittest.mock import patch
 
 from workers.capabilities import dataset_import, dataset_profile, validate_plan, model_inspect
@@ -114,7 +115,7 @@ class CapabilityTests(unittest.TestCase):
             first = submit(payload)
             self.assertEqual(submit(payload)['id'], first['id'])
             self.assertEqual(launch.call_count, 1)
-            self.assertEqual(launch.call_args.args[0][0], payload['execution']['runtime']['python'])
+            self.assertEqual(os.path.abspath(launch.call_args.args[0][0]), payload['execution']['runtime']['python'])
             self.assertEqual(first['runtime'], payload['execution']['runtime'])
             with self.assertRaisesRegex(ValueError, '不同参数'):
                 submit({**payload, 'plan': {**self.plan, 'params': {'num_topics': 3}}})

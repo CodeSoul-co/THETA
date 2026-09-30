@@ -108,7 +108,6 @@ def save_figure(fig, filename, *, dpi=300, formats=('png', 'pdf', 'svg'), **kwar
             if len(titles) != 1:
                 raise ValueError('原图没有唯一总标题，无法安全修改；请明确子图标题')
             title = titles[0]
-        title.set_text(edit['spec']['title'])
     formats = validate_export(dpi, formats)
     path = Path(filename)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -144,6 +143,12 @@ def save_figure(fig, filename, *, dpi=300, formats=('png', 'pdf', 'svg'), **kwar
     if getattr(fig, 'get_layout_engine', lambda: None)() is None:
         try: fig.tight_layout(pad=1.1, w_pad=2, h_pad=2)
         except (ValueError, RuntimeError): pass
+    # Resolve layout once using the original title. Different export backends
+    # and a revised title must not resize the underlying data panels.
+    fig.canvas.draw()
+    fig.set_layout_engine('none')
+    if edit is not None:
+        title.set_text(edit['spec']['title'])
     kwargs.update(dpi=dpi, bbox_inches='tight', facecolor='white', pad_inches=.12)
     paths = []
     for fmt in formats:

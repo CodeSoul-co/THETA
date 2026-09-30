@@ -38,7 +38,7 @@ Keep using the same browser origin: `localhost` and `127.0.0.1` do not share bro
 
 For individual service development, use `npm --prefix agent run web:api`, `npm --prefix agent run web:manual`, and `npm --prefix frontend run dev`. Do not run them on ports already used by the launcher. Configure frontend `.env.local` from `.env.example` only when needed; preserve existing private settings.
 
-The source launcher uses local development mode. Desktop apps use a production entry protected by an application token. Remote Host/Origin values are rejected. `THETA_LOCAL_AUTH_ENABLED=false` disables local proxy access. Model settings come from private `agent/.env.local`; restart APIs after editing it.
+The source launcher uses local development mode. Desktop apps use a production entry protected by an application token. Remote Host/Origin values are rejected. `THETA_LOCAL_AUTH_ENABLED=false` disables local proxy access. Local Web model settings can be saved from **Settings → Model API → Done** and are encrypted in the Agent data directory. Private `agent/.env.local` remains the source configuration for CLI and embedding services; restart APIs after editing it. Deployed-mode settings remain server-managed.
 
 ## Analysis and text processing
 

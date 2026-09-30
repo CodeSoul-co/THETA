@@ -69,7 +69,7 @@ jobs:
           npm --prefix desktop run prepare:runtime
           npm --prefix frontend run test:manual-upload
           npm --prefix frontend run test:presentation
-          node --test agent/dist/src/tools/training-batches.test.js agent/dist/src/tools/installed-skills.test.js agent/dist/web/worker-server.test.js agent/dist/web/upload-stream.test.js agent/dist/web/manual-server.test.js agent/dist/web/manual-result-import.test.js agent/dist/web/analysis-reports.test.js
+          node --test agent/dist/src/tools/training-batches.test.js agent/dist/src/tools/installed-skills.test.js agent/dist/web/inference-settings.test.js agent/dist/web/worker-server.test.js agent/dist/web/upload-stream.test.js agent/dist/web/manual-server.test.js agent/dist/web/manual-result-import.test.js agent/dist/web/analysis-reports.test.js
           npm --prefix desktop test
           npm --prefix desktop run smoke
           npm --prefix desktop run dist

@@ -47,7 +47,7 @@ Training, cloud embeddings, result preparation, and deeper interpretation each r
 
 Local compute defaults to CPU. A source environment with configured CUDA can explicitly select a GPU. `THETA_PYTHON` selects Python; otherwise the Agent prefers `agent/.venv`, then `python3`. Run `./theta doctor --json` to inspect readiness.
 
-THETA zero-shot supports local or cloud embeddings. Cloud requests are bound to the confirmed endpoint, text scope, and budget. Fine-tuning, CTM, and BERTopic require compatible local models. Missing model weights are not downloaded automatically. Plot language controls chart presentation without translating source text.
+THETA zero-shot supports local or cloud embeddings. Cloud requests are bound to the confirmed endpoint, text scope, and budget. CTM and BERTopic also support cloud embeddings; THETA fine-tuning requires compatible local model weights. Missing model weights are not downloaded automatically. Plot language controls chart presentation without translating source text.
 
 Training uses independent background processes. Exiting the CLI or stopping generation does not cancel training; cancellation is a separate action. Reuse the same `THETA_AGENT_HOME` to restore sessions, data, and jobs. The default directory is `.theta_agent/`.
 
@@ -62,3 +62,7 @@ Result preparation uses native plotting code and delivers available matrices, ta
 - [HTTP API](docs/THETA_AGENT_API.md).
 
 External agents can inspect tools with `theta tools list` and call `theta tools call <name> --session <id>`. The host displays confirmation cards and approves or rejects actions. Approval endpoints must not be exposed as tools the language model can call directly.
+
+## Local acceptance check
+
+With the Python compute environment ready, run `npm --prefix agent run acceptance:workbench -- --confirm-local-training` from the repository root. This explicitly trains a tiny synthetic LDA model, verifies split results, isolated model failure, result copying and persisted skills across Web and desktop transports. It uses disposable data and makes no external API requests.

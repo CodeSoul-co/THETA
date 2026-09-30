@@ -62,7 +62,8 @@ export class InstalledSkills {
     try {
       const hashes: Record<string, string> = {}, names = new Set<string>(); let size = 0;
       for (const file of files) {
-        if (file.path === '.theta-manifest.json' || file.path.split('/').some(part => part === '.git' || part === '.env' || part.startsWith('.env.'))) throw new Error('Do not import secrets or Git metadata');
+        if (file.path.split('/').includes('.git')) continue;
+        if (file.path === '.theta-manifest.json' || file.path.split('/').some(part => part === '.env' || part.startsWith('.env.'))) throw new Error('Do not import secrets or Git metadata');
         const target = this.file(stage, file.path), normalized = file.path.normalize('NFC').toLowerCase();
         if (names.has(normalized)) throw new Error('Duplicate skill file path'); names.add(normalized);
         if (typeof file.content !== 'string' || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(file.content)) throw new Error('Invalid skill file content');

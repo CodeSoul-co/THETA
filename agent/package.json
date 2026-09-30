@@ -24,6 +24,7 @@
     "check:worker": "npm run build && node scripts/check-worker-contract.mjs",
     "probe:business": "node scripts/probe-business-api.mjs",
     "acceptance:business": "node scripts/acceptance-business-api.mjs",
+    "acceptance:workbench": "npm run build && node --disable-warning=ExperimentalWarning scripts/acceptance-workbench.mjs",
     "acceptance:conversion": "node scripts/acceptance-conversion.mjs",
     "test:statistics": "node scripts/test-statistics.mjs"
   },

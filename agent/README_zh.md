@@ -47,7 +47,7 @@ pnpm start
 
 本地计算默认使用 CPU；已配置 CUDA 的源码环境可显式选择 GPU。`THETA_PYTHON` 指定 Python，未设置时优先使用 `agent/.venv`，其次为 `python3`。运行 `./theta doctor --json` 检查环境。
 
-THETA 零样本分析支持本地或云端嵌入。云端请求受已确认的服务地址、文本范围与预算约束；微调、CTM 和 BERTopic 使用兼容本地模型。缺失模型不会自动下载。绘图语言只控制图表展示，不翻译原文。
+THETA 零样本分析支持本地或云端嵌入。云端请求受已确认的服务地址、文本范围与预算约束；CTM 和 BERTopic 也支持云端嵌入；THETA 微调需要兼容本地模型权重。缺失模型不会自动下载。绘图语言只控制图表展示，不翻译原文。
 
 训练使用独立后台进程。退出 CLI 或停止生成不等于取消训练，取消需要明确操作。使用相同 `THETA_AGENT_HOME` 可恢复会话、数据和任务；默认保存在 `.theta_agent/`。
 
@@ -62,3 +62,7 @@ THETA 零样本分析支持本地或云端嵌入。云端请求受已确认的�
 - [计算接口契约](docs/worker-interface-contract.md)、[HTTP API](docs/THETA_AGENT_API.md)。
 
 外部 Agent 可用 `theta tools list` 查看工具，通过 `theta tools call <name> --session <id>` 调用。宿主负责展示确认卡并批准或拒绝；批准接口不能注册为模型可直接调用的工具。
+
+## 本地验收检查
+
+准备好 Python 计算环境后，在仓库根目录运行 `npm --prefix agent run acceptance:workbench -- --confirm-local-training`。该命令明确启动小型合成数据的 LDA 训练，检查数据划分结果、单模型失败隔离、结果复制，以及网页和桌面通信方式下的技能持久化。使用独立临时数据，不请求外部接口。

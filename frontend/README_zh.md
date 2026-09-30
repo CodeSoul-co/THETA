@@ -42,7 +42,7 @@ npm --prefix frontend ci
 
 只开发单个服务时，仍可分别运行 `npm --prefix agent run web:api`、`npm --prefix agent run web:manual`、`npm --prefix frontend run dev`，不要与统一入口同时占用端口。单独运行时才需自行配置前端 `.env.local`（参考 `.env.example`，不要覆盖已有配置）。
 
-源码工作台使用本机开发启动器；桌面应用使用带访问令牌的生产入口。远程 Host/Origin 被拒绝；设置 `THETA_LOCAL_AUTH_ENABLED=false` 可关闭本地路由。请保持 `NEXT_PUBLIC_LOCAL_NO_AUTH=false`，不要使用浏览器端假令牌。模型设置共用 `agent/.env.local`，修改后重启 API。手动服务默认只运行本地模型，不会隐式调用付费云端嵌入。
+源码工作台使用本机开发启动器；桌面应用使用带访问令牌的生产入口。远程 Host/Origin 被拒绝；设置 `THETA_LOCAL_AUTH_ENABLED=false` 可关闭本地路由。请保持 `NEXT_PUBLIC_LOCAL_NO_AUTH=false`，不要使用浏览器端假令牌。本地网页可在「设置 → 模型 API」填写配置，点击「完成」即可加密保存到 Agent 数据目录。命令行与嵌入服务仍通过私有 `agent/.env.local` 配置，修改环境文件后重启接口。部署模式由服务端管理模型配置。手动服务默认只运行本地模型，不会隐式调用付费云端嵌入。
 
 手动上传需收到有效文件编号后才显示配置面板；服务错误不能跳过或伪装为“已完成”。本地模型权重或依赖未就绪时会明确拒绝训练，不产生假的任务。
 

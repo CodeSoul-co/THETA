@@ -1,5 +1,6 @@
 import { Readable } from 'node:stream';
 import { InstalledSkills } from '../src/tools/installed-skills.js';
+import { localInferenceSettings } from './inference-settings.js';
 import { receiveUpload } from './upload-stream.js';
 import { rm } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
@@ -50,6 +51,7 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
   const mode = options.mode ?? 'local';
   const skills = new InstalledSkills(home);
   const sessions = new ProductSessionStore(home);
+  const localSettings = mode === 'local' && inferenceFactory === createConfiguredProvider && !process.env.THETA_DESKTOP_TOKEN ? localInferenceSettings(home) : undefined;
   const records = new ResearchStore(home);
   const consultations = new ConsultationStore(home);
   const importManualResults = manualResultImporter(home, options.manualHome ?? path.join(repositoryRoot(), '.local', 'manual-workbench'), records, sessions);
@@ -338,12 +340,13 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
   };
   const inferenceSettings = () => {
     const provider = inferenceFactory();
+    const localProvider = localSettings?.catalog().providers.find(item => item.selected);
     const configuredProvider = provider
       ? configuredProviderSummaries().find(item => item.configured && (item.id === provider.id || item.model === provider.model))
       : undefined;
     return {
       readOnly: mode !== 'local' || inferenceFactory !== createConfiguredProvider,
-      llm: { providerId: configuredProvider?.id ?? provider?.id ?? null, model: provider?.model ?? '', baseUrl: '', apiKeyConfigured: !!provider, reasoningMode: 'auto', reasoningEffort: 'high', reasoningBudgetTokens: null, temperature: 0.2, maxTokens: 4096, timeoutMs: 180000, streaming: false, typewriter: false, typewriterSpeedMs: 15 },
+      llm: { providerId: localProvider?.id ?? configuredProvider?.id ?? provider?.id ?? null, model: localProvider?.configuredModel ?? provider?.model ?? '', baseUrl: localProvider?.baseUrl ?? '', apiKeyConfigured: !!provider, reasoningMode: 'auto', reasoningEffort: 'high', reasoningBudgetTokens: null, temperature: 0.2, maxTokens: 4096, timeoutMs: 180000, streaming: false, typewriter: false, typewriterSpeedMs: 15 },
       embedding: { enabled: false, providerId: 'local', model: '', baseUrl: '', dimensions: null, apiKeyConfigured: false },
     };
   };
@@ -494,6 +497,11 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
           if (method !== 'PATCH') throw new HttpError(405, '模型设置仅支持 GET 或 PATCH。', 'method_not_allowed');
           if (mode !== 'local' || inferenceFactory !== createConfiguredProvider) throw new HttpError(403, '部署模式的模型由服务端配置，不能由单个浏览器修改。', 'forbidden');
           const body = JSON.parse((await readBody(req)).toString() || '{}') as { llm?: { providerId?: string; model?: string } };
+          if (localSettings) {
+            try { localSettings.save(body.llm ?? {}); }
+            catch (error) { throw new HttpError(400, error instanceof Error ? error.message : String(error), 'validation_failed'); }
+            return json(res, inferenceSettings());
+          }
           const providerId = body.llm?.providerId?.trim();
           const candidate = configuredProviderSummaries().find(item => item.id === providerId);
           if (!providerId || !candidate?.configured) throw new HttpError(400, '所选模型供应商尚未配置。', 'validation_failed');
@@ -502,6 +510,7 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
           return json(res, inferenceSettings());
         }
         if (method !== 'GET') throw new HttpError(405, '模型目录仅支持 GET。', 'method_not_allowed');
+        if (localSettings) return json(res, localSettings.catalog());
         const provider = inferenceFactory();
         const configuredProvider = provider
           ? configuredProviderSummaries().find(item => item.configured && (item.id === provider.id || item.model === provider.model))

@@ -22,7 +22,7 @@ class RuntimeEnvironmentTests(unittest.TestCase):
         cls.temp = tempfile.TemporaryDirectory()
         cls.root = Path(cls.temp.name)
         cls.python = cls.root / 'clean environment' / 'bin/python'
-        venv.EnvBuilder(with_pip=False).create(cls.python.parent.parent)
+        venv.EnvBuilder(with_pip=False, symlinks=True).create(cls.python.parent.parent)
         cls.agent = Path(__file__).resolve().parents[2]
 
     @classmethod
@@ -64,7 +64,7 @@ class RuntimeEnvironmentTests(unittest.TestCase):
 
     def test_preview_and_readiness_share_runtime_without_training(self):
         source = self.root / 'texts.csv'
-        source.write_text('text\nexample one\nexample two\n')
+        source.write_text('text\nexample one\nexample two\nexample three\nexample four\n')
         dataset = dataset_import({'filePath': str(source), 'uploadDir': str(self.root / 'uploads')})
         plan = {'modelId': 'lda', 'textColumn': 'text', 'params': {'num_topics': 2}, 'timeoutSeconds': 60}
         response = self.call('compute.preview', {'plan': plan, 'dataset': dataset})
@@ -84,7 +84,8 @@ class RuntimeEnvironmentTests(unittest.TestCase):
             submitted = self.call('compute.submit', {**request, 'home': home,
                                   'authorization': {'id': 'fixture', 'hash': 'fixture'}})
             self.assertFalse(submitted['ok'])
-            self.assertIn('训练依赖或本地模型资产未就绪', submitted['error'])
+            self.assertIn('计算依赖缺失', submitted['error'])
+            self.assertIn('numpy', submitted['error'])
             with closing(sqlite3.connect(Path(home) / 'compute.sqlite')) as db:
                 self.assertEqual(db.execute('SELECT COUNT(*) FROM jobs').fetchone()[0], 0)
 

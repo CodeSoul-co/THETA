@@ -21,7 +21,7 @@ const allowed = source => {
     && !(name.startsWith('.env') && name !== '.env.example') && !name.endsWith('.pyc');
 };
 for (const name of ['agent', 'frontend', 'src', 'trainning', 'config', 'skills']) rmSync(path.join(runtime, name), { recursive: true, force: true });
-for (const name of ['agent/dist', 'agent/workers', 'agent/skills', 'agent/knowledge', 'agent/cli/bin', 'src', 'trainning/worker', 'config', 'skills']) {
+for (const name of ['agent/dist', 'agent/runtime', 'agent/workers', 'agent/skills', 'agent/knowledge', 'agent/cli/bin', 'src', 'trainning/worker', 'config', 'skills']) {
   cpSync(path.join(root, name), path.join(runtime, name), { recursive: true, filter: allowed });
 }
 const pkg = JSON.parse(readFileSync(path.join(root, 'agent/package.json')));

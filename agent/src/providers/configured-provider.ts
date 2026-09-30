@@ -15,6 +15,7 @@ export const providerIdForBaseUrl = (baseUrl: string): string => {
 export const createConfiguredProvider = (env: Environment = process.env): MiniMaxInferenceProvider | undefined => {
   const genericKey = text(env, 'THETA_INFERENCE_API_KEY');
   const selected = text(env, 'THETA_INFERENCE_PROVIDER');
+  if (selected === 'disabled') return undefined;
   if (genericKey) {
     const baseUrl = text(env, 'THETA_INFERENCE_BASE_URL');
     const model = text(env, 'THETA_INFERENCE_MODEL');

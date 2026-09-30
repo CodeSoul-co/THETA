@@ -4,6 +4,7 @@ from __future__ import annotations
 import csv
 import json
 import tempfile
+import shutil
 import unittest
 from pathlib import Path
 
@@ -24,6 +25,7 @@ def read_rows(path: Path) -> tuple[list[str], list[dict[str, str]]]:
 class DatasetConversionTest(unittest.TestCase):
     def setUp(self) -> None:
         self.root = Path(tempfile.mkdtemp(prefix="theta-conversion-"))
+        self.addCleanup(shutil.rmtree, self.root)
         self.uploads = self.root / "uploads"
 
     def write_xlsx(self) -> Path:
@@ -57,7 +59,7 @@ class DatasetConversionTest(unittest.TestCase):
         destination = self.root / "normalized.csv"
         normalize_dataset({"dataset": dataset, "plan": plan}, destination)
         header, rows = read_rows(destination)
-        self.assertEqual(header, ["text", "label", "year", "timestamp", "cov_0"])
+        self.assertEqual(header, ["text", "label", "year", "timestamp", "cov_0", "source_file", "source_row"])
         self.assertEqual(len(rows), ROWS)
         self.assertEqual(rows[0]["text"], TEXTS[0])
         self.assertEqual(rows[0]["cov_0"], "web")
@@ -70,7 +72,7 @@ class DatasetConversionTest(unittest.TestCase):
         destination = self.root / "normalized.csv"
         normalize_dataset({"dataset": dataset, "plan": plan}, destination)
         header, rows = read_rows(destination)
-        self.assertEqual(header, ["text", "cov_0"])
+        self.assertEqual(header, ["text", "cov_0", "source_file", "source_row"])
         self.assertEqual(len(rows), ROWS)
         self.assertTrue(all(row["cov_0"] in {"web", "phone"} for row in rows))
         self.assertTrue(all(row["text"] for row in rows))
@@ -96,7 +98,7 @@ class DatasetConversionTest(unittest.TestCase):
                     destination = self.root / f'{model}-{suffix}.csv'
                     normalize_dataset({'dataset': self.imported(source), 'plan': {'modelId': model, 'textColumn': '正文', 'timeColumn': '发布时间', 'covariates': ['公众号名称'], 'params': {}}}, destination)
                     header, rows = read_rows(destination)
-                    self.assertEqual(header, ['text', 'year', 'timestamp', 'cov_0'])
+                    self.assertEqual(header, ['text', 'year', 'timestamp', 'cov_0', 'source_file', 'source_row'])
                     self.assertEqual(len(rows), ROWS)
                     self.assertEqual(rows[0]['text'], records[0]['正文'])
                     self.assertEqual(rows[0]['timestamp'], records[0]['发布时间'])
@@ -107,7 +109,7 @@ class DatasetConversionTest(unittest.TestCase):
         destination = self.root / "normalized.csv"
         normalize_dataset({"dataset": dataset, "plan": {"modelId": "lda", "textColumn": "内容", "params": {}}}, destination)
         header, rows = read_rows(destination)
-        self.assertEqual(header, ["text"])
+        self.assertEqual(header, ["text", "source_file", "source_row"])
         self.assertEqual(len(rows), ROWS)
 
     def test_a_changed_managed_copy_is_rejected(self) -> None:
@@ -118,33 +120,33 @@ class DatasetConversionTest(unittest.TestCase):
 
     def test_gbk_csv_with_chinese_headers_is_decoded_and_mapped(self) -> None:
         path = self.root / "反馈-gbk.csv"
-        path.write_bytes("内容,渠道\n包裹配送延迟 物流,web\n退款 重复扣费,phone\n".encode("gbk"))
+        path.write_bytes(("内容,渠道\n" + "包裹配送延迟 物流,web\n退款 重复扣费,phone\n" * 2).encode("gbk"))
         dataset = self.imported(path)
         destination = self.root / "normalized.csv"
         normalize_dataset({"dataset": dataset, "plan": {"modelId": "lda", "textColumn": "内容", "covariates": ["渠道"], "params": {}}}, destination)
         header, rows = read_rows(destination)
-        self.assertEqual(header, ["text", "cov_0"])
+        self.assertEqual(header, ["text", "cov_0", "source_file", "source_row"])
         self.assertEqual(rows[0]["text"], "包裹配送延迟 物流")
         self.assertEqual(rows[1]["cov_0"], "phone")
 
     def test_utf8_bom_is_not_part_of_the_column_name(self) -> None:
         path = self.root / "bom.csv"
-        path.write_bytes("\ufeff内容\n包裹配送延迟 物流\n".encode("utf-8"))
+        path.write_bytes(("\ufeff内容\n" + "包裹配送延迟 物流\n" * 3).encode("utf-8"))
         dataset = self.imported(path)
         destination = self.root / "normalized.csv"
         normalize_dataset({"dataset": dataset, "plan": {"modelId": "lda", "textColumn": "内容", "params": {}}}, destination)
         header, rows = read_rows(destination)
-        self.assertEqual(header, ["text"])
+        self.assertEqual(header, ["text", "source_file", "source_row"])
         self.assertEqual(rows[0]["text"], "包裹配送延迟 物流")
 
     def test_tab_separated_records_are_split_into_columns(self) -> None:
         path = self.root / "feedback.tsv"
-        path.write_text("内容\t渠道\n包裹配送延迟\tweb\n", encoding="utf-8")
+        path.write_text("内容\t渠道\n" + "包裹配送延迟\tweb\n" * 3, encoding="utf-8")
         dataset = self.imported(path)
         destination = self.root / "normalized.csv"
         normalize_dataset({"dataset": dataset, "plan": {"modelId": "lda", "textColumn": "内容", "covariates": ["渠道"], "params": {}}}, destination)
         header, rows = read_rows(destination)
-        self.assertEqual(header, ["text", "cov_0"])
+        self.assertEqual(header, ["text", "cov_0", "source_file", "source_row"])
         self.assertEqual(rows[0]["cov_0"], "web")
 
     def test_docx_paragraphs_are_available_as_training_rows(self) -> None:
@@ -156,13 +158,15 @@ class DatasetConversionTest(unittest.TestCase):
         document = Document()
         document.add_paragraph("包裹配送延迟 物流 快递 延误")
         document.add_paragraph("退款 账单 重复扣费 客服")
+        document.add_paragraph("包裹配送延迟 物流 快递 延误")
+        document.add_paragraph("退款 账单 重复扣费 客服")
         document.save(source)
         dataset = self.imported(source)
         destination = self.root / "normalized.csv"
         normalize_dataset({"dataset": dataset, "plan": {"modelId": "lda", "textColumn": "text", "params": {}}}, destination)
         header, rows = read_rows(destination)
-        self.assertEqual(header, ["text"])
-        self.assertEqual([row["text"] for row in rows], ["包裹配送延迟 物流 快递 延误", "退款 账单 重复扣费 客服"])
+        self.assertEqual(header, ["text", "source_file", "source_row"])
+        self.assertEqual([row["text"] for row in rows], ["包裹配送延迟 物流 快递 延误", "退款 账单 重复扣费 客服"] * 2)
 
 
 if __name__ == "__main__":
