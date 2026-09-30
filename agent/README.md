@@ -37,7 +37,7 @@ Describe your research question or drop a file path into the terminal. The Agent
 | `/trace` | Inspect the latest execution trace |
 | `/deny`, `/help`, `/exit` | Reject an action, show help, or exit |
 
-Supported inputs include CSV, TSV, TXT, Markdown, JSON, JSONL, NDJSON, Excel, Parquet, PDF, and DOCX. Local imports are limited to 200 MiB; training normalization supports up to one million rows. Original files are retained. Training uses verified managed copies with selected text, time, label, and covariate columns.
+Supported inputs include CSV, TSV, TXT, Markdown, JSON, JSONL, NDJSON, Excel, Parquet, PDF, and DOCX. Local imports have no fixed file-size limit; training normalization supports up to one million rows. Large files require more time and storage. Original files are retained. Training uses verified managed copies with selected text, time, label, and covariate columns.
 
 Data understanding may send limited excerpts to your configured conversation model. Common email, phone, and credential patterns are masked, but this is not complete anonymization. Prepare sensitive data before importing it.
 

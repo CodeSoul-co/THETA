@@ -37,7 +37,7 @@ pnpm start
 | `/trace` | 查看最近一轮执行记录 |
 | `/deny`、`/help`、`/exit` | 拒绝操作、查看帮助、退出 |
 
-支持 CSV、TSV、TXT、Markdown、JSON、JSONL、NDJSON、Excel、Parquet、PDF、DOCX。单次本地导入上限为 200 MiB，训练规范化上限为一百万行。原文件保留，训练使用经过内容校验的托管副本；文本、时间、标签和协变量由所选列映射。
+支持 CSV、TSV、TXT、Markdown、JSON、JSONL、NDJSON、Excel、Parquet、PDF、DOCX。本地导入不设置固定文件大小上限，训练数据规范化最多支持一百万行；大文件需要更多时间与存储空间。原文件保留，训练使用经过内容校验的托管副本；文本、时间、标签和协变量由所选列映射。
 
 数据理解可向用户配置的对话模型发送有限文本摘录。常见邮箱、手机号和凭据样式会被遮盖，但不构成完整匿名化；敏感数据应在导入前处理。
 
