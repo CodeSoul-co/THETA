@@ -308,13 +308,13 @@ class TopicVisualizer:
                     topic_filename = f'Topic {topic_idx + 1} Word Distribution.png'
                 
                 # Create topic directory path
-                topic_dir = os.path.join(self.output_dir, '..', 'topic', f'topic_{topic_idx + 1}')
-                os.makedirs(topic_dir, exist_ok=True)
-                topic_filepath = os.path.join(topic_dir, topic_filename)
+                topic_dir = Path(self.output_dir).parent / 'topic' / f'topic_{topic_idx + 1}'
+                topic_dir.mkdir(parents=True, exist_ok=True)
+                topic_filepath = topic_dir / topic_filename
                 
                 self._save_figure(fig, topic_filepath, dpi=self.dpi, bbox_inches='tight')
                 logger.info(f"Figure saved to {topic_filepath}")
-                saved_paths.append(topic_filepath)
+                saved_paths.append(str(topic_filepath))
                 plt.close(fig)
             
             return saved_paths
@@ -360,18 +360,18 @@ class TopicVisualizer:
             ax.axis('off')
             
             # Save to corresponding topic folder
-            topic_dir = os.path.join(self.output_dir, '..', 'topic', f'topic_{topic_idx + 1}')
-            os.makedirs(topic_dir, exist_ok=True)
+            topic_dir = Path(self.output_dir).parent / 'topic' / f'topic_{topic_idx + 1}'
+            topic_dir.mkdir(parents=True, exist_ok=True)
             
             if self.language == 'zh':
                 topic_filename = f'主题{topic_idx + 1} 词云.png'
             else:
                 topic_filename = f'Topic {topic_idx + 1} Word Cloud.png'
             
-            topic_filepath = os.path.join(topic_dir, topic_filename)
+            topic_filepath = topic_dir / topic_filename
             self._save_figure(fig, topic_filepath, dpi=self.dpi, bbox_inches='tight', facecolor='white')
             logger.info(f"Word cloud saved to {topic_filepath}")
-            saved_paths.append(topic_filepath)
+            saved_paths.append(str(topic_filepath))
             plt.close(fig)
         
         return saved_paths

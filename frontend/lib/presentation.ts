@@ -55,6 +55,9 @@ const artifactNames: Record<string, string> = {
   'bow matrix': '词袋矩阵', 'document topics': '文档主题矩阵',
   'vocab embeddings': '词表嵌入', embeddings: '文本嵌入', 'topic embeddings': '主题嵌入',
   'word2vec embeddings': '词向量', metadata: '元数据', 'source rows': '原始行索引', texts: '文本数据',
+  'model delivery': '模型交付信息', 'requirements model': '模型运行依赖清单',
+  'trained model': '已训练模型', 'split results': '数据划分与评估结果',
+  'split visualizations': '各数据集图表生成状态', documents: '逐文档主题结果',
 }
 
 export function artifactLabel(name: string, kind = 'artifact'): string {

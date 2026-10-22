@@ -31,6 +31,12 @@ test('图表、数据表及带后缀的文件展示中文名称', () => {
     ['theta_k20.npy', '文档主题矩阵 · 20'],
     ['topic_words_20260918_192843.json', '主题词 · 20260918 192843'],
     ['config_zero_shot.json', '训练配置（零样本分析）'],
+    ['delivery/model_delivery.json', '模型交付信息'],
+    ['delivery/requirements-model.txt', '模型运行依赖清单'],
+    ['delivery/trained_model.joblib', '已训练模型'],
+    ['split_results.json', '数据划分与评估结果'],
+    ['zh/split-visualizations.json', '各数据集图表生成状态'],
+    ['splits/train/documents.csv', '逐文档主题结果'],
     ['年度趋势.png', '年度趋势'],
   ]
   for (const [name, expected] of cases) assert.equal(artifactLabel(name), expected)

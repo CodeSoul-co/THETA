@@ -221,6 +221,7 @@ export const BackendAPI = {
         vocab_size: params.vocab_size || 5000,
         model_params: params.model_params,
         topic_counts: params.topic_counts,
+        data_split: params.data_split,
         text_column: params.text_column,
         meta_columns: params.meta_columns,
         time_column: params.time_column,

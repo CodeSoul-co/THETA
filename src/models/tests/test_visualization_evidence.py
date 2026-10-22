@@ -14,6 +14,30 @@ from visualization.topic_visualizer import load_etm_results
 
 
 class VisualizationEvidenceTests(unittest.TestCase):
+    @unittest.skipUnless(sys.platform == 'win32', 'Windows extended paths only')
+    def test_topic_charts_accept_windows_extended_paths(self):
+        from visualization.topic_visualizer import TopicVisualizer
+        with tempfile.TemporaryDirectory() as home:
+            output = '\\\\?\\' + str(Path(home) / 'zh' / 'global')
+            visualizer = TopicVisualizer(output_dir=output, dpi=72, formats=('png',), language='en')
+            words = [(0, [('refund', 0.8), ('delivery', 0.2)])]
+
+            def save(_figure, filename, **_kwargs):
+                Path(filename).write_bytes(b'chart')
+                return [str(filename)]
+
+            with patch.object(visualizer, '_save_figure', side_effect=save), \
+                    patch.object(visualizer, '_make_wordcloud', return_value=np.ones((8, 8, 3))), \
+                    patch('visualization.topic_visualizer.WORDCLOUD_AVAILABLE', True):
+                topic_words = visualizer.visualize_topic_words(words)
+                wordclouds = visualizer.visualize_all_wordclouds(words)
+
+            expected = Path(output).parent / 'topic' / 'topic_1'
+            self.assertEqual(len(topic_words), 1)
+            self.assertEqual(len(wordclouds), 1)
+            self.assertTrue((expected / 'Topic 1 Word Distribution.png').is_file())
+            self.assertTrue((expected / 'Topic 1 Word Cloud.png').is_file())
+
     def test_unobserved_trajectories_skip_without_random_values(self):
         log = io.StringIO()
         with tempfile.TemporaryDirectory() as home:
