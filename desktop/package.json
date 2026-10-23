@@ -38,6 +38,7 @@
       "preload.cjs",
       "services.mjs",
       "settings.cjs",
+      "ports.cjs",
       "data-home.cjs",
       "ui/icon.png",
       "package.json",

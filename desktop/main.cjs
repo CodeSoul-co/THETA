@@ -2,10 +2,10 @@ const { app, BrowserWindow, Menu, dialog, ipcMain, utilityProcess, session, shel
 const { existsSync, mkdirSync, createWriteStream, readFileSync, writeFileSync } = require('node:fs');
 const { spawn, spawnSync } = require('node:child_process');
 const { randomBytes } = require('node:crypto');
-const { createServer } = require('node:net');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { readSettings, saveInference, saveEmbedding, embeddingSettings } = require('./settings.cjs');
+const { preferredPort, selectPort } = require('./ports.cjs');
 const smoke = process.argv.includes('--smoke-test');
 app.setName('THETA');
 const { prepareDataHome, selectDataHome, saveDataLocation, clearUpgradeCaches } = require('./data-home.cjs');
@@ -37,17 +37,6 @@ function pythonCall(args, options = {}) {
     child.once('exit', code => { clearTimeout(timer); code === 0 ? resolve(stdout) : reject(new Error(stderr || `Python exited ${code}`)); });
     child.stdin.end();
   });
-}
-async function selectPort(preferred) {
-  const server = createServer();
-  try {
-    await new Promise((resolve, reject) => { server.once('error', reject); server.listen(preferred, '127.0.0.1', resolve); });
-    const port = server.address().port;
-    await new Promise(resolve => server.close(resolve)); return port;
-  } catch (error) {
-    if (preferred && error.code === 'EADDRINUSE') return selectPort(0);
-    throw error;
-  }
 }
 function environment(port) {
   const settings = readSettings(settingsFile);
@@ -115,9 +104,7 @@ async function stopService() {
 }
 async function startService() {
   if (!existsSync(python) || !existsSync(path.join(runtime, 'frontend/server.js'))) throw new Error('安装包缺少运行环境。请运行 prepare:python 和 prepare:runtime 后重新打包。');
-  let previousPort = 14320;
-  try { previousPort = JSON.parse(readFileSync(path.join(home, 'port.json'))).port; } catch {}
-  const port = await selectPort(smoke ? 0 : previousPort);
+  const port = await selectPort(smoke ? 0 : preferredPort(path.join(home, 'port.json')));
   writeFileSync(path.join(home, 'port.json'), JSON.stringify({ port }));
   token = randomBytes(32).toString('hex'); workerToken = randomBytes(32).toString('hex');
   serviceEnv = environment(port);
