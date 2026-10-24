@@ -337,7 +337,7 @@ the multipart boundary:
 ```ts
 const form = new FormData();
 form.append('file', file);
-const response = await fetch(`${prefix}/datasets`, {
+const response = await fetch(`${prefix}/datasets?projectId=${encodeURIComponent(projectId)}`, {
   method: 'POST', credentials: 'include',
   headers: { 'X-CSRF-Token': csrfToken }, body: form,
 });
@@ -361,12 +361,19 @@ the same Agent project used by conversation and manual mode. The drawer and
 composer render suffix-aware SVG file icons; this presentation does not change
 the upload API.
 
-Dataset ownership is user-wide, but attachment is project-scoped. Supplying
-`projectId` on upload binds the managed dataset to that project; supplying it on
-list returns only the project's datasets. Creating a run with `datasetRef`, or
-later sending that dataset as an attachment, also persists the same binding.
-Legacy sessions are backfilled only when their run already references the
-dataset, so a newly created project never inherits unrelated user uploads.
+Dataset listing and upload require `projectId`. Dataset references are namespaced
+by project, file content and filename. Run creation, message attachments and data
+tools reject references outside the active project; sending a foreign reference
+does not grant access or change its project assignment. Legacy associations are
+restored only from sessions that already referenced the dataset.
+
+Filesystem discovery for Web and desktop is restricted to
+`THETA_DATA_DIR/projects/<projectId>/` (default: `data/projects/<projectId>/`
+under the engine root). IDs come from the project API, not display names. Shared
+root files, foreign project directories and symlinks cannot be used as a fallback.
+Managed uploads and derived datasets are stored under
+`<Agent home>/uploads/projects/<projectId>/`. Standalone CLI discovery retains
+its independent unscoped catalog.
 
 ## Unified project and result navigation
 

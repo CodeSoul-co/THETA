@@ -1,17 +1,26 @@
 """Discover preuploaded files; host-owned roots and versioned IDs, no LLM paths."""
 import hashlib
 import os
+import re
 from pathlib import Path
 from .readers import SUPPORTED_SUFFIXES
 
 
-def catalog_root():
+def catalog_root(project_id=None):
     from ..capabilities import engine_root
-    return Path(os.environ.get('THETA_DATA_DIR', engine_root() / 'data')).expanduser().resolve()
+    root = Path(os.environ.get('THETA_DATA_DIR', engine_root() / 'data')).expanduser().resolve()
+    if project_id is None:
+        return root
+    if not isinstance(project_id, str) or not re.fullmatch(r'[a-zA-Z0-9_-]{1,128}', project_id):
+        raise ValueError('无效项目数据目录')
+    scoped = root / 'projects' / project_id
+    if scoped.resolve() != scoped:
+        raise ValueError('项目数据目录不能使用符号链接')
+    return scoped
 
 
-def entries():
-    root = catalog_root()
+def entries(project_id=None):
+    root = catalog_root(project_id)
     result = []
     inspected = 0
     truncated = False
@@ -36,7 +45,7 @@ def entries():
                 if not file.is_file():
                     continue
                 relative = file.relative_to(root).as_posix()
-                version = f'{relative}:{stat.st_size}:{stat.st_mtime_ns}'
+                version = f'{project_id or ""}:{relative}:{stat.st_size}:{stat.st_mtime_ns}'
                 result.append({'catalogId': 'catalog-' + hashlib.sha256(version.encode()).hexdigest(),
                                'name': relative, 'sizeBytes': stat.st_size, 'format': file.suffix[1:]})
             except OSError:
@@ -47,7 +56,7 @@ def entries():
 
 
 def discover(payload):
-    found, truncated = entries()
+    found, truncated = entries(payload.get('projectId'))
     offset = payload.get('offset', 0)
     if not isinstance(offset, int) or offset < 0:
         raise ValueError('无效目录分页位置')
@@ -59,16 +68,16 @@ def discover(payload):
 
 def use(payload):
     from ..capabilities import dataset_import
-    found, _ = entries()
+    found, _ = entries(payload.get('projectId'))
     entry = next((item for item in found if item['catalogId'] == payload['catalogId']), None)
     if entry is None:
         raise ValueError('该候选数据已变化或不存在，请重新发现数据目录')
-    root = catalog_root()
+    root = catalog_root(payload.get('projectId'))
     source = root / entry['name']
     if source.resolve() != source or not source.is_file():
         raise ValueError('候选文件越过数据目录边界')
     dataset = dataset_import({'filePath': str(source), 'uploadDir': payload['uploadDir']})
-    after, _ = entries()
+    after, _ = entries(payload.get('projectId'))
     if not any(item['catalogId'] == entry['catalogId'] for item in after):
         raise ValueError('选择过程中数据发生变化，请重新发现')
     return {**dataset, 'catalogName': entry['name']}

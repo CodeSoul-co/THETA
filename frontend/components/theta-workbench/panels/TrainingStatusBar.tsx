@@ -21,7 +21,7 @@ export const TrainingStatusBar = ({ status, catalog, onOpen }: {
   const summary = trainingSummary(status, catalog)
   if (!summary.state) return null
   const title = ({
-    running: zh ? '模型正在训练' : 'Training in progress',
+    running: summary.preparing ? (zh ? '正在准备分析结果' : 'Preparing analysis results') : (zh ? '模型正在训练' : 'Training in progress'),
     queued: zh ? '训练正在排队' : 'Training queued',
     completed: zh ? '训练完成' : 'Training complete',
     failed: zh ? '训练需要关注' : 'Training needs attention',

@@ -36,6 +36,9 @@ export class ResearchStore {
   list<T>(kind: string, offset = 0): T[] {
     return this.use(db => db.prepare('SELECT value FROM records WHERE kind=? ORDER BY rowid DESC LIMIT 100 OFFSET ?').all(kind, offset).map(row => JSON.parse(String(row.value)) as T));
   }
+  listAll<T>(kind: string): T[] {
+    return this.use(db => db.prepare('SELECT value FROM records WHERE kind=? ORDER BY rowid DESC').all(kind).map(row => JSON.parse(String(row.value)) as T));
+  }
   putIfAbsent(kind: string, id: string, value: unknown): boolean {
     return this.use((db) => db.prepare('INSERT OR IGNORE INTO records VALUES (?,?,?)').run(kind, id, JSON.stringify(value)).changes === 1);
   }

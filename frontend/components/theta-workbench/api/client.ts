@@ -230,6 +230,7 @@ export interface WebResultCatalog {
 }
 
 export interface WebAttachment {
+  projectId?: string;
   kind: 'visualization' | 'topic' | 'metric' | 'table' | 'dataset';
   id: string;
   label: string;

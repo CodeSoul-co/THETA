@@ -1,3 +1,4 @@
+import { projectAttachments } from '@/lib/project-identity'
 
 import { OPEN_SOURCE_EDITION } from '@/lib/edition'
 import { Puzzle } from 'lucide-react'
@@ -413,7 +414,8 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
     projectId: string
     optimisticMessageId?: string
   }>>([])
-  const [attachments, setAttachments] = useState<WebAttachment[]>([])
+  const [storedAttachments, setAttachments] = useState<WebAttachment[]>([])
+  const attachments = useMemo(() => projectAttachments(storedAttachments, activeProjectId), [storedAttachments, activeProjectId])
   const [loadError, setLoadError] = useState<string>()
   const [streamState, setStreamState] = useState<StreamState>('idle')
   const [runtimeProfile, setRuntimeProfile] = useState<WebRuntimeProfile>()
@@ -535,11 +537,12 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
       setDatasetSizes(current => ({ ...current, [activeProjectId]: datasets.reduce((sum, item) => sum + item.sizeBytes, 0) }))
       const restored = datasets.map((dataset): WebAttachment => ({
         kind: 'dataset',
+        projectId: activeProjectId,
         id: dataset.datasetRef,
         label: dataset.name,
       }))
       setAttachments((current) => {
-        const merged = [...restored, ...current].filter((item, index, all) =>
+        const merged = [...restored, ...projectAttachments(current, activeProjectId)].filter((item, index, all) =>
           all.findIndex((candidate) => candidate.kind === item.kind && candidate.id === item.id) === index,
         ).slice(-12)
         return merged.length === current.length && merged.every((item, index) => item.id === current[index]?.id)
@@ -548,7 +551,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
       })
       setProjectMemories((current) => {
         const previous = current[activeProjectId] ?? { messages: messagesRef.current, attachments: [] }
-        const merged = [...restored, ...previous.attachments].filter((item, index, all) =>
+        const merged = [...restored, ...projectAttachments(previous.attachments, activeProjectId)].filter((item, index, all) =>
           all.findIndex((candidate) => candidate.kind === item.kind && candidate.id === item.id) === index,
         ).slice(-12)
         return { ...current, [activeProjectId]: { ...previous, attachments: merged } }
@@ -1006,10 +1009,12 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
     const source = openRunStream(activeConversationId, {
       onOpen: () => setStreamState('live'),
       onSnapshot: (data) => {
+        if (cancelled) return
         setStatus(data.status)
         setStreamState('live')
       },
       onStatus: (data) => {
+        if (cancelled) return
         setStatus(data.status)
         const terminal = data.status.trainingStatus === 'completed' || data.status.trainingStatus === 'failed'
         if (!terminal) observedTerminalTrainingRef.current = undefined
@@ -1020,6 +1025,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
         }
       },
       onEvents: (data) => {
+        if (cancelled) return
         setEvents((current) => {
           const merged = new Map(current.map(event => [event.id, event]))
           for (const event of data.events) merged.set(event.id, event)
@@ -1030,12 +1036,13 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
         scheduleReasoningRefresh()
       },
       onMessages: (data) => {
+        if (cancelled) return
         const latest = [...data.messages].reverse().find((message) => message.role === 'assistant' && !message.messageKind.startsWith('activity.'))
         const queueId = processingMessageRef.current
         const receivedNewAssistant = latest != null && !knownMessageIds.current.has(latest.messageId)
         if (latest) setLiveAssistantMessageId(latest.messageId)
         mergeMessages(data.messages)
-        void getResultCatalog(activeConversationId).then(setResultCatalog).catch(() => undefined)
+        void getResultCatalog(activeConversationId).then(data => { if (!cancelled) setResultCatalog(data) }).catch(() => undefined)
         // The message request owns completion; stream snapshots may contain earlier replies.
       },
       onError: () => setStreamState('reconnecting'),
@@ -1789,16 +1796,12 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
     if (!dataset) return
     const projectId = dataset.projectId ?? await ensureProject(dataset.name.replace(/\.[^.]+$/u, '') || '数据分析项目')
 
-    // An existing run retains its original dataset and approvals. Replacement starts
-    // a fresh conversation inside the same project, leaving its history/results intact.
-    const replacing = !!(selectedRunId || workspaceSessionId) && !attachments.some(item => item.kind === 'dataset' && item.id === dataset.datasetRef)
-    if (replacing && activeProjectIdRef.current === projectId) startNewConversation(projectId)
     setDatasetSizes(current => ({ ...current, [projectId]: dataset.sizeBytes }))
-    const datasetAttachments: WebAttachment[] = [{ kind: 'dataset', id: dataset.datasetRef, label: dataset.name }]
+    const datasetAttachments: WebAttachment[] = [{ kind: 'dataset', projectId, id: dataset.datasetRef, label: dataset.name }]
     if (activeProjectIdRef.current === projectId) setAttachments(datasetAttachments)
     setProjectMemories((current) => {
-      const previous = current[projectId] ?? { messages: messagesRef.current, attachments: [] }
-      return { ...current, [projectId]: { ...previous, ...(replacing ? { messages: [], selectedRunId: undefined, workspaceSessionId: undefined } : {}), attachments: datasetAttachments } }
+      const previous = current[projectId] ?? { messages: activeProjectIdRef.current === projectId ? messagesRef.current : [], attachments: [] }
+      return { ...current, [projectId]: { ...previous, attachments: datasetAttachments } }
     })
     if (activeProjectIdRef.current === projectId) setDetailOpen(true)
   }

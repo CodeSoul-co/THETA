@@ -164,6 +164,7 @@ test('result API separates exact manual or automatic selection from interpretati
 });
 test('follow-up attachment is an attached dataset, not a catalog selection', async t => {
   const f = await fixture(t); new ResearchStore(f.home).put('dataset', 'dataset-fixture', { datasetRef: 'dataset-fixture', fileName: '测试.csv', sha256: 'abc', managedPath: '/unused', sizeBytes: 10 });
+  new ResearchStore(f.home).put('web-dataset-owner', 'dataset-fixture', { datasetRef: 'dataset-fixture', ownerId: 'local', projectIds: [f.project.id] });
   const result = await f.request(`/runs/${f.run.runId}/messages`, { content: '看一下附件', attachments: [{ kind: 'dataset', id: 'dataset-fixture' }] });
   assert.equal(result.status, 200); assert.match(f.lastRequest(), /datasetRef.*dataset-fixture/u); assert.equal((await f.request('/runs')).data.runs.length, 1);
   assert.equal((await f.request(`/runs/${f.run.runId}/conversation`)).data.messages[0].content, '看一下附件');
@@ -328,6 +329,26 @@ test('background inference failure remains queryable and does not claim completi
     await new Promise(r=>setTimeout(r,20));
   }
   assert.equal(task.status,'failed');assert.match(task.error,/fixture response failure/);
-  const other=(await f.request('/runs',{projectId:'other',researchGoal:'Other'})).data;
+  const otherProject=(await f.request('/projects',{name:'Other'})).data;
+  const other=(await f.request('/runs',{projectId:otherProject.id,researchGoal:'Other'})).data;
   assert.equal((await f.request(`/runs/${other.runId}/tasks/${task.id}`)).status,404);
+});
+
+test('project isolation rejects foreign attachments and keeps identical uploads independently named', async t => {
+  const f = await fixture(t), other = (await f.request('/projects', { name: 'Another project' })).data;
+  const upload = async (project: string, name: string) => {
+    const response = await fetch(`${f.base}/datasets/upload?projectId=${project}&filename=${encodeURIComponent(name)}`, { method: 'POST', body: 'text\nshared content' });
+    assert.equal(response.status, 200); return (await response.json()).data;
+  };
+  const a = await upload(f.project.id, 'shared.csv'), b = await upload(other.id, 'shared.csv');
+  assert.notEqual(a.datasetRef, b.datasetRef);
+  assert.deepEqual((await f.request(`/datasets?projectId=${f.project.id}`)).data.datasets.map((d: {displayName:string}) => d.displayName), ['shared.csv']);
+  assert.equal((await f.request('/datasets')).status, 400);
+  const rejected = await f.request(`/runs/${f.run.runId}/messages`, { content: 'Read this', attachments: [{ kind: 'dataset', id: b.datasetRef }] });
+  assert.equal(rejected.status, 404); assert.equal(f.calls(), 0);
+  assert.equal((await f.request('/runs', { projectId: f.project.id, datasetRef: b.datasetRef })).status, 404);
+  assert.equal((await f.request('/runs', { sourceSessionId: f.run.runId, projectId: other.id, datasetRef: b.datasetRef })).status, 400);
+  const records = new ResearchStore(f.home);
+  const stored = records.get<{managedPath:string}>('dataset', a.datasetRef);
+  assert.ok(stored.managedPath.includes(path.join('projects', f.project.id)));
 });

@@ -1,4 +1,4 @@
-type ResultReadiness = {
+export type ResultReadiness = {
   status: string
   reportStatus?: string
   artifacts?: { fileCount: number }
@@ -18,4 +18,11 @@ export function resultReadinessNotice(result: ResultReadiness, conversational: b
   return conversational
     ? '训练已完成，图表清单尚未就绪。若还未确认“整理结果”，请返回对话确认；若已确认，页面会自动同步生成后的图表，无需重新训练。'
     : '训练已完成，正在等待结果文件同步。页面会自动更新，无需重新训练。'
+}
+
+/** A finished optimizer is not a published, readable analysis result. */
+export function resultDisplayStatus(result: ResultReadiness, loading = false, readError = false): string {
+  if (result.status !== 'completed') return result.status
+  if (readError || result.reportStatus === 'incomplete') return 'failed'
+  return loading || result.reportStatus === 'generating' || !result.artifacts?.fileCount ? 'running' : 'completed'
 }

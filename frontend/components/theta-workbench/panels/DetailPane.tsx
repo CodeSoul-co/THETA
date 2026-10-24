@@ -1,3 +1,4 @@
+import { resultDisplayStatus } from '@/lib/result-readiness'
 import { toast } from 'sonner'
 import { DATASET_ACCEPT, datasetFilesError, documentCollectionError, isDocumentCollection } from '@/lib/dataset-files'
 import { useFileDrop } from '@/lib/use-file-drop'
@@ -89,7 +90,7 @@ export const DetailPane = ({
 
   const datasets = attachments.filter((attachment) => attachment.kind === 'dataset')
   const hasRichResults = (results?.visualizations.length ?? 0) > 0 || (results?.topics.length ?? 0) > 0 || Object.keys(results?.metrics ?? {}).length > 0
-  const catalogResults = resultCatalog?.results ?? []
+  const catalogResults = (resultCatalog?.results ?? []).map(item => ({ ...item, status: resultDisplayStatus(item) }))
   // 默认展开第一个真正有图表的任务，避免用户看到一片"空"。
   useEffect(() => {
     const first = [...catalogResults].reverse().find((item) => (item.artifacts?.files?.length ?? 0) > 0)
@@ -110,7 +111,7 @@ export const DetailPane = ({
   const trainingState = summary.state
   const modelName = latestResult?.modelId?.toUpperCase() ?? String(record(plan).modelId ?? (zh ? '尚未选择' : 'Not selected'))
   const recentEvents = events.filter(trainingEvent).slice(-4).reverse()
-  const statusLabel = ({ queued: zh ? '等待执行' : 'Queued', running: zh ? '训练中' : 'Training', completed: zh ? '已完成' : 'Completed', failed: zh ? '执行失败' : 'Failed', cancelled: zh ? '已取消' : 'Cancelled' } as Record<string, string>)[trainingState ?? ''] ?? (zh ? '尚未开始' : 'Not started')
+  const statusLabel = ({ queued: zh ? '等待执行' : 'Queued', running: summary.preparing ? (zh ? '正在准备结果' : 'Preparing results') : (zh ? '训练中' : 'Training'), completed: zh ? '已完成' : 'Completed', failed: zh ? '执行失败' : 'Failed', cancelled: zh ? '已取消' : 'Cancelled' } as Record<string, string>)[trainingState ?? ''] ?? (zh ? '尚未开始' : 'Not started')
 
   const chooseDataset = async (files: File[]): Promise<void> => {
     if (!files.length || uploading) return
@@ -195,7 +196,7 @@ export const DetailPane = ({
               const artifacts = result.artifacts as { files: Array<{ name: string; kind: string; url: string }>; archiveUrl?: string } | undefined
               const deliverable = (artifacts?.files ?? []).filter((file) => file.kind === 'figure' || file.kind === 'table')
               const open = openResults.has(result.jobId)
-              const statusText = ({ completed: zh ? '已完成' : 'Completed', running: zh ? '训练中' : 'Training', queued: zh ? '等待中' : 'Queued', failed: zh ? '失败' : 'Failed', cancelled: zh ? '已取消' : 'Cancelled' } as Record<string, string>)[result.status]
+              const statusText = ({ completed: zh ? '已完成' : 'Completed', running: summary.preparing ? (zh ? '正在准备结果' : 'Preparing results') : (zh ? '训练中' : 'Training'), queued: zh ? '等待中' : 'Queued', failed: zh ? '失败' : 'Failed', cancelled: zh ? '已取消' : 'Cancelled' } as Record<string, string>)[result.status]
               return <article key={result.jobId} data-open={open || undefined}>
                 <button type="button" className={css.drawerResultHeader} aria-expanded={open} onClick={() => setOpenResults((current) => { const next = new Set(current); if (next.has(result.jobId)) next.delete(result.jobId); else next.add(result.jobId); return next })}>
                   <strong>{result.modelId.toUpperCase()}</strong>
@@ -203,7 +204,7 @@ export const DetailPane = ({
                   <small>{deliverable.length ? `${deliverable.filter((file) => file.kind === 'figure').length} ${zh ? '图' : 'fig'} · ${deliverable.filter((file) => file.kind === 'table').length} ${zh ? '表' : 'tbl'}` : (result.artifacts ? `${result.artifacts.fileCount} ${zh ? '个文件' : 'files'}` : '')}</small>
                   <ChevronDown className={css.drawerResultChevron} size={14} />
                 </button>
-                <div className={css.drawerProgressTrack}><i style={{ width: `${Math.max(0, Math.min(100, result.percent ?? (result.status === 'completed' ? 100 : 0)))}%` }} /></div>
+                <div className={css.drawerProgressTrack}><i style={{ width: `${Math.max(0, Math.min(result.status === 'running' ? 99 : 100, result.percent ?? (result.status === 'completed' ? 100 : 0)))}%` }} /></div>
                 {open && <div className={css.drawerResultFiles} data-scroll="true">
                   {deliverable.length ? deliverable.map((file) => {
                     const name = file.name.split('/').pop() ?? file.name

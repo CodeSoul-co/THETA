@@ -27,3 +27,8 @@ export function reconcileProjectIdentity<T extends ProjectIdentity>(next: T[], p
     return old ? { ...project, id: old.id, models: old.models?.length ? old.models : project.models } : project
   })
 }
+
+/** Unverified legacy cache entries are restored by the project-scoped API instead. */
+export function projectAttachments<T extends { kind: string; projectId?: string }>(items: T[], projectId: string): T[] {
+  return items.filter(item => item.kind !== 'dataset' || item.projectId === projectId)
+}

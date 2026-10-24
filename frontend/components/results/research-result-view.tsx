@@ -9,7 +9,7 @@ import { ExecutionLog } from "@/components/project/execution-log"
 import { useProjectDraft } from "@/lib/use-project-draft"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { shouldRefreshResultCatalog, resultReadinessNotice } from "@/lib/result-readiness"
+import { resultDisplayStatus, shouldRefreshResultCatalog, resultReadinessNotice } from "@/lib/result-readiness"
 import { artifactLabel, fieldLabel, phaseLabel, statusLabel, systemText, advisoryErrorMessage } from "@/lib/presentation"
 import { resolveChartDataFiles } from "@/lib/chart-data"
 import { MarkdownRenderer } from "@/components/markdown-renderer"
@@ -191,9 +191,10 @@ export function ResearchResultView({ source, initialDestination, onOpenAssistant
     } catch (error) { setLoadError(error instanceof Error ? error.message : String(error)) }
     finally { setRebuilding(false) }
   }
-  const completed = catalog.filter((item) => item.status === "completed")
   const allFiles: ResultFile[] = selected?.artifacts?.files ?? []
   const split = useSplitReport(allFiles)
+  const displayStatus = (item: ResultItem) => resultDisplayStatus(item, item.jobId === selected?.jobId && !!split.url && !split.report && !split.error, item.jobId === selected?.jobId && !!split.error)
+  const completed = catalog.filter(item => displayStatus(item) === 'completed')
   const [datasetRole, setDatasetRole] = useState<DatasetRole>('all')
   useEffect(() => { setDatasetRole('all'); setCategory('all'); setFigurePage(0) }, [selectedJobId])
   const files = useMemo(() => filesForDataset(allFiles, datasetRole), [allFiles, datasetRole])
@@ -411,8 +412,8 @@ export function ResearchResultView({ source, initialDestination, onOpenAssistant
               {catalog.map((item) => {
                 const active = item.jobId === selected?.jobId
                 return <button key={item.jobId} type="button" aria-pressed={active} onClick={() => setSelectedJobId(item.jobId)} className={"group rounded-2xl border p-3 text-left transition " + (active ? "border-blue-400 bg-blue-50/60 shadow-[0_8px_18px_rgba(59,130,246,0.12)]" : "border-slate-200 bg-white hover:border-blue-200 hover:bg-slate-50/70")}>
-                  <div className="flex flex-wrap items-start justify-between gap-2"><strong className="whitespace-nowrap text-sm text-slate-900">{item.modelId.toUpperCase()}{item.topicCount != null ? ` · K=${item.topicCount}` : ""}</strong><span className={"shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium " + statusTone(item.status)}>{statusLabel(item.status)}</span></div>
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500"><span>{item.percent ?? (item.status === "completed" ? 100 : 0)}%</span><span>{item.artifacts?.figureCount ?? 0} 图 · {item.artifacts?.tableCount ?? 0} 表</span></div>
+                  <div className="flex flex-wrap items-start justify-between gap-2"><strong className="whitespace-nowrap text-sm text-slate-900">{item.modelId.toUpperCase()}{item.topicCount != null ? ` · K=${item.topicCount}` : ""}</strong><span className={"shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium " + statusTone(displayStatus(item))}>{(item.status === 'completed' && displayStatus(item) === 'running' ? '正在准备结果' : statusLabel(displayStatus(item)))}</span></div>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500"><span>{displayStatus(item) === "running" ? Math.min(item.percent ?? 0, 99) : item.percent ?? (item.status === "completed" ? 100 : 0)}%</span><span>{item.artifacts?.figureCount ?? 0} 图 · {item.artifacts?.tableCount ?? 0} 表</span></div>
                 </button>
               })}
             </div>

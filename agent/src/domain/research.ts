@@ -49,3 +49,8 @@ export const contentHash = (value: unknown): string => {
     : item && typeof item === 'object' ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, canonical(v)])) : item;
   return createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex');
 };
+
+/** Identical content in separate projects retains separate identity and metadata. */
+export function projectDataset(dataset: Dataset, projectId: string): Dataset {
+  return { ...dataset, datasetRef: `dataset-${contentHash({ projectId, sha256: dataset.sha256, fileName: dataset.fileName })}` };
+}

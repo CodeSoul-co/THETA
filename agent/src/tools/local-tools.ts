@@ -5,7 +5,7 @@ import { KnowledgeBase } from '../knowledge/knowledge-base.js';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import type { InferenceProvider } from '../providers/types.js';
-import { contentHash, type Dataset, type ResearchRun, type TrainingPlan, type ComputeJob } from '../domain/research.js';
+import { contentHash, projectDataset, type Dataset, type ResearchRun, type TrainingPlan, type ComputeJob } from '../domain/research.js';
 import { ResearchStore } from '../memory/research-store.js';
 import { notebookKey, type AnalysisNotebook, type ProductSession } from '../memory/session-store.js';
 import { PythonCapabilityWorker, type CapabilityWorker } from '../adapters/python-worker.js';
@@ -94,7 +94,7 @@ export class LocalProductTools implements ProductToolExecutor {
     }
     catch (error) { return {unavailable:error instanceof Error ? error.message : String(error)}; }
   }
-  constructor(readonly options: { runtimeDb: string; uploadDir: string; inferenceFactory?: () => InferenceProvider | undefined; worker?: CapabilityWorker; compute?: ComputeGateway; analysis?: AnalysisRuntime; onJobObserved?: (job: ComputeJob) => void; onDatasetDerived?: (dataset: Dataset, source: Dataset, session: ProductSession) => void }) {
+  constructor(readonly options: { runtimeDb: string; uploadDir: string; inferenceFactory?: () => InferenceProvider | undefined; worker?: CapabilityWorker; compute?: ComputeGateway; analysis?: AnalysisRuntime; onJobObserved?: (job: ComputeJob) => void; datasetScope?: (session: ProductSession) => { projectId: string; datasetRefs: string[]; sessionIds: string[] }; onDatasetImported?: (dataset: Dataset, session: ProductSession) => void; onDatasetDerived?: (dataset: Dataset, source: Dataset, session: ProductSession) => void }) {
     const home = path.dirname(options.runtimeDb);
     this.records = new ResearchStore(home);
     this.contexts = new ResearchContexts(this.records);
@@ -110,7 +110,10 @@ export class LocalProductTools implements ProductToolExecutor {
   }
   readContext(session: ProductSession): unknown {
     if (!session.contextId) return undefined;
-    const { id, markdown, documentPath } = this.contexts.read(session.contextId);
+    const value = this.contexts.read(session.contextId);
+    const scope = this.options.datasetScope?.(session);
+    if (scope && (!scope.sessionIds.includes(value.owner) || value.datasetRefs.some(ref => !scope.datasetRefs.includes(ref)))) { session.contextId = undefined; return; }
+    const { id, markdown, documentPath } = value;
     return { id, markdown, documentPath };
   }
   readState(session: ProductSession): unknown {
@@ -157,10 +160,14 @@ export class LocalProductTools implements ProductToolExecutor {
     session.contextId = value.id; session.pendingUnderstanding = undefined;
   }
   async attach(filePath: string, session: ProductSession): Promise<unknown> {
-    const dataset = await this.worker.call<Dataset>('dataset.import', { filePath: path.resolve(filePath), uploadDir: this.options.uploadDir });
+    const scope = this.options.datasetScope?.(session);
+    const dataset = await this.worker.call<Dataset>('dataset.import', { filePath: path.resolve(filePath), uploadDir: scope ? path.join(this.options.uploadDir, 'projects', scope.projectId) : this.options.uploadDir });
     return this.registerDataset(dataset, session);
   }
   private registerDataset(dataset: Dataset, session: ProductSession): unknown {
+    const scope = this.options.datasetScope?.(session);
+    if (scope) dataset = projectDataset(dataset, scope.projectId);
+    this.options.onDatasetImported?.(dataset, session);
     this.records.put('dataset', dataset.datasetRef, dataset);
     if (!session.datasetRefs.includes(dataset.datasetRef)) session.datasetRefs.push(dataset.datasetRef);
     if (session.runId) {
@@ -238,6 +245,7 @@ export class LocalProductTools implements ProductToolExecutor {
   }
   private dataset(session: ProductSession, ref?: string): Dataset {
     const id = ref ?? (session.runId ? this.run(session).datasetRef : undefined) ?? (session.datasetRefs.length === 1 ? session.datasetRefs[0] : undefined);
+    if (id && this.options.datasetScope && !this.options.datasetScope(session).datasetRefs.includes(id)) throw new Error('数据不属于当前项目。');
     if (!id || !session.datasetRefs.includes(id)) throw new Error('请先在本会话中提供数据文件。');
     return this.records.get('dataset', id);
   }
@@ -468,9 +476,14 @@ export class LocalProductTools implements ProductToolExecutor {
       const source = this.dataset(session, args.datasetRef as string | undefined);
       const previous = session.runId ? this.run(session) : undefined;
       if (previous?.lastObservedJob && ['running', 'queued'].includes(previous.lastObservedJob.status)) throw new Error('当前训练尚未完成，请勿切换数据。');
+      const scope = this.options.datasetScope?.(session);
       const result = await this.worker.call<{ dataset: Dataset; summary: Record<string, unknown>; profile: Record<string, unknown>; artifacts: Array<{name:string;path:string}> }>('dataset.preprocess', {
-        ...args, dataset: source, home: path.dirname(this.options.runtimeDb), uploadDir: this.options.uploadDir,
+        ...args, dataset: source, home: path.dirname(this.options.runtimeDb), uploadDir: scope ? path.join(this.options.uploadDir, 'projects', scope.projectId) : this.options.uploadDir,
       }, context.signal);
+      if (scope) {
+        result.dataset = projectDataset(result.dataset, scope.projectId);
+        result.summary.datasetRef = result.dataset.datasetRef;
+      }
       this.options.onDatasetDerived?.(result.dataset, source, session);
       this.registerDataset(result.dataset, session);
       const run: ResearchRun = { id: `run-${randomUUID()}`, goal: previous?.goal ?? session.lastUserIntent ?? String(args.purpose), datasetRef: result.dataset.datasetRef, profile: result.profile, jobs: [], notes: [`预处理来源：${source.datasetRef}`, String(args.purpose)] };
@@ -508,9 +521,15 @@ export class LocalProductTools implements ProductToolExecutor {
     if (name === 'knowledge_read') return this.knowledge.read(args as { documentId: string; sectionId?: string; offset?: number; limit?: number });
     if (name === 'reports_list') return [...(session.reports ?? []), ...(session.statisticalReports ?? []).map(({analysisId,runId,status,reportPath,files})=>({analysisId,runId,status,reportPath,files}))];
     if (name === 'runs_list') return (session.runIds ?? []).map(id => { const run = this.records.get<ResearchRun>('run', id); return { id, goal: run.goal, datasetRef: run.datasetRef, modelId: run.plan?.modelId, jobs: run.jobs }; });
-    if (name === 'contexts_list') return this.contexts.list();
-    if (name === 'context_read') return this.contexts.read(String(args.contextId ?? session.contextId ?? ''));
+    if (name === 'contexts_list') return this.contexts.list().filter(item => !this.options.datasetScope || this.options.datasetScope(session).sessionIds.includes(this.contexts.read(item.id).owner));
+    if (name === 'context_read') {
+      const value = this.contexts.read(String(args.contextId ?? session.contextId ?? ''));
+      if (this.options.datasetScope && !this.options.datasetScope(session).sessionIds.includes(value.owner)) throw new Error('上下文不属于当前项目。');
+      return value;
+    }
     if (name === 'context_select') {
+      const source = this.contexts.read(String(args.contextId));
+      if (this.options.datasetScope && !this.options.datasetScope(session).sessionIds.includes(source.owner)) throw new Error('上下文不属于当前项目。');
       const value = this.contexts.select(session.id, String(args.contextId)); session.contextId = value.id; context.save();
       return { ...value, instruction: '上下文已复制到本会话，不会自动附加其中的数据，也不继承任何计算授权。' };
     }
@@ -522,14 +541,16 @@ export class LocalProductTools implements ProductToolExecutor {
       session.contextId = value.id; session.pendingUnderstanding = undefined; context.save(); return value;
     }
     if (name === 'datasets_discover') {
-      const catalog = await this.worker.call<Record<string,unknown>>('dataset.discover', args, context.signal);
-      const uploaded = this.records.list<Dataset>('dataset'); const offset = Number(args.offset ?? 0);
+      const scope = this.options.datasetScope?.(session);
+      const catalog = await this.worker.call<Record<string,unknown>>('dataset.discover', { ...args, ...(scope ? { projectId: scope.projectId } : {}) }, context.signal);
+      const uploaded = this.records.listAll<Dataset>('dataset').filter(dataset => !scope || scope.datasetRefs.includes(dataset.datasetRef)); const offset = Number(args.offset ?? 0);
       return {...catalog, uploadedDatasets:uploaded.slice(offset,offset+50).map(d=>({catalogId:'catalog-'+contentHash({registeredDataset:d.datasetRef,sha256:d.sha256}),name:d.fileName,sizeBytes:d.sizeBytes,source:'managed upload'})),uploadedNextOffset:offset+50<uploaded.length?offset+50:null,
         instruction:'目录候选与已注册上传均可选择。用户明确指定文件后使用其 catalogId；不要因为文件不在预上传目录就断言上传失败。发现不会自动附加或计算。'};
     }
     if (name === 'dataset_use') {
-      const uploaded = this.records.list<Dataset>('dataset').find(d=>'catalog-'+contentHash({registeredDataset:d.datasetRef,sha256:d.sha256})===args.catalogId);
-      const dataset = uploaded ?? await this.worker.call<Dataset>('dataset.use', { ...args, uploadDir: this.options.uploadDir }, context.signal);
+      const scope = this.options.datasetScope?.(session);
+      const uploaded = this.records.listAll<Dataset>('dataset').filter(dataset => !scope || scope.datasetRefs.includes(dataset.datasetRef)).find(d=>'catalog-'+contentHash({registeredDataset:d.datasetRef,sha256:d.sha256})===args.catalogId);
+      const dataset = uploaded ?? await this.worker.call<Dataset>('dataset.use', { ...args, ...(scope ? { projectId: scope.projectId } : {}), uploadDir: scope ? path.join(this.options.uploadDir, 'projects', scope.projectId) : this.options.uploadDir }, context.signal);
       const attached = this.registerDataset(dataset, session); context.save();
       return { attached, instruction: '用户选择的数据已附加；可用 dataset_understand 理解业务。若当前研究已绑定其他数据，先新建研究，不要静默替换已有实验数据。' };
     }

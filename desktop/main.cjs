@@ -63,7 +63,7 @@ function environment(port) {
     THETA_ENV_FILE: path.join(home, '.desktop-no-env'), THETA_LOCAL_AUTH_ENABLED: 'true',
     THETA_PYTHON: python, THETA_WORKER_CONTROL_PYTHON: python,
     PYTHONNOUSERSITE: '1', PYTHONDONTWRITEBYTECODE: '1', PYTHONUTF8: '1',
-    DATA_DIR: path.join(home, 'data'), RESULT_DIR: path.join(home, 'results'), WORKSPACE_DIR: path.join(home, 'workspace'),
+    DATA_DIR: path.join(home, 'data'), THETA_DATA_DIR: path.join(home, 'data'), RESULT_DIR: path.join(home, 'results'), WORKSPACE_DIR: path.join(home, 'workspace'),
     HF_HOME: path.join(home, 'cache/huggingface'), MPLCONFIGDIR: path.join(home, 'cache/matplotlib'),
     NUMBA_CACHE_DIR: path.join(home, 'cache/numba'), XDG_CACHE_HOME: path.join(home, 'cache'),
     TMPDIR: path.join(home, 'tmp'), TMP: path.join(home, 'tmp'), TEMP: path.join(home, 'tmp'),

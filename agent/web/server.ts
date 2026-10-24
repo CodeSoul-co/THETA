@@ -19,7 +19,7 @@ import { createConfiguredProvider, configuredProviderSummaries, selectConfigured
 import { loadThetaProjectEnvironment, repositoryRoot } from '../src/environment.js';
 import type { EffectApproval } from '../src/domain/effect-approval.js';
 import { WebTaskStore, publicTask } from './task-store.js';
-import { contentHash } from '../src/domain/research.js';
+import { projectDataset, contentHash } from '../src/domain/research.js';
 import type { Dataset } from '../src/domain/research.js';
 import { productTools } from '../src/tools/tool-catalog.js';
 import { PythonCapabilityWorker } from '../src/adapters/python-worker.js';
@@ -56,11 +56,22 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
   const consultations = new ConsultationStore(home);
   const importManualResults = manualResultImporter(home, options.manualHome ?? path.join(repositoryRoot(), '.local', 'manual-workbench'), records, sessions);
   const tools = new LocalProductTools({ runtimeDb: path.join(home, 'runtime.sqlite'), uploadDir: path.join(home, 'uploads'), inferenceFactory, ...adapters,
+    datasetScope: session => {
+      const meta = records.get<WebMeta>('web-session', session.id);
+      const principal = { id: meta.ownerId ?? 'local' } as AgentPrincipal;
+      return { projectId: meta.projectId,
+        datasetRefs: records.listAll<Dataset>('dataset').filter(item => datasetAssignedToProject(item.datasetRef, meta.projectId, principal)).map(item => item.datasetRef),
+        sessionIds: metas(principal).filter(item => item.projectId === meta.projectId).map(item => item.id) };
+    },
+    onDatasetImported: (dataset, session) => {
+      const meta = records.get<WebMeta>('web-session', session.id);
+      records.put('web-dataset-owner', dataset.datasetRef, { datasetRef: dataset.datasetRef, ownerId: meta.ownerId ?? 'local', projectIds: [meta.projectId] });
+    },
     onDatasetDerived: (dataset, source, session) => {
       const meta = records.get<WebMeta>('web-session', session.id);
-      const sourceOwner = records.list<DatasetOwner>('web-dataset-owner').find(item => item.datasetRef === source.datasetRef);
+      const sourceOwner = datasetOwner(source.datasetRef);
       if (mode !== 'local' && sourceOwner?.ownerId !== meta.ownerId) throw new Error('不能将其他用户的数据派生到本项目');
-      const existing = records.list<DatasetOwner>('web-dataset-owner').find(item => item.datasetRef === dataset.datasetRef);
+      const existing = datasetOwner(dataset.datasetRef);
       if (mode !== 'local' && existing && existing.ownerId !== meta.ownerId) throw new Error('派生数据归属冲突，未切换训练数据');
       records.put('web-dataset-owner', dataset.datasetRef, { datasetRef: dataset.datasetRef, ownerId: meta.ownerId ?? sourceOwner?.ownerId ?? 'local', projectIds: [...new Set([...(existing?.projectIds ?? []), meta.projectId])] });
     },
@@ -76,10 +87,13 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
   const inFlight = new Set<Promise<unknown>>();
   let shuttingDown = false;
   const owns = (ownerId: string | undefined, principal: AgentPrincipal) => mode === 'local' || ownerId === principal.id;
-  const metas = (principal?: AgentPrincipal) => records.list<WebMeta>('web-session').filter(m => !m.archived && (!principal || owns(m.ownerId, principal)));
+  const metas = (principal?: AgentPrincipal) => records.listAll<WebMeta>('web-session').filter(m => !m.archived && (!principal || owns(m.ownerId, principal)));
   const webSession = (id: string, principal?: AgentPrincipal) => {
     if (!metas(principal).some(m => m.id === id)) throw new HttpError(404, '对话不存在或已归档。', 'not_found');
-    return sessions.get(id);
+    const session = sessions.get(id), meta = records.get<WebMeta>('web-session', id);
+    const owner = principal ?? { id: meta.ownerId ?? 'local' } as AgentPrincipal;
+    session.datasetRefs = session.datasetRefs.filter(ref => datasetAssignedToProject(ref, meta.projectId, owner));
+    return session;
   };
   const projectFor = (id: string, principal: AgentPrincipal) => {
     const project = records.get<Project>('web-project', id);
@@ -100,10 +114,11 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
   const datasetAssignedToProject = (datasetRef: string, projectId: string, principal: AgentPrincipal) => {
     if (!datasetOwnedBy(datasetRef, principal)) return false;
     const owner = datasetOwner(datasetRef);
-    return owner?.projectIds?.includes(projectId) === true || datasetUsedByProject(datasetRef, projectId, principal);
+    return owner?.projectIds?.length ? owner.projectIds.includes(projectId) : datasetUsedByProject(datasetRef, projectId, principal);
   };
   const assignDatasetToProject = (datasetRef: string, projectId: string, principal: AgentPrincipal) => {
     projectFor(projectId, principal);
+    if (!datasetAssignedToProject(datasetRef, projectId, principal)) throw new HttpError(404, '数据不属于当前项目。', 'not_found');
     const owner = datasetOwner(datasetRef) ?? { datasetRef, ownerId: principal.id };
     if (!owns(owner.ownerId, principal)) throw new HttpError(404, '数据集不存在。', 'not_found');
     records.put('web-dataset-owner', datasetRef, {
@@ -638,7 +653,7 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
           try { return json(res, await importManualResults(input, principal.id)); }
           catch (error) { if (error instanceof ManualImportError) throw new HttpError(error.status, error.message, 'manual_import_failed'); throw error; }
         }
-        const list = () => records.list<Project>('web-project').filter(p => !p.archived && owns(p.ownerId, principal)).map(p => ({ ...p, ownerId: undefined, runIds: metas(principal).filter(m => m.projectId === p.id).map(m => m.id) }));
+        const list = () => records.listAll<Project>('web-project').filter(p => !p.archived && owns(p.ownerId, principal)).map(p => ({ ...p, ownerId: undefined, runIds: metas(principal).filter(m => m.projectId === p.id).map(m => m.id) }));
         if (method === 'GET') return json(res, { projects: list() });
         const body = method === 'DELETE' ? {} : JSON.parse((await readBody(req)).toString());
         const previous = parts[3] ? projectFor(parts[3], principal) : undefined;
@@ -653,7 +668,8 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
           assertDatasetOwner(ref, principal);
           if (!datasetAssignedToProject(ref, input.projectId, principal)) throw new HttpError(400, '文件不属于当前项目');
         }
-        const dataset = await capabilityWorker.call<Dataset>('dataset.combine', { datasets: input.datasetRefs.map((ref: string, index: number) => ({ ...records.get<Dataset>('dataset', ref), ...(typeof input.sourceNames?.[index] === 'string' ? { fileName: input.sourceNames[index].slice(0, 512) } : {}) })), uploadDir: path.join(home, 'uploads') });
+        const combined = await capabilityWorker.call<Dataset>('dataset.combine', { datasets: input.datasetRefs.map((ref: string, index: number) => ({ ...records.get<Dataset>('dataset', ref), ...(typeof input.sourceNames?.[index] === 'string' ? { fileName: input.sourceNames[index].slice(0, 512) } : {}) })), uploadDir: path.join(home, 'uploads', 'projects', input.projectId) });
+        const dataset = projectDataset(combined, input.projectId);
         records.put('dataset', dataset.datasetRef, dataset);
         records.put('web-dataset-owner', dataset.datasetRef, { datasetRef: dataset.datasetRef, ownerId: principal.id, projectIds: [input.projectId] });
         return json(res, { datasetRef: dataset.datasetRef, displayName: dataset.fileName, sizeBytes: dataset.sizeBytes, suffix: '.jsonl', createdAt: new Date().toISOString() });
@@ -661,9 +677,10 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
       if (parts[2] === 'datasets') {
         const view = (d: Dataset) => ({ datasetRef: d.datasetRef, displayName: d.fileName, sizeBytes: d.sizeBytes, suffix: path.extname(d.fileName), createdAt: new Date().toISOString() });
         const projectId = url.searchParams.get('projectId')?.trim();
+        if (!projectId) throw new HttpError(400, '请指定项目后读取或上传数据。', 'validation_failed');
         if (method === 'GET') {
           if (projectId) projectFor(projectId, principal);
-          return json(res, { datasets: records.list<Dataset>('dataset').filter(d => projectId
+          return json(res, { datasets: records.listAll<Dataset>('dataset').filter(d => projectId
             ? datasetAssignedToProject(d.datasetRef, projectId, principal)
             : datasetOwnedBy(d.datasetRef, principal)).map(view) });
         }
@@ -682,10 +699,10 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
         try {
           if (legacyFile) writeFileSync(filePath, Buffer.from(await legacyFile.arrayBuffer()), { mode: 0o600 });
           else await receiveUpload(req, filePath);
-          const scratch: ProductSession = { id: `upload-${randomUUID()}`, title: '', datasetRefs: [], messages: [], updatedAt: new Date().toISOString() };
-          const receipt = await tools.attach(filePath, scratch) as { datasetRef: string };
-          const imported = records.get<Dataset>('dataset', receipt.datasetRef);
-          records.put('dataset', receipt.datasetRef, { ...imported, fileName: path.basename(fileName) });
+          const imported = await capabilityWorker.call<Dataset>('dataset.import', { filePath, uploadDir: path.join(home, 'uploads', 'projects', projectId) });
+          const dataset = projectDataset({ ...imported, fileName: path.basename(fileName) }, projectId);
+          const receipt = { datasetRef: dataset.datasetRef };
+          records.put('dataset', receipt.datasetRef, dataset);
           const previousOwner = datasetOwner(receipt.datasetRef);
           records.put('web-dataset-owner', receipt.datasetRef, {
             datasetRef: receipt.datasetRef,
@@ -699,10 +716,17 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
       if (!parts[3]) {
         if (method === 'GET') return json(res, { runs: metas(principal).map(m => snapshot(sessions.get(m.id))) });
         const body = JSON.parse((await readBody(req)).toString());
+        const requestedProject = body.sourceSessionId ? records.get<WebMeta>('web-session', body.sourceSessionId).projectId : String(body.projectId ?? 'local');
+        if (body.projectId && body.projectId !== requestedProject) throw new HttpError(400, '对话不属于当前项目。');
+        if (typeof body.projectId === 'string') projectFor(body.projectId, principal);
+        if (body.datasetRef) {
+          assertDatasetOwner(body.datasetRef, principal);
+          if (!datasetAssignedToProject(body.datasetRef, requestedProject, principal)) throw new HttpError(404, '数据不属于当前项目。', 'not_found');
+        }
         const session = body.sourceSessionId ? webSession(body.sourceSessionId, principal) : sessions.create();
         if (!body.sourceSessionId) {
           if (mode === 'deployed' && typeof body.projectId !== 'string') throw new HttpError(400, 'projectId 为必填项。', 'validation_failed');
-          if (mode === 'deployed') projectFor(body.projectId, principal);
+          if (typeof body.projectId === 'string') projectFor(body.projectId, principal);
           if (body.analysisMode !== undefined && !['topic','free'].includes(body.analysisMode)) throw new HttpError(400, '分析模式无效');
           session.analysisMode = body.analysisMode ?? 'topic';
           session.title = String(body.researchGoal ?? '新的研究对话').slice(0, 120);

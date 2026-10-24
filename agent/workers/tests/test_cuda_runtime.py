@@ -26,6 +26,7 @@ class CUDARuntimeTests(unittest.TestCase):
         def download(path,notify,check): check();downloads.append(path);path.write_bytes(data)
         with tempfile.TemporaryDirectory() as home, patch.dict('os.environ',{},clear=True), \
              patch.object(cuda_runtime,'compatible_driver',return_value=True), \
+             patch.object(cuda_runtime.shutil,'disk_usage',return_value=type('Disk',(),{'free':100*1024**3})()), \
              patch.object(cuda_runtime,'WHEEL_SHA256',hashlib.sha256(data).hexdigest()), \
              patch.object(cuda_runtime,'download',side_effect=download):
             path=cuda_runtime.prepare_runtime(home,events.append,lambda:False,time.monotonic()+30)
@@ -40,6 +41,7 @@ class CUDARuntimeTests(unittest.TestCase):
             data=self.wheel(invalid=not bad_hash);events=[]
             with tempfile.TemporaryDirectory() as home, patch.dict('os.environ',{},clear=True), \
                  patch.object(cuda_runtime,'compatible_driver',return_value=True), \
+                 patch.object(cuda_runtime.shutil,'disk_usage',return_value=type('Disk',(),{'free':100*1024**3})()), \
                  patch.object(cuda_runtime,'WHEEL_SHA256','bad' if bad_hash else hashlib.sha256(data).hexdigest()), \
                  patch.object(cuda_runtime,'download',side_effect=lambda p,n,c:p.write_bytes(data)):
                 self.assertIsNone(cuda_runtime.prepare_runtime(home,events.append,lambda:False,time.monotonic()+30))

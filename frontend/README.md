@@ -40,6 +40,16 @@ For individual service development, use `npm --prefix agent run web:api`, `npm -
 
 The source launcher uses local development mode. Desktop apps use a production entry protected by an application token. Remote Host/Origin values are rejected. `THETA_LOCAL_AUTH_ENABLED=false` disables local proxy access. Local Web model settings can be saved from **Settings → Model API → Done** and are encrypted in the Agent data directory. Private `agent/.env.local` remains the source configuration for CLI and embedding services; restart APIs after editing it. Deployed-mode settings remain server-managed.
 
+## Project data boundaries
+
+Web and desktop uploads, derived datasets, cached attachments and Agent data tools are scoped to the active project. Uploading into an existing conversation preserves that conversation and its history. Identical files uploaded into different projects receive separate dataset references.
+
+For files placed directly on the backend, use `THETA_DATA_DIR/projects/<projectId>/` (or `data/projects/<projectId>/` under the engine root when unset). Use the project ID returned by the project API, not its display name. The Agent scans only that project's directory; files in the shared root or another project are not inherited. Upload through the interface if you do not know the project ID. The standalone CLI retains its independent, unscoped catalog.
+
+Desktop apps set this root to `data/` inside the selected application data directory, so project files are stored outside the installed application bundle.
+
+Model computation and result preparation are separate stages. The workbench shows “Preparing results” until published report files and the selected dataset's result data are readable.
+
 ## Analysis and text processing
 
 Manual uploads must return a valid file identifier before analysis configuration becomes available. Missing model files or dependencies are reported before training.

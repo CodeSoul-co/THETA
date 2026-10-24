@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { reconcileProjectIdentity } from './project-identity.ts'
+import { reconcileProjectIdentity, projectAttachments } from './project-identity.ts'
 
 test('同名历史数据库项目刷新时不共享标签 ID 或模型配置', () => {
   const previous = [{ id: 'proj-db-28', dbProjectId: 28, name: '测试', datasetName: '测试', models: ['prodlda'] }]
@@ -28,4 +28,12 @@ test('数据库身份优先于名称，归档后重建不可继承旧标签', ()
   const previous = [{ id: 'tab-1', dbProjectId: 1, name: '旧名', datasetName: 'data' }]
   assert.equal(reconcileProjectIdentity([{ ...previous[0], id: 'proj-db-1', name: '新名' }], previous)[0].id, 'tab-1')
   assert.equal(reconcileProjectIdentity([{ ...previous[0], id: 'proj-db-2', dbProjectId: 2 }], previous)[0].id, 'proj-db-2')
+})
+
+test('切换项目不保留其他项目或未校验旧缓存的数据引用', () => {
+  const own = { kind: 'dataset', projectId: 'a', id: 'one' }
+  const other = { kind: 'dataset', projectId: 'b', id: 'two' }
+  const old = { kind: 'dataset', id: 'legacy' }
+  assert.deepEqual(projectAttachments([own, other, old], 'a'), [own])
+  assert.deepEqual(projectAttachments([own, other], 'b'), [other])
 })

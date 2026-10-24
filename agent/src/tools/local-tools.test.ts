@@ -218,3 +218,25 @@ test('registered uploads are discoverable and selected explicitly without filesy
     assert.deepEqual(session.datasetRefs,['dataset-uploaded']);
   }finally{rmSync(home,{recursive:true,force:true});}
 });
+
+test('Web project scope filters managed catalogs and binds filesystem discovery to the host project', async () => {
+  const home = mkdtempSync(path.join(os.tmpdir(), 'theta-project-tools-'));
+  try {
+    const records = new ResearchStore(home), a = { datasetRef: 'a', fileName: 'a.csv', sha256: 'a', sizeBytes: 1, managedPath: '/a.csv' }, b = { ...a, datasetRef: 'b', fileName: 'b.csv' };
+    records.put('dataset', 'a', a); records.put('dataset', 'b', b);
+    for (let i = 0; i < 110; i++) records.put('dataset', 'foreign-' + i, { ...b, datasetRef: 'foreign-' + i });
+    const calls: Array<{operation:string;input:any}> = [];
+    const worker: CapabilityWorker = { call: async <T>(operation: string, input: unknown) => { calls.push({operation,input}); return (operation === 'dataset.preprocess' ? { dataset: {...a, sha256:'derived'}, summary:{}, profile:{}, artifacts:[] } : { datasets: [] }) as T; } };
+    const tools = new LocalProductTools({ runtimeDb: path.join(home, 'research.sqlite'), uploadDir: path.join(home, 'uploads'), worker,
+      datasetScope: () => ({ projectId: 'project-a', datasetRefs: ['a'], sessionIds: ['chat-a'] }) });
+    const session: ProductSession = { id: 'chat-a', title: '', messages: [], datasetRefs: ['a', 'b'], updatedAt: '' };
+    const context = { session, userMessage: '', save() {} };
+    const catalog = await tools.execute('datasets_discover', {}, context) as {uploadedDatasets:Array<{name:string}>};
+    assert.deepEqual(catalog.uploadedDatasets.map(item => item.name), ['a.csv']);
+    assert.equal(calls[0].input.projectId, 'project-a');
+    await assert.rejects(tools.execute('dataset_read', { datasetRef: 'b', operation: 'overview' }, context), /当前项目/);
+    assert.equal(calls.length, 1);
+    await tools.execute('dataset_preprocess', {datasetRef:'a', purpose:'Normalize text', code:'df = df.copy()', textColumn:'text'}, context);
+    assert.equal(calls[1].input.uploadDir, path.join(home, 'uploads', 'projects', 'project-a'));
+  } finally { rmSync(home, { recursive:true, force:true }); }
+});
