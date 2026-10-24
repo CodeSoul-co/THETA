@@ -426,7 +426,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [sidebarWidth, setSidebarWidth] = useState(readSidebarWidth)
   const [sidebarResizing, setSidebarResizing] = useState(false)
-  const [detailOpen, setDetailOpen] = useState(true)
+  const [detailOpen, setDetailOpen] = useState(false)
   const [detailTab, setDetailTab] = useState<'progress' | 'results'>('progress')
   const [manualVisited, setManualVisited] = useState(workspaceMode === 'manual')
   const switchWorkspace = (mode: WorkspaceMode): void => {
@@ -880,7 +880,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
     const narrow = window.matchMedia('(max-width: 900px)')
     const syncPanels = (matches: boolean): void => {
       setSidebarOpen(!matches)
-      setDetailOpen(!matches)
+      if (matches) setDetailOpen(false)
     }
     syncPanels(narrow.matches)
     const onChange = (event: MediaQueryListEvent): void => syncPanels(event.matches)
@@ -1427,7 +1427,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
       knownMessageIds.current.clear()
       setSelectedRunId(detail.runId)
       setWorkspaceSessionId(undefined)
-      setDetailOpen(true)
+      setDetailOpen(false)
       void refreshRuns()
     }
     window.addEventListener('theta:open-conversation', openConversation)
@@ -1435,6 +1435,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
   }, [activateScope, refreshRuns])
 
   const startNewConversation = useCallback((projectId = activeProjectId) => {
+    setDetailOpen(false)
     setResultDestination(null)
     setWorkspaceMode('conversation')
     setLocalAnalysisMode('topic')
@@ -1541,6 +1542,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
   }
 
   const openProject = (project: LocalProject): void => {
+    setDetailOpen(false)
     const snapshot = projectMemoriesRef.current[project.id]
     const projectRunIds = new Set([
       ...project.runIds,
