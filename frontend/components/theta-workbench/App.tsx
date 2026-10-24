@@ -545,7 +545,7 @@ export const AppRoot = ({ initialMode }: { initialMode?: WorkspaceMode }): React
         const merged = [...restored, ...projectAttachments(current, activeProjectId)].filter((item, index, all) =>
           all.findIndex((candidate) => candidate.kind === item.kind && candidate.id === item.id) === index,
         ).slice(-12)
-        return merged.length === current.length && merged.every((item, index) => item.id === current[index]?.id)
+        return merged.length === current.length && merged.every((item, index) => item.id === current[index]?.id && item.projectId === current[index]?.projectId)
           ? current
           : merged
       })

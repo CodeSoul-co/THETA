@@ -469,7 +469,11 @@ export class LocalProductTools implements ProductToolExecutor {
     context.signal?.throwIfAborted();
     const session = context.session;
     if (skillTools.some(tool=>tool.name===name)) return new BundledSkills(path.dirname(this.options.runtimeDb)).execute(name,args,context);
-    if (statisticsTools.some(tool=>tool.name===name)) return this.statistics.execute(name,args,context);
+    if (statisticsTools.some(tool=>tool.name===name)) {
+      const ref = name === 'statistics_plan' ? args.datasetRef : name === 'statistics_request_approval' ? session.statisticalPlans?.[notebookKey(session)]?.datasetRef : undefined;
+      if (ref) this.dataset(session, String(ref));
+      return this.statistics.execute(name,args,context);
+    }
     if (miningTools.some(tool=>tool.name===name)) return executeMining(this.options.analysis,name,input,context,this.options.inferenceFactory?.());
     if (name === 'dataset_preprocess') {
       if (session.pendingConfirmation || session.pendingSynthesis || this.batches.active(session)) throw new Error('请先完成或撤回待确认方案；正在训练时不能切换数据。');

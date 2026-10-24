@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { LocalProductTools, isExplicitDenial, isExplicitApproval } from './local-tools.js';
-import type { ProductSession } from '../memory/session-store.js';
+import { notebookKey, type ProductSession } from '../memory/session-store.js';
 import { ResearchStore } from '../memory/research-store.js';
 import type { ComputeGateway } from '../adapters/compute-gateway.js';
 import type { CapabilityWorker } from '../adapters/python-worker.js';
@@ -236,6 +236,9 @@ test('Web project scope filters managed catalogs and binds filesystem discovery 
     assert.equal(calls[0].input.projectId, 'project-a');
     await assert.rejects(tools.execute('dataset_read', { datasetRef: 'b', operation: 'overview' }, context), /当前项目/);
     assert.equal(calls.length, 1);
+    session.statisticalPlans = { [notebookKey(session)]: { datasetRef:'b', plan:{} as any } };
+    await assert.rejects(tools.execute('statistics_request_approval', {}, context), /当前项目/);
+    assert.equal(calls.length, 1, 'A stale statistical plan cannot read another project during preview');
     await tools.execute('dataset_preprocess', {datasetRef:'a', purpose:'Normalize text', code:'df = df.copy()', textColumn:'text'}, context);
     assert.equal(calls[1].input.uploadDir, path.join(home, 'uploads', 'projects', 'project-a'));
   } finally { rmSync(home, { recursive:true, force:true }); }
