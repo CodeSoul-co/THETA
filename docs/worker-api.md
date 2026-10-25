@@ -2,6 +2,8 @@
 
 [中文](worker-api.zh.md) | English
 
+**Cloud compute is coming soon. This release provides the configuration entry and compatibility contract.**
+
 THETA keeps the Agent, conversation history, project ownership, data preview, and report writing on the user's computer. Training defaults to the bundled local worker. Settings → Compute can select a remote service for new training tasks in both conversation and manual modes. This is a client integration contract; this repository does not deploy a hosted commercial service.
 
 Set the API base URL, API key, currency (CNY or USD), and maximum cost per experiment. Zero permits free tasks only. Clicking Done saves the configuration. Keys are encrypted with a private local key and are excluded from installers. Batch cost can reach the per-experiment limit multiplied by the number of model/topic-count combinations. The training dialog explicitly confirms uploading the selected dataset and any independently uploaded train/validation/test files. Local LLM and embedding keys are never forwarded. Model weights and any embedding service credentials required by remote training must be provisioned by the remote service.

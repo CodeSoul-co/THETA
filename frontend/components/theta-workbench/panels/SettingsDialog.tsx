@@ -221,9 +221,9 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange, initialTab 
         </nav>
 
         {tab === 'compute' && <section className={css.section}>
-          <div className={css.sectionHeader}><h3>{zh ? '训练计算资源' : 'Training compute'}</h3><p>{zh ? '对话与手动模式共用。Agent、对话和数据预览保留在本机。' : 'Shared by conversation and manual modes. Agent, conversations and data previews stay on this computer.'}</p></div>
+          <div className={css.sectionHeader}><h3>{zh ? '训练计算资源' : 'Training compute'}</h3><p>{zh ? '对话与手动模式共用。Agent、对话和数据预览保留在本机。云计算资源即将推出，已预留兼容服务的配置入口。' : 'Shared by conversation and manual modes. Agent, conversations and data previews stay on this computer. Cloud compute is coming soon; configuration for compatible services is available in advance.'}</p></div>
           {compute && <>
-          <label className={css.field}><span>{zh ? '执行位置' : 'Execution'}</span><select value={compute.mode} onChange={e => {setCompute({...compute,mode:e.target.value as ComputeSettings['mode']});setComputeDirty(true)}}><option value="local">{zh ? '本地 Worker（默认）' : 'Local worker (default)'}</option><option value="remote">{zh ? '远程 Worker API' : 'Remote worker API'}</option></select></label>
+          <label className={css.field}><span>{zh ? '执行位置' : 'Execution'}</span><select value={compute.mode} onChange={e => {setCompute({...compute,mode:e.target.value as ComputeSettings['mode']});setComputeDirty(true)}}><option value="local">{zh ? '本地 Worker（默认）' : 'Local worker (default)'}</option><option value="remote">{zh ? '云计算资源（即将推出）' : 'Cloud compute (Coming soon)'}</option></select></label>
           {compute.mode === 'remote' && <>
             <p>{zh ? '需要兼容 THETA Worker v1 的计算服务。训练时上传选定数据，计算完成后将结果和图表下载到本机；不上传对话或本机模型密钥。' : 'Requires a THETA Worker v1 compatible service. Selected data is uploaded for training; results and charts are downloaded. Conversations and local model keys are not uploaded.'}</p>
             <label className={css.field}><span>API URL</span><input value={compute.url} placeholder="https://worker.example.com" onChange={e => {setCompute({...compute,url:e.target.value});setComputeDirty(true)}} /></label>

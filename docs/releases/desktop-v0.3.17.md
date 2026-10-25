@@ -2,6 +2,8 @@
 
 [中文](desktop-v0.3.17.zh.md) | English
 
+**Cloud compute is coming soon; its API configuration entry is available in advance.**
+
 - Local Agent with selectable training compute. Local worker remains the default; Settings → Compute accepts a compatible remote worker API, key, and per-experiment cost limit.
 - Conversation and manual training share the same compute selection, with explicit data-upload and cost confirmation.
 - Remote progress includes training and embedding events. Training is marked complete only after results, split outputs, and charts have been downloaded and verified.

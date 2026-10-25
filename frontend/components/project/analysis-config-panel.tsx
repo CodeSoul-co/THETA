@@ -208,7 +208,7 @@ export function AnalysisConfigPanel({
             <DialogDescription>
               数据集：{datasetName} · {description ?? '选择模型后，可分别调整每个模型的参数。'}
             </DialogDescription>
-            {compute?.mode === 'remote' && <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-950"><p>远程计算：{compute.url}</p><p>每个模型实验最多 {compute.maxCost} {compute.currency}；多模型、多主题数按实验数累计。将上传本次选定数据及独立划分数据；Agent 与对话留在本机。模型权重由远端服务提供。</p><label className="mt-2 flex items-start gap-2"><input type="checkbox" checked={remoteConfirmed} onChange={e=>setRemoteConfirmed(e.target.checked)} />同意本次数据上传与上述费用上限</label></div>}
+            {compute?.mode === 'remote' && <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-950"><p>云计算资源（即将推出）：{compute.url}</p><p>每个模型实验最多 {compute.maxCost} {compute.currency}；多模型、多主题数按实验数累计。将上传本次选定数据及独立划分数据；Agent 与对话留在本机。模型权重由远端服务提供。</p><label className="mt-2 flex items-start gap-2"><input type="checkbox" checked={remoteConfirmed} onChange={e=>setRemoteConfirmed(e.target.checked)} />同意本次数据上传与上述费用上限</label></div>}
             <ComputationNotice sizeBytes={datasetSizeBytes} models={config.models} />
           </DialogHeader>
 

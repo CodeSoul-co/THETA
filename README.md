@@ -77,7 +77,7 @@ Conversation and manual modes share the training configuration dialog. Review th
 
 ### Shared Web and desktop workflow
 
-**Local Agent, selectable compute.** Settings → Compute defaults to the local worker. Configure a THETA Worker v1 compatible API URL, key, and per-experiment cost limit to run training remotely in both conversation and manual modes. Projects, Agent orchestration, and conversations remain local. Selected training data is uploaded only after confirmation; progress, split results, charts, and downloads return to the local project. See the [remote worker integration contract](docs/worker-api.md).
+**Cloud compute: coming soon.** **Local Agent, selectable compute.** Settings → Compute defaults to the local worker. Configure a THETA Worker v1 compatible API URL, key, and per-experiment cost limit to run training remotely in both conversation and manual modes. Projects, Agent orchestration, and conversations remain local. Selected training data is uploaded only after confirmation; progress, split results, charts, and downloads return to the local project. See the [remote worker integration contract](docs/worker-api.md).
 
 The Web workbench and desktop app use the same interface and Worker APIs for training, progress, and results. Upload individual files or a whole folder, combine selected files, remove uploaded source files, or replace data within the current project. Large uploads show a processing-time notice. LDA is the recommended default; THETA is marked as experimental. You can clear model selections while editing, but must select at least one before starting. A failed model retains its own error while other ready models continue.
 
