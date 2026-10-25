@@ -1,3 +1,4 @@
+import { ConfiguredComputeGateway } from '../adapters/remote-worker-gateway.js';
 import path from 'node:path';
 import { InstalledSkills } from './installed-skills.js';
 import { BundledSkills, skillTools } from './bundled-skills.js';
@@ -105,7 +106,7 @@ export class LocalProductTools implements ProductToolExecutor {
     this.backend = options.compute ? 'custom' : businessUrl || process.env.THETA_COMPUTE_URL || 'local';
     this.compute = options.compute ?? (businessUrl
       ? new BusinessApiComputeGateway(this.records, fetch, { baseUrl: businessUrl })
-      : process.env.THETA_COMPUTE_URL ? new GoComputeGateway(process.env.THETA_COMPUTE_URL, this.records, fetch, home, this.worker) : new LocalComputeGateway(home, this.worker));
+      : process.env.THETA_COMPUTE_URL ? new GoComputeGateway(process.env.THETA_COMPUTE_URL, this.records, fetch, home, this.worker) : new ConfiguredComputeGateway(home, this.worker));
     this.batches = new TrainingBatches(this.records, this.compute, this.backend);
   }
   readContext(session: ProductSession): unknown {
@@ -249,22 +250,24 @@ export class LocalProductTools implements ProductToolExecutor {
     if (!id || !session.datasetRefs.includes(id)) throw new Error('请先在本会话中提供数据文件。');
     return this.records.get('dataset', id);
   }
+  private remoteWorker(): boolean { return this.compute instanceof ConfiguredComputeGateway && this.compute.isRemote(); }
+  private computePreview(input: {dataset: Dataset;plan: TrainingPlan}): Promise<any> { return this.compute.preview ? this.compute.preview(input) : this.worker.call('compute.preview', input); }
   private async preview(run: ResearchRun, session: ProductSession): Promise<{ request: ComputeRequest; summary: string; ready: boolean; readiness: { ready: boolean; issues?: string[] } }> {
     this.requireBackend(run);
     if (!run.plan || !run.planHash) throw new Error('请先提出具体模型、数据列和参数方案。');
     const dataset = this.dataset(session);
     if (this.needsEmbeddingChoice(session, run, run.plan)) throw new Error('请先选择本地或云端嵌入，再生成新的训练确认卡。');
-    const preview = await this.worker.call<{ execution: Record<string, unknown>; readiness: { ready: boolean; issues?: string[] }; rowCount: number }>('compute.preview', { plan: run.plan, dataset });
-    const remote = this.backend !== 'local' && this.backend !== 'custom';
-    const request = { jobId: `job-${run.planHash}`, runId: run.id, dataset, plan: run.plan, execution: { ...preview.execution, ...(remote ? { computeConfigurationFingerprint: this.configurationFingerprint() } : {}) } };
+    const preview = await this.computePreview({ plan: run.plan, dataset });
+    const remote = Boolean(preview.execution.remoteWorker) || this.backend !== 'local' && this.backend !== 'custom';
+    const request = { jobId: `job-${run.planHash}`, runId: run.id, projectId: this.options.datasetScope?.(session).projectId ?? session.id, dataset, plan: run.plan, execution: { ...preview.execution, ...(remote ? { computeConfigurationFingerprint: this.configurationFingerprint() } : {}) } };
     const embedding = preview.execution.embedding as { mode: string; endpoint?: string; model?: string };
     const runtime = preview.execution.runtime as { profile: string; revision: string; python: string; mode: string } | undefined;
     const environment = !remote && runtime ? `\n运行环境：${runtime.profile} · ${runtime.revision}（${runtime.mode === 'shared' ? '共享兼容环境' : '独立配置'}）\nPython：${runtime.python}` : '';
-    const external = embedding.mode === 'cloud'
+    const external = preview.execution.remoteWorker ? `\n将上传本次数据及划分数据；远端报价上限：${preview.execution.remoteWorker.quote.maxCost} ${preview.execution.remoteWorker.quote.currency}。Agent 与对话保留在本机。` : embedding.mode === 'cloud'
       ? `\n外部 embedding：${embedding.endpoint}\n外部模型：${embedding.model}\n将发送：选定文本列的全文与派生词表（${preview.rowCount} 行输入）。\n最多 ${preview.execution.maxExternalRequests} 次 HTTP 请求，包括失败请求；没有自动重试。\n费用按供应商计费，当前没有可靠金额报价。`
       : '\nEmbedding 使用本地资源；本操作不授权外部 embedding 或模型下载。';
-    return { request, readiness: preview.readiness, ready: remote || preview.readiness.ready,
-      summary: `允许执行这次${remote ? '远端' : `本地 ${run.plan.device ?? (process.platform === 'win32' ? 'auto' : 'cpu')}`}计算？\n${this.planSummary(run, dataset)}${remote ? `\n计算端点：${this.backend}\n远端运行资源/费用以已登记 runtime 为准；确认包含该任务的状态查询和结果链接读取。` : ''}${environment}${external}\n这是一次具体操作授权，不授权后续新实验。` };
+    return { request, readiness: preview.readiness, ready: preview.execution.remoteWorker ? preview.readiness.ready : remote || preview.readiness.ready,
+      summary: `允许执行这次${remote ? '远端' : `本地 ${run.plan.device ?? (process.platform === 'win32' ? 'auto' : 'cpu')}`}计算？\n${this.planSummary(run, dataset)}${remote ? `\n计算端点：${preview.execution.remoteEndpoint ?? this.backend}\n远端运行资源/费用以已登记 runtime 为准；确认包含该任务的状态查询和结果链接读取。` : ''}${environment}${external}\n这是一次具体操作授权，不授权后续新实验。` };
   }
   private requestEffect(session: ProductSession, run: ResearchRun, action: string, payload: unknown, summary: string): unknown {
     const approval = this.approvals.request(session.id, { action, target: this.backend, payload, summary });
@@ -287,7 +290,7 @@ export class LocalProductTools implements ProductToolExecutor {
     if (!configuration) throw new Error('当前没有可编辑的训练确认卡。');
     const [profile, runtime] = await Promise.all([
       this.worker.call<{ columns: string[] }>('dataset.profile', { dataset: this.dataset(session) }),
-      this.worker.call('runtime.config', {}),
+      this.compute instanceof ConfiguredComputeGateway ? this.compute.runtime() : this.worker.call('runtime.config', {}),
     ]);
     const supplied = configuration.plans.find(plan => typeof plan.params['text.stopwords'] === 'string')?.params['text.stopwords'];
     let stopwords: { id: string; name: string; count: number } | undefined;
@@ -310,9 +313,10 @@ export class LocalProductTools implements ProductToolExecutor {
   }
   /** Final host/UI confirmation: preserve per-model failures while queuing valid models. */
   async submitTrainingConfiguration(session: ProductSession, input: {
-    checkpointId: string; expectedContentHash: string; plans: unknown[]; cloudConfirmed?: boolean;
+    checkpointId: string; expectedContentHash: string; plans: unknown[]; workerSelection?:string; cloudConfirmed?: boolean;
     cloudSelection?: { provider: string; model: string; endpoint: string }; stopwords?: string[];
   }, save: () => void, signal?: AbortSignal): Promise<unknown> {
+    if(this.compute instanceof ConfiguredComputeGateway)this.compute.assertSelection(input.workerSelection);
     const batchId = `batch-${input.checkpointId}`; const configurationHash = contentHash(input);
     const existing = this.batches.get(batchId);
     if (existing) {
@@ -342,11 +346,11 @@ export class LocalProductTools implements ProductToolExecutor {
       for (const key of ['embedding_cloud_provider', 'embedding_model', 'embedding_api_base', 'embedding_api_key_env', 'text.stopwords']) delete plan.params[key];
       if (input.stopwords) plan.params['text.stopwords'] = input.stopwords.join('\n');
       const cloud = ['theta', 'ctm', 'bertopic'].includes(plan.modelId) && plan.params.embedding_provider === 'cloud';
-      if (cloud && (input.cloudConfirmed !== true || plan.modelId === 'theta' && (plan.params.mode ?? 'zero_shot') !== 'zero_shot' || !input.cloudSelection)) throw new Error('云端嵌入支持 THETA 零样本、CTM 和 BERTopic；请勾选发送文本与费用确认。');
-      const preview = await this.worker.call<{ execution: Record<string, unknown>; readiness: { ready: boolean; issues?: string[] } }>('compute.preview', { plan, dataset }, signal);
+      if (!this.remoteWorker() && cloud && (input.cloudConfirmed !== true || plan.modelId === 'theta' && (plan.params.mode ?? 'zero_shot') !== 'zero_shot' || !input.cloudSelection)) throw new Error('云端嵌入支持 THETA 零样本、CTM 和 BERTopic；请勾选发送文本与费用确认。');
+      const preview = await this.computePreview({ plan, dataset });
       const actual = preview.execution.embedding as { mode: string; provider?: string; endpoint?: string; model?: string };
       if (actual.mode !== (cloud ? 'cloud' : 'local')) throw new Error(`${plan.modelId} 的实际嵌入方式与选择不一致。`);
-      if (cloud) {
+      if (cloud && !preview.execution.remoteWorker) {
         const shown = input.cloudSelection!;
         if (shown.provider !== actual.provider || shown.model !== actual.model || shown.endpoint.replace(/\/$/u, '').replace(/\/embeddings$/u, '') + '/embeddings' !== actual.endpoint) throw new Error('云端服务已变化，请重新打开配置并确认。');
       }
@@ -360,7 +364,7 @@ export class LocalProductTools implements ProductToolExecutor {
       const runId = `run-${contentHash({ batchId, plan }).slice(0, 32)}`;
       const jobId = `job-${contentHash({ batchId, dataset, plan })}`;
       if (failure) failures[jobId] = failure;
-      requests.push({ runId, jobId, dataset, plan,
+      requests.push({ runId, jobId, projectId: this.options.datasetScope?.(session).projectId ?? session.id, dataset, plan,
         execution: { ...execution, ...(!['local', 'custom'].includes(this.backend) ? { computeConfigurationFingerprint: this.configurationFingerprint() } : {}) } });
     }
     signal?.throwIfAborted();
@@ -374,6 +378,7 @@ export class LocalProductTools implements ProductToolExecutor {
     return contentHash({ runId: run.id, dataset: this.dataset(session), plan, backend: this.backend });
   }
   private needsEmbeddingChoice(session: ProductSession, run: ResearchRun, plan: TrainingPlan): boolean {
+    if (this.remoteWorker()) return false;
     return (['ctm', 'bertopic'].includes(plan.modelId) || plan.modelId === 'theta' && (plan.params.mode ?? 'zero_shot') === 'zero_shot')
       && session.embeddingSelections?.[run.id]?.scope !== this.embeddingScope(session, run, plan);
   }
@@ -566,8 +571,8 @@ export class LocalProductTools implements ProductToolExecutor {
     }
     if (name === 'models_list') return this.worker.call('models.list', {}, context.signal);
     if (name === 'models_inspect') return this.worker.call('models.inspect', args, context.signal);
-    if (name === 'runtime_config') return this.worker.call('runtime.config', {}, context.signal);
-    if (name === 'runtime_check') return this.worker.call('runtime.check', args, context.signal);
+    if (name === 'runtime_config') return this.compute instanceof ConfiguredComputeGateway ? this.compute.runtime() : this.worker.call('runtime.config', {}, context.signal);
+    if (name === 'runtime_check') return this.compute instanceof ConfiguredComputeGateway ? this.compute.checkRuntime(args) : this.worker.call('runtime.check', args, context.signal);
     if (name === 'dataset_read') return this.worker.call('dataset.profile', { ...args, dataset: this.dataset(session, args.datasetRef as string | undefined) }, context.signal);
     if (name === 'run_create') {
       const ref = args.datasetRef as string | undefined ?? (session.datasetRefs.length === 1 ? session.datasetRefs[0] : undefined);
@@ -804,7 +809,11 @@ export class LocalProductTools implements ProductToolExecutor {
           : '用户已确认独立研究解读。依据 sourceData 原始文本、已保存研究目标、原生图表与原始 theta/beta 回答实质研究问题，引用具体 sourceRow 和原生产物。不要把解释文件格式或图表用途当作结果分析。只有 matrixRowsAligned=true 才能关联文本与该行主题权重。完整回答由宿主保存为独立 Markdown。' };
     }
     if (effect.action !== 'compute.submit') throw new Error('未注册的外部操作，不能执行。');
-    const preview = await this.preview(run, session);
+    const approvedRequest = effect.payload as ComputeRequest;
+    const remoteWorker = approvedRequest.execution?.remoteWorker;
+    if(remoteWorker && (contentHash(approvedRequest.dataset)!==contentHash(this.dataset(session)) || contentHash(approvedRequest.plan)!==contentHash(run.plan)))throw new Error('数据或方案已变化，请重新确认');
+    // A quote is an immutable approval input; re-quoting would invalidate every approval.
+    const preview = remoteWorker ? {ready:true,request:approvedRequest} : await this.preview(run, session);
     if (!preview.ready || contentHash(preview.request) !== contentHash(effect.payload)) throw new Error('操作、环境配置或数据已变化，请重新查看并确认。');
     const receipt = this.approvals.decide(effect.id, session.id, pending.contentHash, true);
     this.approvals.assert(receipt, effect.action, this.backend, preview.request);

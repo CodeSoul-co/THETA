@@ -4,7 +4,7 @@
 
 <h1>THETA (θ)</h1>
 
-[![Desktop](https://img.shields.io/badge/Desktop-macOS%20%7C%20Windows-blue?style=flat-square)](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.15)
+[![Desktop](https://img.shields.io/badge/Desktop-macOS%20%7C%20Windows-blue?style=flat-square)](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.17)
 [![CLI Agent + Web](https://img.shields.io/badge/CLI%20Agent%20%2B%20Web-local-green?style=flat-square)](agent/README.md)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-CodeSoulco%2FTHETA-yellow?style=flat-square)](https://huggingface.co/CodeSoulco/THETA)
 
@@ -20,13 +20,13 @@ Use **the Web workbench, CLI Agent, or desktop app**, with an optional Skill for
 
 | Entry point | Best for | Get started |
 | --- | --- | --- |
-| **Desktop · Mac / Windows** | Installing and using THETA without setting up a development environment | [Download an installer](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.15); Python and compute dependencies are bundled. No separate Python, Node.js, or Conda installation is needed |
+| **Desktop · Mac / Windows** | Installing and using THETA without setting up a development environment | [Download an installer](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.17); Python and compute dependencies are bundled. No separate Python, Node.js, or Conda installation is needed |
 | **Web workbench** | Conversation and manual analysis in your browser | Complete the [source environment setup](agent/README.md), run `./theta-web start`, and open the local workbench |
 | **CLI Agent** | Conversational data analysis in your terminal | Complete the [Agent setup](agent/README.md), then run `./theta` |
 
 You can also use the [THETA Workflow Skill](skills/theta-workflow/SKILL.md) with a compatible agent to guide research and training.
 
-### Desktop downloads · 0.3.15 preview
+### Desktop downloads · 0.3.17 preview
 
 From 0.3.8, use **Settings → App updates** for future downloads. Windows supports confirmed restart-to-install; the unsigned Mac preview downloads the DMG in the app. Earlier versions need one manual installation to enable this feature.
 
@@ -37,12 +37,12 @@ The desktop app bundles the Web interface. Source updates take effect after `./t
 
 | System | Installer |
 | --- | --- |
-| macOS · Apple Silicon (M-series) | [Download DMG](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.15/THETA-0.3.15-mac-arm64.dmg) |
-| Windows · x64 | [Download EXE installer](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.15/THETA-0.3.15-win-x64.exe) |
+| macOS · Apple Silicon (M-series) | [Download DMG](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.17/THETA-0.3.17-mac-arm64.dmg) |
+| Windows · x64 | [Download EXE installer](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.17/THETA-0.3.17-win-x64.exe) |
 
 On Mac, open the DMG and drag **THETA** into Applications. On Windows, run the EXE installer. Open Settings in the app to enter your model API endpoint and key, and choose local or cloud embeddings. **No user credentials or model weights are bundled.** The default local embedding model is Qwen3-Embedding-0.6B; the cloud preset is GLM embedding-3. Traditional models such as LDA do not require neural model weights.
 
-This desktop release is a preview without official signing/notarization, so the operating system may show a security warning. Native Intel Mac and Windows ARM installers are not provided. See the [desktop guide](docs/desktop.md) and [release notes with SHA-256 checksums](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.15).
+This desktop release is a preview without official signing/notarization, so the operating system may show a security warning. Native Intel Mac and Windows ARM installers are not provided. See the [desktop guide](docs/desktop.md) and [release notes with SHA-256 checksums](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.17).
 
 ## Start the Web Workbench (Conversation / Manual)
 
@@ -76,6 +76,8 @@ For THETA zero-shot analysis, choose local or cloud embeddings before confirming
 Conversation and manual modes share the training configuration dialog. Review the proposed models, data columns, and parameters before starting. Multiple models run sequentially and retain separate results. Draft settings and confirmed queues persist across refreshes without submitting duplicate tasks.
 
 ### Shared Web and desktop workflow
+
+**Local Agent, selectable compute.** Settings → Compute defaults to the local worker. Configure a THETA Worker v1 compatible API URL, key, and per-experiment cost limit to run training remotely in both conversation and manual modes. Projects, Agent orchestration, and conversations remain local. Selected training data is uploaded only after confirmation; progress, split results, charts, and downloads return to the local project. See the [remote worker integration contract](docs/worker-api.md).
 
 The Web workbench and desktop app use the same interface and Worker APIs for training, progress, and results. Upload individual files or a whole folder, combine selected files, remove uploaded source files, or replace data within the current project. Large uploads show a processing-time notice. LDA is the recommended default; THETA is marked as experimental. You can clear model selections while editing, but must select at least one before starting. A failed model retains its own error while other ready models continue.
 
@@ -746,7 +748,7 @@ If you find **THETA** useful in your research, please cite this repository:
   year = {2026},
   howpublished = {GitHub repository},
   url = {https://github.com/CodeSoul-co/THETA},
-  note = {Version 0.3.15}
+  note = {Version 0.3.17}
 }
 ```
 

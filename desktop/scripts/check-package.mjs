@@ -14,7 +14,7 @@ export async function inspectPackage(root, privateValues = []) {
       const file = path.join(directory, entry.name);
       const relative = path.relative(root, file);
       if ((entry.name.startsWith('.env') && entry.name !== '.env.example')
-        || ['settings.json', 'credentials.json', 'credentials.key', '.npmrc', '.pypirc', '.smoke-home'].includes(entry.name)) {
+        || ['compute-settings.json', 'settings.json', 'credentials.json', 'credentials.key', '.npmrc', '.pypirc', '.smoke-home'].includes(entry.name)) {
         throw new Error(`Private configuration found in package: ${relative}`);
       }
       if (entry.isDirectory()) { await walk(file); continue; }
@@ -52,6 +52,8 @@ export function localCredentials(root) {
     values.push(settings.encryptedKey, settings.embedding?.encryptedKey,
       ...Object.values(settings.providers ?? {}).map(provider => provider.encryptedKey));
   }
+  const computeFile = appData && path.join(appData,'THETA/compute-settings.json');
+  if(computeFile && existsSync(computeFile)) values.push(JSON.parse(readFileSync(computeFile,'utf8')).encryptedToken);
   return values;
 }
 

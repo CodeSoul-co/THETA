@@ -28,7 +28,7 @@ configure_numba_cache()
 
 from . import capabilities, local_compute
 from . import execution_policy, runtime_environments
-from . import remote_report, figure_tools
+from . import remote_report, figure_tools, downloaded_results
 from . import analysis_report
 from .dataset import catalog, business, collection
 from .dataset.preprocess import preprocess
@@ -68,6 +68,7 @@ HANDLERS = {
     "compute.status": local_compute.status,
     "compute.cancel": local_compute.cancel,
     "compute.results": local_compute.results,
+    "compute.receive": downloaded_results.receive,
     "compute.remote_report": remote_report.generate,
     "figure.adjust": figure_tools.adjust,
 }

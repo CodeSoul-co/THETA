@@ -40,7 +40,7 @@ export function TrainingConfigurationCard({ runId, interaction, onApproved }: {
       description="Agent 已预填建议模型与各自参数；你可以手动修改，最终确认后按顺序训练。"
       confirmLabel="确认并开始训练" onConfirm={async config => {
         await submitTrainingEditor(runId, { checkpointId: card.actionRef, expectedContentHash: card.contentHash!, plans: plansFromConfig(config, data.plans),
-          cloudConfirmed: config.cloudConfirmed, cloudSelection: config.cloudSelection, stopwordsId: config.stopwords?.id })
+          workerSelection: config.workerSelection, cloudConfirmed: config.cloudConfirmed, cloudSelection: config.cloudSelection, stopwordsId: config.stopwords?.id })
         changeOpen(false); onApproved()
       }} />}
   </section>

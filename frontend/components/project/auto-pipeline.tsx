@@ -245,7 +245,7 @@ export function AutoPipeline(props: AutoPipelineProps) {
         const response = await BackendAPI.startTraining({ file_id: Number(activeFileId), data_split: dataSplit, dataset_name: dataset, model_type: config.models.join(','), model_params: modelParams, topic_counts: explorationCounts(config),
           num_topics: Number(modelParams[config.models[0]].num_topics ?? modelParams[config.models[0]].max_topics ?? 20), vocab_size: config.vocabSize,
           plot_language: config.plotLanguage, stopwords_id: config.stopwords ? Number(config.stopwords.id) : undefined, model_size: config.modelSize, mode: config.mode,
-          embedding_provider: config.embeddingProvider, cloud_confirmed: config.cloudConfirmed, external_request_limit: config.externalRequestLimit,
+          embedding_provider: config.embeddingProvider, worker_selection: config.workerSelection, cloud_confirmed: config.cloudConfirmed, external_request_limit: config.externalRequestLimit,
           cloud_selection: config.cloudSelection,
           text_column: activeSelection.textColumn, meta_columns: activeSelection.metaColumns, time_column: activeSelection.timeColumn, label_column: activeSelection.labelColumn })
         setTaskId(String(response.id)); setTask(null)

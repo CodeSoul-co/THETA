@@ -80,7 +80,7 @@ const EMBEDDING_MODES = [
 // ==================== 类型 ====================
 
 export interface AnalysisConfigService {
-  runtime(): Promise<{ embedding: { preferredMode?: string; configured: boolean; provider: string; endpoint: string; model: string } }>
+  runtime(): Promise<{ compute?: {mode:string;url:string;maxCost:number;currency:string;fingerprint:string}; embedding: { preferredMode?: string; configured: boolean; provider: string; endpoint: string; model: string } }>
   model(id: string): Promise<ModelContract>
   uploadStopwords(file: File): Promise<NonNullable<AnalysisConfig['stopwords']>>
   stopwordsDownloadUrl: string
@@ -140,14 +140,17 @@ export function AnalysisConfigPanel({
   const [uploadingStopwords, setUploadingStopwords] = useState(false)
   const [stopwordError, setStopwordError] = useState<string | null>(null)
   const [sharedTopics, setSharedTopics] = useProjectDraft(`${projectKey}:shared-topics`, Number(initialConfig.parameters[initialConfig.models[0]]?.num_topics ?? initialConfig.parameters[initialConfig.models[0]]?.max_topics ?? 20))
+  const [compute, setCompute] = useState<{mode:string;url:string;maxCost:number;currency:string;fingerprint:string}>()
+  const [remoteConfirmed,setRemoteConfirmed] = useState(false)
   const [embedding, setEmbedding] = useState<{ configured: boolean; provider: string; endpoint: string; model: string } | null>(null)
   useEffect(() => {
     if (!open) return
     let cancelled = false
     service.runtime()
       .then(result => { if (!cancelled) {
+        setCompute(result.compute); setRemoteConfirmed(false)
         setEmbedding(result.embedding)
-        setConfig(prev => ({ ...prev, ...(result.embedding.preferredMode ? { embeddingProvider: result.embedding.preferredMode === "local" ? "local" : "cloud" } : {}), cloudConfirmed: false }))
+        setConfig(prev => ({ ...prev, ...(result.compute?.mode === "remote" ? {embeddingProvider:"local" as const} : result.embedding.preferredMode ? { embeddingProvider: result.embedding.preferredMode === "local" ? "local" : "cloud" } : {}), cloudConfirmed: false }))
       } })
       .catch(() => { if (!cancelled) setEmbedding(null) })
     return () => { cancelled = true }
@@ -186,11 +189,12 @@ export function AnalysisConfigPanel({
       setSubmitError('请至少选择一个模型后再继续。')
       return
     }
+    if (compute?.mode === "remote" && !remoteConfirmed) {setSubmitError("请确认远程计算的数据上传与费用上限。");return}
     if (!valid) return
     setSubmitting(true); setSubmitError('')
     try {
       explorationCounts(config)
-      if (await onConfirm({ ...config, cloudSelection: embedding ? { provider: embedding.provider, endpoint: embedding.endpoint, model: embedding.model } : undefined }) !== false) onOpenChange(false)
+      if (await onConfirm({ ...config, workerSelection: compute?.mode === "remote" ? compute.fingerprint : undefined, cloudSelection: embedding ? { provider: embedding.provider, endpoint: embedding.endpoint, model: embedding.model } : undefined }) !== false) onOpenChange(false)
     } catch (cause) { setSubmitError(cause instanceof Error ? cause.message : String(cause)) }
     finally { setSubmitting(false) }
   }
@@ -204,6 +208,7 @@ export function AnalysisConfigPanel({
             <DialogDescription>
               数据集：{datasetName} · {description ?? '选择模型后，可分别调整每个模型的参数。'}
             </DialogDescription>
+            {compute?.mode === 'remote' && <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-950"><p>远程计算：{compute.url}</p><p>每个模型实验最多 {compute.maxCost} {compute.currency}；多模型、多主题数按实验数累计。将上传本次选定数据及独立划分数据；Agent 与对话留在本机。模型权重由远端服务提供。</p><label className="mt-2 flex items-start gap-2"><input type="checkbox" checked={remoteConfirmed} onChange={e=>setRemoteConfirmed(e.target.checked)} />同意本次数据上传与上述费用上限</label></div>}
             <ComputationNotice sizeBytes={datasetSizeBytes} models={config.models} />
           </DialogHeader>
 
@@ -359,7 +364,7 @@ export function AnalysisConfigPanel({
                 {config.models.some(model => ['theta', 'ctm', 'bertopic'].includes(model)) && (
                       <div className="space-y-3 rounded-xl border bg-white p-4">
                         <Label>嵌入计算位置</Label>
-                        <RadioGroup aria-label="嵌入计算位置" value={config.embeddingProvider} onValueChange={v => setConfig(prev => ({ ...prev, embeddingProvider: v as "local" | "cloud", cloudConfirmed: false, ...(v === "cloud" ? { mode: "zero_shot" } : {}) }))} className="grid gap-3 sm:grid-cols-2">
+                        <RadioGroup aria-label="嵌入计算位置" value={config.embeddingProvider} onValueChange={v => setConfig(prev => ({ ...prev, embeddingProvider: v as "local" | "cloud", cloudConfirmed: false, ...(v === "cloud" ? { mode: "zero_shot" } : {}) }))} disabled={compute?.mode === "remote"} className="grid gap-3 sm:grid-cols-2">
                           <div className="flex items-center gap-2"><RadioGroupItem id="embedding-local" value="local" /><Label htmlFor="embedding-local">本地嵌入 · 已配置模型</Label></div>
                           <div className="flex items-center gap-2"><RadioGroupItem id="embedding-cloud" value="cloud" /><Label htmlFor="embedding-cloud">云端嵌入 · 已配置服务</Label></div>
                         </RadioGroup>

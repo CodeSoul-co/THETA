@@ -19,7 +19,7 @@ LABELS = {'all': '全量', 'train': '训练集', 'validation': '验证集', 'tes
 
 
 def collect_exhibits(summary, result_root, directory):
-    root = Path(summary['reportPath']).parent / 'native' if summary.get('reportPath') else result_root
+    root = result_root / 'native' if summary.get('remoteDelivery') else Path(summary['reportPath']).parent / 'native' if summary.get('reportPath') else result_root
     root = root.resolve()
     # Native report paths originate from the already-verified result manifest.
     verified = {item['relativePath']: item['sha256'] for key in ('tables', 'figures') for item in summary.get(key, [])}
@@ -27,7 +27,7 @@ def collect_exhibits(summary, result_root, directory):
     # in a verified native manifest, or belong to the immutable training tree.
     if summary.get('reportPath'):
         import json
-        manifest = json.loads((root.parent / 'manifest.json').read_text(encoding='utf-8'))
+        manifest = {'files': summary['availableArtifacts']} if summary.get('remoteDelivery') else json.loads((root.parent / 'manifest.json').read_text(encoding='utf-8'))
         verified = {Path(item['path']).resolve().relative_to(root).as_posix(): item['sha256']
                     for item in manifest['files'] if Path(item['path']).resolve().is_relative_to(root)}
     assets = directory / 'assets'; assets.mkdir(parents=True, exist_ok=True)

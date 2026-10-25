@@ -5,8 +5,9 @@ import { ResearchStore } from '../memory/research-store.js';
 
 export type ResultView = 'summary' | 'artifacts' | 'tables' | 'figures' | 'distribution' | 'metrics' | 'report';
 
-export interface ComputeRequest { jobId: string; runId: string; dataset: Dataset; plan: TrainingPlan; execution?: Record<string, unknown> }
+export interface ComputeRequest { jobId: string; runId: string; projectId?: string; dataset: Dataset; plan: TrainingPlan; execution?: Record<string, unknown> }
 export interface ComputeGateway {
+  preview?(input: { dataset: Dataset; plan: TrainingPlan }): Promise<any>;
   submit(request: ComputeRequest, authorization?: ApprovalReceipt): Promise<ComputeJob>;
   status(jobId: string): Promise<ComputeJob>;
   cancel(jobId: string): Promise<ComputeJob>;

@@ -313,6 +313,9 @@ def run(home: str, job_id: str) -> None:
 
 def results(payload: dict) -> dict:
     job = status(payload)
+    if job.get('remoteReport'):
+        from .downloaded_results import read
+        return read(job, payload)
     if job["status"] != "completed":
         raise ValueError("任务尚未成功完成，不能读取成功结果")
     root = Path(job["resultDir"])

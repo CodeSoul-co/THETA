@@ -4,7 +4,7 @@
 
 <h1>THETA (θ)</h1>
 
-[![Desktop](https://img.shields.io/badge/Desktop-macOS%20%7C%20Windows-blue?style=flat-square)](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.15)
+[![Desktop](https://img.shields.io/badge/Desktop-macOS%20%7C%20Windows-blue?style=flat-square)](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.17)
 [![CLI Agent + Web](https://img.shields.io/badge/CLI%20Agent%20%2B%20Web-local-green?style=flat-square)](agent/README_zh.md)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-CodeSoulco%2FTHETA-yellow?style=flat-square)](https://huggingface.co/CodeSoulco/THETA)
 
@@ -14,19 +14,21 @@
 
 </div>
 
+默认使用本地 Agent 与本地 Worker。在“设置 → 计算资源”中可填写兼容 THETA Worker v1 的服务地址、密钥及每个实验的费用上限，对话与手动模式共用。远程训练经确认后上传选定数据，进度、划分结果、图表与下载文件回到本机项目；Agent 和对话保留在本地。接入方式见[远程计算接口说明](docs/worker-api.zh.md)。
+
 ## 选择你的使用方式
 
 THETA 提供 **Web 工作台、CLI Agent、桌面应用**三种入口，另可通过 Skill 接入其他 Agent。本仓库统一维护本地版：工作台与计算服务在本机运行，项目和结果保存在本机。用户可自行配置云端对话模型与 Embedding API。
 
 | 使用方式 | 适合谁 | 如何开始 |
 | --- | --- | --- |
-| **桌面端（Mac / Windows）** | 希望安装后直接使用的用户 | [下载安装包](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.15)；内置 Python 和计算依赖，无需另装 Python、Node.js 或 Conda |
+| **桌面端（Mac / Windows）** | 希望安装后直接使用的用户 | [下载安装包](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.17)；内置 Python 和计算依赖，无需另装 Python、Node.js 或 Conda |
 | **Web 工作台** | 希望在浏览器中使用对话／手动分析的用户 | 完成[源码环境配置](agent/README_zh.md)后运行 `./theta-web start`，打开本机网页 |
 | **CLI Agent** | 希望在终端中用自然语言分析数据的用户 | 完成[Agent 安装](agent/README_zh.md)后运行 `./theta` |
 
 已有 Agent 的用户还可使用 [THETA Workflow Skill](skills/theta-workflow/SKILL.md) 引导研究与训练流程。
 
-### 桌面端下载 · 0.3.15 预览版
+### 桌面端下载 · 0.3.17 预览版
 
 从 0.3.8 起，可在“设置 → 应用更新”中获取后续版本。Windows 支持确认后重启安装；当前未正式签名的 Mac 预览版可在应用内下载 DMG。旧版需要手动安装一次才能获得更新功能。
 
@@ -37,12 +39,12 @@ Windows 默认优先使用兼容的 NVIDIA 显卡，异常时回退到 CPU。首
 
 | 系统 | 安装包 |
 | --- | --- |
-| macOS · Apple Silicon（M 系列） | [下载 DMG](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.15/THETA-0.3.15-mac-arm64.dmg) |
-| Windows · x64 | [下载 EXE 安装程序](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.15/THETA-0.3.15-win-x64.exe) |
+| macOS · Apple Silicon（M 系列） | [下载 DMG](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.17/THETA-0.3.17-mac-arm64.dmg) |
+| Windows · x64 | [下载 EXE 安装程序](https://github.com/CodeSoul-co/THETA/releases/download/desktop-v0.3.17/THETA-0.3.17-win-x64.exe) |
 
 Mac 打开 DMG 后将 **THETA** 拖入「应用程序」；Windows 运行 EXE 安装程序。启动后在「设置」中填写自己的模型 API 地址与 Key，并按需配置本地或云端 Embedding。**安装包不含用户密钥，也不含大模型权重**；默认本地 Embedding 为 Qwen3-Embedding-0.6B，云端预设为 GLM embedding-3。LDA 等传统算法无需下载神经网络权重。
 
-当前桌面版本是未正式签名／公证的预览版，系统可能显示安全提示；暂不提供 Intel Mac 和 Windows ARM 原生安装包。参见[桌面使用说明](docs/desktop.zh.md)、[发行说明与 SHA-256 校验文件](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.15)。
+当前桌面版本是未正式签名／公证的预览版，系统可能显示安全提示；暂不提供 Intel Mac 和 Windows ARM 原生安装包。参见[桌面使用说明](docs/desktop.zh.md)、[发行说明与 SHA-256 校验文件](https://github.com/CodeSoul-co/THETA/releases/tag/desktop-v0.3.17)。
 
 ## 启动网页工作台（对话 / 手动）
 
@@ -751,7 +753,7 @@ kill -9 <PID>
   year = {2026},
   howpublished = {GitHub repository},
   url = {https://github.com/CodeSoul-co/THETA},
-  note = {Version 0.3.15}
+  note = {Version 0.3.17}
 }
 ```
 

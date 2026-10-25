@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { constants, createReadStream, existsSync, lstatSync, realpathSync } from 'node:fs';
+import { constants, readFileSync, writeFileSync, createReadStream, existsSync, lstatSync, realpathSync } from 'node:fs';
 import { cp, mkdir, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -133,7 +133,7 @@ export function manualResultImporter(home: string, manualHome: string, records: 
     const computeRows: Array<{ id: string; request: ComputeRequest; state: ComputeJob }> = [];
     const now = new Date().toISOString();
     try {
-      for (const original of [...files.map(file => file.dataset), ...jobs.map(job => job.request.dataset)]) {
+      for (const original of [...files.map(file => file.dataset), ...jobs.flatMap(job => [job.request.dataset, ...Object.values(job.request.plan.dataSplit?.sources ?? {}).map(source=>source.dataset)])]) {
         if (datasets.has(original.datasetRef)) continue;
         const managedPath = path.join(importRoot, 'datasets', contentHash(original), path.basename(original.fileName));
         await copy(inside(manualHome, original.managedPath), managedPath);
@@ -150,12 +150,21 @@ export function manualResultImporter(home: string, manualHome: string, records: 
         await copy(sourceRoot, targetRoot);
         const resultDir = path.join(targetRoot, path.relative(sourceRoot, sourceResult));
         const state: ComputeJob = { ...job.state, id: jobId, status: 'completed', resultDir, pid: undefined };
+        if(job.state.remoteReport){
+          const originalReport=inside(sourceRoot,job.state.remoteReport);
+          state.remoteReport=path.join(targetRoot,path.relative(sourceRoot,originalReport));
+          const rebase=(value:any):any=>typeof value==='string' ? value.replaceAll(sourceRoot,targetRoot) : Array.isArray(value) ? value.map(rebase) : value&&typeof value==='object' ? Object.fromEntries(Object.entries(value).map(([key,item])=>[key,rebase(item)])) : value;
+          const report=rebase(JSON.parse(readFileSync(originalReport,'utf8')));report.jobId=jobId;
+          writeFileSync(state.remoteReport,JSON.stringify(report));
+        }
+        const plan=structuredClone(job.request.plan);
+        if(plan.dataSplit?.sources)for(const source of Object.values(plan.dataSplit.sources))source.dataset=datasets.get(source.dataset.datasetRef)!;
         const run: ResearchRun = { id: `run-${randomUUID()}`, goal: `${project.name}：继续解读与修改 ${job.request.plan.modelId} 结果`,
-          datasetRef: datasets.get(job.request.dataset.datasetRef)!.datasetRef, computeBackend: 'local', plan: job.request.plan,
-          planHash: contentHash(job.request.plan), jobs: [jobId], activeJob: jobId, lastObservedJob: state,
+          datasetRef: datasets.get(job.request.dataset.datasetRef)!.datasetRef, computeBackend: 'local', plan,
+          planHash: contentHash(plan), jobs: [jobId], activeJob: jobId, lastObservedJob: state,
           notes: [`由手动项目 ${project.id} 的已完成任务 ${job.id} 复制；原项目不变，未重新训练。`] };
         runs.push(run);
-        computeRows.push({ id: jobId, state, request: { jobId, runId: run.id, dataset: datasets.get(job.request.dataset.datasetRef)!, plan: job.request.plan } });
+        computeRows.push({ id: jobId, state, request: { jobId, runId: run.id, dataset: datasets.get(job.request.dataset.datasetRef)!, plan } });
         const delivered = await inventory(resultDir);
         if (!delivered.length || (await resultHash(delivered, process.platform === 'win32') !== job.state.resultHash && await resultHash(delivered, process.platform !== 'win32') !== job.state.resultHash)) {
           throw new ManualImportError(409, '结果文件与训练完成时的校验记录不一致，未创建对话副本。');

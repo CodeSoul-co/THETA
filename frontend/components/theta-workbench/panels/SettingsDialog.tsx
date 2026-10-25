@@ -15,13 +15,14 @@ import { usePreferences } from '../preferences.tsx'
 import { useAuth } from '@/contexts/auth-context'
 import { accountStorageKey } from '../storage-scope.ts'
 import css from './SettingsDialog.module.css'
+import { computeSettingsApi, type ComputeSettings } from '../api/client.ts'
 import type { WebInferenceSettingsUpdate } from '../api/client.ts'
 import { DesktopUpdates } from './DesktopUpdates'
 import type { DesktopEmbedding } from '@/types/desktop'
 
 interface SettingsDialogProps { initialTab?: 'inference' | 'embedding' | 'updates'; open: boolean; onClose: () => void; onAccountNameChange?: (name: string) => void }
 
-type SettingsTab = 'account' | 'appearance' | 'language' | 'inference' | 'embedding' | 'updates'
+type SettingsTab = 'account' | 'appearance' | 'language' | 'inference' | 'embedding' | 'updates' | 'compute'
 
 const ACCOUNT_NAME_KEY = 'theta.frontend.account-name.v1'
 
@@ -30,6 +31,23 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange, initialTab 
   const { user } = useAuth()
   const defaultAccountName = user?.username?.trim() || user?.full_name?.trim() || 'user'
   const { catalog, settings, update, loading: settingsLoading } = useInferenceSettings()
+  const [compute, setCompute] = useState<ComputeSettings>()
+  const [computeKey, setComputeKey] = useState('')
+  const [computeDirty, setComputeDirty] = useState(false)
+  useEffect(() => {
+    if (!open || !OPEN_SOURCE_EDITION) return
+    let active = true
+    setComputeDirty(false); setComputeKey('')
+    computeSettingsApi.read().then(value => {if(active) setCompute(value)}).catch(error => {if(active) {setMessageType('error');setMessage(String(error))}})
+    return () => {active=false}
+  }, [open])
+  const saveCompute = async () => {
+    if (!compute) return false
+    setSaving(true)
+    try { setCompute(await computeSettingsApi.save({...compute,token:computeKey}));setComputeKey('');setComputeDirty(false);return true }
+    catch(error) {setMessageType('error');setMessage(error instanceof Error ? error.message : String(error));return false}
+    finally {setSaving(false)}
+  }
   const [tab, setTab] = useState<SettingsTab>(OPEN_SOURCE_EDITION ? 'appearance' : 'account')
   const [accountName, setAccountName] = useState(defaultAccountName)
   const [selectedProviderId, setSelectedProviderId] = useState<string>('')
@@ -157,6 +175,7 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange, initialTab 
     if (saving) return
     if (inferenceDirty && !await saveInferenceSettings()) { setTab('inference'); return }
     if (embeddingDirty && !await saveEmbeddingSettings()) { setTab('embedding'); return }
+    if (computeDirty && !await saveCompute()) {setTab('compute');return}
     onClose()
   }
 
@@ -197,9 +216,24 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange, initialTab 
           <button type="button" className={tab === 'language' ? css.active : ''} onClick={() => setTab('language')}><IconGlobeOutline14 size={16} />{zh ? '语言' : 'Language'}</button>
           <button type="button" className={tab === 'inference' ? css.active : ''} onClick={() => setTab('inference')}><IconSettingsOutline16 />{zh ? '模型 API' : 'Model API'}</button>
           {embedding && <button type="button" className={tab === 'embedding' ? css.active : ''} onClick={() => { setTab('embedding'); setMessage(undefined) }}><IconSettingsOutline16 />Embedding 模型</button>}
+          {OPEN_SOURCE_EDITION && <button type="button" className={tab === 'compute' ? css.active : ''} onClick={() => setTab('compute')}><IconSettingsOutline16 />{zh ? '计算资源' : 'Compute'}</button>}
           {embedding && <button type="button" className={tab === 'updates' ? css.active : ''} onClick={() => setTab('updates')}><IconSettingsOutline16 />{zh ? '应用更新' : 'App updates'}</button>}
         </nav>
 
+        {tab === 'compute' && <section className={css.section}>
+          <div className={css.sectionHeader}><h3>{zh ? '训练计算资源' : 'Training compute'}</h3><p>{zh ? '对话与手动模式共用。Agent、对话和数据预览保留在本机。' : 'Shared by conversation and manual modes. Agent, conversations and data previews stay on this computer.'}</p></div>
+          {compute && <>
+          <label className={css.field}><span>{zh ? '执行位置' : 'Execution'}</span><select value={compute.mode} onChange={e => {setCompute({...compute,mode:e.target.value as ComputeSettings['mode']});setComputeDirty(true)}}><option value="local">{zh ? '本地 Worker（默认）' : 'Local worker (default)'}</option><option value="remote">{zh ? '远程 Worker API' : 'Remote worker API'}</option></select></label>
+          {compute.mode === 'remote' && <>
+            <p>{zh ? '需要兼容 THETA Worker v1 的计算服务。训练时上传选定数据，计算完成后将结果和图表下载到本机；不上传对话或本机模型密钥。' : 'Requires a THETA Worker v1 compatible service. Selected data is uploaded for training; results and charts are downloaded. Conversations and local model keys are not uploaded.'}</p>
+            <label className={css.field}><span>API URL</span><input value={compute.url} placeholder="https://worker.example.com" onChange={e => {setCompute({...compute,url:e.target.value});setComputeDirty(true)}} /></label>
+            <label className={css.field}><span>API Key</span><input type="password" autoComplete="new-password" value={computeKey} placeholder={compute.tokenConfigured ? '••••••••' : ''} onChange={e=>{setComputeKey(e.target.value);setComputeDirty(true)}} /></label>
+            <label className={css.field}><span>{zh ? '每个模型实验的费用上限（0 表示仅免费）' : 'Maximum cost per experiment (0 means free only)'}</span><input type="number" min="0" step="0.01" value={compute.maxCost} onChange={e=>{setCompute({...compute,maxCost:Number(e.target.value)});setComputeDirty(true)}} /></label>
+            <label className={css.field}><span>{zh ? '币种' : 'Currency'}</span><select value={compute.currency} onChange={e=>{setCompute({...compute,currency:e.target.value});setComputeDirty(true)}}><option>CNY</option><option>USD</option></select></label>
+            <Button disabled={saving} onClick={async()=>{if(computeDirty && !await saveCompute())return;setSaving(true);try{const result=await computeSettingsApi.test();setMessageType('success');setMessage((zh ? '连接成功，支持模型：' : 'Connected. Models: ')+result.models.join(', '))}catch(error){setMessageType('error');setMessage(String(error))}finally{setSaving(false)}}}>{zh ? '保存并测试连接' : 'Save and test connection'}</Button>
+          </>}
+          </>}
+        </section>}
         {tab === 'updates' && <DesktopUpdates zh={zh} />}
 
         {tab === 'account' && (

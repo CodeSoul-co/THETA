@@ -8,6 +8,7 @@ export interface AnalysisConfig {
   topicCounts?: string
   modelSize: string
   embeddingProvider: 'local' | 'cloud'
+  workerSelection?: string
   cloudConfirmed: boolean
   cloudSelection?: { provider: string; endpoint: string; model: string }
   externalRequestLimit: number

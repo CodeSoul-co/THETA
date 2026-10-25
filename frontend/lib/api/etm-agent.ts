@@ -138,6 +138,7 @@ function normalizeTaskStatus(status: string): TaskResponse['status'] {
 
 export interface CreateTaskRequest {
   embedding_provider?: 'local' | 'cloud';
+  worker_selection?: string;
   cloud_confirmed?: boolean;
   cloud_selection?: { provider: string; endpoint: string; model: string };
   external_request_limit?: number;
@@ -533,7 +534,7 @@ export const ETMAgentAPI = {
         language: request.language,
         plot_language: request.plot_language,
         embedding_provider: request.embedding_provider,
-        cloud_confirmed: request.cloud_confirmed,
+        worker_selection: request.worker_selection, cloud_confirmed: request.cloud_confirmed,
         cloud_selection: request.cloud_selection,
         external_request_limit: request.external_request_limit,
         stopwords_id: request.stopwords_id,

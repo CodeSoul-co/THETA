@@ -82,6 +82,7 @@ export interface TrainParams {
   topic_counts?: number[];
   data_split?: import('../data-split').DataSplit;
   embedding_provider?: 'local' | 'cloud';
+  worker_selection?: string;
   cloud_confirmed?: boolean;
   cloud_selection?: { provider: string; endpoint: string; model: string };
   external_request_limit?: number;
@@ -214,7 +215,7 @@ export const BackendAPI = {
         language: params.plot_language || params.language || 'zh',
         plot_language: params.plot_language,
         embedding_provider: params.embedding_provider,
-        cloud_confirmed: params.cloud_confirmed,
+        worker_selection: params.worker_selection, cloud_confirmed: params.cloud_confirmed,
         cloud_selection: params.cloud_selection,
         external_request_limit: params.external_request_limit,
         stopwords_id: params.stopwords_id,

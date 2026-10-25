@@ -1,7 +1,7 @@
 {
   "name": "theta-desktop",
   "productName": "THETA",
-  "version": "0.3.16",
+  "version": "0.3.17",
   "private": true,
   "description": "THETA local research workbench with bundled Python",
   "author": "CodeSoul",
@@ -56,6 +56,7 @@
           "!**/.env",
           "!**/.env.*",
           "!**/settings.json",
+          "!**/compute-settings.json",
           "!**/credentials.json",
           "!**/.smoke-home/**",
           "!**/credentials.key"

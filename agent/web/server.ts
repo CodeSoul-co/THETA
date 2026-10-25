@@ -1,3 +1,5 @@
+import { workerConfiguration } from '../src/adapters/worker-configuration.js';
+import { ConfiguredComputeGateway } from '../src/adapters/remote-worker-gateway.js';
 import { Readable } from 'node:stream';
 import { InstalledSkills } from '../src/tools/installed-skills.js';
 import { localInferenceSettings } from './inference-settings.js';
@@ -498,8 +500,16 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
         if (method === 'PATCH' && parts[3]) {skills.setEnabled(parts[3],input.enabled);return json(res,{skills:skills.list()});}
         throw new HttpError(404,'Unknown skill endpoint','not_found');
       }
+      if (parts[2] === 'compute-settings') {
+        if (mode !== 'local') throw new HttpError(403, '计算配置由本机宿主管理');
+        const configuration=workerConfiguration(home);
+        if (method === 'GET') return json(res,configuration.publicValue());
+        if (method === 'PATCH') return json(res,configuration.save(JSON.parse((await readBody(req,32768)).toString())));
+        if (method === 'POST' && parts[3] === 'test') return json(res,await new ConfiguredComputeGateway(home,capabilityWorker).catalog());
+        throw new HttpError(405,'不支持此操作');
+      }
       if (parts[2] === 'health') return json(res, { service: 'theta-agent', mode: 'conversation', checks: [] });
-      if (parts[2] === 'training-runtime' && method === 'GET') return json(res, await capabilityWorker.call('runtime.config', {}));
+      if (parts[2] === 'training-runtime' && method === 'GET') return json(res, await new ConfiguredComputeGateway(home,capabilityWorker).runtime());
       if (parts[2] === 'training-models' && method === 'GET' && MODEL_IDS.includes(parts[3] as typeof MODEL_IDS[number])) return json(res, await capabilityWorker.call('models.inspect', { modelId: parts[3] }));
       if (parts[2] === 'training-stopwords' && parts[3] === 'default' && method === 'GET') {
         res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Content-Disposition': 'attachment; filename=THETA-stopwords.txt' });
@@ -790,7 +800,7 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
         const value = await locked(id, async (s, save, signal) => {
           syncCards(s);
           const result = await tools.submitTrainingConfiguration(s, { checkpointId: input.checkpointId, expectedContentHash: input.expectedContentHash, plans: input.plans,
-            cloudConfirmed: input.cloudConfirmed, cloudSelection: input.cloudSelection, stopwords }, save, signal);
+            workerSelection: input.workerSelection, cloudConfirmed: input.cloudConfirmed, cloudSelection: input.cloudSelection, stopwords }, save, signal);
           const old = records.get<WebCard>('web-card', input.checkpointId);
           const submitted = result as { job?: { status?: string; error?: string }; reused?: boolean };
           records.put('web-card', old.id, { ...old, state: submitted.job?.status === 'failed' ? 'failed' : 'approved', error: submitted.job?.error,

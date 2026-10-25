@@ -599,7 +599,7 @@ const v3Checkpoint = async (runId: string): Promise<V3Checkpoint | null> =>
 
 export interface TrainingEditorData { inputKind?: 'text' | 'table'; datasetSizeBytes?: number; plans: EditorTrainingPlan[]; datasetName: string; columns: string[]; goal: string; stopwords?: { id: string; name: string; count: number } }
 export const getTrainingEditor = (runId: string) => request<TrainingEditorData>(v3Path(runId, '/training-configuration'))
-export const submitTrainingEditor = (runId: string, value: { checkpointId: string; expectedContentHash: string; plans: EditorTrainingPlan[]; cloudConfirmed: boolean; cloudSelection?: { provider: string; endpoint: string; model: string }; stopwordsId?: string | number }) =>
+export const submitTrainingEditor = (runId: string, value: { checkpointId: string; expectedContentHash: string; plans: EditorTrainingPlan[]; workerSelection?:string; cloudConfirmed: boolean; cloudSelection?: { provider: string; endpoint: string; model: string }; stopwordsId?: string | number }) =>
   request(v3Path(runId, '/training-configuration'), { method: 'POST', body: JSON.stringify(value) })
 export const trainingEditorService = (runId: string): AnalysisConfigService => ({
   runtime: () => request('/api/v3/training-runtime'),
@@ -1142,3 +1142,10 @@ export const setAnalysisMode = async (runId: string, analysisMode: 'topic' | 'fr
   if (await apiVersion() !== 'v3') throw new Error('自由分析需要新版 Agent 服务');
   return request(v3Path(runId), {method:'PATCH',body:JSON.stringify({analysisMode})});
 };
+
+export interface ComputeSettings { fingerprint:string; mode: 'local' | 'remote'; url: string; tokenConfigured: boolean; maxCost: number; currency: string }
+export const computeSettingsApi = {
+  read: () => request<ComputeSettings>('/api/v3/compute-settings'),
+  save: (value: ComputeSettings & {token?:string;clearToken?:boolean}) => request<ComputeSettings>('/api/v3/compute-settings', {method:'PATCH',body:JSON.stringify(value)}),
+  test: () => request<{models:string[]}>('/api/v3/compute-settings/test', {method:'POST'}),
+}

@@ -40,7 +40,7 @@ export interface ComputeJob {
   phase: string; percent: number; error?: string;
   message?: string; phaseHistory?: { phase: string; at: number }[];
   diagnostics?: { available: boolean; stage?: string; category?: string; message?: string; reason?: string };
-  resultDir?: string; resultWarning?: string; resultHash?: string; pid?: number;
+  remoteReport?: string; resultDir?: string; resultWarning?: string; resultHash?: string; pid?: number;
   telemetry?: JobTelemetry;
   runtime?: { profile: string; revision: string; python: string; mode: string; dependencyFingerprint: string };
 }

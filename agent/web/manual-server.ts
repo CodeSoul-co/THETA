@@ -1,3 +1,4 @@
+import { ConfiguredComputeGateway } from '../src/adapters/remote-worker-gateway.js';
 import { receiveUpload } from './upload-stream.js';
 import { rm } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
@@ -52,7 +53,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
       throw new HttpError(409, '已存在同名项目，请打开已有项目，或使用其他名称。');
     }
   };
-  const compute = new LocalComputeGateway(home, worker);
+  const compute = new ConfiguredComputeGateway(home, worker);
   const approvals = new EffectApprovals(new ResearchStore(home));
   const observations = new Map<number, { at: number; pending: Promise<RecordValue> }>();
   const detailedStates = new Map<string, { at: number; value: ComputeJob }>();
@@ -178,7 +179,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
       if (url.pathname === '/api/auth/verify') return json(res, { valid: true, user_id: user.id, username: user.username });
       if (url.pathname === '/api/auth/logout') return json(res, { message: '本地开发无需登录' });
       if (url.pathname === '/config') return json(res, { supported_models: [...supported], supported_modes: ['zero_shot', 'unsupervised', 'supervised'], supported_model_sizes: ['0.6B', '4B', '8B'], default_num_topics: 20, default_epochs: 100 });
-      if (url.pathname === '/api/runtime/config' && method === 'GET') return json(res, await worker.call('runtime.config', {}));
+      if (url.pathname === '/api/runtime/config' && method === 'GET') return json(res, await compute.runtime());
       if (url.pathname.startsWith('/api/models/') && method === 'GET') {
         const modelId = url.pathname.split('/')[3];
         if (!supported.has(modelId)) throw new HttpError(404, '模型不存在');
@@ -322,6 +323,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
         const plotLanguage = input.plot_language ?? input.language ?? 'zh';
         if (!['zh', 'en', 'chinese', 'english'].includes(plotLanguage)) throw new HttpError(400, '请选择中文或英文绘图语言');
         const stopwords = input.stopwords_id == null ? undefined : get('stopwords', input.stopwords_id).words;
+        compute.assertSelection(input.worker_selection);
         const models = [...new Set(String(input.model_type ?? 'theta').split(','))];
         if (!models.length || models.some(model => !supported.has(model))) throw new HttpError(400, '模型选择无效');
         const counts = input.topic_counts === undefined ? [] : input.topic_counts;
@@ -344,7 +346,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
         const failures: RecordValue[] = [];
         for (const model of models) for (const count of counts.length ? counts : [undefined]) {
           try {
-          if (['theta', 'ctm', 'bertopic'].includes(model) && cloud) {
+          if (['theta', 'ctm', 'bertopic'].includes(model) && cloud && !compute.isRemote()) {
             if (input.cloud_confirmed !== true || model === 'theta' && (input.mode ?? 'zero_shot') !== 'zero_shot') throw new HttpError(400, '云端嵌入需要同意发送文本，且仅支持零样本模式');
             if (!Number.isInteger(externalRequestLimit) || externalRequestLimit < 1 || externalRequestLimit > 1000) throw new HttpError(400, '云端请求上限必须为 1–1000 的整数');
           }
@@ -361,10 +363,10 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
           if (['theta', 'ctm', 'bertopic'].includes(model)) params.embedding_provider = embeddingProvider;
           if (model === 'theta') Object.assign(params, { mode: input.mode ?? 'zero_shot', model_size: input.model_size ?? '0.6B', embedding_provider: embeddingProvider });
           const plan: TrainingPlan = { modelId: model, textColumn, dataSplit, params, timeoutSeconds: 43200, device: process.platform === 'win32' ? 'auto' : 'cpu', rationale: '用户在手动工作台明确提交的参数', ...(['theta', 'ctm', 'bertopic'].includes(model) && cloud ? { externalRequestLimit } : {}), ...(input.time_column ? { timeColumn: input.time_column } : {}), ...(input.label_column ? { labelColumn: input.label_column } : {}), ...(model === 'stm' ? { covariates: input.meta_columns ?? [] } : {}) };
-          const preview = await worker.call<{ execution: Record<string, unknown>; readiness: { ready: boolean; issues?: string[]; missingDependencies?: string[]; requiredAssetVariable?: string } }>('compute.preview', { dataset: file.dataset, plan });
+          const preview = await compute.preview({ dataset: file.dataset, plan });
           if (!preview.readiness.ready) throw new HttpError(400, `${model.toUpperCase()}：${preview.readiness.issues?.join('；') || (preview.readiness.missingDependencies?.length ? '缺少计算依赖：' + preview.readiness.missingDependencies.join(', ') : '运行环境检查未通过，请检查计算依赖和嵌入配置。')}`);
           if ((preview.execution.embedding as RecordValue)?.mode !== (['theta', 'ctm', 'bertopic'].includes(model) && cloud ? 'cloud' : 'local')) throw new HttpError(400, '实际嵌入策略与用户选择不一致，请重新确认');
-          if (['theta', 'ctm', 'bertopic'].includes(model) && cloud) {
+          if (['theta', 'ctm', 'bertopic'].includes(model) && cloud && !preview.execution.remoteWorker) {
             const actual = preview.execution.embedding as RecordValue;
             const shown = input.cloud_selection;
             if (!shown || shown.provider !== actual.provider || shown.model !== actual.model || String(shown.endpoint).replace(/\/$/u, '').replace(/\/embeddings$/u, '') + '/embeddings' !== actual.endpoint) throw new HttpError(400, '云端接收服务或模型与界面确认内容不一致，请重新打开配置并确认');
@@ -376,7 +378,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
         if (current.cancel_requested || closing) return;
         current.queue = plans.map(({ model, plan, execution }) => ({
           model,
-          request: { jobId: `job-${contentHash({ manualJobId: job.id, model, dataset: file.dataset, plan })}`, runId: `manual-project-${job.id}`, dataset: file.dataset, plan, execution } satisfies ComputeRequest,
+          request: { jobId: `job-${contentHash({ manualJobId: job.id, model, dataset: file.dataset, plan })}`, runId: `manual-project-${job.id}`, projectId: file.dataset_name, dataset: file.dataset, plan, execution } satisfies ComputeRequest,
         }));
         current.model_failures = failures; current.status = plans.length ? 'running' : 'failed'; current.preflightIncomplete = false; save('job', current);
         await advance(job.id);
@@ -510,6 +512,18 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
             if (!file || !realpathSync.native(file).startsWith(realpathSync.native(home) + path.sep)) throw new HttpError(404, '结果文件不存在');
             const mime: Record<string, string> = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml', '.html': 'text/html', '.csv': 'text/csv; charset=utf-8', '.json': 'application/json', '.pdf': 'application/pdf', '.txt': 'text/plain; charset=utf-8' };
             res.writeHead(200, { 'Content-Type': mime[path.extname(file)] ?? 'application/octet-stream', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "sandbox allow-scripts; default-src 'self' data: https: 'unsafe-inline'" });
+            if(path.extname(file)==='.html') {
+              const content=readFileSync(file,'utf8').replace(/(href|src)=["']([^"']+)["']/gu,(match,attr,target)=>{
+                if(/^(?:https?:|data:|#|\/api\/)/iu.test(target))return match;
+                try {
+                  const resolved=target.startsWith('file:')?fileURLToPath(target):path.resolve(path.dirname(file),decodeURIComponent(target.split('#')[0]));
+                  const linked=deliveryFiles.find(item=>path.resolve(item.path)===resolved);
+                  const link=linked ? `/api/backend/api/results/${encodeURIComponent(dataset)}/visualizations/file?model=${encodeURIComponent(result.model)}&job_id=${encodeURIComponent(selectedJobId??'')}&path=${encodeURIComponent(linked.name)}` : '#unavailable';
+                  return `${attr}="${link}"`;
+                }catch{return `${attr}="#unavailable"`;}
+              });
+              res.end(content);return;
+            }
             const stream = createReadStream(file);
             res.on('close', () => stream.destroy());
             stream.on('error', () => res.destroy());
@@ -547,6 +561,7 @@ export function createManualServer(home: string, worker: CapabilityWorker = new 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (process.env.NODE_ENV === 'production') throw new Error('手动免登录服务仅用于本机开发，不能在生产环境启动。');
   loadThetaProjectEnvironment();
+  process.env.THETA_COMPUTE_SETTINGS_HOME ??= process.env.THETA_AGENT_HOME ?? path.join(repositoryRoot(), '.theta_agent');
   const home = path.join(repositoryRoot(), '.local', 'manual-workbench');
   const port = Number(process.env.THETA_MANUAL_PORT ?? 4321);
   createManualServer(home).listen(port, '127.0.0.1', () => console.log(`THETA 手动工作台 http://127.0.0.1:${port} · ${home}`));
