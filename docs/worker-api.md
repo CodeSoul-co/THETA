@@ -6,6 +6,8 @@ THETA keeps the Agent, conversation history, project ownership, data preview, an
 
 Set the API base URL, API key, currency (CNY or USD), and maximum cost per experiment. Zero permits free tasks only. Clicking Done saves the configuration. Keys are encrypted with a private local key and are excluded from installers. Batch cost can reach the per-experiment limit multiplied by the number of model/topic-count combinations. The training dialog explicitly confirms uploading the selected dataset and any independently uploaded train/validation/test files. Local LLM and embedding keys are never forwarded. Model weights and any embedding service credentials required by remote training must be provisioned by the remote service.
 
+Project IDs are namespaced per local workspace before transfer, so identically named manual projects on different computers remain distinct.
+
 ## HTTP contract
 
 All JSON responses below are direct objects, without an `ok/data` wrapper. All control requests use `Authorization: Bearer <key>`. Production URLs require HTTPS; loopback HTTP supports development. Redirects are rejected. Errors use an HTTP error code and `{"error":{"message":"reason"}}`. Clients must never supply a local executable, shared filesystem path, or shell command to the remote service.

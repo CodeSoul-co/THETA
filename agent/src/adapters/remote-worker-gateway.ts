@@ -61,7 +61,11 @@ export class ConfiguredComputeGateway implements ComputeGateway {
     new EffectApprovals(this.store).assert(receipt,'compute.submit','local',request);
     const c=this.config.read();if(c.mode!=='remote'||remote.fingerprint!==this.config.fingerprint(c)||Date.parse(remote.quote.expiresAt)<=Date.now())throw new Error('计算配置或报价已变化，请重新确认');
     const prior=this.mapping(request.jobId);if(prior){if(prior.requestHash!==contentHash(request))throw new Error('任务内容变化');if(prior.remoteId)return this.status(request.jobId);}
-    const projectId=request.projectId;if(!projectId)throw new Error('远程训练缺少项目归属');
+    if(!request.projectId)throw new Error('远程训练缺少项目归属');
+    // Independent installations may have identically named manual projects.
+    this.store.putIfAbsent('worker-namespace','home',{id:randomUUID()});
+    const namespace=this.store.get<{id:string}>('worker-namespace','home').id;
+    const projectId='theta-'+contentHash({namespace,project:request.projectId});
     const value:RemoteJob=prior??{config:c,projectId,requestHash:contentHash(request),request};
     if(!prior&&!this.store.putIfAbsent('worker-job',request.jobId,value))throw new Error('任务正在提交，请查询状态');
     const dataset=await this.upload(c,projectId,request.dataset);const plan=portablePlan(request.plan);

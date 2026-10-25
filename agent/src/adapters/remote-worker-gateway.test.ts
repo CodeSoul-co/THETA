@@ -72,7 +72,7 @@ test('remote worker transfers only selected data, preserves splits and restores 
   assert.equal(state.status,'running');assert.equal(state.telemetry!.events![0].current,2);
   const submission=f.calls.find(c=>c.route==='/v1/jobs')!.body;
   assert.equal(f.calls.filter(c=>c.route==='/v1/datasets').length,4);
-  assert.equal(submission.projectId,'project-a');assert.ok(submission.plan.dataSplit.sources.test.dataset.datasetId);
+  assert.match(submission.projectId,/^theta-[a-f0-9]{64}$/);assert.notEqual(submission.projectId,'project-a');assert.ok(submission.plan.dataSplit.sources.test.dataset.datasetId);
   assert.ok(!JSON.stringify(submission).includes(f.home));assert.ok(!f.localCalls.includes('compute.submit'));
   await f.gateway.submit(request,receipt);assert.equal(f.submits(),1);
   f.configuration.save({mode:'local',url:f.base,maxCost:0});
@@ -139,7 +139,7 @@ test('conversation training uses the remote worker with the original approved qu
   await tools.approve(session,'确认');
   assert.equal(f.submits(),1);assert.ok(!f.localCalls.includes('compute.submit'));
   assert.equal(f.calls.filter(c=>c.route==='/v1/preview').length,1,'approval must retain the quote already shown');
-  assert.equal(f.calls.find(c=>c.route==='/v1/jobs')!.body.projectId,'project-a');
+  assert.match(f.calls.find(c=>c.route==='/v1/jobs')!.body.projectId,/^theta-[a-f0-9]{64}$/);
  }finally{await f.close()}
 });
 
@@ -152,4 +152,12 @@ test('downloaded remote results register through the real local worker API and p
   assert.equal(evidence.splits.groups.all.count,4);assert.equal(evidence.plan.modelId,'lda');
   assert.ok(evidence.description.includes('原始记录数'));assert.equal(evidence.catalog.length,1);
  }finally{await f.close()}
+});
+
+test('same project names in independent installations receive different remote namespaces',async()=>{
+ const a=await fixture(),b=await fixture();try{
+  const first=await a.request(),second=await b.request();
+  await a.gateway.submit(first,a.authorize(first));await b.gateway.submit(second,b.authorize(second));
+  assert.notEqual(a.calls.find(c=>c.route==='/v1/jobs')!.body.projectId,b.calls.find(c=>c.route==='/v1/jobs')!.body.projectId);
+ }finally{await a.close();await b.close()}
 });
