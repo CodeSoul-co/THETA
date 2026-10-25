@@ -19,6 +19,7 @@ import { DatabaseSync } from 'node:sqlite';
 const hash=(text:string)=>createHash('sha256').update(text).digest('hex');
 async function fixture(realDelivery=false){
   const home=mkdtempSync(path.join(tmpdir(),'theta-remote-contract-'));
+  let uncertain=false;
   let status='running', wrongProject=false, corrupt=false, quoteCost=0, submits=0;
   const calls:{route:string;body:any;authorization:string|undefined}[]=[];
   const artifacts:Record<string,string>={
@@ -36,7 +37,7 @@ async function fixture(realDelivery=false){
     if(route==='/v1/capabilities')return json({protocol:'theta-worker-v1',models:['lda','bertopic']});
     if(route==='/v1/preview')return json({readiness:{ready:true},quote:{id:'q1',maxCost:quoteCost,currency:'CNY',expiresAt:new Date(Date.now()+3600000).toISOString()}});
     if(route==='/v1/datasets')return json({datasetId:'data-'+calls.length,sha256:raw.match(/name="sha256"\r\n\r\n([^\r]+)/)![1],projectId:raw.match(/name="projectId"\r\n\r\n([^\r]+)/)![1]});
-    if(route==='/v1/jobs'){submits++;return json({id:'remote-1',projectId:body.projectId});}
+    if(route==='/v1/jobs'){submits++;if(uncertain){res.statusCode=503;return json({error:{message:'response interrupted'}})}return json({id:'remote-1',projectId:body.projectId});}
     const project=decodeURIComponent(route.split('/')[3]??'');
     if(route.endsWith('/results'))return json({schema:'theta-results-v1',status:'ready',projectId:project,jobId:'remote-1',files:Object.entries(artifacts).map(([name,data])=>({name,url:base+'/files/'+encodeURIComponent(name)+'?signature=test',sizeBytes:Buffer.byteLength(data),sha256:corrupt?'a'.repeat(64):hash(data),kind:name.endsWith('.svg')?'figure':name.endsWith('.csv')?'table':'artifact'})),evidence:{tables:[],figures:[],evidence:[],matrices:[]}});
     if(route.startsWith('/files/'))return res.end(artifacts[decodeURIComponent(route.split('?')[0].slice(7))]);
@@ -62,7 +63,7 @@ async function fixture(realDelivery=false){
   const gateway=new ConfiguredComputeGateway(home,worker);
   const request=async():Promise<ComputeRequest>=>({jobId:'job-'+hash('job'),runId:'run',projectId:'project-a',dataset,plan,execution:(await gateway.preview({dataset,plan})).execution});
   const authorize=(payload:ComputeRequest)=>{const approvals=new EffectApprovals(new ResearchStore(home));const effect=approvals.request('session',{action:'compute.submit',target:'local',payload,summary:'test'});return approvals.decide(effect.id,'session',effect.hash,true)!;};
-  return {home,base,server,worker,gateway,configuration,request,authorize,calls,localCalls,dataset,plan,artifacts,finish(){status='completed'},corrupt(){corrupt=true},wrong(){wrongProject=true},cost(){quoteCost=2},submits:()=>submits,async close(){server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));rmSync(home,{recursive:true,force:true})}};
+  return {home,base,server,worker,gateway,configuration,request,authorize,calls,localCalls,dataset,plan,artifacts,uncertain(){uncertain=true},finish(){status='completed'},corrupt(){corrupt=true},wrong(){wrongProject=true},cost(){quoteCost=2},submits:()=>submits,async close(){server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));rmSync(home,{recursive:true,force:true})}};
 }
 test('remote worker transfers only selected data, preserves splits and restores jobs across settings changes',async()=>{
  const f=await fixture();try{
@@ -160,4 +161,14 @@ test('same project names in independent installations receive different remote n
   await a.gateway.submit(first,a.authorize(first));await b.gateway.submit(second,b.authorize(second));
   assert.notEqual(a.calls.find(c=>c.route==='/v1/jobs')!.body.projectId,b.calls.find(c=>c.route==='/v1/jobs')!.body.projectId);
  }finally{await a.close();await b.close()}
+});
+
+test('uncertain submission remains tracked and resolves the original job without resubmission',async()=>{
+ const f=await fixture();try{
+  const request=await f.request();f.uncertain();
+  const submitted=await f.gateway.submit(request,f.authorize(request));
+  assert.equal(submitted.phase,'confirming_submission');
+  const restarted=new ConfiguredComputeGateway(f.home,f.worker);
+  assert.equal((await restarted.status(request.jobId)).status,'running');assert.equal(f.submits(),1);
+ }finally{await f.close()}
 });

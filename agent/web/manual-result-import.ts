@@ -153,7 +153,7 @@ export function manualResultImporter(home: string, manualHome: string, records: 
         if(job.state.remoteReport){
           const originalReport=inside(sourceRoot,job.state.remoteReport);
           state.remoteReport=path.join(targetRoot,path.relative(sourceRoot,originalReport));
-          const rebase=(value:any):any=>typeof value==='string' ? value.replaceAll(sourceRoot,targetRoot) : Array.isArray(value) ? value.map(rebase) : value&&typeof value==='object' ? Object.fromEntries(Object.entries(value).map(([key,item])=>[key,rebase(item)])) : value;
+          const rebase=(value:any):any=>typeof value==='string' ? value.replaceAll(sourceRoot,targetRoot).replaceAll(path.join(manualHome,'compute',job.id),targetRoot) : Array.isArray(value) ? value.map(rebase) : value&&typeof value==='object' ? Object.fromEntries(Object.entries(value).map(([key,item])=>[key,rebase(item)])) : value;
           const report=rebase(JSON.parse(readFileSync(originalReport,'utf8')));report.jobId=jobId;
           writeFileSync(state.remoteReport,JSON.stringify(report));
         }

@@ -168,3 +168,20 @@ test('imports verified Windows trees with mixed-case and nested names, but rejec
   writeFileSync(path.join(f.manualHome, 'compute', f.ids[0], 'results', 'README.md'), 'changed bytes');
   await assert.rejects(f.importer({ projectId: 1 }, 'another-owner'), /校验/);
 });
+
+test('remote delivery paths are rebased into the independent conversation copy', async t => {
+  const f=fixture(t);const db=new DatabaseSync(path.join(f.manualHome,'compute.sqlite'));
+  const row=db.prepare('SELECT value FROM jobs WHERE id=?').get(f.ids[0])!;
+  const state=JSON.parse(String(row.value));
+  const original=path.join(f.manualHome,'compute',f.ids[0],'delivery.json');
+  const artifact=path.join(state.resultDir,'index.html');
+  writeFileSync(original,JSON.stringify({jobId:f.ids[0],resultDir:state.resultDir,reportPath:artifact,files:[{path:artifact,name:'index.html'}]}));
+  state.remoteReport=original;db.prepare('UPDATE jobs SET value=? WHERE id=?').run(JSON.stringify(state),f.ids[0]);db.close();
+  const imported=await f.importer({projectId:1,selectedJobId:f.ids[0]},'local');
+  const session=f.sessions.get(imported.runId);const run=f.records.get<ResearchRun>('run',session.runId!);
+  const copied=new DatabaseSync(path.join(f.home,'compute.sqlite'));
+  const job=JSON.parse(String(copied.prepare('SELECT value FROM jobs WHERE id=?').get(run.activeJob!)!.value));copied.close();
+  const report=JSON.parse(readFileSync(job.remoteReport,'utf8'));
+  assert.ok(report.files.every((file:{path:string})=>file.path.startsWith(f.home)));
+  assert.ok(!JSON.stringify(report).includes(f.manualHome));
+});

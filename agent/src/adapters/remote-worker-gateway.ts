@@ -10,6 +10,7 @@ import { contentHash, type ComputeJob, type Dataset, type TrainingPlan } from '.
 import { LocalComputeGateway, type ComputeGateway, type ComputeRequest, type ResultView } from './compute-gateway.js';
 import type { CapabilityWorker } from './python-worker.js';
 import { workerConfiguration, safeWorkerUrl, type WorkerConfiguration } from './worker-configuration.js';
+class WorkerApiError extends Error { constructor(readonly status:number,message:string){super(message);} }
 interface RemoteJob { config:WorkerConfiguration; projectId:string; remoteId?:string; requestHash:string; request:ComputeRequest; report?:any }
 interface RemoteFile { name:string; url:string; sha256:string; sizeBytes:number; kind:string }
 const metadata=(d:Dataset)=>({datasetRef:d.datasetRef,sha256:d.sha256,fileName:d.fileName,sizeBytes:d.sizeBytes});
@@ -29,7 +30,7 @@ export class ConfiguredComputeGateway implements ComputeGateway {
   private mapping(id:string):RemoteJob|undefined { try{return this.store.get('worker-job',id)}catch(e){if(e instanceof Error&&e.message.startsWith('记录不存在'))return;throw e;} }
   private async api(config:WorkerConfiguration,route:string,body?:unknown,method?:string):Promise<any> {
     const r=await this.fetcher(config.url+route,{method:method??(body===undefined?'GET':'POST'),redirect:'error',signal:AbortSignal.timeout(300000),headers:{authorization:`Bearer ${this.config.token(config)}`,...(body instanceof FormData?{}:{'content-type':'application/json'})},body:body===undefined?undefined:body instanceof FormData?body:JSON.stringify(body)}).catch(()=>{throw new Error('无法连接远程计算服务，请检查服务地址、网络和服务运行状态；未自动重试训练提交');});
-    const value=await r.json();if(!r.ok)throw new Error(`远程计算 HTTP ${r.status}：${String(value.error?.message??value.error??'请求失败').slice(0,1000)}`);return value;
+    const value=await r.json();if(!r.ok)throw new WorkerApiError(r.status,`远程计算 HTTP ${r.status}：${String(value.error?.message??value.error??'请求失败').slice(0,1000)}`);return value;
   }
   isRemote(){return this.config.read().mode==='remote';}
   assertSelection(fingerprint?:string){if(this.isRemote() && fingerprint!==this.config.fingerprint(this.config.read()))throw new Error('远程计算配置已变化，请重新打开训练配置并确认上传与费用上限');}
@@ -70,7 +71,11 @@ export class ConfiguredComputeGateway implements ComputeGateway {
     if(!prior&&!this.store.putIfAbsent('worker-job',request.jobId,value))throw new Error('任务正在提交，请查询状态');
     const dataset=await this.upload(c,projectId,request.dataset);const plan=portablePlan(request.plan);
     if(plan.dataSplit?.sources)for(const [key,source] of Object.entries(request.plan.dataSplit!.sources!))plan.dataSplit.sources[key]={...plan.dataSplit.sources[key],dataset:await this.upload(c,projectId,source.dataset)};
-    const job=await this.api(c,'/v1/jobs',{clientJobId:request.jobId,idempotencyKey:request.jobId,projectId,dataset,plan,quoteId:remote.quote.id,maxCost:remote.quote.maxCost,currency:c.currency});
+    let job;
+    try { job=await this.api(c,'/v1/jobs',{clientJobId:request.jobId,idempotencyKey:request.jobId,projectId,dataset,plan,quoteId:remote.quote.id,maxCost:remote.quote.maxCost,currency:c.currency}); } catch(error) {
+      if(error instanceof WorkerApiError && error.status<500)throw error;
+      return {id:request.jobId,status:'queued',phase:'confirming_submission',percent:0,message:'提交响应中断，正在核对原任务；不会自动重复训练或计费'};
+    }
     if(!job.id||job.projectId!==projectId)throw new Error('远程任务归属无效；请使用原任务 ID 查询，勿重复计费');
     value.remoteId=String(job.id);this.store.put('worker-job',request.jobId,value);return {id:request.jobId,status:'queued',phase:'queued',percent:0};
   }
@@ -78,9 +83,14 @@ export class ConfiguredComputeGateway implements ComputeGateway {
   async status(id:string):Promise<ComputeJob>{
     const m=this.mapping(id);if(!m)return this.local.status(id);
     if(m.report&&existsSync(m.report.resultDir))return {id,status:'completed',phase:'completed',percent:100,resultDir:m.report.resultDir,resultHash:m.report.resultHash};
-    if(!m.remoteId){const found=await this.api(m.config,`/v1/projects/${encodeURIComponent(m.projectId)}/jobs/by-client-id/${encodeURIComponent(id)}`);if(!found.id||found.projectId!==m.projectId)throw new Error('远程提交结果尚待核对');m.remoteId=String(found.id);this.store.put('worker-job',id,m);}
+    if(!m.remoteId){
+      let found;
+      try {found=await this.api(m.config,`/v1/projects/${encodeURIComponent(m.projectId)}/jobs/by-client-id/${encodeURIComponent(id)}`);}
+      catch(error){return {id,status:'queued',phase:'confirming_submission',percent:0,message:'原任务提交结果尚待服务方核对，不会重复提交',error:error instanceof Error?error.message:String(error)};}
+      if(!found.id||found.projectId!==m.projectId)throw new Error('远程提交结果尚待核对');m.remoteId=String(found.id);this.store.put('worker-job',id,m);
+    }
     const s=await this.api(m.config,this.route(m));
-    if(s.projectId!==m.projectId||!['queued','running','completed','failed','cancelled'].includes(s.status))throw new Error('远程任务状态或项目归属无效');
+    if(String(s.id)!==m.remoteId||s.projectId!==m.projectId||!['queued','running','completed','failed','cancelled'].includes(s.status))throw new Error('远程任务状态或项目归属无效');
     const state:ComputeJob={id,phaseHistory:s.phaseHistory,diagnostics:s.diagnostics,status:s.status,phase:String(s.phase??s.status),percent:Math.max(0,Math.min(99,Number(s.percent)||0)),error:s.error,message:s.message,telemetry:s.telemetry};
     if(s.status==='completed'){
       if(m.report&&existsSync(m.report.resultDir))return {...state,percent:100,resultDir:m.report.resultDir,resultHash:m.report.resultHash};
@@ -90,7 +100,7 @@ export class ConfiguredComputeGateway implements ComputeGateway {
     }
     return state;
   }
-  async cancel(id:string){const m=this.mapping(id);if(!m)return this.local.cancel(id);if(!m.remoteId)await this.status(id);const current=this.mapping(id)!;await this.api(current.config,this.route(current,'/cancel'),{});return this.status(id);}
+  async cancel(id:string){const m=this.mapping(id);if(!m)return this.local.cancel(id);if(!m.remoteId)await this.status(id);const current=this.mapping(id)!;if(!current.remoteId)throw new Error('原任务提交结果尚待核对，请先恢复连接或联系计算服务，暂未发送取消请求');await this.api(current.config,this.route(current,'/cancel'),{});return this.status(id);}
   cachedStatus(_id:string):ComputeJob|undefined {return undefined;}
   private async hydrate(id:string,m:RemoteJob){
     const manifest=await this.api(m.config,this.route(m,'/results'));
