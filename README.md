@@ -14,6 +14,9 @@
 
 </div>
 
+> [!IMPORTANT]
+> **Version compatibility: future releases may introduce breaking changes.** THETA is under active development. Configuration formats, project data structures, APIs, and workflows may change incompatibly, requiring migration or updates to existing projects, settings, or third-party integrations. Before upgrading, read the release notes and back up your complete project data directories, configuration, and important analysis results. Follow any migration instructions provided for that release.
+
 ## Choose how to use THETA
 
 Use **the Web workbench, CLI Agent, or desktop app**, with an optional Skill for other agents. This repository maintains the local edition: the workbench and compute services run on your computer, where projects and results are stored. You can configure your own cloud LLM and Embedding APIs.
@@ -33,7 +36,7 @@ From 0.3.8, use **Settings → App updates** for future downloads. Windows suppo
 
 Windows automatically uses compatible NVIDIA GPUs, with CPU fallback. The first accelerated task downloads a verified GPU component (about 2.6 GiB); CPU-only computers do not need it. See the [GPU setup details](docs/desktop.md#windows-gpu-acceleration).
 
-The desktop app bundles the Web interface. Source updates take effect after `./theta-web restart`; installed apps need an application update to receive the same changes. Updating the app retains projects and settings.
+The desktop app bundles the Web interface. Source updates take effect after `./theta-web restart`; installed apps need an application update to receive the same changes. Current desktop installers retain projects and settings; consult the corresponding release notes for data compatibility and migration requirements in future versions.
 
 | System | Installer |
 | --- | --- |
