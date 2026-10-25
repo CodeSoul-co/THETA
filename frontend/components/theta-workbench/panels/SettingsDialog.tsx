@@ -233,6 +233,7 @@ export const SettingsDialog = ({ open, onClose, onAccountNameChange, initialTab 
             <Button disabled={saving} onClick={async()=>{if(computeDirty && !await saveCompute())return;setSaving(true);try{const result=await computeSettingsApi.test();setMessageType('success');setMessage((zh ? '连接成功，支持模型：' : 'Connected. Models: ')+result.models.join(', '))}catch(error){setMessageType('error');setMessage(String(error))}finally{setSaving(false)}}}>{zh ? '保存并测试连接' : 'Save and test connection'}</Button>
           </>}
           </>}
+          {message && <p role="status" className={css.inlineMessage} data-type={messageType}>{message}</p>}
         </section>}
         {tab === 'updates' && <DesktopUpdates zh={zh} />}
 

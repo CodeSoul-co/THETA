@@ -10,14 +10,14 @@ import { ConfiguredComputeGateway } from './remote-worker-gateway.js';
 import { workerConfiguration } from './worker-configuration.js';
 import { EffectApprovals } from '../domain/effect-approval.js';
 import { ResearchStore } from '../memory/research-store.js';
-import type { CapabilityWorker } from './python-worker.js';
+import { PythonCapabilityWorker, type CapabilityWorker } from './python-worker.js';
 import type { ComputeRequest } from './compute-gateway.js';
 import { createManualServer } from '../../web/manual-server.js';
 import { LocalProductTools } from '../tools/local-tools.js';
 import type { ProductSession } from '../memory/session-store.js';
 import { DatabaseSync } from 'node:sqlite';
 const hash=(text:string)=>createHash('sha256').update(text).digest('hex');
-async function fixture(){
+async function fixture(realDelivery=false){
   const home=mkdtempSync(path.join(tmpdir(),'theta-remote-contract-'));
   let status='running', wrongProject=false, corrupt=false, quoteCost=0, submits=0;
   const calls:{route:string;body:any;authorization:string|undefined}[]=[];
@@ -47,6 +47,7 @@ async function fixture(){
   const reports=new Map<string,any>();const localCalls:string[]=[];
   const worker:CapabilityWorker={async call<T>(op:string,input:any):Promise<T>{
     localCalls.push(op);
+    if(realDelivery && ['compute.receive','compute.results'].includes(op))return new PythonCapabilityWorker().call<T>(op,input);
     if(op==='compute.receive'){reports.set(input.request.jobId,input.report);return input.report;}
     if(op==='compute.results')return reports.get(input.jobId);
     if(op==='compute.preview')return {readiness:{ready:true},execution:{}} as T;
@@ -139,5 +140,16 @@ test('conversation training uses the remote worker with the original approved qu
   assert.equal(f.submits(),1);assert.ok(!f.localCalls.includes('compute.submit'));
   assert.equal(f.calls.filter(c=>c.route==='/v1/preview').length,1,'approval must retain the quote already shown');
   assert.equal(f.calls.find(c=>c.route==='/v1/jobs')!.body.projectId,'project-a');
+ }finally{await f.close()}
+});
+
+test('downloaded remote results register through the real local worker API and provide report evidence', {skip:!process.env.THETA_PYTHON},async()=>{
+ const f=await fixture(true);try{
+  const request=await f.request();await f.gateway.submit(request,f.authorize(request));f.finish();
+  const report=await f.gateway.results(request.jobId,'report');
+  assert.equal(report.reportStatus,'complete');assert.ok(report.resultHash);
+  const evidence=await new PythonCapabilityWorker().call<any>('analysis_report.evidence',{home:f.home,jobId:request.jobId,directory:path.join(f.home,'analysis')});
+  assert.equal(evidence.splits.groups.all.count,4);assert.equal(evidence.plan.modelId,'lda');
+  assert.ok(evidence.description.includes('原始记录数'));assert.equal(evidence.catalog.length,1);
  }finally{await f.close()}
 });

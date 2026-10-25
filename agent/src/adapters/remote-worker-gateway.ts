@@ -28,7 +28,7 @@ export class ConfiguredComputeGateway implements ComputeGateway {
   }
   private mapping(id:string):RemoteJob|undefined { try{return this.store.get('worker-job',id)}catch(e){if(e instanceof Error&&e.message.startsWith('记录不存在'))return;throw e;} }
   private async api(config:WorkerConfiguration,route:string,body?:unknown,method?:string):Promise<any> {
-    const r=await this.fetcher(config.url+route,{method:method??(body===undefined?'GET':'POST'),redirect:'error',signal:AbortSignal.timeout(300000),headers:{authorization:`Bearer ${this.config.token(config)}`,...(body instanceof FormData?{}:{'content-type':'application/json'})},body:body===undefined?undefined:body instanceof FormData?body:JSON.stringify(body)});
+    const r=await this.fetcher(config.url+route,{method:method??(body===undefined?'GET':'POST'),redirect:'error',signal:AbortSignal.timeout(300000),headers:{authorization:`Bearer ${this.config.token(config)}`,...(body instanceof FormData?{}:{'content-type':'application/json'})},body:body===undefined?undefined:body instanceof FormData?body:JSON.stringify(body)}).catch(()=>{throw new Error('无法连接远程计算服务，请检查服务地址、网络和服务运行状态；未自动重试训练提交');});
     const value=await r.json();if(!r.ok)throw new Error(`远程计算 HTTP ${r.status}：${String(value.error?.message??value.error??'请求失败').slice(0,1000)}`);return value;
   }
   isRemote(){return this.config.read().mode==='remote';}
@@ -93,7 +93,7 @@ export class ConfiguredComputeGateway implements ComputeGateway {
     if(manifest.schema!=='theta-results-v1'||manifest.projectId!==m.projectId||manifest.jobId!==m.remoteId||manifest.status!=='ready'||!Array.isArray(manifest.files)||!manifest.files.length)throw new Error('完整结果尚未就绪或清单归属不一致');
     const names=new Set<string>();
     for(const f of manifest.files as RemoteFile[]){if(typeof f.name!=='string'||/[\x00-\x1f<>"|?*]/.test(f.name)||f.name.length>240||f.name.split('/').some(p=>/[. ]$/.test(p)||/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(p))||f.name.includes('\\')||f.name.includes(':')||f.name.split('/').some(p=>!p||p==='.'||p==='..')||[...names].some(name=>name.normalize('NFC').toLowerCase()===f.name.normalize('NFC').toLowerCase())||!['figure','table','matrix','report','artifact'].includes(f.kind)||!Number.isSafeInteger(f.sizeBytes)||f.sizeBytes<0||!/^[a-f0-9]{64}$/.test(f.sha256))throw new Error('结果清单包含无效路径或校验信息');names.add(f.name);const artifactUrl=new URL(f.url);const base=new URL(f.url);base.search='';safeWorkerUrl(base.href);if(artifactUrl.hash)throw new Error('结果链接包含无效片段');}
-    if(![...names].some(name=>/(^|\/)split_results\.json$/.test(name))||!names.has('index.html'))throw new Error('结果缺少数据划分清单或完整图表报告');
+    if([...names].filter(name=>/(^|\/)split_results\.json$/.test(name)).length!==1||!names.has('index.html'))throw new Error('结果缺少数据划分清单或完整图表报告');
     const root=path.join(this.home,'compute',id,'delivery');const stage=root+'-'+randomUUID();mkdirSync(stage,{recursive:true});
     try{
       for(const f of manifest.files as RemoteFile[]){
