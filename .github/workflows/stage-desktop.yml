@@ -1,0 +1,89 @@
+name: Stage verified desktop installers
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Successful Desktop application build run
+        required: true
+      platform:
+        type: choice
+        options: [macos, windows]
+        required: true
+      tag:
+        description: Existing draft release tag
+        required: true
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: stage-${{ inputs.tag }}-${{ inputs.platform }}
+  cancel-in-progress: false
+
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BUILD_RUN: ${{ inputs.run_id }}
+      PLATFORM: ${{ inputs.platform }}
+      RELEASE_TAG: ${{ inputs.tag }}
+    steps:
+      - name: Verify build provenance and draft release
+        run: |
+          set -euo pipefail
+          [[ "$BUILD_RUN" =~ ^[0-9]+$ ]]
+          [[ "$RELEASE_TAG" =~ ^desktop-v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          gh api "repos/$GH_REPO/actions/runs/$BUILD_RUN" > build.json
+          gh api "repos/$GH_REPO/actions/workflows/desktop.yml" > workflow.json
+          gh release view "$RELEASE_TAG" --json isDraft,targetCommitish > release.json
+          python3 - <<'PY'
+          import json
+          build, workflow, release = [json.load(open(p)) for p in ('build.json','workflow.json','release.json')]
+          assert build['conclusion'] == 'success' and build['workflow_id'] == workflow['id']
+          assert release['isDraft'] and release['targetCommitish'] == build['head_sha']
+          PY
+      - name: Download tested artifacts
+        run: |
+          set -euo pipefail
+          arch=x64; if [ "$PLATFORM" = macos ]; then arch=arm64; fi
+          gh run download "$BUILD_RUN" --name "THETA-$PLATFORM-$arch" --dir artifacts
+          python3 -m pip install --quiet --target "$RUNNER_TEMP/release-yaml" PyYAML
+      - name: Verify and upload to draft only
+        run: |
+          set -euo pipefail
+          export PYTHONPATH="$RUNNER_TEMP/release-yaml"
+          python3 - <<'PY'
+          import base64, hashlib, json, os, pathlib, subprocess, yaml
+          version = os.environ['RELEASE_TAG'].removeprefix('desktop-v')
+          mac = os.environ['PLATFORM'] == 'macos'
+          installers = [f'THETA-{version}-mac-arm64.dmg', f'THETA-{version}-mac-arm64.zip'] if mac else [f'THETA-{version}-win-x64.exe']
+          metadata = 'latest-mac.yml' if mac else 'latest.yml'
+          expected = set(installers + [p+'.blockmap' for p in installers] + [metadata])
+          files = {}
+          for p in pathlib.Path('artifacts').rglob('*'):
+              if p.is_file() and p.name in expected:
+                  assert p.name not in files, 'Duplicate artifact name'
+                  files[p.name] = p
+          assert set(files) == expected, 'Missing installer or update metadata'
+          info = yaml.safe_load(files[metadata].read_text())
+          assert info['version'] == version and {f['url'] for f in info['files']} == set(installers)
+          for record in info['files']:
+              p = files[record['url']]
+              with p.open('rb') as stream: digest = hashlib.file_digest(stream, 'sha512').digest()
+              assert p.stat().st_size == record['size'] and base64.b64encode(digest).decode() == record['sha512']
+          # Recheck immediately before mutating the release; never modify a public release.
+          release = json.loads(subprocess.check_output(['gh','release','view',os.environ['RELEASE_TAG'],'--json','isDraft']))
+          assert release['isDraft']
+          subprocess.run(['gh','release','upload',os.environ['RELEASE_TAG'],*[str(p) for p in files.values()],'--clobber'],check=True)
+          assets = json.loads(subprocess.check_output(['gh','release','view',os.environ['RELEASE_TAG'],'--json','assets']))['assets']
+          actual = {a['name']:a for a in assets}
+          for name,p in files.items():
+              with p.open('rb') as stream: digest = hashlib.file_digest(stream,'sha256').hexdigest()
+              assert actual[name]['size'] == p.stat().st_size and actual[name]['digest'] == 'sha256:'+digest
+          print('Verified and staged',len(files),'assets. Release remains a draft.')
+          PY
