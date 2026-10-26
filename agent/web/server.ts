@@ -304,7 +304,7 @@ export function createAgentServer(home: string, inferenceFactory = createConfigu
     let content = String(m.metadata?.webUserText ?? m.content);
     // 引用身份只需要模型看到，界面上不展示。
     if (m.role === 'user') content = content.replace(/\n*\[\[cite\]\][\s\S]*?\[\[\/cite\]\]/gu, '').trim();
-    if (m.role === 'assistant') content = content.replace(/(!?)\[([^\]]*)\]\(<?(\/[^)>]+)>?\)/gu, (_match, bang: string, label: string, file: string) => {
+    if (m.role === 'assistant') content = content.replace(/(!?)\[([^\]]*)\]\(<?((?:\/|[A-Za-z]:[\\/])[^)>]+)>?\)/gu, (_match, bang: string, label: string, file: string) => {
       const url = artifactUrl(session, file);
       // The conversation renderer only draws images with absolute http(s) URLs.
       return bang === '!' && origin ? `![${label}](${origin}${url})` : `${bang}[${label}](${url})`;
