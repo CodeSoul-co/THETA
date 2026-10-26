@@ -1,7 +1,7 @@
 {
   "name": "theta-desktop",
   "productName": "THETA",
-  "version": "0.3.17",
+  "version": "0.3.17-dev.1026",
   "private": true,
   "description": "THETA local research workbench with bundled Python",
   "author": "CodeSoul",
@@ -38,6 +38,7 @@
       "preload.cjs",
       "services.mjs",
       "settings.cjs",
+      "ports.cjs",
       "data-home.cjs",
       "ui/icon.png",
       "package.json",
