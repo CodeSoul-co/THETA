@@ -1,6 +1,6 @@
 {
   "name": "theta-agent",
-  "version": "0.3.17-dev.1026",
+  "version": "0.3.17-dev.1027",
   "private": true,
   "type": "module",
   "description": "Conversational THETA agent with independent CLI and compute adapters",
