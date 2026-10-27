@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -65,10 +66,11 @@ def inspect(payload: dict) -> dict:
 
 
 def route(operation: str, payload: dict) -> None:
-    """Replace the transport process, preserving PID, stdin JSON and cancellation.
+    """Run the request in its host-selected interpreter.
 
-    No proxy subprocess remains between Node and the selected worker. Detached
-    training then inherits this interpreter through the existing submit path.
+    POSIX replaces the transport process; Windows relays through a child because
+    it cannot safely replace a Python process with its stdin redirected.
+    Detached training inherits the selected interpreter through submit.
     """
     profile = None
     if operation in {'statistics.preview', 'statistics.execute'}:
@@ -97,6 +99,16 @@ def route(operation: str, payload: dict) -> None:
         environment.update({'OMP_NUM_THREADS': '1', 'OPENBLAS_NUM_THREADS': '1', 'MKL_NUM_THREADS': '1', 'NUMEXPR_NUM_THREADS': '1'})
     environment.pop('PYTHONPATH', None)
     environment.pop('PYTHONHOME', None)
+    if os.name == 'nt':
+        # Windows has no POSIX-style exec. Replacing this process after dup2'ing
+        # stdin can terminate Python with 0xC0000005 before it emits JSON.
+        completed = subprocess.run(
+            [runtime['python'], '-m', 'workers', operation],
+            input=json.dumps(payload, ensure_ascii=False).encode('utf-8'),
+            stdout=sys.stdout.buffer, stderr=sys.stderr.buffer, env=environment,
+            check=False,
+        )
+        raise SystemExit(completed.returncode)
     with tempfile.TemporaryFile() as request:
         request.write(json.dumps(payload, ensure_ascii=False).encode())
         request.seek(0)

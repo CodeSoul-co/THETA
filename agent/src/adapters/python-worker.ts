@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { packageRoot, repositoryRoot } from '../environment.js';
@@ -18,7 +18,14 @@ export class ProcessCapabilityWorker implements CapabilityWorker {
       let forcedStop: ReturnType<typeof setTimeout> | undefined;
       const stop = (error: Error): void => {
         if (failure) return;
-        failure = error; child.kill('SIGTERM');
+        failure = error;
+        if (process.platform === 'win32' && child.pid) {
+          // A routed Windows worker has a child interpreter. Terminate the tree
+          // so cancellation cannot leave that interpreter running on its own.
+          execFile('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true }, (killError) => {
+            if (killError) child.kill('SIGTERM');
+          });
+        } else child.kill('SIGTERM');
         forcedStop = setTimeout(() => child.kill('SIGKILL'), 2000);
       };
       const abort = (): void => stop(new Error('能力调用已中断'));
@@ -34,10 +41,10 @@ export class ProcessCapabilityWorker implements CapabilityWorker {
       child.stderr.on('data', (chunk) => { stderr = (stderr + chunk).slice(-4000); });
       child.stdin.on('error', () => {});
       child.on('error', (error) => { failure = error; });
-      child.on('close', (code) => {
+      child.on('close', (code, closeSignal) => {
         clearTimeout(timer); clearTimeout(killTimer); clearTimeout(forcedStop); signal?.removeEventListener('abort', abort);
         if (failure) return reject(failure);
-        try { const result = JSON.parse(stdout); if (!result.ok) throw new Error(result.error ?? 'Worker failed'); if (code !== 0) throw new Error(`Worker exited ${code}`); resolve(result.data as T); }
+        try { if (!stdout.trim()) throw new Error(`Worker exited ${code ?? closeSignal ?? 'unknown'} without a response`); const result = JSON.parse(stdout); if (!result.ok) throw new Error(result.error ?? 'Worker failed'); if (code !== 0) throw new Error(`Worker exited ${code}`); resolve(result.data as T); }
         catch (error) { reject(new Error(`计算能力 ${operation}：${error instanceof Error ? error.message : String(error)}${stdout ? '' : ` (${stderr.slice(-500)})`}`)); }
       });
       child.stdin.end(JSON.stringify(input));
